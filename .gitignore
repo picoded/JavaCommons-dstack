@@ -1,0 +1,37 @@
+#
+# exclude common hidden file types
+#
+.*
+*.swp
+*._*
+*.unison*
+
+#
+# Exclude common temp files
+#
+debug.txt
+*.log
+
+#
+# XCode workspace
+#
+**/xcuserdata/*
+
+#
+# Build folder
+#
+bin
+build
+bin/*
+build/*
+
+#
+# Testing tmp folder
+#
+test/tmp
+
+#
+# Include back .gitignore
+#
+!.gitignore
+!.travis.yml

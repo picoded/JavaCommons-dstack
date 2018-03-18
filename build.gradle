@@ -1,0 +1,216 @@
+//----------------------------------------------------------------
+//
+//  Gradle project core configuration
+//
+//----------------------------------------------------------------
+
+// Setup gradle and its plugins
+plugins {
+	// Setup gradle for java library builds
+	id 'java-library'
+
+	// // The one fat jar with dependencies (without shade)
+	// id "com.github.onslip.gradle-one-jar" version "1.0.5"
+
+	// Shadow plugin used to build the shade jar
+	id 'com.github.johnrengelman.plugin-shadow' version '2.0.2'
+
+	// jacoco code coverage for test
+	id 'jacoco'
+}
+
+// Dependency providers to fetch from
+repositories {
+	// Use jcenter for resolving your dependencies.
+	jcenter()
+
+	// Alterantively maven central could be used instead
+	mavenCentral()
+
+	// You can declare any other Maven/Ivy/file repository here.
+}
+
+//----------------------------------------------------------------
+//
+//  Project versioning
+//
+//----------------------------------------------------------------
+
+// The Project version
+version = '4.1.0'
+
+// Setup java compilation version
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+//----------------------------------------------------------------
+//
+//  Project dependencies
+//
+//----------------------------------------------------------------
+
+// Dependencies used in the build
+dependencies {
+	
+	// This dependencies is exported to consumers, that is to say found on their compile classpath.
+	//-------------------------------------------------------------------------------------------------------------------
+
+	// // Apache-commons
+	// api "org.apache.commons:commons-lang3:3.7"
+	// api "org.apache.commons:commons-text:1.2"
+	// api "org.apache.commons:commons-collections4:4.1"
+	// api "commons-io:commons-io:2.6"
+	// api "commons-codec:commons-codec:1.11"
+
+	// // JSON / XML processing
+	// api "com.fasterxml.jackson.core:jackson-core:2.9.4"
+	// api "com.fasterxml.jackson.core:jackson-databind:2.9.4"
+
+	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
+	//-------------------------------------------------------------------------------------------------------------------
+	// implementation 'com.google.guava:guava:23.0'
+
+	// Testing dependencies
+	//-------------------------------------------------------------------------------------------------------------------
+	testImplementation 'junit:junit:4.12'
+
+}
+
+//----------------------------------------------------------------
+//
+//  Jar build steps
+//
+//----------------------------------------------------------------
+
+//
+// Base JAR build settings
+//
+// `gradle jar`
+//
+jar {
+	// Archive name overwrite
+	archiveName = project.name+"-"+project.version+""+".jar"
+	description = "Build the "+archiveName+" with no dependencies"
+
+	// Inherit the main jar manifest
+	manifest {
+		attributes(
+			'Implementation-Title': project.name,
+			'Implementation-Version': project.version
+		)
+	}
+}
+
+//
+// Shadow jar - dependencies are shaded
+//
+// `gradle shadowJar`
+//
+shadowJar {
+	// Archive name overwrite
+	archiveName = project.name+"-"+project.version+"-shade"+".jar"
+	description = "Build the "+archiveName+" with all dependencies shaded"
+
+	// Inherit the main jar manifest
+	manifest {
+		inheritFrom project.tasks.jar.manifest
+	}
+
+	// Shade depencies under "picoded.shade"
+	relocate "org", "picoded.shade.org"
+	relocate "com", "picoded.shade.com"
+}
+
+//
+// Fat jar - dependencies are included, and not shaded
+//
+// `gradle shadowJar`
+//
+task fatJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+	// Archive name overwrite
+	archiveName = project.name+"-"+project.version+"-all"+".jar"
+	description = "Build the "+archiveName+" with all dependencies"
+
+	//
+	// Note that the following is extended heavily from the default setup of shadowJar task
+	// See : https://github.com/johnrengelman/shadow/blob/7ef6fc2699627f172b05a3bd3523201d63bb588f/src/main/groovy/com/github/jengelman/gradle/plugins/shadow/ShadowJavaPlugin.groovy#L38-L63
+	//
+
+	// NOTE : I dunno what this is - but it was setup in the default config
+	conventionMapping.with {
+		map('classifier') {
+			'all'
+		}
+	}
+	// Build from the main output
+	from sourceSets.main.output
+	// Load default configurations
+	configurations = [project.configurations.findByName('runtimeClasspath') ? project.configurations.runtimeClasspath : project.configurations.runtime]
+	// Inherit the main jar manifest
+	manifest {
+		inheritFrom project.tasks.jar.manifest
+	}
+	// Project dependencies libraries
+	doFirst {
+		def files = project.configurations.findByName(com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin.CONFIGURATION_NAME).files
+		if (files) {
+			def libs = [project.tasks.jar.manifest.attributes.get('Class-Path')]
+			libs.addAll files.collect { "${it.name}" }
+			manifest.attributes 'Class-Path': libs.findAll { it }.join(' ')
+		}
+	}
+	// Exclude signed jar signatures?
+	exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+
+	// Disable relocation
+	relocate "org", "org"
+	relocate "com", "com"
+}
+
+// artifacts {
+//     archives shadowJar
+//     archives jar
+// }
+
+//----------------------------------------------------------------
+//
+//  Jacoco test coverage
+//
+//----------------------------------------------------------------
+
+jacoco {
+	toolVersion = "0.8.0"
+}
+
+jacocoTestReport {
+	// Build the report
+	reports {
+		xml.enabled true
+		csv.enabled true
+
+		// Report format compatible with codeconv.io
+		xml.destination "${buildDir}/reports/jacoco/report.xml"
+		csv.destination "${buildDir}/reports/jacoco/report.csv"
+	}
+}
+
+//----------------------------------------------------------------
+//
+//  Quick multibuild steps
+//
+//----------------------------------------------------------------
+
+task buildAll {
+	description = "Build all 3 jars: jar, shadowJar, fatJar"
+
+	dependsOn jar
+	dependsOn shadowJar
+	dependsOn fatJar
+}
+
+task testAndBuildAll {
+	description = "Performs the full test suite, then build all 3 jars: jar, shadowJar, fatJar"
+
+	dependsOn jacocoTestReport
+	dependsOn buildAll
+}
