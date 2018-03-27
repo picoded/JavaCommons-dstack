@@ -45,6 +45,12 @@ targetCompatibility = 1.8
 
 //----------------------------------------------------------------
 //
+//  JavaCommons-core integration
+//
+//----------------------------------------------------------------
+
+//----------------------------------------------------------------
+//
 //  Project dependencies
 //
 //----------------------------------------------------------------
@@ -52,6 +58,10 @@ targetCompatibility = 1.8
 // Dependencies used in the build
 dependencies {
 	
+	// JavaCommons dependencies
+	//---------------------------------------
+	// compile project(":JavaCommons-core")
+
 	// This dependencies is exported to consumers, that is to say found on their compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 
