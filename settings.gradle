@@ -2,4 +2,4 @@
 rootProject.name = 'picoded-JavaCommons-dstack'
 
 // Including submodule builds
-include 'JavaCommons-core'
+// include 'JavaCommons-core'

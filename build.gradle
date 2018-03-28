@@ -49,6 +49,11 @@ targetCompatibility = 1.8
 //
 //----------------------------------------------------------------
 
+task buildJavaCommonsCore(type: GradleBuild) {
+	buildFile = './JavaCommons-core/build.gradle'
+	tasks = ['build']
+}
+
 //----------------------------------------------------------------
 //
 //  Project dependencies
@@ -60,6 +65,10 @@ dependencies {
 	
 	// JavaCommons dependencies
 	//---------------------------------------
+	compile files("./JavaCommons-core/build/libs/picodedJavaCommons-core-*-all.jar") {
+		builtBy 'buildJavaCommonsCore'
+	}
+
 	// compile project(":JavaCommons-core")
 
 	// This dependencies is exported to consumers, that is to say found on their compile classpath.
