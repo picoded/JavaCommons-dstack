@@ -1,5 +1,2 @@
 // Defines the project build name
 rootProject.name = 'picoded-JavaCommons-dstack'
-
-// Including submodule builds
-// include 'JavaCommons-core'
