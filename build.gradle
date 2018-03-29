@@ -71,14 +71,17 @@ dependencies {
 	//---------------------------------------
 
 	// Get and compile against the -all.jar lib file from javacommons core
-	// note that compileOnly ensures this file is not included in any jar builds
+	// note that compileOnly + testImplementation ensures this file is not included 
+	// in any of the 3 jar builds, but still make it part of the test suite
 	compileOnly fileTree(dir: './JavaCommons-core/build/libs', include: ['*-all.jar']) 
+	testImplementation fileTree(dir: './JavaCommons-core/build/libs', include: ['*-all.jar']) 
 
 	// This dependencies is exported to consumers, that is to say found on their compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 
 	// OJDBC driver connection
 	api files("./lib/jsql/ojdbc6.jar") //for oracle
+	api "org.xerial:sqlite-jdbc:3.21.0.1"
 
 	// // Apache-commons
 	// api "org.apache.commons:commons-lang3:3.7"
