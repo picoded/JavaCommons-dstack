@@ -1,0 +1,74 @@
+#
+# Setup travis for java, it auto detects gradle for most parts
+#
+language: java
+
+# use false for faster docker based builds
+# full break down on the issue is commented below.
+sudo: true 
+
+# ------------------------------------------------------------------------
+#
+# Ok folks, its 2018 - and we are still debating on entropy =[
+# 
+# Long story short, i tried multiple times to implement some form
+# of random number support within the travis build system with docker
+# AKA sudo:false. Unfortunately, despite offical steps that indicate
+# otherwise, even with haveged in docker install. It seems that,
+# there isnt enough "entropy", further more due to the travis build
+# setup. Finally fighting with the custom java options also seem
+# to be an uphill beattle.... so yoloz... 
+#
+# give up and use VM sudo. I do not need enterprise security 
+# for my public opensource unit testing anyway.
+#
+# Btw : it's the auth/hashing/security module that needed entropy
+# to test, which should be kinda obvious why
+#
+# addons:
+#   apt:
+#     packages:
+#     - haveged
+# before_script:
+#   - service haveged start
+#   # Trick java into using urandom, I do not need
+#   # enterprise security for unit testing
+#   # See : https://github.com/travis-ci/travis-ci/issues/1494
+#   # See : https://github.com/travis-ci/travis-ci/issues/8408
+#   - _JAVA_OPTIONS="-Xmx2048m -Djava.security.egd=file:/dev/./urandom"
+#
+# ------------------------------------------------------------------------
+
+#
+# Ensure haveged is installed, and env is properly setup
+# And ensure build permission for various files
+#
+before_script:
+  - sudo apt-get install haveged && sudo service haveged start
+  - chmod +x gradlew
+#
+# Build / Test scripts
+#
+script:
+  - ./gradlew check
+  - ./gradlew jacocoTestReport
+  - ./gradlew buildAll
+  # - ./gradlew jar
+  # - ./gradlew shadowJar
+  # - ./gradlew fatJar
+  
+#
+# Caching - to be used if relevent
+#
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+#
+# Code coverage run
+#
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
