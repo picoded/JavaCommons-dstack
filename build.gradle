@@ -49,10 +49,14 @@ targetCompatibility = 1.8
 //
 //----------------------------------------------------------------
 
+// JavaCommons core compilation
 task buildJavaCommonsCore(type: GradleBuild) {
 	buildFile = './JavaCommons-core/build.gradle'
 	tasks = ['build']
 }
+
+// Dependency linkage of core project build
+compileJava.dependsOn buildJavaCommonsCore
 
 //----------------------------------------------------------------
 //
@@ -65,14 +69,16 @@ dependencies {
 	
 	// JavaCommons dependencies
 	//---------------------------------------
-	compile files("./JavaCommons-core/build/libs/picodedJavaCommons-core-*-all.jar") {
-		builtBy 'buildJavaCommonsCore'
-	}
 
-	// compile project(":JavaCommons-core")
+	// Get and compile against the -all.jar lib file from javacommons core
+	// note that compileOnly ensures this file is not included in any jar builds
+	compileOnly fileTree(dir: './JavaCommons-core/build/libs', include: ['*-all.jar']) 
 
 	// This dependencies is exported to consumers, that is to say found on their compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
+
+	// OJDBC driver connection
+	api files("./lib/jsql/ojdbc6.jar") //for oracle
 
 	// // Apache-commons
 	// api "org.apache.commons:commons-lang3:3.7"
@@ -136,8 +142,10 @@ shadowJar {
 	}
 
 	// Shade depencies under "picoded.shade"
+	relocate "picoded", "picoded"
 	relocate "org", "picoded.shade.org"
 	relocate "com", "picoded.shade.com"
+	relocate "oracle", "picoded.shade.oracle"
 }
 
 //
@@ -182,14 +190,19 @@ task fatJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
 	exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
 
 	// Disable relocation
+	relocate "picoded", "picoded"
 	relocate "org", "org"
 	relocate "com", "com"
+	relocate "oracle", "oracle"
 }
 
-// artifacts {
-//     archives shadowJar
-//     archives jar
-// }
+// Define the equivalent of buildAll
+// for the build process done by "gradle build"
+artifacts {
+	archives fatJar
+	archives shadowJar
+	archives jar
+}
 
 //----------------------------------------------------------------
 //
