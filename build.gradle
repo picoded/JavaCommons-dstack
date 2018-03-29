@@ -221,6 +221,10 @@ test {
 	exclude "**/perf/*.java"
 	exclude "**/perf/*_perf*"
 
+	// For now - exclude mssql, and oracle test cases
+	exclude "**/*Mssql*"
+	exclude "**/*Oracle*"
+
 	// Setup test to run on parllel threads = to number of processors by default
 	if (project.hasProperty('maxParallelForks')) {
 		maxParallelForks = project.maxParallelForks as int
