@@ -221,9 +221,17 @@ test {
 	exclude "**/perf/*.java"
 	exclude "**/perf/*_perf*"
 
-	// For now - exclude mssql, and oracle test cases
-	exclude "**/*Mssql*"
-	exclude "**/*Oracle*"
+	// Include mssql, mysql, and oracle test
+	// only if they are configured respectively
+	if(!project.hasProperty("test_mssql")) {
+		exclude "**/*Mssql*"
+	}
+	if(!project.hasProperty("test_oracle")) {
+		exclude "**/*Oracle*"
+	}
+	if(!project.hasProperty("test_mysql")) {
+		exclude "**/*Mysql*"
+	}
 
 	// Setup test to run on parllel threads = to number of processors by default
 	if (project.hasProperty('maxParallelForks')) {
