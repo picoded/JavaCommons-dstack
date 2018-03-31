@@ -219,7 +219,7 @@ artifacts {
 test {
 	// Exclude performance related test
 	exclude "**/perf/*.java"
-	exclude "**/perf/*_perf*"
+	exclude "**/*_perf*"
 
 	// Include mssql, mysql, and oracle test
 	// only if they are configured respectively
