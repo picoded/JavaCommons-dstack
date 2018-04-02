@@ -84,6 +84,16 @@ public class Core_KeyValue implements KeyValue {
 		return main.getValue(key);
 	}
 
+	/**
+	 * Default to String conversion of generic value
+	 *
+	 * @return The converted string, always possible unless null
+	 **/
+	@Override
+	public String toString() {
+		return getValue();
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Key name identifier handling

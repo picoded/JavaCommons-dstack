@@ -82,6 +82,21 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	}
 	
 	/**
+	 * Convinence varient of put, where string value is used instead
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param value as String, as such its "key" is ignored when used here
+	 *
+	 * @return null
+	 **/
+	default KeyValue put(String key, String value) {
+		putValue(key, value);
+		return null;
+	}
+	
+	/**
 	 * Remove the value, given the key
 	 * 
 	 * @param key where the value is stored
