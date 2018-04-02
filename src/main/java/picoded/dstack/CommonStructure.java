@@ -4,6 +4,7 @@ package picoded.dstack;
 import java.util.Map;
 
 // Library imports
+import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.common.SystemSetupInterface;
 
@@ -74,19 +75,19 @@ public interface CommonStructure extends SystemSetupInterface {
 	 **/
 	void clear();
 	
-	// /**
-	//  * persistent config mapping implmentation, conceptually in some cases you should be able to
-	//  * "overwrite this", maybe even load another dstack object for lolz (dun do in production).
-	//  *
-	//  * In other cases it may just do nothing (like this one)
-	//  *
-	//  * As such it is important for all implmentation depending on this function,
-	//  * to fallback to a sane default if the value is "not set"
-	//  *
-	//  * @return  The configuration map, to update / change settings.
-	//  **/
-	// default GenericConvertMap<String, Object> configMap() {
-	// 	return new GenericConvertHashMap<String, Object>();
-	// }
+	/**
+	 * persistent config mapping implmentation, conceptually in some cases you should be able to
+	 * "overwrite this", maybe even load another dstack object for lolz (dun do in production).
+	 *
+	 * In other cases it may just do nothing (like this one)
+	 *
+	 * As such it is important for all implmentation depending on this function,
+	 * to fallback to a sane default if the value is "not set"
+	 *
+	 * @return  The configuration map, to update / change settings.
+	 **/
+	default GenericConvertMap<String, Object> configMap() {
+		return new GenericConvertHashMap<String, Object>();
+	}
 	
 }
