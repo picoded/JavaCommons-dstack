@@ -128,6 +128,13 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 		}
 		return null;
 	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Functions, used by DataObject
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -140,13 +147,6 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 * @return nothing
 	 **/
 	abstract protected void DataObjectRemoteDataMap_remove(String oid);
-	
-	//--------------------------------------------------------------------------
-	//
-	// Functions, used by DataObject
-	// [Internal use, to be extended in future implementation]
-	//
-	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
