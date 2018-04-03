@@ -50,7 +50,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 * @param key as String
 	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
 	 *
-	 * @return String value
+	 * @return Long value
 	 **/
 	abstract protected Long getValueRaw(String key, long now);
 

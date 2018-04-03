@@ -86,7 +86,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 * @param key as String
 	 * @param now timestamp
 	 *
-	 * @return String value
+	 * @return Long value
 	 **/
 	protected Long getValueRaw(String key, long now) {
 		try {
