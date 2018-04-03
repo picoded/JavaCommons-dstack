@@ -49,7 +49,7 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Returns the value, with validation
+	 * Returns the value, with validation against the current timestamp
 	 *
 	 * Handles re-entrant lock where applicable
 	 *
@@ -102,6 +102,43 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 **/
 	abstract public void setExpiryRaw(String key, long time);
 	
+	//--------------------------------------------------------------------------
+	//
+	// Basic get and put
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 * Its return String type is to maintain consistency with Map interfaces
+	 *
+	 * @param key as String
+	 * @param value as String
+	 *
+	 * @return null
+	 **/
+	@Override
+	public String putValue(String key, String value) {
+		setValueRaw(key, value, 0);
+		return null;
+	}
+	
+	/**
+	 * Returns the value, given the key
+	 *
+	 * Null return can either represent no value or expired value.
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  value of the given key
+	 **/
+	@Override
+	public String getValue(Object key) {
+		return getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
