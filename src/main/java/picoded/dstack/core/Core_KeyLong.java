@@ -23,9 +23,6 @@ public class Core_KeyLong implements KeyLong {
 	 */
 	protected String key = null;
 
-//	protected static ReentrantLock arithmeticLock = new ReentrantLock();
-//	protected static ReentrantLock expiryLock = new ReentrantLock();
-
 	//--------------------------------------------------------------------------
 	//
 	// Constructor
@@ -58,21 +55,8 @@ public class Core_KeyLong implements KeyLong {
 	 * @return Long
 	 */
 	public Long incrementAndGet(Object key) {
-		Long value = main.getValue(key);
-		value = new Long(value.longValue() + 1);
-		main.putValue((String) key, value);
+		Long value = main.incrementAndGet(key);
 		return value;
-//		arithmeticLock.lock();
-//		Long returnValue = new Long(0);
-//		try{
-//			returnValue = main.getValue(key);
-//			long currentValue = returnValue.longValue() + 1;
-//			returnValue = new Long(currentValue);
-//			main.putValue((String)key, returnValue);
-//		}finally {
-//			arithmeticLock.unlock();
-//		}
-//		return returnValue;
 	}
 
 	/**
@@ -82,19 +66,8 @@ public class Core_KeyLong implements KeyLong {
 	 * @return Long
 	 */
 	public Long getAndIncrement(Object key){
-		Long value = main.getValue(key);
-		main.put((String) key, new Long(value.longValue() + 1));
+		Long value = main.getAndIncrement(key);
 		return value;
-//		arithmeticLock.lock();
-//		Long returnValue = new Long(0);
-//		try{
-//			returnValue = main.getValue(key);
-//			long currentValue = returnValue.longValue() + 1;
-//			main.putValue((String)key, new Long(currentValue));
-//		}finally {
-//			arithmeticLock.unlock();
-//		}
-//		return returnValue;
 	}
 
 	/**
@@ -104,9 +77,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @return Long
 	 */
 	public Long decrementAndGet(Object key){
-		Long value = main.getValue(key);
-		value = new Long(value.longValue() - 1);
-		main.putValue((String) key, value);
+		Long value = main.decrementAndGet(key);
 		return value;
 	}
 
@@ -117,8 +88,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @return Long
 	 */
 	public Long getAndDecrement(Object key){
-		Long value = main.getValue(key);
-		main.put((String) key, new Long(value.longValue() - 1));
+		Long value = main.getAndDecrement(key);
 		return value;
 	}
 
