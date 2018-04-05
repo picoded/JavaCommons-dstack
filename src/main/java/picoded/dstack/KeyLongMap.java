@@ -145,7 +145,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long incrementAndGet(Object key);
+	long incrementAndGet(Object key);
 
 	/**
 	 * Return the current value of the key and increment by 1
@@ -153,7 +153,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndIncrement(Object key);
+	long getAndIncrement(Object key);
 
 	/**
 	 * Decrement the value of the key and return the updated value.
@@ -161,7 +161,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long decrementAndGet(Object key);
+	long decrementAndGet(Object key);
 
 	/**
 	 * Return the current value of the key and decrement by 1
@@ -169,7 +169,20 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndDecrement(Object key);
+	long getAndDecrement(Object key);
+
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
+	boolean weakCompareAndSet(String key, Long expect, Long update);
 
 	//--------------------------------------------------------------------------
 	//
