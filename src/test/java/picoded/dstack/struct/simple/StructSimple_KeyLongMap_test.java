@@ -75,6 +75,28 @@ public class StructSimple_KeyLongMap_test {
 	}
 
 	@Test
+	public void getUnknownKey() throws Exception{
+		assertNull(null, testObj.get("nullKey"));
+	}
+
+	@Test
+	public void getValueFromExpiredKey() throws Exception{
+		long expiredTime = System.currentTimeMillis() - 5000;
+		testObj.putWithExpiry("expiredKey", 12L, expiredTime);
+
+		assertNull(testObj.getValue("expiredKey"));
+		assertNull(testObj.get("expiredKey"));
+	}
+
+	@Test
+	public void setNullValueToKey() throws Exception {
+		testObj.putValue("nullKey", null);
+
+		assertNull(testObj.get("nullKey"));
+		assertNull(testObj.getValue("nullKey"));
+	}
+
+	@Test
 	public void getExpireTime() throws Exception {
 		long expireTime = System.currentTimeMillis() * 2;
 		testObj.putWithExpiry("yes", 0L, expireTime);
@@ -94,6 +116,7 @@ public class StructSimple_KeyLongMap_test {
 		long fetchedExpireTime = testObj.getExpiry("yes");
 		assertNotNull(fetchedExpireTime);
 		assertEquals(fetchedExpireTime, newExpireTime);
+
 	}
 
 	@Test
@@ -124,6 +147,10 @@ public class StructSimple_KeyLongMap_test {
 
 		assertEquals(new HashSet<String>(Arrays.asList(new String[] { "yes", "hello" })),
 				testObj.keySet(1L));
+
+		// Search for null
+		assertEquals(new HashSet<String>(Arrays.asList(new String[] { "yes", "hello" , "this", "is"})),
+				testObj.keySet(null));
 	}
 
 	@Test
@@ -140,6 +167,20 @@ public class StructSimple_KeyLongMap_test {
 
 		// key should be null after expiration time.
 		assertEquals(null, testObj.get("yes"));
+	}
+
+	@Test
+	public void maintenanceCheckTest() throws Exception{
+		// put a key with lifespan of 100ms
+		testObj.put("shortLife", 23L);
+		testObj.get("shortLife").setLifeSpan(100);
+
+		// Ensure the life is over
+		Thread.sleep(200);
+
+		testObj.maintenance();
+
+		assertNull(testObj.get("shortLife"));
 	}
 
 }
