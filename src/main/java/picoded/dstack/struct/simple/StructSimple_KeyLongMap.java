@@ -42,7 +42,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * Handles re-entrant lock where applicable
 	 *
-	 * @param key, note that null matches ALL
+	 * @param value, note that null matches ALL
 	 *
 	 * @return array of keys
 	 **/
@@ -132,9 +132,17 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 			}
 			setExpiryRaw(key, expire);
 			return null;
-		} finally {
+		} catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}finally {
 			accessLock.writeLock().unlock();
 		}
+	}
+
+	@Override
+	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+		return false;
 	}
 
 	//--------------------------------------------------------------------------
@@ -180,7 +188,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 * Handles re-entrant lock where applicable
 	 *
 	 * @param key as String
-	 * @param expire timestamp in seconds, 0 means NO expire
+	 * @param time timestamp in seconds, 0 means NO expire
 	 *
 	 * @return long
 	 **/
