@@ -17,6 +17,7 @@ import org.junit.Test;
 
 // Test depends
 import picoded.dstack.*;
+import picoded.dstack.core.Core_FileWorkspace;
 import picoded.dstack.struct.simple.*;
 
 public class StructSimple_FileWorkspaceMap_test {
@@ -101,6 +102,19 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeByteArray("reader reading", content.getBytes());
 		String actualContent = new String(fileWorkspace.readByteArray("reader reading"));
 		assertEquals(content, actualContent);
+	}
+
+	@Test
+	public void readNonExistenceFile() {
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNull(fileWorkspace.readByteArray("unknown path"));
+		assertNull(fileWorkspace.readByteArray(null));
+	}
+
+	@Test
+	public void readNonExistenceWorkspaceAndFile() throws Exception{
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNull(fileWorkspace.readByteArray("unknown path"));
 	}
 
 	@Test

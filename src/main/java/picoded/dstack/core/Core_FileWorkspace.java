@@ -74,7 +74,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 		}
 
 		// Initialize if needed
-		if(!inMain.backend_workspaceExist(_oid)){
+		if(inMain != null && !inMain.backend_workspaceExist(_oid)){
 			inMain.init(_oid);
 		}
 

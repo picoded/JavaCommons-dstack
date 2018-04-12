@@ -77,7 +77,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 
-			if(workspace != null){
+			if(workspace != null && filepath != null){
 				return workspace.get(filepath);
 			}
 
