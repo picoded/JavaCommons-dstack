@@ -155,4 +155,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 		writeByteArray(filepath, jointData);
 	}
 
+	public void removeFile(final String filepath){
+		main.backend_removeFile(_oid, filepath);
+	}
+
 }

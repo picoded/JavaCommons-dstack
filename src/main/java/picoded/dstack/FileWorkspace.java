@@ -68,6 +68,13 @@ public interface FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	void writeByteArray(final String filepath, final byte[] data);
+
+	/**
+	 * Delete an existing file from the workspace
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	void removeFile(final String filepath);
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.

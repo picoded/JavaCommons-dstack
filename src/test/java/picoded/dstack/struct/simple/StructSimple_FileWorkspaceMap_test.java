@@ -112,9 +112,20 @@ public class StructSimple_FileWorkspaceMap_test {
 	}
 
 	@Test
-	public void readNonExistenceWorkspaceAndFile() throws Exception{
+	public void deleteExistingFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
-		assertNull(fileWorkspace.readByteArray("unknown path"));
+		fileWorkspace.writeByteArray("existingDeletion", "to be deleted".getBytes());
+		assertNotNull(fileWorkspace.fileExist("existingDeletion"));
+		fileWorkspace.removeFile("existingDeletion");
+		assertFalse(fileWorkspace.fileExist("existingDeletion"));
+	}
+
+	@Test
+	public void deleteNonExistingFile() {
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertFalse(fileWorkspace.fileExist("alreadyNotExist"));
+		fileWorkspace.removeFile("alreadyNotExist");
+		assertFalse(fileWorkspace.fileExist("alreadyNotExist"));
 	}
 
 	@Test
@@ -124,4 +135,5 @@ public class StructSimple_FileWorkspaceMap_test {
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));
 	}
+
 }

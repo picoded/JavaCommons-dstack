@@ -113,6 +113,16 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param   data to write the file with
 	 **/
 	abstract protected void backend_fileWrite(final String oid, final String filepath, final byte[] data);
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	abstract protected void backend_removeFile(final String oid, final String filepath);
 	
 	//--------------------------------------------------------------------------
 	//

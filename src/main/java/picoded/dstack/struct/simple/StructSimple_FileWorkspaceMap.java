@@ -114,6 +114,28 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 
 	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	@Override
+	protected void backend_removeFile(String oid, String filepath) {
+		try {
+			accessLock.writeLock().lock();
+
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+
+			workspace.remove(filepath);
+
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+
+	/**
 	 * The basic initialization method for newEntry() so as to create an existence object
 	 * to be searched.
 	 * E.g. In file systems, the latter inheritance will implement a mkdir method if not exist
