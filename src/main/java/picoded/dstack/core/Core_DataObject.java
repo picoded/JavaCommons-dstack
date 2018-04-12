@@ -83,10 +83,14 @@ public class Core_DataObject implements DataObject {
 		mainTable = (Core_DataObjectMap) inTable;
 		
 		// Generates a GUID if not given
-		if (inOID == null || inOID.length() < 22) {
+		if (inOID == null) {
 			// Issue a GUID
 			if (_oid == null) {
 				_oid = GUID.base58();
+			}
+
+			if(_oid.length() < 4) {
+				throw new RuntimeException("_oid should be atleast 4 character long");
 			}
 			
 			// // D= GUID collision check for LOLZ
