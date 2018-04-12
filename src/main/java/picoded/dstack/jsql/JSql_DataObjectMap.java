@@ -38,12 +38,12 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	/**
 	 * The tablename for the key value pair map
 	 **/
-	protected String DataObjectMapName = null;
+	protected String dataStorageTable = null;
 	
 	/**
 	 * The tablename the parent key
 	 **/
-	protected String baseTableName = null;
+	protected String primaryKeyTable = null;
 	
 	/**
 	 * JSql setup
@@ -54,8 +54,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	public JSql_DataObjectMap(JSql inJSql, String tablename) {
 		super();
 		sqlObj = inJSql;
-		baseTableName = "DP_" + tablename;
-		DataObjectMapName = "DD_" + tablename;
+		primaryKeyTable = "DP_" + tablename;
+		dataStorageTable = "DD_" + tablename;
 	}
 	
 	//--------------------------------------------------------------------------
@@ -130,7 +130,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// BASE Table constructor
 		//----------------------------
 		sqlObj.createTable( //
-			baseTableName, //
+			primaryKeyTable, //
 			new String[] { //
 			// Primary key, as classic int, this is used to lower SQL
 			// fragmentation level, and index memory usage. And is not accessible.
@@ -157,7 +157,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// DATA Table constructor
 		//----------------------------
 		sqlObj.createTable( //
-			DataObjectMapName, //
+			dataStorageTable, //
 			new String[] { //
 			// Primary key, as classic int, this is used to lower SQL
 			// fragmentation level, and index memory usage. And is not accessible.
@@ -203,7 +203,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// This optimizes query by object keys
 		// + oID
 		sqlObj.createIndex( //
-			baseTableName, "oID", "UNIQUE", "unq" //
+			primaryKeyTable, "oID", "UNIQUE", "unq" //
 		); //
 		
 		// This optimizes query by object keys,
@@ -212,16 +212,16 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// + oID, kID
 		// + oID, kID, idx
 		sqlObj.createIndex( //
-			DataObjectMapName, "oID, kID, idx", "UNIQUE", "unq" //
+			dataStorageTable, "oID, kID, idx", "UNIQUE", "unq" //
 		); //
 		
 		// Foreign key constraint,
 		// to migrate functionality over to JSQL class itself
 		try {
 			sqlObj.update_raw( //
-				"ALTER TABLE " + DataObjectMapName + //
-					"ADD CONSTRAINT " + DataObjectMapName + "_fk" + //
-					"FOREIGN KEY (oID) REFERENCES " + baseTableName + "(oID)" + //
+				"ALTER TABLE " + dataStorageTable + //
+					"ADD CONSTRAINT " + dataStorageTable + "_fk" + //
+					"FOREIGN KEY (oID) REFERENCES " + primaryKeyTable + "(oID)" + //
 					"ON DELETE CASCADE" // NOTE : This slows performance down
 				);
 		} catch (Exception e) {
@@ -236,14 +236,14 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// + kID
 		// + kID, nVl
 		sqlObj.createIndex( //
-			DataObjectMapName, "kID, nVl", null, "knIdx" //
+			dataStorageTable, "kID, nVl", null, "knIdx" //
 		); //
 		
 		// This optimizes for string values
 		// + kID
 		// + kID, sVl
 		sqlObj.createIndex( //
-			DataObjectMapName, "kID, sVl", null, "ksIdx" //
+			dataStorageTable, "kID, sVl", null, "ksIdx" //
 		); //
 		
 		// Full text index, for textual data
@@ -255,7 +255,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		//	);
 		//} else {
 		// sqlObj.createIndex( //
-		// 	DataObjectMapName, "tVl", null, "tVlI" // Sqlite uses normal index
+		// 	dataStorageTable, "tVl", null, "tVlI" // Sqlite uses normal index
 		// ); //
 		//}
 		
@@ -277,12 +277,12 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		
 		// // By created time
 		// sqlObj.createIndex( //
-		// 	DataObjectMapName, "cTm, kID, nVl, sVl", null, "cTm_valMap" //
+		// 	dataStorageTable, "cTm, kID, nVl, sVl", null, "cTm_valMap" //
 		// ); //
 		
 		// // By updated time
 		// sqlObj.createIndex( //
-		// 	DataObjectMapName, "uTm, kID, nVl, sVl", null, "uTm_valMap" //
+		// 	dataStorageTable, "uTm, kID, nVl, sVl", null, "uTm_valMap" //
 		// ); //
 		
 		//sqlObj.createIndex( //
@@ -298,8 +298,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
 	public void systemDestroy() {
-		sqlObj.dropTable(DataObjectMapName);
-		sqlObj.dropTable(baseTableName);
+		sqlObj.dropTable(dataStorageTable);
+		sqlObj.dropTable(primaryKeyTable);
 	}
 	
 	/**
@@ -307,8 +307,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public void clear() {
-		sqlObj.delete(DataObjectMapName);
-		sqlObj.delete(baseTableName);
+		sqlObj.delete(dataStorageTable);
+		sqlObj.delete(primaryKeyTable);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -329,10 +329,10 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	protected void DataObjectRemoteDataMap_remove(String oid) {
 		// Delete the data
-		sqlObj.delete(DataObjectMapName, "oID = ?", new Object[] { oid });
+		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { oid });
 		
 		// Delete the parent key
-		sqlObj.delete(baseTableName, "oID = ?", new Object[] { oid });
+		sqlObj.delete(primaryKeyTable, "oID = ?", new Object[] { oid });
 	}
 	
 	/**
@@ -340,7 +340,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Returns null if not exists
 	 **/
 	protected Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		return JSql_DataObjectMapUtil.JSqlObjectMapFetch(sqlObj, DataObjectMapName, _oid, null);
+		return JSql_DataObjectMapUtil.JSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
 	}
 	
 	/**
@@ -355,7 +355,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		
 		// Ensure GUID is registered
 		sqlObj.upsert( //
-			baseTableName, //
+			primaryKeyTable, //
 			new String[] { "oID" }, //
 			new Object[] { _oid }, //
 			new String[] { "uTm" }, //
@@ -366,7 +366,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			);
 		
 		// Does the data append
-		JSql_DataObjectMapUtil.JSqlObjectMapAppend(sqlObj, DataObjectMapName, _oid, fullMap, keys, true);
+		JSql_DataObjectMapUtil.JSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys, true);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -384,7 +384,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public Set<String> keySet() {
-		JSqlResult r = sqlObj.select(baseTableName, "oID");
+		JSqlResult r = sqlObj.select(primaryKeyTable, "oID");
 		if (r == null || r.get("oID") == null) {
 			return new HashSet<String>();
 		}
@@ -413,7 +413,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
-		return JSql_DataObjectMapUtil.DataObjectMapQuery_id(this, sqlObj, DataObjectMapName, whereClause,
+		return JSql_DataObjectMapUtil.DataObjectMapQuery_id(this, sqlObj, dataStorageTable, whereClause,
 			whereValues, orderByStr, offset, limit);
 	}
 	
@@ -427,7 +427,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return JSql_DataObjectMapUtil.DataObjectMapCount(this, sqlObj, DataObjectMapName, whereClause,
+		return JSql_DataObjectMapUtil.DataObjectMapCount(this, sqlObj, dataStorageTable, whereClause,
 			whereValues, null, -1, -1);
 	}
 	
@@ -450,7 +450,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public Set<String> getKeyNames(int seekDepth) {
-		JSqlResult r = sqlObj.select(DataObjectMapName, "DISTINCT kID");
+		JSqlResult r = sqlObj.select(dataStorageTable, "DISTINCT kID");
 		if (r == null || r.get("kID") == null) {
 			return new HashSet<String>();
 		}
@@ -471,7 +471,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public String randomObjectID() {
 		// Get a random ID
-		JSqlResult r = sqlObj.randomSelect(baseTableName, "oID", null, null, 1);
+		JSqlResult r = sqlObj.randomSelect(primaryKeyTable, "oID", null, null, 1);
 		
 		// No result : NULL
 		if (r == null || r.get("oID") == null || r.rowCount() <= 0) {
@@ -517,9 +517,9 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// Result set to fetch next ID
 		JSqlResult r = null;
 		if (currentID == null) {
-			r = sqlObj.select(baseTableName, "oID", null, null, "oID ASC", 1, 0);
+			r = sqlObj.select(primaryKeyTable, "oID", null, null, "oID ASC", 1, 0);
 		} else {
-			r = sqlObj.select(baseTableName, "oID", "oID > ?", new Object[] { currentID }, "oID ASC",
+			r = sqlObj.select(primaryKeyTable, "oID", "oID > ?", new Object[] { currentID }, "oID ASC",
 				1, 0);
 		}
 		
