@@ -4,9 +4,6 @@ import picoded.core.conv.ArrayConv;
 
 /**
  * Represent a file storage backend for a workspace
- * 
- * As of now this intentionally DOES NOT handle strings processing,
- * to simplify the development process of this class (until its more stable)
  */
 public interface FileWorkspace {
 
@@ -84,4 +81,13 @@ public interface FileWorkspace {
 		writeByteArray(filepath, jointData);
 	}
 
+	// @TODO - once this API is more stable
+	//
+	// + File exists check
+	// + File deletion
+	// + String handling
+	// + File copies within workspace
+	// + File moving within workspace
+	//--------------------------------------------------------------------------
+	
 }
