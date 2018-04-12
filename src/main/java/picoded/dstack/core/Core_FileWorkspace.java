@@ -1,12 +1,15 @@
 package picoded.dstack.core;
 
 // Java imports
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 // Picoded imports
+import picoded.core.conv.ArrayConv;
+import picoded.core.file.FileUtil;
 import picoded.dstack.DataObject;
 import picoded.dstack.DataObjectMap;
 import picoded.dstack.FileWorkspace;
@@ -54,7 +57,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public Core_FileWorkspace(Core_FileWorkspaceMap inMain, String inOID) {
 		// Main table to use
 		main = (Core_FileWorkspaceMap) inMain;
-		
+
 		// Generates a GUID if not given
 		if (inOID == null) {
 			// Issue a GUID
@@ -65,10 +68,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 			if(_oid.length() < 4) {
 				throw new RuntimeException("_oid should be atleast 4 character long");
 			}
+		} else {
+			// _oid setup
+			_oid = inOID;
 		}
-		
-		// _oid setup
-		_oid = inOID;
+
+		// Initialize if needed
+		if(!inMain.backend_workspaceExist(_oid)){
+			inMain.init(_oid);
+		}
+
 	}
 	
 	// FileWorkspace implementation
@@ -106,7 +115,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * 
 	 * @return the file contents, null if file does not exists
 	 */
-	byte[] readByteArray(final String filepath);
+	public byte[] readByteArray(final String filepath){
+		return main.backend_fileRead(_oid, filepath);
+	}
 
 	/**
 	 * Writes a byte array to a file creating the file if it does not exist.
@@ -116,7 +127,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to extract 
 	 * @param data the content to write to the file
 	 **/
-	void writeByteArray(final String filepath, final byte[] data);
+	public void writeByteArray(final String filepath, final byte[] data){
+		main.backend_fileWrite(_oid, filepath, data);
+	}
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
@@ -127,7 +140,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param file   the file to write to
 	 * @param data   the content to write to the file
 	 **/
-	default void appendByteArray(final String filepath, final byte[] data) {
+	public void appendByteArray(final String filepath, final byte[] data) {
 
 		// Get existing data
 		byte[] read = readByteArray(filepath);
@@ -141,6 +154,5 @@ public class Core_FileWorkspace implements FileWorkspace {
 		// Write the new joint data
 		writeByteArray(filepath, jointData);
 	}
-
 
 }
