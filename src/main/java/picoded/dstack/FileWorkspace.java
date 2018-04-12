@@ -35,6 +35,18 @@ public interface FileWorkspace {
 		return -1;
 	}
 
+	// File exists checks
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Checks if the filepath exists with a file.
+	 * 
+	 * @param  filepath in the workspace to check
+	 * 
+	 * @return true, if file exists (and writable), false if it does not. Possible a folder 
+	 */
+	boolean fileExist(final String filepath);
+
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
 	
