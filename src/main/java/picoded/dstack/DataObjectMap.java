@@ -437,8 +437,9 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 * and its iterative nature as an eventuality. The phrase looselyIterate was chosen,
 	 * to properly reflect its nature.
 	 *
-	 * Another way to phrase it, in worse case scenerio, its completely random, eventually iterating all objects
-	 * In best case scenerio, it does proper iteration as per normal.
+	 * Another way to phrase it, in worse case scenerio, its completely random, 
+	 * eventually iterating all objects. In best case scenerio, it does proper 
+	 * iteration as per normal.
 	 *
 	 * @param   Current object ID, can be NULL
 	 *
