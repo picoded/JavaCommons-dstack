@@ -93,6 +93,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 			accessLock.readLock().lock();
 
 			Long val = longMap.get(key);
+
 			if (val == null) {
 				return null;
 			}
@@ -124,6 +125,10 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	protected Long setValueRaw(String key, Long value, long expire) {
 		try {
 			accessLock.writeLock().lock();
+
+			if(key == null || key.isEmpty()){
+				return null;
+			}
 			if (value == null) {
 				longMap.remove(key);
 				expireMap.remove(key);
@@ -141,8 +146,18 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	}
 
 	@Override
+	public Long addAndGet(Object key, Object delta) {
+		return super.addAndGet(key, delta);
+	}
+
+	@Override
+	public Long getAndAdd(Object key, Object delta) {
+		return super.getAndAdd(key, delta);
+	}
+
+	@Override
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		return false;
+		return super.weakCompareAndSet(key, expect, update);
 	}
 
 	//--------------------------------------------------------------------------
