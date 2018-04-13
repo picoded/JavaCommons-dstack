@@ -154,6 +154,57 @@ public class StructSimple_KeyLongMap_test {
 	}
 
 	@Test
+	public void weakCompareAndSetTest() throws Exception {
+		testObj.put("first", 3L);
+		boolean result = testObj.weakCompareAndSet("first", 3L, 4L);
+		assertTrue(result);
+		assertEquals(4L, testObj.getValue("first").longValue());
+
+		result = testObj.weakCompareAndSet("first", 3L, 5L);
+		assertFalse(result);
+
+		result = testObj.weakCompareAndSet("unknown value", null, 3L);
+		assertTrue(result);
+		assertEquals(3L, testObj.getValue("unknown value").longValue());
+
+		result = testObj.weakCompareAndSet("unknown value", 3L, 5L);
+		assertTrue(result);
+		assertEquals(5L, testObj.getValue("unknown value").longValue());
+	}
+
+	@Test
+	public void incrementAndGet() throws Exception {
+		testObj.put("incrementAndGet", 4L);
+		long value = testObj.incrementAndGet("incrementAndGet");
+		assertEquals(5L, value);
+		assertEquals(5L, testObj.getValue("incrementAndGet").longValue());
+	}
+
+	@Test
+	public void getAndIncrement() throws Exception {
+		testObj.put("getAndIncrement", 4L);
+		long value = testObj.getAndIncrement("getAndIncrement");
+		assertEquals(4L, value);
+		assertEquals(5L, testObj.getValue("getAndIncrement").longValue());
+	}
+
+	@Test
+	public void decrementAndGet() throws Exception {
+		testObj.put("decrementAndGet", 4L);
+		long value = testObj.decrementAndGet("decrementAndGet");
+		assertEquals(3L, value);
+		assertEquals(3L, testObj.getValue("decrementAndGet").longValue());
+	}
+
+	@Test
+	public void getAndDecrement() throws Exception {
+		testObj.put("getAndDecrement", 4L);
+		long value = testObj.getAndDecrement("getAndDecrement");
+		assertEquals(4L, value);
+		assertEquals(3L, testObj.getValue("getAndDecrement").longValue());
+	}
+
+	@Test
 	public void SLOW_testColumnExpiration() throws Exception {
 		// set column expiration time to current time + 1 secs.
 		long expirationTime = System.currentTimeMillis() + 1 * 1000;

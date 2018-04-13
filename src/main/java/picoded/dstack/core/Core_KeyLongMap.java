@@ -1,5 +1,6 @@
 package picoded.dstack.core;
 
+import picoded.core.conv.GenericConvert;
 import picoded.dstack.KeyLong;
 import picoded.dstack.KeyLongMap;
 
@@ -141,54 +142,30 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	//
 	//--------------------------------------------------------------------------
 
-	/**
-	 * Increment the value of the key and return the updated value.
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public long incrementAndGet(Object key) {
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		value = new Long(value.longValue() + 1);
-		setValueRaw((String) key, value, 0);
-		return value.longValue();
+	public Long addAndGet(Object key, Object delta) {
+
+		long deltaLn = GenericConvert.toLong(delta, 0);
+		Long res = getAndAdd(key, deltaLn);
+		if (res == null) {
+			return null;
+		}
+		return res.longValue() + deltaLn;
+
 	}
 
-	/**
-	 * Return the current value of the key and increment by 1
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public long getAndIncrement(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		setValueRaw((String) key, new Long(value.longValue() + 1), 0);
-		return value.longValue();
-	}
+	public Long getAndAdd(Object key, Object delta) {
 
-	/**
-	 * Decrement the value of the key and return the updated value.
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public long decrementAndGet(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		value = new Long(value.longValue() - 1);
-		setValueRaw((String) key, value, 0);
-		return value.longValue();
-	}
+		Long oldVal = getValue(key);
 
-	/**
-	 * Return the current value of the key and decrement by 1
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public long getAndDecrement(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		setValueRaw((String) key, new Long(value.longValue() - 1), 0);
-		return value.longValue();
+		// Assume 0, if old value does not exists
+		if (oldVal == null) {
+			oldVal = (Long) 0l;
+		}
+
+		Long newVal = oldVal.longValue() + GenericConvert.toNumber(delta).longValue();
+		setValueRaw(key.toString(), newVal, System.currentTimeMillis());
+
+		return oldVal;
 	}
 
 	/**
@@ -203,7 +180,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 * @return true if successful
 	 **/
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		Long curVal = getValueRaw(key, System.currentTimeMillis());
+		Long curVal = getValue( key );
 
 		//if current value is equal to expected value, set to new value
 		if (curVal != null && curVal.longValue() == expect.longValue()) {
