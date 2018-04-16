@@ -115,14 +115,25 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	protected Long setValueRaw(String key, Long value, long expire){
 		long now = System.currentTimeMillis();
-		sqlObj.upsert( //
-				keyLongMapName, //
-				new String[] { "kID" }, //unique cols
-				new Object[] { key }, //unique value
-				//
-				new String[] { "cTm", "eTm", "kVl" }, //insert cols
-				new Object[] { now, expire, value.longValue() } //insert values
-		);
+
+		// Null values are returned and not added to the database
+		if(value == null){
+			return null;
+		}
+
+		try{
+			sqlObj.upsert( //
+					keyLongMapName, //
+					new String[] { "kID" }, //unique cols
+					new Object[] { key }, //unique value
+					//
+					new String[] { "cTm", "eTm", "kVl" }, //insert cols
+					new Object[] { now, expire, value.longValue() } //insert values
+			);
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
+
 
 		return null;
 	}
@@ -157,6 +168,67 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	public void setExpiryRaw(String key, long expire){
 		sqlObj.update("UPDATE " + keyLongMapName + " SET eTm=? WHERE kID=?", expire, key);
+	}
+
+	public Long getAndAdd(Object key, Object delta) {
+		// Tries limits
+		int limit = 100;
+		int tries = 0;
+
+		// Try 100 tries
+		while (tries < limit) {
+			// Get the "old" value
+			JSqlResult r = sqlObj.select(keyLongMapName, "*", "kID = ?", new Object[] { key });
+
+			Long oldVal = null;
+			if (r.get("kVl") != null && r.get("kVl").length > 0 && r.get("kVl")[0] != null) {
+				oldVal = GenericConvert.toLong(r.get("kVl")[0], 0);
+			} else {
+				oldVal = 0l;
+			}
+			Long newVal = oldVal.longValue() + GenericConvert.toLong(delta, 0);
+
+			// If old value holds true, update to new value
+			if (weakCompareAndSet(key.toString(), oldVal, newVal)) {
+				return oldVal; //return old value on success
+			}
+			tries++;
+		}
+
+		throw new RuntimeException("Max tries reached : " + tries);
+	}
+
+	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+
+		// Potentially a new upsert, ensure there is something to "delete" atleast
+		if (expect == null || expect == 0l) {
+			// Does a blank upsert, with default values (No actual insert)
+			long now = System.currentTimeMillis();
+			try {
+				sqlObj.upsert( //
+						keyLongMapName, // unique key
+						new String[] { "kID" }, //unique cols
+						new Object[] { key }, //unique value
+						// insert (ignore)
+						null, null,
+						// default value
+
+						new String[] { "cTm", "eTm", "kVl" }, //insert cols
+						new Object[] { now, 0l, 0l }, //insert values
+						// misc (ignore)
+						null);
+			} catch (JSqlException e) {
+				// silenced exception, if value already exists,
+				// the update call will work anyway
+			}
+			// Expect is now atleast 0
+			expect = 0l;
+		}
+
+		// Does the update from 0
+		JSqlResult r = sqlObj.query("UPDATE " + keyLongMapName
+				+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
+		return (r.affectedRows() > 0);
 	}
 
 
