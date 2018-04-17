@@ -29,6 +29,25 @@ import picoded.core.struct.GenericConvertMap;
  * Read / query performance can however be heavily mintigated by the inclusion
  * of a JCache layer for non-complex lookup cached reads. Which will in most cases be the main
  * read request load.
+ * 
+ * The following are the key considerations
+ * 
+ * + Query by SQL style queries
+ * + Storage of arbitary data values
+ * + Reasonable level of performance trade off
+ * 
+ * The following are things to note
+ * 
+ * + Internally it flatten nested objects as individual key value pairs
+ * + Lists are treated as arrays internally
+ * 
+ * Gotcha's
+ * 
+ * + You must call the put command on changed values, for changes to be detected.
+ * + While it is possible to store large binary data (its supported), it should be heavily avoided
+ *   as objects are cached and used in its complete form. Resulting to large overheads for raw binary data.
+ * + NULL values are treated as "deleted" values
+ * 
  **/
 public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>, CommonStructure {
 	
