@@ -120,7 +120,7 @@ dependencies {
 //
 jar {
 	// Archive name overwrite
-	archiveName = project.name+"-"+project.version+""+".jar"
+	archiveName = project.name+"-"+project.version+"-nodep"+".jar"
 	description = "Build the "+archiveName+" with no dependencies"
 
 	// Inherit the main jar manifest
