@@ -15,6 +15,7 @@ import org.apache.commons.lang3.RandomUtils;
 // Picoded imports
 import picoded.core.struct.template.UnsupportedDefaultMap;
 import picoded.core.struct.query.Query;
+import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
 import picoded.dstack.core.Core_DataObject;
 import picoded.core.struct.GenericConvertMap;
 
@@ -49,7 +50,11 @@ import picoded.core.struct.GenericConvertMap;
  * + NULL values are treated as "deleted" values
  * 
  **/
-public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>, CommonStructure {
+public interface DataObjectMap extends 
+	UnsupportedDefaultMap<String, DataObject>, 
+	CommonStructure, 
+	CollectionQueryForIDInterface<String,DataObject>
+{
 	
 	// DataObject optimizations
 	//----------------------------------------------
@@ -138,33 +143,9 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		return retArr;
 	}
 	
-	// Query operations (to optimize on specific implementation)
+	// Query and aggregation operations (to optimize on specific implementation)
+	// NOTE: Interface is inherited from CollectionQueryForIDInterface
 	//--------------------------------------------------------------------------
-	
-	/**
-	 * Performs a search query, and returns the respective DataObjects
-	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 *
-	 * @return  The DataObject[] array
-	 **/
-	default DataObject[] query(String whereClause, Object[] whereValues) {
-		return query(whereClause, whereValues, null, 0, 0);
-	}
-	
-	/**
-	 * Performs a search query, and returns the respective DataObjects
-	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 * @param   query string to sort the order by, use null to ignore
-	 *
-	 * @return  The DataObject[] array
-	 **/
-	default DataObject[] query(String whereClause, Object[] whereValues, String orderByStr) {
-		return query(whereClause, whereValues, orderByStr, 0, 0);
-	}
 	
 	/**
 	 * Performs a search query, and returns the respective DataObjects
@@ -180,35 +161,6 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	default DataObject[] query(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
 		return getArrayFromID(query_id(whereClause, whereValues, orderByStr, offset, limit), true);
-	}
-	
-	/**
-	 * Performs a search query, and returns the respective DataObject keys.
-	 *
-	 * This is the GUID key varient of query, this is critical for stack lookup
-	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 *
-	 * @return  The String[] array
-	 **/
-	default String[] query_id(String whereClause, Object[] whereValues) {
-		return query_id(whereClause, whereValues, null, -1, -1);
-	}
-	
-	/**
-	 * Performs a search query, and returns the respective DataObject keys.
-	 *
-	 * This is the GUID key varient of query, this is critical for stack lookup
-	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 * @param   query string to sort the order by, use null to ignore
-	 *
-	 * @return  The String[] array
-	 **/
-	default String[] query_id(String whereClause, Object[] whereValues, String orderByStr) {
-		return query_id(whereClause, whereValues, orderByStr, -1, -1);
 	}
 	
 	/**
