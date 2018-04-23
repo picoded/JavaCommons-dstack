@@ -313,7 +313,8 @@ public class Core_DataObject implements DataObject {
 		// Get from delta changes, if exists
 		Object ret = deltaDataMap.get(key);
 		
-		// Get from incomplete map, exists
+		// Get from incomplete map, if it exists
+		// This helps optimize calls done after a "query"
 		if (ret == null && remoteDataMap != null && !isCompleteRemoteDataMap) {
 			ret = remoteDataMap.get(key);
 		}
@@ -330,7 +331,7 @@ public class Core_DataObject implements DataObject {
 		}
 		
 		// Returns valid value
-		return ret;
+		return Core_DataObjectMap.detachValue( ret );
 	}
 	
 	/**

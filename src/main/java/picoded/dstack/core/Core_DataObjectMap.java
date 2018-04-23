@@ -31,6 +31,13 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	
 	/**
 	 * Ensures the returned value is not refrencing the input value, cloning if needed
+	 * 
+	 * This is understandably CPU / ram inefficent, one possible solution,
+	 * for Map / List implementation, is to create and return a Map / List
+	 * proxy, which only "saves" the delta changes or performs a clone of its
+	 * internal structure on a put request.
+	 * 
+	 * As such no "cloning" would occur on a normal basis
 	 *
 	 * @return  The cloned value, with no risk of modifying the original.
 	 **/
