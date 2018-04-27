@@ -88,6 +88,9 @@ public enum Core_DataType {
 	
 	//
 	// Array based, varients of above
+	//
+	// NOTE : THIS IS NOT IMPLEMENTED NOR USED AS OF NOW
+	//
 	//--------------------------------------------------------------------
 	UUID_ARRAY(511), DataTable_ARRAY(512),
 	
