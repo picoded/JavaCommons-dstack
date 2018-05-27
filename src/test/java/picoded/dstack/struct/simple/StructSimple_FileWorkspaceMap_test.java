@@ -72,7 +72,6 @@ public class StructSimple_FileWorkspaceMap_test {
 	@Test
 	public void workspaceExistence() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
-		System.out.println(fileWorkspace._oid());
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		assertNull(testObj.get("unknown value"));
 	}
