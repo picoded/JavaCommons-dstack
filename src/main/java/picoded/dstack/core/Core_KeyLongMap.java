@@ -1,5 +1,6 @@
 package picoded.dstack.core;
 
+import picoded.core.conv.GenericConvert;
 import picoded.dstack.KeyLong;
 import picoded.dstack.KeyLongMap;
 
@@ -94,7 +95,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return long
 	 **/
-	abstract public void setExpiryRaw(String key, long time);
+	abstract public void setExpiryRaw(String key, long expire);
 
 	//--------------------------------------------------------------------------
 	//
@@ -141,54 +142,57 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	//
 	//--------------------------------------------------------------------------
 
-	/**
-	 * Increment the value of the key and return the updated value.
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public Long incrementAndGet(Object key) {
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		value = new Long(value.longValue() + 1);
-		setValueRaw((String) key, value, 0);
-		return value;
+	public Long addAndGet(Object key, Object delta) {
+
+		long deltaLn = GenericConvert.toLong(delta, 0);
+		Long res = getAndAdd(key, deltaLn);
+		if (res == null) {
+			return null;
+		}
+		return res.longValue() + deltaLn;
+
+	}
+
+	public Long getAndAdd(Object key, Object delta) {
+
+		Long oldVal = getValue(key);
+
+		// Assume 0, if old value does not exists
+		if (oldVal == null) {
+			oldVal = (Long) 0l;
+		}
+
+		Long newVal = oldVal.longValue() + GenericConvert.toNumber(delta).longValue();
+		setValueRaw(key.toString(), newVal, System.currentTimeMillis());
+
+		return oldVal;
 	}
 
 	/**
-	 * Return the current value of the key and increment by 1
+	 * Stores (and overwrites if needed) key, value pair
 	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public Long getAndIncrement(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		setValueRaw((String) key, new Long(value.longValue() + 1), 0);
-		return value;
-	}
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
+	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+		Long curVal = getValue( key );
 
-	/**
-	 * Decrement the value of the key and return the updated value.
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public Long decrementAndGet(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		value = new Long(value.longValue() - 1);
-		setValueRaw((String) key, value, 0);
-		return value;
-	}
+		//if current value is equal to expected value, set to new value
+		if (curVal != null && curVal.longValue() == expect.longValue()) {
+			setValueRaw(key, update, 0);
+			return true;
+		} else if (curVal == null || curVal.longValue() == 0l) {
+			setValueRaw(key, update, 0);
+			return true;
+		} else {
+			return false;
+		}
 
-	/**
-	 * Return the current value of the key and decrement by 1
-	 *
-	 * @param key to retrieve
-	 * @return Long
-	 */
-	public Long getAndDecrement(Object key){
-		Long value = getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
-		setValueRaw((String) key, new Long(value.longValue() - 1), 0);
-		return value;
 	}
 
 	//--------------------------------------------------------------------------
@@ -247,8 +251,8 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 * @param expire timestamp in seconds, 0 means NO expire
 	 **/
 	@Override
-	public void setExpiry(String key, long time) {
-		setExpiryRaw(key, time);
+	public void setExpiry(String key, long expire) {
+		setExpiryRaw(key, expire);
 	}
 
 	/**

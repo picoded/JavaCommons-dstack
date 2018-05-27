@@ -138,6 +138,25 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	//
 	//--------------------------------------------------------------------------
 
+	/**
+	 * Returns the value, given the key
+	 *
+	 * @param key param find the meta key
+	 * @param delta value to add
+	 *
+	 * @return  value of the given key after adding
+	 **/
+	Long addAndGet(Object key, Object delta);
+
+	/**
+	 * Returns the value, given the key. Then apply the delta change
+	 *
+	 * @param key param find the meta key
+	 * @param delta value to add
+	 *
+	 * @return  value of the given key, note that it returns 0 if there wasnt a previous value set
+	 **/
+	Long getAndAdd(Object key, Object delta);
 
 	/**
 	 * Increment the value of the key and return the updated value.
@@ -145,7 +164,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long incrementAndGet(Object key);
+	default Long incrementAndGet(Object key) { return addAndGet(key, 1); }
 
 	/**
 	 * Return the current value of the key and increment by 1
@@ -153,7 +172,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndIncrement(Object key);
+	default Long getAndIncrement(Object key) { return getAndAdd(key, 1); }
 
 	/**
 	 * Decrement the value of the key and return the updated value.
@@ -161,7 +180,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long decrementAndGet(Object key);
+	default Long decrementAndGet(Object key) { return addAndGet(key, -1); }
 
 	/**
 	 * Return the current value of the key and decrement by 1
@@ -169,7 +188,20 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndDecrement(Object key);
+	default Long getAndDecrement(Object key) { return getAndAdd(key, -1); }
+
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
+	boolean weakCompareAndSet(String key, Long expect, Long update);
 
 	//--------------------------------------------------------------------------
 	//

@@ -42,7 +42,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * Handles re-entrant lock where applicable
 	 *
-	 * @param key, note that null matches ALL
+	 * @param value, note that null matches ALL
 	 *
 	 * @return array of keys
 	 **/
@@ -93,6 +93,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 			accessLock.readLock().lock();
 
 			Long val = longMap.get(key);
+
 			if (val == null) {
 				return null;
 			}
@@ -124,6 +125,10 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	protected Long setValueRaw(String key, Long value, long expire) {
 		try {
 			accessLock.writeLock().lock();
+
+			if(key == null || key.isEmpty()){
+				return null;
+			}
 			if (value == null) {
 				longMap.remove(key);
 				expireMap.remove(key);
@@ -132,9 +137,27 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 			}
 			setExpiryRaw(key, expire);
 			return null;
-		} finally {
+		} catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}finally {
 			accessLock.writeLock().unlock();
 		}
+	}
+
+	@Override
+	public Long addAndGet(Object key, Object delta) {
+		return super.addAndGet(key, delta);
+	}
+
+	@Override
+	public Long getAndAdd(Object key, Object delta) {
+		return super.getAndAdd(key, delta);
+	}
+
+	@Override
+	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+		return super.weakCompareAndSet(key, expect, update);
 	}
 
 	//--------------------------------------------------------------------------
@@ -180,7 +203,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 * Handles re-entrant lock where applicable
 	 *
 	 * @param key as String
-	 * @param expire timestamp in seconds, 0 means NO expire
+	 * @param time timestamp in seconds, 0 means NO expire
 	 *
 	 * @return long
 	 **/
