@@ -111,7 +111,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 			}
 			Map<String, Object> ret = new HashMap<String, Object>();
 			for (Entry<String, Object> entry : storedValue.entrySet()) {
-				ret.put(entry.getKey(), detachValue(storedValue.get(entry.getKey())));
+				ret.put(entry.getKey(), deepCopy(storedValue.get(entry.getKey())));
 			}
 			return ret;
 		} finally {

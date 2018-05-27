@@ -331,7 +331,7 @@ public class Core_DataObject implements DataObject {
 		}
 		
 		// Returns valid value
-		return Core_DataObjectMap.detachValue( ret );
+		return Core_DataObjectMap.deepCopy( ret );
 	}
 	
 	/**

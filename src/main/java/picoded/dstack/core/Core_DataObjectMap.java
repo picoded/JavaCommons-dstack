@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.Set;
 
 // Picoded imports
-import picoded.core.conv.ConvertJSON;
+import picoded.core.conv.GenericConvert;
+import picoded.core.conv.NestedObjectUtil;
 import picoded.core.common.ObjectToken;
 import picoded.core.struct.query.*;
 import picoded.dstack.*;
@@ -32,8 +33,10 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	/**
 	 * Ensures the returned value is not refrencing the input value, cloning if needed
 	 * 
-	 * This is understandably CPU / ram inefficent, one possible solution,
-	 * for Map / List implementation, is to create and return a Map / List
+	 * This is understandably currently a CPU / ram inefficent,solution,
+	 * for Map / List implementation.
+	 * 
+	 * A possible solution in the future is to create and return a Map / List
 	 * proxy, which only "saves" the delta changes or performs a clone of its
 	 * internal structure on a put request.
 	 * 
@@ -41,16 +44,8 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 *
 	 * @return  The cloned value, with no risk of modifying the original.
 	 **/
-	static public Object detachValue(Object in) {
-		if (in instanceof byte[]) { //bytearray support
-			byte[] ori = (byte[]) in;
-			byte[] cop = new byte[ori.length];
-			for (int a = 0; a < ori.length; ++a) {
-				cop[a] = ori[a];
-			}
-			return cop;
-		}
-		return ConvertJSON.toObject(ConvertJSON.fromObject(in));
+	static public Object deepCopy(Object in) {
+		return NestedObjectUtil.deepCopy(in);
 	}
 	
 	//--------------------------------------------------------------------------
