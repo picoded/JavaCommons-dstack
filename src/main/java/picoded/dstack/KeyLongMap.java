@@ -3,6 +3,19 @@ package picoded.dstack;
 import java.util.Set;
 import picoded.core.struct.GenericConvertMap;
 
+/**
+ * Reference interface of KeyLongMap Map data structure
+ *
+ * This is intended to be an optimized key numeric map data storage
+ * Used mainly in caching or performance critical scenerios, with atomic support
+ *
+ * As such its sacrifices much utility for performance (eg: lack of query support)
+ *
+ * Note : expire timestamps are measured in milliseconds.
+ * 
+ * Note : KeyLong class simply serves as a convinence means to pass the 
+ *        value representation without passing the whole map. 
+ **/
 public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonStructure {
 
 	//--------------------------------------------------------------------------
