@@ -26,113 +26,6 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	
 	//--------------------------------------------------------------------------
 	//
-	// Generic Utility functions
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Ensures the returned value is not refrencing the input value, cloning if needed
-	 * 
-	 * This is understandably currently a CPU / ram inefficent,solution,
-	 * for Map / List implementation.
-	 * 
-	 * A possible solution in the future is to create and return a Map / List
-	 * proxy, which only "saves" the delta changes or performs a clone of its
-	 * internal structure on a put request.
-	 * 
-	 * As such no "cloning" would occur on a normal basis
-	 *
-	 * @return  The cloned value, with no risk of modifying the original.
-	 **/
-	static public Object deepCopy(Object in) {
-		return NestedObjectUtil.deepCopy(in);
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// Query Utility functions
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Utility funciton, used to sort and limit the result of a query
-	 *
-	 * @param   list of DataObject to sort and return
-	 * @param   query string to sort the order by, use null to ignore
-	 * @param   offset of the result to display, use -1 to ignore
-	 * @param   number of objects to return max
-	 *
-	 * @return  The DataObject list to return
-	 **/
-	public static List<DataObject> sortAndOffsetList(List<DataObject> retList, String orderByStr,
-		int offset, int limit) {
-		
-		// Sorting the order, if needed
-		if (orderByStr != null && (orderByStr = orderByStr.trim()).length() > 0) {
-			// Creates the order by sorting, with _oid
-			OrderBy<DataObject> sorter = new OrderBy<DataObject>(orderByStr + " , _oid");
-			
-			// Sort it
-			Collections.sort(retList, sorter);
-		}
-		
-		// Get sublist if needed
-		if (offset >= 1 || limit >= 1) {
-			int size = retList.size();
-			
-			// Out of bound, return blank
-			if (offset >= size) {
-				return new ArrayList<DataObject>();
-			}
-			
-			// Ensures the upper end does not go out of bound
-			int end = size;
-			if (limit > -1) {
-				end = offset + limit;
-			}
-			if (end > size) {
-				end = size;
-			}
-			
-			// // Out of range
-			// if (end <= offset) {
-			// 	return new DataObject[0];
-			// }
-			
-			// Get sublist
-			retList = retList.subList(offset, end);
-		}
-		
-		// Returns the list, you can easily convert to an array via "toArray(new DataObject[0])"
-		return retList;
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// DataObject removal
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Removes a DataObject if it exists, from the DB
-	 *
-	 * @param  object GUID to fetch, OR the DataObject itself
-	 *
-	 * @return NULL
-	 **/
-	public DataObject remove(Object key) {
-		if (key instanceof DataObject) {
-			// Removal via DataObject itself
-			DataObjectRemoteDataMap_remove(((DataObject) key)._oid());
-		} else {
-			// Remove using the ID
-			DataObjectRemoteDataMap_remove(key.toString());
-		}
-		return null;
-	}
-
-	//--------------------------------------------------------------------------
-	//
 	// Functions, used by DataObject
 	// [Internal use, to be extended in future implementation]
 	//
@@ -251,6 +144,113 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 		return sortAndOffsetList(retList, orderByStr, offset, limit).toArray(new DataObject[0]);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Generic Utility functions
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Ensures the returned value is not refrencing the input value, cloning if needed
+	 * 
+	 * This is understandably currently a CPU / ram inefficent,solution,
+	 * for Map / List implementation.
+	 * 
+	 * A possible solution in the future is to create and return a Map / List
+	 * proxy, which only "saves" the delta changes or performs a clone of its
+	 * internal structure on a put request.
+	 * 
+	 * As such no "cloning" would occur on a normal basis
+	 *
+	 * @return  The cloned value, with no risk of modifying the original.
+	 **/
+	static public Object deepCopy(Object in) {
+		return NestedObjectUtil.deepCopy(in);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Query Utility functions
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Utility funciton, used to sort and limit the result of a query
+	 *
+	 * @param   list of DataObject to sort and return
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max
+	 *
+	 * @return  The DataObject list to return
+	 **/
+	public static List<DataObject> sortAndOffsetList(List<DataObject> retList, String orderByStr,
+		int offset, int limit) {
+		
+		// Sorting the order, if needed
+		if (orderByStr != null && (orderByStr = orderByStr.trim()).length() > 0) {
+			// Creates the order by sorting, with _oid
+			OrderBy<DataObject> sorter = new OrderBy<DataObject>(orderByStr + " , _oid");
+			
+			// Sort it
+			Collections.sort(retList, sorter);
+		}
+		
+		// Get sublist if needed
+		if (offset >= 1 || limit >= 1) {
+			int size = retList.size();
+			
+			// Out of bound, return blank
+			if (offset >= size) {
+				return new ArrayList<DataObject>();
+			}
+			
+			// Ensures the upper end does not go out of bound
+			int end = size;
+			if (limit > -1) {
+				end = offset + limit;
+			}
+			if (end > size) {
+				end = size;
+			}
+			
+			// // Out of range
+			// if (end <= offset) {
+			// 	return new DataObject[0];
+			// }
+			
+			// Get sublist
+			retList = retList.subList(offset, end);
+		}
+		
+		// Returns the list, you can easily convert to an array via "toArray(new DataObject[0])"
+		return retList;
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// DataObject removal
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Removes a DataObject if it exists, from the DB
+	 *
+	 * @param  object GUID to fetch, OR the DataObject itself
+	 *
+	 * @return NULL
+	 **/
+	public DataObject remove(Object key) {
+		if (key instanceof DataObject) {
+			// Removal via DataObject itself
+			DataObjectRemoteDataMap_remove(((DataObject) key)._oid());
+		} else {
+			// Remove using the ID
+			DataObjectRemoteDataMap_remove(key.toString());
+		}
+		return null;
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// DataObject operations
