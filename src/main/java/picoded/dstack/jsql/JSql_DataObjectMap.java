@@ -340,7 +340,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Returns null if not exists
 	 **/
 	protected Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		return JSql_DataObjectMapUtil.JSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
+		return JSql_DataObjectMapUtil.jSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
 	}
 	
 	/**
@@ -366,7 +366,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			);
 		
 		// Does the data append
-		JSql_DataObjectMapUtil.JSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys, true);
+		JSql_DataObjectMapUtil.jSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys, true);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -413,7 +413,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
-		return JSql_DataObjectMapUtil.DataObjectMapQuery_id(this, sqlObj, dataStorageTable, whereClause,
+		return JSql_DataObjectMapUtil.dataObjectMapQuery_id(this, sqlObj, dataStorageTable, whereClause,
 			whereValues, orderByStr, offset, limit);
 	}
 	
@@ -427,7 +427,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return JSql_DataObjectMapUtil.DataObjectMapCount(this, sqlObj, dataStorageTable, whereClause,
+		return JSql_DataObjectMapUtil.dataObjectMapCount(this, sqlObj, dataStorageTable, whereClause,
 			whereValues, null, -1, -1);
 	}
 	
