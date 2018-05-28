@@ -13,6 +13,7 @@ import picoded.dstack.DataObjectMap;
 import picoded.dstack.DataObject;
 import picoded.dstack.core.Core_DataObjectMap;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.query.Query;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.dstack.jsql.connector.*;
 import picoded.core.conv.ListValueConv;
@@ -402,19 +403,28 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * This is the GUID key varient of query, this is critical for stack lookup
 	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 * @param   query string to sort the order by, use null to ignore
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
 	 * @param   offset of the result to display, use -1 to ignore
 	 * @param   number of objects to return max, use -1 to ignore
 	 *
 	 * @return  The String[] array
 	 **/
-	@Override
-	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
+	public String[] query_id(Query queryClause, String orderByStr,
 		int offset, int limit) {
-		return JSql_DataObjectMapUtil.dataObjectMapQuery_id(this, sqlObj, dataStorageTable, whereClause,
-			whereValues, orderByStr, offset, limit);
+		if(queryClause == null) {
+			return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
+				this, sqlObj, dataStorageTable, //
+				null, null, //
+				orderByStr, offset, limit //
+			);
+		}
+		return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
+			this, sqlObj, dataStorageTable, //
+			queryClause.toSqlString(), //
+			queryClause.queryArgumentsArray(), //
+			orderByStr, offset, limit //
+		);
 	}
 	
 	/**
