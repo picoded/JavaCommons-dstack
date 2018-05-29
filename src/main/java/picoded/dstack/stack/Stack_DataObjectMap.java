@@ -170,8 +170,9 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 
 		// Assert that it has an _oid clause, and no OR clause
 		// if it doesnt, return null
-		int oidQueryPos = whereClause.indexOf("_oid = ?");
-		if( oidQueryPos < 0 || !whereClause.contains("OR") ) {
+		String oidQuery = "\"_oid\" = ?";
+		int oidQueryPos = whereClause.indexOf(oidQuery);
+		if( oidQueryPos < 0 || whereClause.contains("OR") ) {
 			return null;
 		}
 
@@ -179,9 +180,12 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 		// now is to find the argument index position
 		int argumentIndex = 0;
 		int argumentPos = whereClause.indexOf("?");
-		while( argumentPos > 0 && argumentPos != oidQueryPos+7) {
+		int targetPos = oidQueryPos+oidQuery.length()-1;
+
+		// Iterate possible ? positions, till its actual index is found
+		while( argumentPos > 0 && argumentPos < targetPos ) {
 			++argumentIndex;
-			argumentPos = whereClause.indexOf("?", argumentPos);
+			argumentPos = whereClause.indexOf("?", argumentPos+1);
 		}
 
 		// Get the query argument to use, and get directly
