@@ -334,7 +334,6 @@ public interface DataObjectMap extends
 	//--------------------------------------------------------------------------
 	
 	/**
-	 *
 	 * Removes all data, without tearing down setup
 	 *
 	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"

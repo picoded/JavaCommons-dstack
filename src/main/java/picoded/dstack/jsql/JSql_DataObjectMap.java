@@ -328,7 +328,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * @return  nothing
 	 **/
-	protected void DataObjectRemoteDataMap_remove(String oid) {
+	public void DataObjectRemoteDataMap_remove(String oid) {
 		// Delete the data
 		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { oid });
 		
@@ -340,7 +340,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Gets the complete remote data map, for DataObject.
 	 * Returns null if not exists
 	 **/
-	protected Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
+	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
 		return JSql_DataObjectMapUtil.jSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
 	}
 	
@@ -348,7 +348,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Updates the actual backend storage of DataObject
 	 * either partially (if supported / used), or completely
 	 **/
-	protected void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
+	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		
 		// Curent timestamp

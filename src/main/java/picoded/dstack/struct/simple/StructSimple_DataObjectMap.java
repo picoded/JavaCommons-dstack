@@ -88,7 +88,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * @return  nothing
 	 **/
-	protected void DataObjectRemoteDataMap_remove(String oid) {
+	public void DataObjectRemoteDataMap_remove(String oid) {
 		try {
 			accessLock.writeLock().lock();
 			valueMap.remove(oid);
@@ -102,7 +102,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Gets the complete remote data map, for DataObject.
 	 * Returns null if not exists
 	 **/
-	protected Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
+	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
 		try {
 			accessLock.readLock().lock();
 			Map<String, Object> storedValue = valueMap.get(oid);
@@ -123,7 +123,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Updates the actual backend storage of DataObject
 	 * either partially (if supported / used), or completely
 	 **/
-	protected void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
+	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		try {
 			accessLock.writeLock().lock();

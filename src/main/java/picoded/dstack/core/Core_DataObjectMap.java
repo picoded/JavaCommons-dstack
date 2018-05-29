@@ -41,7 +41,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 *
 	 * @return nothing
 	 **/
-	abstract protected void DataObjectRemoteDataMap_remove(String oid);
+	abstract public void DataObjectRemoteDataMap_remove(String oid);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -53,7 +53,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 *
 	 * @return  The raw Map object to build the DataObject, null if does not exists
 	 **/
-	abstract protected Map<String, Object> DataObjectRemoteDataMap_get(String oid);
+	abstract public Map<String, Object> DataObjectRemoteDataMap_get(String oid);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -65,7 +65,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 * @param   The full map of data. This is required as not all backend implementations allow partial update
 	 * @param   Keys to update, this is used to optimize certain backends
 	 **/
-	abstract protected void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
+	abstract public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys);
 	
 	//--------------------------------------------------------------------------
@@ -83,6 +83,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 * @param   where query statement
 	 * @param   where clause values array
 	 * @param   query string to sort the order by, use null to ignore
+	 * @param   orderByStr string to sort the order by, use null to ignore
 	 * @param   offset of the result to display, use -1 to ignore
 	 * @param   number of objects to return max, use -1 to ignore
 	 *
@@ -90,18 +91,42 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 **/
 	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
+		// Setup the query, if needed
+		if (whereClause == null) {
+			// Null gets all
+			return query_id(null, orderByStr, offset, limit);
+		} else {
+			// Performs a search query
+			Query queryObj = Query.build(whereClause, whereValues);
+			return query_id(queryObj, orderByStr, offset, limit);
+		}
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(Query queryClause, String orderByStr,
+		int offset, int limit) {
 		
 		// The return list of DataObjects
 		List<DataObject> retList = null;
 		
 		// Setup the query, if needed
-		if (whereClause == null) {
+		if (queryClause == null) {
 			// Null gets all
 			retList = new ArrayList<DataObject>(this.values());
 		} else {
 			// Performs a search query
-			Query queryObj = Query.build(whereClause, whereValues);
-			retList = queryObj.search(this);
+			retList = queryClause.search(this);
 		}
 		
 		// Sort, offset, convert to array, and return
