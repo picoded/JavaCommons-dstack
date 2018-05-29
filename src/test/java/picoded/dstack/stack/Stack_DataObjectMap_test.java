@@ -39,4 +39,24 @@ public class Stack_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 		return new Stack_DataObjectMap(new Core_DataObjectMap[] { layer1, layer2 });
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Layered testing
+	//
+	//--------------------------------------------------------------------------
+	
+	/// Lower layered read
+	@Test
+	public void lowerLayerRead() {
+		// Setup the lower layer
+		DataObject data = layer2.newEntry();
+		data.put("hello","world");
+		data.saveAll();
+		String oid = data._oid();
+
+		// Gettign from the stack
+		data = mtObj.get(oid);
+		assertNotNull(data);
+		assertEquals("world", data.get("hello"));
+	}
 }
