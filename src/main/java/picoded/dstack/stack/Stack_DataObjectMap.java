@@ -136,7 +136,6 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 		return queryLayer.keySet();
 	}
 	
-
 	//--------------------------------------------------------------------------
 	//
 	// Query based optimization
@@ -144,7 +143,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	//--------------------------------------------------------------------------
 	
 	/// Internal reuse DataObject array representing "no data found"
-	protected static final DataObject[] BLANK_DATA_OBJECTS = (DataObject[])EmptyArray.OBJECT;
+	protected static final DataObject[] BLANK_DATA_OBJECTS = new DataObject[] {};
 
 	/**
 	 * Single object query optimization, this is done to optimize Query calls with _oid = ?
@@ -160,6 +159,11 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * @return the single DataObject, if found and valid
 	 */
 	public DataObject[] singleObjectQuery(Query queryClause) {
+
+		// No queryClause, no possible result
+		if( queryClause == null ) {
+			return null;
+		}
 
 		// Get the where clause as SQL string
 		String whereClause = queryClause.toSqlString();
@@ -238,9 +242,11 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	public long queryCount(String whereClause, Object[] whereValues) {
 		
 		// Optimize for _oid = ? without or clauses
-		DataObject[] singleQueryCheck = singleObjectQuery(Query.build(whereClause, whereValues));
-		if( singleQueryCheck != null ) {
-			return singleQueryCheck.length;
+		if( whereClause != null ) {
+			DataObject[] singleQueryCheck = singleObjectQuery(Query.build(whereClause, whereValues));
+			if( singleQueryCheck != null ) {
+				return singleQueryCheck.length;
+			}
 		}
 
 		// Standard call against query layer
@@ -284,10 +290,22 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 		return queryLayer.looselyIterateObjectID(currentID);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Copy pasta code, I wished could have worked in an interface
+	//
+	//--------------------------------------------------------------------------
 
+	/**
+	 * Removes all data, without tearing down setup
+	 * 
+	 * Sadly, due to a how Map interface prevents "default" implementation
+	 * of clear from being valid, this seems to be a needed copy-pasta code
+	 **/
 	public void clear() {
 		for(CommonStructure layer : commonStructureStack()) {
 			layer.clear();
 		}
 	}
+
 }
