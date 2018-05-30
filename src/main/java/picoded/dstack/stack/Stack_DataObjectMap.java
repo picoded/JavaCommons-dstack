@@ -94,7 +94,8 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * @return  nothing
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
-		for(int i = 0; i < dataLayers.length; ++i) {
+		// Remove data from the lowest layer upwards
+		for(int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].DataObjectRemoteDataMap_remove(oid);
 		}
 	}
@@ -104,9 +105,15 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * Returns null if not exists
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
+		// Get the data from the first "source" layer
 		for(int i = 0; i < dataLayers.length; ++i) {
 			Map<String, Object> res = dataLayers[i].DataObjectRemoteDataMap_get(oid);
 			if( res != null ) {
+				// Populate the data back upwards
+				Set<String> resKeySet = res.keySet();
+				for(i = i-1; i>=0; --i) {
+					dataLayers[i].DataObjectRemoteDataMap_update(oid, res, resKeySet);
+				}
 				return res;
 			}
 		}
@@ -119,7 +126,8 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 **/
 	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
-		for(int i = 0; i < dataLayers.length; ++i) {
+		// Write data from the lowest layer upwards
+		for(int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].DataObjectRemoteDataMap_update(oid, fullMap, keys);
 		}
 	}
