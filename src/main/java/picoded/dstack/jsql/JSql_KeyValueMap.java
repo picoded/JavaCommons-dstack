@@ -8,6 +8,7 @@ import picoded.dstack.KeyValue;
 import picoded.dstack.core.Core_KeyValueMap;
 import picoded.dstack.jsql.connector.*;
 import picoded.core.conv.ListValueConv;
+import picoded.core.struct.MutablePair;
 
 /**
  * Reference implementation of KeyValueMap data structure.
@@ -50,29 +51,6 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 
 	/**
 	 * [Internal use, to be extended in future implementation]
-	 * Returns the value, with validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp
-	 *
-	 * @return String value
-	 **/
-	protected String getValueRaw(String key, long now) {
-		// Search for the key
-		JSqlResult r = sqlObj.select(sqlTableName, "*", "kID=?", new Object[] { key });
-		long expiry = getExpiryRaw(r);
-
-		if (expiry != 0 && expiry < now) {
-			return null;
-		}
-
-		return r.get("kVl")[0].toString();
-	}
-
-	/**
-	 * [Internal use, to be extended in future implementation]
 	 * Sets the value, with validation
 	 *
 	 * Handles re-entrant lock where applicable
@@ -83,7 +61,7 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @return null
 	 **/
-	protected String setValueRaw(String key, String value, long expire) {
+	public String setValueRaw(String key, String value, long expire) {
 		long now = System.currentTimeMillis();
 		sqlObj.upsert( //
 				sqlTableName, //
@@ -96,58 +74,67 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 		return null;
 	}
 
-	//--------------------------------------------------------------------------
-	//
-	// Expiration and lifespan handling (core)
-	//
-	//--------------------------------------------------------------------------
-
 	/**
 	 * [Internal use, to be extended in future implementation]
-	 * Gets the expire time from the JSqlResult
+	 * 
+	 * Returns the value and expiry, with validation against the current timestamp
+	 * 
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp
+	 *
+	 * @return String value
 	 **/
-	protected long getExpiryRaw(JSqlResult r) throws JSqlException {
+	public MutablePair<String,Long> getValueExpiryRaw(String key, long now) {
 		// Search for the key
-		Object rawTime = null;
+		JSqlResult r = sqlObj.select(sqlTableName, "*", "kID=?", new Object[] { key });
+		long expiry = fetchExpiryRaw(r);
 
-		// Has value
-		if (r != null && r.rowCount() > 0) {
-			rawTime = r.get("eTm")[0];
-		} else {
-			return -1; //No value (-1)
+		// No valid value found , return null
+		if( expiry < 0 ) {
+			return null;
 		}
 
-		// 0 represents expired value
-		long ret = 0;
-		if (rawTime != null) {
-			if (rawTime instanceof Number) {
-				ret = ((Number) rawTime).longValue();
-			} else {
-				ret = Long.parseLong(rawTime.toString());
-			}
+		// Expired value, return null
+		if (expiry != 0 && expiry < now) {
+			return null;
 		}
 
-		if (ret <= 0) {
-			return 0;
-		} else {
-			return ret;
-		}
+		// Get the value, and return the pair
+		String val = r.get("kVl")[0].toString();
+		return new MutablePair<String,Long>(val,expiry);
 	}
 
 	/**
 	 * [Internal use, to be extended in future implementation]
-	 * Returns the expire time stamp value, raw without validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 *
-	 * @return long
+	 * Gets the expire time from the JSqlResult
+	 * 
+	 * @return -2 : represents no record found, -1 represents expired
 	 **/
-	protected long getExpiryRaw(String key) {
-		// Search for the key, get expire timestamp, and process it
-		return getExpiryRaw( //
-				sqlObj.select(sqlTableName, "eTm", "kID=?", new Object[] { key }));
+	public long fetchExpiryRaw(JSqlResult r) throws JSqlException {
+		// Search for the key
+		Object rawTime = null;
+
+		// Get the rawTime object only if valid value is found
+		if (r != null && r.rowCount() > 0) {
+			rawTime = r.get("eTm")[0];
+		} else {
+			return -2; //No value (-2)
+
+		}
+
+		// Return valid rawTime value
+		if (rawTime != null) {
+			if (rawTime instanceof Number) {
+				return ((Number) rawTime).longValue();
+			} else {
+				return Long.parseLong(rawTime.toString());
+			}
+		}
+
+		// No value found, return 0
+		return 0;
 	}
 
 	/**

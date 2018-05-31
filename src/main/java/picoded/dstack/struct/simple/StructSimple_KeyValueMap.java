@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import picoded.dstack.KeyValueMap;
 import picoded.dstack.core.Core_KeyValueMap;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.MutablePair;
 import picoded.core.struct.GenericConvertHashMap;
 
 /**
@@ -68,12 +69,21 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 			
 			// Iterate and get
 			for (String key : valuekeySet) {
-				String rawValue = getValueRaw(key, now);
+				
+				// Get the value pair, if it has a valid value
+				MutablePair<String,Long> pair = getValueExpiryRaw_noLocking(key, now);
+				if( pair == null ) {
+					continue;
+				}
+
+				// Validate the rawValue
+				String rawValue = pair.getLeft();
 				if (rawValue != null && (value == null || rawValue.equals(value))) {
 					ret.add(key);
 				}
 			}
 			
+			// Return the full keyset
 			return ret;
 		} finally {
 			accessLock.readLock().unlock();
@@ -88,38 +98,6 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
-	 * Returns the value, with validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp
-	 *
-	 * @return String value
-	 **/
-	protected String getValueRaw(String key, long now) {
-		try {
-			accessLock.readLock().lock();
-			
-			String val = valueMap.get(key);
-			if (val == null) {
-				return null;
-			}
-			
-			// Note: 0 = no timestamp, hence valid value
-			long expiry = getExpiryRaw(key);
-			if (expiry != 0 && expiry < now) {
-				return null;
-			}
-			
-			return val;
-		} finally {
-			accessLock.readLock().unlock();
-		}
-	}
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
 	 * Sets the value, with validation
 	 *
 	 * Handles re-entrant lock where applicable
@@ -130,7 +108,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @return null
 	 **/
-	protected String setValueRaw(String key, String value, long expire) {
+	public String setValueRaw(String key, String value, long expire) {
 		try {
 			accessLock.writeLock().lock();
 			if (value == null) {
@@ -146,42 +124,61 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 		}
 	}
 	
-	//--------------------------------------------------------------------------
-	//
-	// Expiration and lifespan handling (core)
-	//
-	//--------------------------------------------------------------------------
-	
 	/**
 	 * [Internal use, to be extended in future implementation]
-	 * Returns the expire time stamp value, raw without validation
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
 	 *
 	 * Handles re-entrant lock where applicable
 	 *
 	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
 	 *
-	 * @return long
+	 * @return String value, and expiry pair
 	 **/
-	protected long getExpiryRaw(String key) {
+	protected MutablePair<String,Long> getValueExpiryRaw_noLocking(String key, long now) {
+		String val = valueMap.get(key);
+		if (val == null) {
+			return null;
+		}
+		
+		// Get the expire object
+		Long expireObj = expireMap.get(key);
+		if(expireObj == null) {
+			expireObj = 0L;
+		}
+
+		// Note: 0 = no timestamp, hence valid value
+		long expiry = expireObj.longValue();
+		if (expiry != 0 && expiry < now) {
+			return null;
+		}
+
+		// Return the expirary pair
+		return new MutablePair<String,Long>(val,expiry);
+	}
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return String value, and expiry pair
+	 **/
+	public MutablePair<String,Long> getValueExpiryRaw(String key, long now) {
 		try {
-			accessLock.readLock().lock();
-			
-			// no value fails
-			if (valueMap.get(key) == null) {
-				return -1;
-			}
-			
-			// Expire value?
-			Long expireObj = expireMap.get(key);
-			if (expireObj == null) {
-				return 0;
-			}
-			return expireObj.longValue();
+			accessLock.writeLock().lock();
+			return getValueExpiryRaw_noLocking(key, now);
 		} finally {
-			accessLock.readLock().unlock();
+			accessLock.writeLock().unlock();
 		}
 	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 * Sets the expire time stamp value, raw without validation
