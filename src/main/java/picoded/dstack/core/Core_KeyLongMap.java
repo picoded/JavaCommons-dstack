@@ -208,7 +208,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expire
+	 * @return long, 0 means no expiry, -1 no data / expire
 	 **/
 	@Override
 	public long getExpiry(String key) {
@@ -227,7 +227,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expire
+	 * @return long, 0 means no expiry, -1 no data / expire
 	 **/
 	@Override
 	public long getLifespan(String key) {

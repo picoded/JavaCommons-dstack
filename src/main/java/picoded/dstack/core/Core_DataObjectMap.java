@@ -349,7 +349,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
-	 * having any form of time "expirary", this call does nothing in most implementation.
+	 * having any form of time "expiry", this call does nothing in most implementation.
 	 *
 	 * As such im making that the default =)
 	 **/

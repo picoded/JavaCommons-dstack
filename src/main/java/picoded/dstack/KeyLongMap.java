@@ -276,7 +276,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getExpiry(String key);
 
@@ -285,7 +285,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getLifespan(String key);
 
@@ -327,7 +327,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 
 	/**
 	 * Stores (and overwrites if needed) key, value pair
-	 * with expirary value.
+	 * with expiry value.
 	 *
 	 * Important note: It does not return the previously stored value
 	 *

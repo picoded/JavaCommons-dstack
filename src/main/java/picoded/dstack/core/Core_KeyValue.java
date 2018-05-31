@@ -118,7 +118,7 @@ public class Core_KeyValue implements KeyValue {
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	public long getExpiry() {
 		return main.getExpiry(key);
@@ -127,7 +127,7 @@ public class Core_KeyValue implements KeyValue {
 	/**
 	 * Returns the lifespan time stamp value
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	public long getLifespan() {
 		return main.getLifespan(key);
@@ -168,7 +168,7 @@ public class Core_KeyValue implements KeyValue {
 	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
-	 * with expirary value.
+	 * with expiry value.
 	 *
 	 * Important note: It does not return the previously stored value
 	 *

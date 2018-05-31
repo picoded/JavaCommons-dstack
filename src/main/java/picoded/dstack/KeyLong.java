@@ -20,14 +20,14 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getExpiry();
 
 	/**
 	 * Returns the lifespan time stamp value
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getLifespan();
 
@@ -60,7 +60,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 
 	/**
 	 * Stores (and overwrites if needed) key, value pair
-	 * with expirary value.
+	 * with expiry value.
 	 *
 	 * Important note: It does not return the previously stored value
 	 *
