@@ -88,7 +88,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * @return Long value
 	 **/
-	protected Long getValueRaw(String key, long now) {
+	public Long getValueRaw(String key, long now) {
 		try {
 			accessLock.readLock().lock();
 
@@ -122,7 +122,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * @return null
 	 **/
-	protected Long setValueRaw(String key, Long value, long expire) {
+	public Long setValueRaw(String key, Long value, long expire) {
 		try {
 			accessLock.writeLock().lock();
 
@@ -176,7 +176,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * @return long
 	 **/
-	protected long getExpiryRaw(String key) {
+	public long getExpiryRaw(String key) {
 		try {
 			accessLock.readLock().lock();
 

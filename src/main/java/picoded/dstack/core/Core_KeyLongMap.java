@@ -53,7 +53,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return Long value
 	 **/
-	abstract protected Long getValueRaw(String key, long now);
+	abstract public Long getValueRaw(String key, long now);
 
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -68,7 +68,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return null
 	 **/
-	abstract protected Long setValueRaw(String key, Long value, long expire);
+	abstract public Long setValueRaw(String key, Long value, long expire);
 
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -81,7 +81,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return long
 	 **/
-	abstract protected long getExpiryRaw(String key);
+	abstract public long getExpiryRaw(String key);
 
 	/**
 	 * [Internal use, to be extended in future implementation]
