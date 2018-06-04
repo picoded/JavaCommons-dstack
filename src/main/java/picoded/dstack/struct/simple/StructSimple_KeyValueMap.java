@@ -188,7 +188,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 * @param key as String
 	 * @param expire timestamp in seconds, 0 means NO expire
 	 *
-	 * @return long
+	 * @return 
 	 **/
 	public void setExpiryRaw(String key, long time) {
 		try {
