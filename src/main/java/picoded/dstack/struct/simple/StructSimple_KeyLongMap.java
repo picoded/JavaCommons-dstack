@@ -176,19 +176,46 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 		}
 	}
 
-	@Override
-	public Long addAndGet(Object key, Object delta) {
-		return super.addAndGet(key, delta);
-	}
-
-	@Override
-	public Long getAndAdd(Object key, Object delta) {
-		return super.getAndAdd(key, delta);
-	}
-
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
 	@Override
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		return super.weakCompareAndSet(key, expect, update);
+		try{
+			accessLock.writeLock().lock();
+
+			// Retrieve existing value and expiry
+			long now = System.currentTimeMillis();
+			MutablePair<Long, Long> pair = getValueExpiryRaw_noLocking(key, now);
+
+			// Value does not exists (0 is considered as not exists)
+			// Update value and return success
+			if(pair == null && (expect == null || expect == 0L)){
+				longMap.put(key, update);
+				return true;
+			}
+			
+			// Value exists and equivalent to expected value
+			// Update value and return success
+			if(pair.getLeft().equals(expect)){
+				longMap.put(key, update);
+				return true;
+			}
+
+			// Operation fail, return failure
+			return false;
+
+		} finally {
+			accessLock.writeLock().unlock();
+		}
 	}
 
 	//--------------------------------------------------------------------------

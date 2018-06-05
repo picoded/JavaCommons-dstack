@@ -163,39 +163,11 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 		return getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
 	}
 
-
-
 	//--------------------------------------------------------------------------
 	//
 	// Incremental operations
 	//
 	//--------------------------------------------------------------------------
-
-	public Long addAndGet(Object key, Object delta) {
-
-		long deltaLn = GenericConvert.toLong(delta, 0);
-		Long res = getAndAdd(key, deltaLn);
-		if (res == null) {
-			return null;
-		}
-		return res.longValue() + deltaLn;
-
-	}
-
-	public Long getAndAdd(Object key, Object delta) {
-
-		Long oldVal = getValue(key);
-
-		// Assume 0, if old value does not exists
-		if (oldVal == null) {
-			oldVal = (Long) 0l;
-		}
-
-		Long newVal = oldVal.longValue() + GenericConvert.toNumber(delta).longValue();
-		setValueRaw(key.toString(), newVal, System.currentTimeMillis());
-
-		return oldVal;
-	}
 
 	/**
 	 * Stores (and overwrites if needed) key, value pair
@@ -208,21 +180,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return true if successful
 	 **/
-	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		Long curVal = getValue( key );
-
-		//if current value is equal to expected value, set to new value
-		if (curVal != null && curVal.longValue() == expect.longValue()) {
-			setValueRaw(key, update, 0);
-			return true;
-		} else if (curVal == null || curVal.longValue() == 0l) {
-			setValueRaw(key, update, 0);
-			return true;
-		} else {
-			return false;
-		}
-
-	}
+	abstract public boolean weakCompareAndSet(String key, Long expect, Long update);
 
 	//--------------------------------------------------------------------------
 	//

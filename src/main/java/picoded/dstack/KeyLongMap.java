@@ -1,6 +1,10 @@
 package picoded.dstack;
 
 import java.util.Set;
+
+import javax.management.RuntimeErrorException;
+
+import picoded.core.conv.GenericConvert;
 import picoded.core.struct.GenericConvertMap;
 
 /**
@@ -159,7 +163,42 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 *
 	 * @return  value of the given key after adding
 	 **/
-	Long addAndGet(Object key, Object delta);
+	default Long addAndGet(Object key, Object delta) {
+		//
+		// NOTE : The default implmentation of addAndGet,
+		//        or getAndAdd relies on repetaed tries using
+		//        weakCompareAndSet, while functional.
+		//        Is highly inefficent in most cases
+		//
+
+		// Validate and convert the key to String
+		if(key == null) {
+			throw new IllegalArgumentException("key cannot be null in addAndGet");
+		}
+		String keyAsString = key.toString();
+
+		// Attempt to update the key for 5 times before throwing exception
+		for(int tries=0;tries < 5; tries++){
+			// Retrieve value from key
+			Long value = getValue(keyAsString);
+
+			// Assume value as 0 if not exist
+			if (value == null) {
+				value = new Long(0);
+			}
+
+			// Calculate the updated value
+			Long updatedValue = GenericConvert.toLong(delta)+value;
+
+			// Update the value with weakCompareAndSet and return 
+			if (weakCompareAndSet(keyAsString, value, updatedValue)) {
+				return updatedValue;
+			}
+		}
+
+		// Throw exception due to number of retries exceeded the limit
+		throw new RuntimeException("Number of retries exceeded limit for addAndGet");
+	}
 
 	/**
 	 * Returns the value, given the key. Then apply the delta change
@@ -169,7 +208,42 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 *
 	 * @return  value of the given key, note that it returns 0 if there wasnt a previous value set
 	 **/
-	Long getAndAdd(Object key, Object delta);
+	default Long getAndAdd(Object key, Object delta) {
+		//
+		// NOTE : The default implmentation of addAndGet,
+		//        or getAndAdd relies on repetaed tries using
+		//        weakCompareAndSet, while functional.
+		//        Is highly inefficent in most cases
+		//
+
+		// Validate and convert the key to String
+		if(key == null) {
+			throw new IllegalArgumentException("key cannot be null in addAndGet");
+		}
+		String keyAsString = key.toString();
+
+		// Attempt to update the key for 5 times before throwing exception
+		for(int tries=0;tries < 5; tries++){
+			// Retrieve value from key
+			Long value = getValue(keyAsString);
+
+			// Assume value as 0 if not exist
+			if (value == null) {
+				value = new Long(0);
+			}
+
+			// Calculate the updated value
+			Long updatedValue = GenericConvert.toLong(delta)+value;
+
+			// Update the value with weakCompareAndSet and return the original value
+			if (weakCompareAndSet(keyAsString, value, updatedValue)) {
+				return value;
+			}
+		}
+
+		// Throw exception due to number of retries exceeded the limit
+		throw new RuntimeException("Number of retries exceeded limit for addAndGet");
+	}
 
 	/**
 	 * Increment the value of the key and return the updated value.
