@@ -108,7 +108,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
-
 		// Once a workspace is found in any layers
 		for(int i = 0; i < dataLayers.length ; i++) {
 			if(dataLayers[i].backend_workspaceExist(oid)){
@@ -131,7 +130,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public byte[] backend_fileRead(String oid, String filepath) {
-
 		// Retrieve from higher level to the source of truth
 		for(int i = 0; i < dataLayers.length; ++i) {
 			// Retrieve the data of the file
@@ -146,7 +144,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 				return data;
 			}
 		}
-
 		// No data exist
 		return null;
 
