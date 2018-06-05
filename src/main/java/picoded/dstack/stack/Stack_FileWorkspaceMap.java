@@ -91,6 +91,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public void backend_workspaceRemove(String oid) {
+		// Remove layer by layer starting from the lowest layer
 		for(int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_workspaceRemove(oid);
 		}
@@ -107,7 +108,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
-		
+
 		// Once a workspace is found in any layers
 		for(int i = 0; i < dataLayers.length ; i++) {
 			if(dataLayers[i].backend_workspaceExist(oid)){
@@ -162,6 +163,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
+		// Write the data starting from the lowest layer
 		for(int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_fileWrite(oid, filepath, data);
 		}
@@ -177,6 +179,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 */
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
+		// Remove the file starting from the lowest layer
 		for(int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_removeFile(oid, filepath);
 		}
