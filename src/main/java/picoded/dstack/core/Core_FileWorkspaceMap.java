@@ -53,7 +53,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @param ObjectID of workspace to remove
 	 **/
-	abstract protected void backend_workspaceRemove(String oid);
+	abstract public void backend_workspaceRemove(String oid);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -64,7 +64,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  boolean to check if workspace exists
 	 **/
-	abstract protected boolean backend_workspaceExist(String oid);
+	abstract public boolean backend_workspaceExist(String oid);
 	
 	//--------------------------------------------------------------------------
 	//
@@ -87,7 +87,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  boolean true, if file eixst
 	 **/
-	protected boolean backend_fileExist(final String oid, final String filepath) {
+	public boolean backend_fileExist(final String oid, final String filepath) {
 		return backend_fileRead(oid, filepath) != null;
 	}
 	
@@ -101,7 +101,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	abstract protected byte[] backend_fileRead(final String oid, final String filepath);
+	abstract public byte[] backend_fileRead(final String oid, final String filepath);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -112,7 +112,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	abstract protected void backend_fileWrite(final String oid, final String filepath, final byte[] data);
+	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
 
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -122,7 +122,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param oid identifier to the workspace
 	 * @param filepath the file to be removed
 	 */
-	abstract protected void backend_removeFile(final String oid, final String filepath);
+	abstract public void backend_removeFile(final String oid, final String filepath);
 	
 	//--------------------------------------------------------------------------
 	//
@@ -150,7 +150,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @param oid to be initialized
 	 */
-	abstract protected void init(String oid);
+	abstract public void init(String oid);
 	
 	/**
 	 * Get a FileWorkspace, and returns it. Skips existance checks if required

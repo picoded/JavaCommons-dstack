@@ -78,7 +78,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param ObjectID of workspace to remove
 	 **/
 	@Override
-	protected void backend_workspaceRemove(String oid) {
+	public void backend_workspaceRemove(String oid) {
 		sqlObj.delete(fileWorkspaceTableName, "oID = ?", new Object[] { oid });
 	}
 
@@ -92,7 +92,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  boolean to check if workspace exists
 	 **/
 	@Override
-	protected boolean backend_workspaceExist(String oid) {
+	public boolean backend_workspaceExist(String oid) {
 		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "oID", "oID = ?", new Object[]{ oid});
 		return jSqlResult.rowCount() > 0;
 	}
@@ -108,7 +108,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	@Override
-	protected byte[] backend_fileRead(String oid, String filepath) {
+	public byte[] backend_fileRead(String oid, String filepath) {
 		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, null, "oID = ? AND path = ?", new Object[]{ oid, filepath });
 
 		if (jSqlResult == null || jSqlResult.get("data") == null || jSqlResult.rowCount() <= 0){
@@ -127,7 +127,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   data to write the file with
 	 **/
 	@Override
-	protected void backend_fileWrite(String oid, String filepath, byte[] data) {
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		try{
@@ -155,7 +155,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param filepath the file to be removed
 	 */
 	@Override
-	protected void backend_removeFile(String oid, String filepath) {
+	public void backend_removeFile(String oid, String filepath) {
 		sqlObj.delete(
 			fileWorkspaceTableName,
 			"oid = ? AND path = ?", new Object[] { oid, filepath }
@@ -170,7 +170,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * HashMap<> object.
 	 */
 	@Override
-	protected void init(String oid) {
+	public void init(String oid) {
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		try{
 			sqlObj.upsert( //

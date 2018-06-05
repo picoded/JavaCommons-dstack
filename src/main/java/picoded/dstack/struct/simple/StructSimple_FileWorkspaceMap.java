@@ -29,7 +29,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param ObjectID of workspace to remove
 	 **/
 	@Override
-	protected void backend_workspaceRemove(String oid) {
+	public void backend_workspaceRemove(String oid) {
 		try {
 			accessLock.writeLock().lock();
 			fileContentMap.remove(oid);
@@ -48,7 +48,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  boolean to check if workspace exists
 	 **/
 	@Override
-	protected boolean backend_workspaceExist(String oid) {
+	public boolean backend_workspaceExist(String oid) {
 		try {
 			accessLock.readLock().lock();
 
@@ -71,7 +71,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	@Override
-	protected byte[] backend_fileRead(String oid, String filepath) {
+	public byte[] backend_fileRead(String oid, String filepath) {
 		try {
 			accessLock.readLock().lock();
 
@@ -98,7 +98,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   data to write the file with
 	 **/
 	@Override
-	protected void backend_fileWrite(String oid, String filepath, byte[] data) {
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		try {
 			accessLock.writeLock().lock();
 
@@ -122,7 +122,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param filepath the file to be removed
 	 */
 	@Override
-	protected void backend_removeFile(String oid, String filepath) {
+	public void backend_removeFile(String oid, String filepath) {
 		try {
 			accessLock.writeLock().lock();
 
@@ -143,7 +143,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * HashMap<> object.
 	 */
 	@Override
-	protected void init(String oid){
+	public void init(String oid){
 		fileContentMap.put(oid, new ConcurrentHashMap<String, byte[]>());
 	}
 
