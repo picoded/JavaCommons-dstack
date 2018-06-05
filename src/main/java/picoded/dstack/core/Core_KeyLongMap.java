@@ -3,6 +3,7 @@ package picoded.dstack.core;
 import picoded.core.conv.GenericConvert;
 import picoded.dstack.KeyLong;
 import picoded.dstack.KeyLongMap;
+import picoded.core.struct.MutablePair;
 
 /**
  * Common base utility class of KeyLongMap.
@@ -44,20 +45,6 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Returns the value, with validation against the current timestamp
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
-	 *
-	 * @return Long value
-	 **/
-	abstract public Long getValueRaw(String key, long now);
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Sets the value, with validation
 	 *
 	 * Handles re-entrant lock where applicable
@@ -73,19 +60,6 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Returns the expire time stamp value, raw without validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 *
-	 * @return long
-	 **/
-	abstract public long getExpiryRaw(String key);
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Sets the expire time stamp value, raw without validation
 	 *
 	 * Handles re-entrant lock where applicable
@@ -96,6 +70,61 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 * @return long
 	 **/
 	abstract public void setExpiryRaw(String key, long expire);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return Long value, and expiry pair
+	 **/
+	abstract public MutablePair<Long,Long> getValueExpiryRaw(String key, long now);
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return Long value
+	 **/
+	public Long getValueRaw(String key, long now) {
+		MutablePair<Long, Long> pair = getValueExpiryRaw(key, now);
+		if( pair != null ) {
+			return pair.getLeft().longValue();
+		}
+		return null;
+	}
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the expire time stamp value, raw without validation
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return long
+	 **/
+	public long getExpiryRaw(String key, long now) {
+		MutablePair<Long,Long> pair = getValueExpiryRaw(key, now);
+		if( pair != null ) {
+			return pair.getRight().longValue();
+		}
+		return -1;
+	}
+
 
 	//--------------------------------------------------------------------------
 	//
@@ -212,14 +241,16 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 **/
 	@Override
 	public long getExpiry(String key) {
-		long expire = getExpiryRaw(key);
-		if (expire <= 0) { //0 = no timestamp, -1 = no data
-			return expire;
+		// Get the value / expiry value pair
+		MutablePair<Long,Long> pair = getValueExpiryRaw(key, System.currentTimeMillis());
+
+		// No data found
+		if( pair == null ) {
+			return -1;
 		}
-		if (expire > System.currentTimeMillis()) {
-			return expire;
-		}
-		return -1; //expired
+
+		// Return expirary
+		return pair.getRight().longValue();
 	}
 
 	/**
@@ -231,16 +262,30 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 **/
 	@Override
 	public long getLifespan(String key) {
-		long expire = getExpiryRaw(key);
-		if (expire <= 0) { //0 = no timestamp, -1 = no data
-			return expire;
+		// Time stamp to use now
+		long now = System.currentTimeMillis();
+
+		// Get the value / expiry value pair
+		MutablePair<Long,Long> pair = getValueExpiryRaw(key, now);
+		
+		// No data found
+		if( pair == null ) {
+			return -1;
 		}
 
-		long lifespan = expire - System.currentTimeMillis();
+		// Get expire timestamp
+		long expire = pair.getRight();
+
+		//0 = no timestamp, -1 = no data
+		if (expire <= 0) { 
+			return expire;
+		}
+		
+		// Calculate the livespan
+		long lifespan = expire - now;
 		if (lifespan <= 0) {
 			return -1; //expired
 		}
-
 		return lifespan;
 	}
 

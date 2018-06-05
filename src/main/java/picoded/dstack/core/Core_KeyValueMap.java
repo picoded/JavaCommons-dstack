@@ -193,7 +193,7 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 		}
 
 		// Return expirary
-		return pair.getRight();
+		return pair.getRight().longValue();
 	}
 	
 	/**
@@ -209,7 +209,7 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 		long now = System.currentTimeMillis();
 
 		// Get the value / expiry value pair
-		MutablePair<String,Long> pair = getValueExpiryRaw(key, System.currentTimeMillis());
+		MutablePair<String,Long> pair = getValueExpiryRaw(key, now);
 		
 		// No data found
 		if( pair == null ) {

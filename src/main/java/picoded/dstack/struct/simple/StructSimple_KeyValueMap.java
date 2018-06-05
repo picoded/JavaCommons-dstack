@@ -172,10 +172,10 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	public MutablePair<String,Long> getValueExpiryRaw(String key, long now) {
 		try {
-			accessLock.writeLock().lock();
+			accessLock.readLock().lock();
 			return getValueExpiryRaw_noLocking(key, now);
 		} finally {
-			accessLock.writeLock().unlock();
+			accessLock.readLock().unlock();
 		}
 	}
 

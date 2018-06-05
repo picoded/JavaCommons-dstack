@@ -1,12 +1,13 @@
 package picoded.dstack.struct.simple;
 
-import picoded.dstack.core.Core_KeyLongMap;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import picoded.dstack.core.Core_KeyLongMap;
+import picoded.core.struct.MutablePair;
 
 public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 
@@ -42,7 +43,7 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * Handles re-entrant lock where applicable
 	 *
-	 * @param value, note that null matches ALL
+	 * @param key, note that null matches ALL
 	 *
 	 * @return array of keys
 	 **/
@@ -50,21 +51,30 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	public Set<String> keySet(Long value) {
 		try {
 			accessLock.readLock().lock();
-
+			
 			long now = System.currentTimeMillis();
 			Set<String> ret = new HashSet<String>();
-
+			
 			// The keyset to check against
 			Set<String> valuekeySet = longMap.keySet();
-
+			
 			// Iterate and get
 			for (String key : valuekeySet) {
-				Long rawValue = getValueRaw(key, now);
-				if (rawValue != null && (value == null || rawValue.longValue() == value.longValue())) {
+				
+				// Get the value pair, if it has a valid value
+				MutablePair<Long,Long> pair = getValueExpiryRaw_noLocking(key, now);
+				if( pair == null ) {
+					continue;
+				}
+
+				// Validate the rawValue
+				Long rawValue = pair.getLeft();
+				if (rawValue != null && (value == null || rawValue.equals(value))) {
 					ret.add(key);
 				}
 			}
-
+			
+			// Return the full keyset
 			return ret;
 		} finally {
 			accessLock.readLock().unlock();
@@ -76,39 +86,6 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	// Fundamental set/get value (core)
 	//
 	//--------------------------------------------------------------------------
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 * Returns the value, with validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp
-	 *
-	 * @return Long value
-	 **/
-	public Long getValueRaw(String key, long now) {
-		try {
-			accessLock.readLock().lock();
-
-			Long val = longMap.get(key);
-
-			if (val == null) {
-				return null;
-			}
-
-			// Note: 0 = no timestamp, hence valid value
-			long expiry = getExpiryRaw(key);
-			if (expiry != 0 && expiry < now) {
-				return null;
-			}
-
-			return val;
-		} finally {
-			accessLock.readLock().unlock();
-		}
-	}
 
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -142,6 +119,60 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 			return null;
 		}finally {
 			accessLock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return String value, and expiry pair
+	 **/
+	protected MutablePair<Long,Long> getValueExpiryRaw_noLocking(String key, long now) {
+		Long val = longMap.get(key);
+		if (val == null) {
+			return null;
+		}
+		
+		// Get the expire object
+		Long expireObj = expireMap.get(key);
+		if(expireObj == null) {
+			expireObj = 0L;
+		}
+
+		// Note: 0 = no timestamp, hence valid value
+		long expiry = expireObj.longValue();
+		if (expiry != 0 && expiry < now) {
+			return null;
+		}
+
+		// Return the expirary pair
+		return new MutablePair<Long,Long>(val,expiry);
+	}
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * Returns the value, with validation
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp
+	 *
+	 * @return Long value
+	 **/
+	public MutablePair<Long, Long> getValueExpiryRaw(String key, long now) {
+		try {
+			accessLock.readLock().lock();
+			return getValueExpiryRaw_noLocking(key, now);
+		} finally {
+			accessLock.readLock().unlock();
 		}
 	}
 
