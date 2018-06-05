@@ -139,18 +139,6 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		// Actual return
 		return new Core_FileWorkspace(this, null);
 	}
-
-	/**
-	 * The basic initialization method for FileWorkspace constructor so as to create an
-	 * object to be searched.
-	 *
-	 * E.g. In file systems, the latter inheritance will implement a mkdir method if not exist
-	 * Or using in-memory data structure, the latter inheritance will implement perhaps a
-	 * HashMap<> object.
-	 *
-	 * @param oid to be initialized
-	 */
-	abstract public void init(String oid);
 	
 	/**
 	 * Get a FileWorkspace, and returns it. Skips existance checks if required

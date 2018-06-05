@@ -72,6 +72,7 @@ public class StructSimple_FileWorkspaceMap_test {
 	@Test
 	public void workspaceExistence() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		assertNull(testObj.get("unknown value"));
 	}
@@ -130,6 +131,7 @@ public class StructSimple_FileWorkspaceMap_test {
 	@Test
 	public void deleteWorkspace() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));

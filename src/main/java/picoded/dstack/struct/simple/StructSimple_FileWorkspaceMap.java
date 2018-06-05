@@ -128,25 +128,15 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 
-			workspace.remove(filepath);
+			// workspace exist, remove the file in the workspace
+			if(workspace != null){
+				workspace.remove(filepath);
+			}
 
 		} finally {
 			accessLock.writeLock().unlock();
 		}
 	}
-
-	/**
-	 * The basic initialization method for newEntry() so as to create an existence object
-	 * to be searched.
-	 * E.g. In file systems, the latter inheritance will implement a mkdir method if not exist
-	 * Or using in-memory data structure, the latter inheritance will implement perhaps a
-	 * HashMap<> object.
-	 */
-	@Override
-	public void init(String oid){
-		fileContentMap.put(oid, new ConcurrentHashMap<String, byte[]>());
-	}
-
 
 	//--------------------------------------------------------------------------
 	//
