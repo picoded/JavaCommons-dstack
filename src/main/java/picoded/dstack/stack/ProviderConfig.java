@@ -133,6 +133,4 @@ public class ProviderConfig {
 		throw new IllegalArgumentException("Unknown stack configuration type : "+type);
 	}
 
-
-
 }
