@@ -1,0 +1,6 @@
+java-formatter-0.0.1-SNAPSHOT-jar-with-dependencies
+
+Note this is customised for the newer java version
+See: http://gitlab.picoded-dev.com/picoded/java-code-formatter
+
+For original, See: https://github.com/kbzod/javacodeformatter
