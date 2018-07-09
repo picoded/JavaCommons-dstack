@@ -50,11 +50,8 @@ import picoded.core.struct.GenericConvertMap;
  * + NULL values are treated as "deleted" values
  * 
  **/
-public interface DataObjectMap extends 
-	UnsupportedDefaultMap<String, DataObject>, 
-	CommonStructure, 
-	CollectionQueryForIDInterface<String,DataObject>
-{
+public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>, CommonStructure,
+	CollectionQueryForIDInterface<String, DataObject> {
 	
 	// DataObject optimizations
 	//----------------------------------------------
@@ -191,7 +188,6 @@ public interface DataObjectMap extends
 		// Query and count
 		return query_id(whereClause, whereValues, null).length;
 	}
-	
 	
 	// Get from key names operations (to optimize on specific implementation)
 	//
@@ -334,7 +330,6 @@ public interface DataObjectMap extends
 	//--------------------------------------------------------------------------
 	
 	/**
-	 *
 	 * Removes all data, without tearing down setup
 	 *
 	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"

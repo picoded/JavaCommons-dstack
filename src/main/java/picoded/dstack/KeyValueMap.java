@@ -39,7 +39,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 * @return  KeyValue object (does not validate if it exists)
 	 */
 	KeyValue getKeyValue(Object key);
-
+	
 	/**
 	 * Returns the KeyValue, given the key
 	 *
@@ -53,7 +53,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	@Override
 	default KeyValue get(Object key) {
 		KeyValue r = getKeyValue(key);
-		if(r.getLifespan() >= 0) {
+		if (r.getLifespan() >= 0) {
 			return r;
 		}
 		return null;
@@ -71,7 +71,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 **/
 	@Override
 	default KeyValue put(String key, KeyValue value) {
-		if( value == null ) {
+		if (value == null) {
 			putValue(key, null);
 		} else {
 			putValue(key, value.toString());
@@ -149,7 +149,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 * @return  null
 	 **/
 	default String removeValue(Object key) {
-		return putValue((String)key, null);
+		return putValue((String) key, null);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -212,7 +212,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getExpiry(String key);
 	
@@ -221,7 +221,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getLifespan(String key);
 	
@@ -263,7 +263,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
-	 * with expirary value.
+	 * with expiry value.
 	 *
 	 * Important note: It does not return the previously stored value
 	 *
@@ -296,7 +296,7 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 * @return String value of the random key generated
 	 **/
 	default String generateNonceKey(String val) {
-		return generateNonceKey(val, configMap().getLong("NonceLifespan", 3600*1000));
+		return generateNonceKey(val, configMap().getLong("NonceLifespan", 3600 * 1000));
 	}
 	
 	/**
@@ -331,9 +331,9 @@ public interface KeyValueMap extends GenericConvertMap<String, KeyValue>, Common
 	 **/
 	default String generateNonceKey(String val, long lifespan, int keyLength) {
 		String res = null;
-
+		
 		// Use base58 guid for keylength == 22
-		if( keyLength == 22 ) {
+		if (keyLength == 22) {
 			res = GUID.base58();
 		} else {
 			res = NxtCrypt.randomString(keyLength);

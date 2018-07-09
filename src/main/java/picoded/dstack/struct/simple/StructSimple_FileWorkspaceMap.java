@@ -8,13 +8,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
-
-
+	
 	protected ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
-
+	
 	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
-
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
@@ -29,7 +27,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param ObjectID of workspace to remove
 	 **/
 	@Override
-	protected void backend_workspaceRemove(String oid) {
+	public void backend_workspaceRemove(String oid) {
 		try {
 			accessLock.writeLock().lock();
 			fileContentMap.remove(oid);
@@ -37,7 +35,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.writeLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -48,18 +46,18 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  boolean to check if workspace exists
 	 **/
 	@Override
-	protected boolean backend_workspaceExist(String oid) {
+	public boolean backend_workspaceExist(String oid) {
 		try {
 			accessLock.readLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 			return workspace != null;
-
+			
 		} finally {
 			accessLock.readLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -71,23 +69,23 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	@Override
-	protected byte[] backend_fileRead(String oid, String filepath) {
+	public byte[] backend_fileRead(String oid, String filepath) {
 		try {
 			accessLock.readLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-
-			if(workspace != null && filepath != null){
+			
+			if (workspace != null && filepath != null) {
 				return workspace.get(filepath);
 			}
-
+			
 			return null;
 		} finally {
 			accessLock.readLock().unlock();
 		}
-
+		
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -98,21 +96,22 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   data to write the file with
 	 **/
 	@Override
-	protected void backend_fileWrite(String oid, String filepath, byte[] data) {
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		try {
 			accessLock.writeLock().lock();
-
-			ConcurrentHashMap<String, byte[]> workspace = (fileContentMap.get(oid) == null) ? new ConcurrentHashMap<>() : fileContentMap.get(oid);
-
+			
+			ConcurrentHashMap<String, byte[]> workspace = (fileContentMap.get(oid) == null) ? new ConcurrentHashMap<>()
+				: fileContentMap.get(oid);
+			
 			workspace.put(filepath, data);
-
+			
 			fileContentMap.put(oid, workspace);
-
+			
 		} finally {
 			accessLock.writeLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -122,51 +121,41 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param filepath the file to be removed
 	 */
 	@Override
-	protected void backend_removeFile(String oid, String filepath) {
+	public void backend_removeFile(String oid, String filepath) {
 		try {
 			accessLock.writeLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-
-			workspace.remove(filepath);
-
+			
+			// workspace exist, remove the file in the workspace
+			if (workspace != null) {
+				workspace.remove(filepath);
+			}
+			
 		} finally {
 			accessLock.writeLock().unlock();
 		}
 	}
-
-	/**
-	 * The basic initialization method for newEntry() so as to create an existence object
-	 * to be searched.
-	 * E.g. In file systems, the latter inheritance will implement a mkdir method if not exist
-	 * Or using in-memory data structure, the latter inheritance will implement perhaps a
-	 * HashMap<> object.
-	 */
-	@Override
-	protected void init(String oid){
-		fileContentMap.put(oid, new ConcurrentHashMap<String, byte[]>());
-	}
-
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------
-
+	
 	@Override
 	public void systemSetup() {
-
+		
 	}
-
+	
 	@Override
 	public void systemDestroy() {
 		clear();
 	}
-
+	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
-	 * having any form of time "expirary", this call does nothing in most implementation.
+	 * having any form of time "expiry", this call does nothing in most implementation.
 	 *
 	 * As such im making that the default =)
 	 **/
@@ -174,10 +163,10 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void maintenance() {
 		// Do nothing
 	}
-
+	
 	@Override
 	public void clear() {
-		try{
+		try {
 			accessLock.writeLock().lock();
 			fileContentMap.clear();
 		} finally {

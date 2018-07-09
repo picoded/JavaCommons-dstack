@@ -250,6 +250,17 @@ test {
 
 //----------------------------------------------------------------
 //
+//  Custom src-beautify
+//
+//----------------------------------------------------------------
+
+task srcBeautify(type:Exec) {
+	workingDir '.'
+	commandLine 'java','-cp','./build-util/java-formatter/java-formatter-with-dependencies.jar','Formatter','./build-util/java-formatter/code-format.opts','./src'
+}
+
+//----------------------------------------------------------------
+//
 //  Jacoco test coverage
 //
 //----------------------------------------------------------------

@@ -33,7 +33,7 @@ public class StructSimple_KeyValueMap_test {
 	public KeyValueMap implementationConstructor() {
 		return new StructSimple_KeyValueMap();
 	}
-
+	
 	// Setup and sanity test
 	//-----------------------------------------------------
 	@Before
@@ -41,7 +41,7 @@ public class StructSimple_KeyValueMap_test {
 		testObj = implementationConstructor();
 		testObj.systemSetup();
 	}
-
+	
 	@After
 	public void systemDestroy() {
 		if (testObj != null) {
@@ -141,20 +141,20 @@ public class StructSimple_KeyValueMap_test {
 		// key should be null after expiration time.
 		assertEquals(null, testObj.get("yes"));
 	}
-
+	
 	// CRUD operations
 	//-----------------------------------------------------
-
+	
 	@Test
 	public void removeObject() throws Exception {
 		testObj.put("removeMe", "no");
 		testObj.put("pleaseRemove", "okay");
-
+		
 		assertEquals(testObj.getValue("pleaseRemove"), "okay");
-
+		
 		testObj.remove("pleaseRemove");
-
+		
 		assertNull(testObj.getValue("pleaseRemove"));
 	}
-
+	
 }

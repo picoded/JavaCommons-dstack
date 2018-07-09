@@ -3,6 +3,7 @@ package picoded.dstack.core;
 import picoded.core.conv.GenericConvert;
 import picoded.dstack.KeyLong;
 import picoded.dstack.KeyLongMap;
+import picoded.core.struct.MutablePair;
 
 /**
  * Common base utility class of KeyLongMap.
@@ -11,14 +12,14 @@ import picoded.dstack.KeyLongMap;
  * but helps provide a common base line for all the various implementation.
  **/
 public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong> implements
-		KeyLongMap {
-
+	KeyLongMap {
+	
 	//--------------------------------------------------------------------------
 	//
 	// Basic get operation
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the KeyValue object, given the key identifier, if found
 	 *
@@ -28,33 +29,19 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 **/
 	@Override
 	public KeyLong getKeyLong(Object key) {
-		if( key == null ) {
+		if (key == null) {
 			throw new RuntimeException("key parameter cannot be NULL");
 		}
 		return new Core_KeyLong(this, key.toString());
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// raw put & get, meant to be actually implemented.
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Returns the value, with validation against the current timestamp
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
-	 *
-	 * @return Long value
-	 **/
-	abstract protected Long getValueRaw(String key, long now);
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -68,21 +55,8 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return null
 	 **/
-	abstract protected Long setValueRaw(String key, Long value, long expire);
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Returns the expire time stamp value, raw without validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 *
-	 * @return long
-	 **/
-	abstract protected long getExpiryRaw(String key);
-
+	abstract public Long setValueRaw(String key, Long value, long expire);
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -96,13 +70,67 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 * @return long
 	 **/
 	abstract public void setExpiryRaw(String key, long expire);
-
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return Long value, and expiry pair
+	 **/
+	abstract public MutablePair<Long, Long> getValueExpiryRaw(String key, long now);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return Long value
+	 **/
+	public Long getValueRaw(String key, long now) {
+		MutablePair<Long, Long> pair = getValueExpiryRaw(key, now);
+		if (pair != null) {
+			return pair.getLeft().longValue();
+		}
+		return null;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the expire time stamp value, raw without validation
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return long
+	 **/
+	public long getExpiryRaw(String key, long now) {
+		MutablePair<Long, Long> pair = getValueExpiryRaw(key, now);
+		if (pair != null) {
+			return pair.getRight().longValue();
+		}
+		return -1;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Basic get and put
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -119,7 +147,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 		setValueRaw(key, value, 0);
 		return null;
 	}
-
+	
 	/**
 	 * Returns the value, given the key
 	 *
@@ -131,43 +159,15 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 **/
 	@Override
 	public Long getValue(Object key) {
-		return getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis());
+		return getValueRaw((key != null) ? key.toString() : null, System.currentTimeMillis());
 	}
-
-
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Incremental operations
 	//
 	//--------------------------------------------------------------------------
-
-	public Long addAndGet(Object key, Object delta) {
-
-		long deltaLn = GenericConvert.toLong(delta, 0);
-		Long res = getAndAdd(key, deltaLn);
-		if (res == null) {
-			return null;
-		}
-		return res.longValue() + deltaLn;
-
-	}
-
-	public Long getAndAdd(Object key, Object delta) {
-
-		Long oldVal = getValue(key);
-
-		// Assume 0, if old value does not exists
-		if (oldVal == null) {
-			oldVal = (Long) 0l;
-		}
-
-		Long newVal = oldVal.longValue() + GenericConvert.toNumber(delta).longValue();
-		setValueRaw(key.toString(), newVal, System.currentTimeMillis());
-
-		return oldVal;
-	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -179,22 +179,8 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	 *
 	 * @return true if successful
 	 **/
-	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		Long curVal = getValue( key );
-
-		//if current value is equal to expected value, set to new value
-		if (curVal != null && curVal.longValue() == expect.longValue()) {
-			setValueRaw(key, update, 0);
-			return true;
-		} else if (curVal == null || curVal.longValue() == 0l) {
-			setValueRaw(key, update, 0);
-			return true;
-		} else {
-			return false;
-		}
-
-	}
-
+	abstract public boolean weakCompareAndSet(String key, Long expect, Long update);
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
@@ -202,48 +188,64 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	// Built using getExpiryRaw and setExpiryRaw
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expire
+	 * @return long, 0 means no expiry, -1 no data / expire
 	 **/
 	@Override
 	public long getExpiry(String key) {
-		long expire = getExpiryRaw(key);
-		if (expire <= 0) { //0 = no timestamp, -1 = no data
-			return expire;
+		// Get the value / expiry value pair
+		MutablePair<Long, Long> pair = getValueExpiryRaw(key, System.currentTimeMillis());
+		
+		// No data found
+		if (pair == null) {
+			return -1;
 		}
-		if (expire > System.currentTimeMillis()) {
-			return expire;
-		}
-		return -1; //expired
+		
+		// Return expirary
+		return pair.getRight().longValue();
 	}
-
+	
 	/**
 	 * Returns the lifespan time stamp value
 	 *
 	 * @param key as String
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expire
+	 * @return long, 0 means no expiry, -1 no data / expire
 	 **/
 	@Override
 	public long getLifespan(String key) {
-		long expire = getExpiryRaw(key);
-		if (expire <= 0) { //0 = no timestamp, -1 = no data
+		// Time stamp to use now
+		long now = System.currentTimeMillis();
+		
+		// Get the value / expiry value pair
+		MutablePair<Long, Long> pair = getValueExpiryRaw(key, now);
+		
+		// No data found
+		if (pair == null) {
+			return -1;
+		}
+		
+		// Get expire timestamp
+		long expire = pair.getRight();
+		
+		//0 = no timestamp, -1 = no data
+		if (expire <= 0) {
 			return expire;
 		}
-
-		long lifespan = expire - System.currentTimeMillis();
+		
+		// Calculate the livespan
+		long lifespan = expire - now;
 		if (lifespan <= 0) {
 			return -1; //expired
 		}
-
 		return lifespan;
 	}
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -254,7 +256,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	public void setExpiry(String key, long expire) {
 		setExpiryRaw(key, expire);
 	}
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -265,7 +267,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	public void setLifeSpan(String key, long lifespan) {
 		setExpiryRaw(key, lifespan + System.currentTimeMillis());
 	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -281,7 +283,7 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	public Long putWithLifespan(String key, Long value, long lifespan) {
 		return setValueRaw(key, value, (lifespan <= 0) ? -1 : System.currentTimeMillis() + lifespan);
 	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -297,5 +299,5 @@ public abstract class Core_KeyLongMap extends Core_DataStructure<String, KeyLong
 	public Long putWithExpiry(String key, Long value, long expireTime) {
 		return setValueRaw(key, value, expireTime);
 	}
-
+	
 }

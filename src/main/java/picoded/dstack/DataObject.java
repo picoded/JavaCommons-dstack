@@ -26,7 +26,7 @@ public interface DataObject extends GenericConvertMap<String, Object> {
 	default long createdTimestamp() {
 		return -1;
 	}
-
+	
 	/**
 	 * The updated timestamp of the map in ms, 
 	 * note that -1 means the current backend does not support this feature
@@ -36,7 +36,7 @@ public interface DataObject extends GenericConvertMap<String, Object> {
 	default long updatedTimestamp() {
 		return -1;
 	}
-
+	
 	/**
 	 * Gets and return its current value
 	 *

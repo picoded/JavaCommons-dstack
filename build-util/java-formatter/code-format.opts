@@ -1,0 +1,28 @@
+# 
+# The following option file, overrides <> with the following format
+# 
+# <field name>:<type>:<value>
+# 
+# See: http://www.cs.utep.edu/cheon/download/jml4c/javadocs/org/eclipse/jdt/internal/formatter/DefaultCodeFormatterOptions.html
+# For a full list of options
+#
+
+# output a mix of space and tabs
+tab_char:int:4
+
+# Sets tabs size to 3 spaces
+tab_size:int:3
+indentation_size:int:3
+
+# Continous statement, indenting size (double of standard)
+continuation_indentation:int:1
+continuation_indentation_for_array_initializer:int:1
+
+# Sets the page width to 100 characters
+page_width:int:100
+
+# Setup tabs as leading indentation only
+use_tabs_only_for_leading_indentations:boolean:false
+
+# Fills up empty lines with indent
+indent_empty_lines:boolean:true

@@ -12,9 +12,9 @@ import picoded.dstack.*;
  * Does not actually implement its required feature,
  * but helps provide a common base line for all the various implementation.
  **/
-abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace> implements FileWorkspaceMap {
+abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace>
+	implements FileWorkspaceMap {
 	
-
 	//--------------------------------------------------------------------------
 	//
 	// FileWorkspace removal
@@ -38,7 +38,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		}
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
@@ -53,7 +53,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @param ObjectID of workspace to remove
 	 **/
-	abstract protected void backend_workspaceRemove(String oid);
+	abstract public void backend_workspaceRemove(String oid);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -64,7 +64,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  boolean to check if workspace exists
 	 **/
-	abstract protected boolean backend_workspaceExist(String oid);
+	abstract public boolean backend_workspaceExist(String oid);
 	
 	//--------------------------------------------------------------------------
 	//
@@ -87,7 +87,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  boolean true, if file eixst
 	 **/
-	protected boolean backend_fileExist(final String oid, final String filepath) {
+	public boolean backend_fileExist(final String oid, final String filepath) {
 		return backend_fileRead(oid, filepath) != null;
 	}
 	
@@ -101,7 +101,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	abstract protected byte[] backend_fileRead(final String oid, final String filepath);
+	abstract public byte[] backend_fileRead(final String oid, final String filepath);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -112,8 +112,8 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	abstract protected void backend_fileWrite(final String oid, final String filepath, final byte[] data);
-
+	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -122,7 +122,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param oid identifier to the workspace
 	 * @param filepath the file to be removed
 	 */
-	abstract protected void backend_removeFile(final String oid, final String filepath);
+	abstract public void backend_removeFile(final String oid, final String filepath);
 	
 	//--------------------------------------------------------------------------
 	//
@@ -139,18 +139,6 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		// Actual return
 		return new Core_FileWorkspace(this, null);
 	}
-
-	/**
-	 * The basic initialization method for FileWorkspace constructor so as to create an
-	 * object to be searched.
-	 *
-	 * E.g. In file systems, the latter inheritance will implement a mkdir method if not exist
-	 * Or using in-memory data structure, the latter inheritance will implement perhaps a
-	 * HashMap<> object.
-	 *
-	 * @param oid to be initialized
-	 */
-	abstract protected void init(String oid);
 	
 	/**
 	 * Get a FileWorkspace, and returns it. Skips existance checks if required
@@ -187,16 +175,14 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		}
 		
 		// Get if workspace exists
-		if( backend_workspaceExist(soid) ) {
+		if (backend_workspaceExist(soid)) {
 			return new Core_FileWorkspace(this, soid);
 		}
-
+		
 		// Return null if not exist
 		return null;
 	}
 	
-
-
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance
@@ -205,7 +191,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
-	 * having any form of time "expirary", this call does nothing in most implementation.
+	 * having any form of time "expiry", this call does nothing in most implementation.
 	 *
 	 * As such im making that the default =)
 	 **/

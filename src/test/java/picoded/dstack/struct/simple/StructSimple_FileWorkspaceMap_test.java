@@ -21,27 +21,26 @@ import picoded.dstack.core.Core_FileWorkspace;
 import picoded.dstack.struct.simple.*;
 
 public class StructSimple_FileWorkspaceMap_test {
-
+	
 	// Test object for reuse
 	public FileWorkspaceMap testObj = null;
-
-
+	
 	// To override for implementation
 	//-----------------------------------------------------
-
+	
 	/// Note that this implementation constructor
 	/// is to be overriden for the various backend
 	/// specific test cases
 	public FileWorkspaceMap implementationConstructor() {
 		return new StructSimple_FileWorkspaceMap();
 	}
-
+	
 	@Before
 	public void systemSetup() {
 		testObj = implementationConstructor();
 		testObj.systemSetup();
 	}
-
+	
 	@After
 	public void systemDestroy() {
 		if (testObj != null) {
@@ -49,51 +48,52 @@ public class StructSimple_FileWorkspaceMap_test {
 		}
 		testObj = null;
 	}
-
+	
 	@Test
 	public void constructorSetupAndMaintenance() {
 		// not null check
 		assertNotNull(testObj);
-
+		
 		// run maintaince, no exception?
 		testObj.maintenance();
-
+		
 		// run incremental maintaince, no exception?
 		testObj.incrementalMaintenance();
 	}
-
+	
 	@Test
 	public void createFileWorkspace() {
 		assertNull(testObj.get("nonExistence"));
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertNotNull(fileWorkspace);
 	}
-
+	
 	@Test
 	public void workspaceExistence() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		assertNull(testObj.get("unknown value"));
 	}
-
+	
 	@Test
-	public void checkFileExist(){
+	public void checkFileExist() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertTrue(!fileWorkspace.fileExist("nonExistence"));
 		fileWorkspace.writeByteArray("nonExistence", "".getBytes());
 		assertTrue(fileWorkspace.fileExist("nonExistence"));
 	}
-
+	
 	@Test
 	public void writeToFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		fileWorkspace.writeByteArray("testPath", "data to write".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()).readByteArray("testPath"));
-
+		
 		fileWorkspace.writeByteArray("a long string", "some test".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()).readByteArray("a long string"));
 	}
-
+	
 	@Test
 	public void readFromFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
@@ -102,14 +102,14 @@ public class StructSimple_FileWorkspaceMap_test {
 		String actualContent = new String(fileWorkspace.readByteArray("reader reading"));
 		assertEquals(content, actualContent);
 	}
-
+	
 	@Test
 	public void readNonExistenceFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertNull(fileWorkspace.readByteArray("unknown path"));
 		assertNull(fileWorkspace.readByteArray(null));
 	}
-
+	
 	@Test
 	public void deleteExistingFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
@@ -118,7 +118,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.removeFile("existingDeletion");
 		assertFalse(fileWorkspace.fileExist("existingDeletion"));
 	}
-
+	
 	@Test
 	public void deleteNonExistingFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
@@ -126,13 +126,14 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.removeFile("alreadyNotExist");
 		assertFalse(fileWorkspace.fileExist("alreadyNotExist"));
 	}
-
+	
 	@Test
 	public void deleteWorkspace() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));
 	}
-
+	
 }

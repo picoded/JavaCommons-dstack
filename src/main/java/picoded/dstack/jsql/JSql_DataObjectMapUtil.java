@@ -304,7 +304,8 @@ public class JSql_DataObjectMapUtil {
 	 **/
 	protected static Object[] extractKeyValueFromPos_nonArray(JSqlResult r, int pos) {
 		Object value = extractNonArrayValueFromPos(r, pos);
-		return new Object[] { r.get("kID")[pos], value };
+		Object[] idArr = r.get("kID");
+		return new Object[] { idArr[pos], value };
 	}
 	
 	/**
@@ -349,7 +350,7 @@ public class JSql_DataObjectMapUtil {
 	 * @param {boolean} optimizeAppend    - Used to indicate if batch mode should be used as optimization (not used)
 	 **/
 	@SuppressWarnings("unchecked")
-	public static void JSqlObjectMapAppend( //
+	public static void jSqlObjectMapAppend( //
 		JSql sql, String tName, String _oid, //
 		Map<String, Object> objMap, Set<String> keyList, //
 		boolean batchMode //
@@ -453,7 +454,7 @@ public class JSql_DataObjectMapUtil {
 	 * @param {String} _oid               - object id to store the key value pairs into
 	 * @param {Map<String,Object>} ret    - map to populate, and return, created if null if there is data
 	 **/
-	public static Map<String, Object> JSqlObjectMapFetch( //
+	public static Map<String, Object> jSqlObjectMapFetch( //
 		JSql sql, //
 		String sqlTableName, String _oid, //
 		Map<String, Object> ret //
@@ -696,9 +697,9 @@ public class JSql_DataObjectMapUtil {
 			type == Core_DataType.INTEGER || //
 				type == Core_DataType.FLOAT || //
 				type == Core_DataType.DOUBLE || type == Core_DataType.LONG) { //
-																					 //---------------------------
-																					 // Numeric column processing
-																					 //---------------------------
+				//---------------------------
+				// Numeric column processing
+				//---------------------------
 				
 				// Get numeric column
 				select.append(", N" + joinCount + ".nVl AS ");
@@ -1019,7 +1020,7 @@ public class JSql_DataObjectMapUtil {
 	 *
 	 * @return  The String[] array
 	 **/
-	public static String[] DataObjectMapQuery_id( //
+	public static String[] dataObjectMapQuery_id( //
 		// The meta table / sql configs
 		DataObjectMap dataObjectMapObj, JSql sql, String tablename, //
 		// The actual query
@@ -1027,8 +1028,8 @@ public class JSql_DataObjectMapUtil {
 	) { //
 		JSqlResult r = runComplexQuery(
 			//
-			dataObjectMapObj, sql, tablename, "DISTINCT \"oID\"", whereClause, whereValues, orderByStr,
-			offset, limit);
+			dataObjectMapObj, sql, tablename, "DISTINCT \"oID\"", whereClause, whereValues,
+			orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
 		if (oID_list != null) {
@@ -1062,7 +1063,7 @@ public class JSql_DataObjectMapUtil {
 	// 	String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	// ) { //
 	// 	return dataObjectMapObj.getArrayFromID(
-	// 		DataObjectMapQuery_id(dataObjectMapObj, sql, tablename, whereClause, whereValues, orderByStr,
+	// 		dataObjectMapQuery_id(dataObjectMapObj, sql, tablename, whereClause, whereValues, orderByStr,
 	// 			offset, limit), true);
 	// }
 	
@@ -1083,7 +1084,7 @@ public class JSql_DataObjectMapUtil {
 	 *
 	 * @return  The DataObject[] array
 	 **/
-	public static long DataObjectMapCount( //
+	public static long dataObjectMapCount( //
 		//
 		DataObjectMap dataObjectMapObj, JSql sql, String tablename, //
 		//

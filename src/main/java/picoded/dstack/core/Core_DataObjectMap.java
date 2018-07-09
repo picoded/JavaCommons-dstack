@@ -22,7 +22,152 @@ import picoded.dstack.*;
  * Does not actually implement its required feature,
  * but helps provide a common base line for all the various implementation.
  **/
-abstract public class Core_DataObjectMap extends Core_DataStructure<String, DataObject> implements DataObjectMap {
+abstract public class Core_DataObjectMap extends Core_DataStructure<String, DataObject> implements
+	DataObjectMap {
+	
+	//--------------------------------------------------------------------------
+	//
+	// Functions, used by DataObject
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the complete remote data map, for DataObject.
+	 * This is used to nuke an entire object
+	 *
+	 * @param Object ID to remove
+	 *
+	 * @return nothing
+	 **/
+	abstract public void DataObjectRemoteDataMap_remove(String oid);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Gets the complete remote data map, for DataObject.
+	 * This is used to get the raw map data from the backend.
+	 *
+	 * @param  Object ID to get
+	 *
+	 * @return  The raw Map object to build the DataObject, null if does not exists
+	 **/
+	abstract public Map<String, Object> DataObjectRemoteDataMap_get(String oid);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 *
+	 * @param   Object ID to get
+	 * @param   The full map of data. This is required as not all backend implementations allow partial update
+	 * @param   Keys to update, this is used to optimize certain backends
+	 **/
+	abstract public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
+		Set<String> keys);
+	
+	//--------------------------------------------------------------------------
+	//
+	// Query functions
+	// [Should really be overwritten, as this does the inefficent lazy way]
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
+		int offset, int limit) {
+		// Setup the query, if needed
+		if (whereClause == null) {
+			// Null gets all
+			return query_id(null, orderByStr, offset, limit);
+		} else {
+			// Performs a search query
+			Query queryObj = Query.build(whereClause, whereValues);
+			return query_id(queryObj, orderByStr, offset, limit);
+		}
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+		
+		// The return list of DataObjects
+		List<DataObject> retList = null;
+		
+		// Setup the query, if needed
+		if (queryClause == null) {
+			// Null gets all
+			retList = new ArrayList<DataObject>(this.values());
+		} else {
+			// Performs a search query
+			retList = queryClause.search(this);
+		}
+		
+		// Sort, offset, convert to array, and return
+		retList = sortAndOffsetList(retList, orderByStr, offset, limit);
+		
+		// Prepare the actual return string array
+		int retLength = retList.size();
+		String[] ret = new String[retLength];
+		for (int a = 0; a < retLength; ++a) {
+			ret[a] = retList.get(a)._oid();
+		}
+		
+		// Returns
+		return ret;
+	}
+	
+	/**
+	 * Performs a custom search by configured keyname
+	 *
+	 * @param   keyName to lookup for
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	public DataObject[] getFromKeyName(String keyName, String orderByStr, int offset, int limit) {
+		
+		// The return list
+		List<DataObject> retList = new ArrayList<DataObject>();
+		
+		// Iterate the list, add if containsKey
+		for (DataObject obj : values()) {
+			if (obj.containsKey(keyName)) {
+				retList.add(obj);
+			}
+		}
+		
+		// Sort, offset, convert to array, and return
+		return sortAndOffsetList(retList, orderByStr, offset, limit).toArray(new DataObject[0]);
+	}
 	
 	//--------------------------------------------------------------------------
 	//
@@ -130,126 +275,6 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 		}
 		return null;
 	}
-
-	//--------------------------------------------------------------------------
-	//
-	// Functions, used by DataObject
-	// [Internal use, to be extended in future implementation]
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the complete remote data map, for DataObject.
-	 * This is used to nuke an entire object
-	 *
-	 * @param Object ID to remove
-	 *
-	 * @return nothing
-	 **/
-	abstract protected void DataObjectRemoteDataMap_remove(String oid);
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Gets the complete remote data map, for DataObject.
-	 * This is used to get the raw map data from the backend.
-	 *
-	 * @param  Object ID to get
-	 *
-	 * @return  The raw Map object to build the DataObject, null if does not exists
-	 **/
-	abstract protected Map<String, Object> DataObjectRemoteDataMap_get(String oid);
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Updates the actual backend storage of DataObject
-	 * either partially (if supported / used), or completely
-	 *
-	 * @param   Object ID to get
-	 * @param   The full map of data. This is required as not all backend implementations allow partial update
-	 * @param   Keys to update, this is used to optimize certain backends
-	 **/
-	abstract protected void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
-		Set<String> keys);
-	
-	//--------------------------------------------------------------------------
-	//
-	// Query functions
-	// [Should really be overwritten, as this does the inefficent lazy way]
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Performs a search query, and returns the respective DataObject keys.
-	 *
-	 * This is the GUID key varient of query, this is critical for stack lookup
-	 *
-	 * @param   where query statement
-	 * @param   where clause values array
-	 * @param   query string to sort the order by, use null to ignore
-	 * @param   offset of the result to display, use -1 to ignore
-	 * @param   number of objects to return max, use -1 to ignore
-	 *
-	 * @return  The String[] array
-	 **/
-	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
-		int offset, int limit) {
-		
-		// The return list of DataObjects
-		List<DataObject> retList = null;
-		
-		// Setup the query, if needed
-		if (whereClause == null) {
-			// Null gets all
-			retList = new ArrayList<DataObject>(this.values());
-		} else {
-			// Performs a search query
-			Query queryObj = Query.build(whereClause, whereValues);
-			retList = queryObj.search(this);
-		}
-		
-		// Sort, offset, convert to array, and return
-		retList = sortAndOffsetList(retList, orderByStr, offset, limit);
-		
-		// Prepare the actual return string array
-		int retLength = retList.size();
-		String[] ret = new String[retLength];
-		for (int a = 0; a < retLength; ++a) {
-			ret[a] = retList.get(a)._oid();
-		}
-		
-		// Returns
-		return ret;
-	}
-	
-	/**
-	 * Performs a custom search by configured keyname
-	 *
-	 * @param   keyName to lookup for
-	 * @param   query string to sort the order by, use null to ignore
-	 * @param   offset of the result to display, use -1 to ignore
-	 * @param   number of objects to return max
-	 *
-	 * @return  The DataObject[] array
-	 **/
-	public DataObject[] getFromKeyName(String keyName, String orderByStr, int offset, int limit) {
-		
-		// The return list
-		List<DataObject> retList = new ArrayList<DataObject>();
-		
-		// Iterate the list, add if containsKey
-		for (DataObject obj : values()) {
-			if (obj.containsKey(keyName)) {
-				retList.add(obj);
-			}
-		}
-		
-		// Sort, offset, convert to array, and return
-		return sortAndOffsetList(retList, orderByStr, offset, limit).toArray(new DataObject[0]);
-	}
 	
 	//--------------------------------------------------------------------------
 	//
@@ -324,7 +349,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
-	 * having any form of time "expirary", this call does nothing in most implementation.
+	 * having any form of time "expiry", this call does nothing in most implementation.
 	 *
 	 * As such im making that the default =)
 	 **/

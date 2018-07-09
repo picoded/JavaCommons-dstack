@@ -648,6 +648,33 @@ public class StructSimple_DataObjectMap_test {
 		assertEquals(oRes.length - 1, qRes.length);
 	}
 	
+	@Test
+	public void queryWithOID() {
+		
+		// Lets just rescycle old test for some dummy data
+		basicTest();
+		
+		// Lets get DataObject list
+		DataObject[] oRes = null;
+		assertNotNull(oRes = mtObj.query(null, null));
+		assertTrue(oRes.length > 0);
+		
+		// Lets remove one object
+		DataObject ref = oRes[0];
+		
+		// Lets query to make sure it works
+		DataObject[] qRes = null;
+		assertNotNull(qRes = mtObj.query("_oid = ?", new Object[] { ref._oid() }));
+		assertEquals(1, qRes.length);
+		assertEquals(ref._oid(), qRes[0]._oid());
+		
+		// Lets query to make sure it works
+		qRes = null;
+		assertNotNull(qRes = mtObj.query("num != ? AND _oid = ?", new Object[] { -1, ref._oid() }));
+		assertEquals(1, qRes.length);
+		assertEquals(ref._oid(), qRes[0]._oid());
+	}
+	
 	// Random object, and iteration support
 	//-----------------------------------------------
 	

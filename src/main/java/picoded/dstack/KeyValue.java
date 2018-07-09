@@ -8,14 +8,14 @@ import picoded.core.struct.GenericConvertValue;
  * Implemented as part of KeyValueMap
  **/
 public interface KeyValue extends GenericConvertValue<String> {
-
+	
 	/**
 	 * Get and return the key used to store the value
 	 * 
 	 * @return  the key representing the value
 	 */
 	String getKey();
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
@@ -25,14 +25,14 @@ public interface KeyValue extends GenericConvertValue<String> {
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getExpiry();
 	
 	/**
 	 * Returns the lifespan time stamp value
 	 *
-	 * @return long, 0 means no expirary, -1 no data / expired
+	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getLifespan();
 	
@@ -65,7 +65,7 @@ public interface KeyValue extends GenericConvertValue<String> {
 	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
-	 * with expirary value.
+	 * with expiry value.
 	 *
 	 * Important note: It does not return the previously stored value
 	 *
