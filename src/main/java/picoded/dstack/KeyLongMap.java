@@ -21,13 +21,13 @@ import picoded.core.struct.GenericConvertMap;
  *        value representation without passing the whole map. 
  **/
 public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonStructure {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Basic KeyValue object put / get / remove operations (for map support)
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Gets and return the KeyValue, regardless if any value is stored (or expired)
 	 *
@@ -36,7 +36,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return  KeyLong object (does not validate if it exists)
 	 */
 	KeyLong getKeyLong(Object key);
-
+	
 	/**
 	 * Returns the KeyLong, given the key
 	 *
@@ -50,12 +50,12 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	@Override
 	default KeyLong get(Object key) {
 		KeyLong r = getKeyLong(key);
-		if(r.getLifespan() >= 0) {
+		if (r.getLifespan() >= 0) {
 			return r;
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) the value at the given key
 	 *
@@ -68,14 +68,14 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 **/
 	@Override
 	default KeyLong put(String key, KeyLong value) {
-		if( value == null ) {
+		if (value == null) {
 			putValue(key, null);
 		} else {
 			putValue(key, value.getValue());
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Convinence varient of put, where string value is used instead
 	 *
@@ -90,7 +90,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 		putValue(key, value);
 		return null;
 	}
-
+	
 	/**
 	 * Remove the value, given the key
 	 *
@@ -103,14 +103,14 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 		removeValue(key);
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Basic put / get / remove operations performed
 	// directly on the stored value
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the value, given the key
 	 *
@@ -121,7 +121,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return  value of the given key
 	 **/
 	Long getValue(Object key);
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -134,7 +134,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return null
 	 **/
 	Long putValue(String key, Long value);
-
+	
 	/**
 	 * Remove the value, given the key
 	 *
@@ -146,15 +146,15 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return  null
 	 **/
 	default Long removeValue(Object key) {
-		return putValue((String)key, null);
+		return putValue((String) key, null);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Incremental operations
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the value, given the key
 	 *
@@ -170,36 +170,36 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 		//        weakCompareAndSet, while functional.
 		//        Is highly inefficent in most cases
 		//
-
+		
 		// Validate and convert the key to String
-		if(key == null) {
+		if (key == null) {
 			throw new IllegalArgumentException("key cannot be null in addAndGet");
 		}
 		String keyAsString = key.toString();
-
+		
 		// Attempt to update the key for 5 times before throwing exception
-		for(int tries=0;tries < 5; tries++){
+		for (int tries = 0; tries < 5; tries++) {
 			// Retrieve value from key
 			Long value = getValue(keyAsString);
-
+			
 			// Assume value as 0 if not exist
 			if (value == null) {
 				value = new Long(0);
 			}
-
+			
 			// Calculate the updated value
-			Long updatedValue = GenericConvert.toLong(delta)+value;
-
+			Long updatedValue = GenericConvert.toLong(delta) + value;
+			
 			// Update the value with weakCompareAndSet and return 
 			if (weakCompareAndSet(keyAsString, value, updatedValue)) {
 				return updatedValue;
 			}
 		}
-
+		
 		// Throw exception due to number of retries exceeded the limit
 		throw new RuntimeException("Number of retries exceeded limit for addAndGet");
 	}
-
+	
 	/**
 	 * Returns the value, given the key. Then apply the delta change
 	 *
@@ -215,68 +215,76 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 		//        weakCompareAndSet, while functional.
 		//        Is highly inefficent in most cases
 		//
-
+		
 		// Validate and convert the key to String
-		if(key == null) {
+		if (key == null) {
 			throw new IllegalArgumentException("key cannot be null in addAndGet");
 		}
 		String keyAsString = key.toString();
-
+		
 		// Attempt to update the key for 5 times before throwing exception
-		for(int tries=0;tries < 5; tries++){
+		for (int tries = 0; tries < 5; tries++) {
 			// Retrieve value from key
 			Long value = getValue(keyAsString);
-
+			
 			// Assume value as 0 if not exist
 			if (value == null) {
 				value = new Long(0);
 			}
-
+			
 			// Calculate the updated value
-			Long updatedValue = GenericConvert.toLong(delta)+value;
-
+			Long updatedValue = GenericConvert.toLong(delta) + value;
+			
 			// Update the value with weakCompareAndSet and return the original value
 			if (weakCompareAndSet(keyAsString, value, updatedValue)) {
 				return value;
 			}
 		}
-
+		
 		// Throw exception due to number of retries exceeded the limit
 		throw new RuntimeException("Number of retries exceeded limit for addAndGet");
 	}
-
+	
 	/**
 	 * Increment the value of the key and return the updated value.
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	default Long incrementAndGet(Object key) { return addAndGet(key, 1); }
-
+	default Long incrementAndGet(Object key) {
+		return addAndGet(key, 1);
+	}
+	
 	/**
 	 * Return the current value of the key and increment by 1
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	default Long getAndIncrement(Object key) { return getAndAdd(key, 1); }
-
+	default Long getAndIncrement(Object key) {
+		return getAndAdd(key, 1);
+	}
+	
 	/**
 	 * Decrement the value of the key and return the updated value.
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	default Long decrementAndGet(Object key) { return addAndGet(key, -1); }
-
+	default Long decrementAndGet(Object key) {
+		return addAndGet(key, -1);
+	}
+	
 	/**
 	 * Return the current value of the key and decrement by 1
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	default Long getAndDecrement(Object key) { return getAndAdd(key, -1); }
-
+	default Long getAndDecrement(Object key) {
+		return getAndAdd(key, -1);
+	}
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 *
@@ -289,13 +297,13 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return true if successful
 	 **/
 	boolean weakCompareAndSet(String key, Long expect, Long update);
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Other common map operations
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Contains key operation.
 	 *
@@ -308,7 +316,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	default boolean containsKey(Object key) {
 		return getLifespan(key.toString()) >= 0;
 	}
-
+	
 	/**
 	 * [warning] : avoid use in production, use a DataTable instead.
 	 *
@@ -325,7 +333,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	default Set<String> keySet() {
 		return keySet(null);
 	}
-
+	
 	/**
 	 * [warning] : avoid use in production, use a DataTable instead.
 	 *
@@ -338,13 +346,13 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return array of keys
 	 **/
 	Set<String> keySet(Long value);
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
@@ -353,7 +361,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getExpiry(String key);
-
+	
 	/**
 	 * Returns the lifespan time stamp value
 	 *
@@ -362,7 +370,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
 	long getLifespan(String key);
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -370,7 +378,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param expireTimestamp expire unix timestamp value in milliseconds
 	 **/
 	void setExpiry(String key, long expireTimestamp);
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -378,13 +386,13 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @param lifespan time to expire in milliseconds
 	 **/
 	void setLifeSpan(String key, long lifespan);
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Extended map operations
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 * with lifespan value.
@@ -398,7 +406,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return null
 	 **/
 	Long putWithLifespan(String key, Long value, long lifespan);
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 * with expiry value.
@@ -412,13 +420,13 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	 * @return String
 	 **/
 	Long putWithExpiry(String key, Long value, long expireTimestamp);
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Backend system setup / teardown / maintenance
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 *
@@ -429,5 +437,5 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	default void clear() {
 		((GenericConvertMap<String, KeyLong>) this).clear();
 	}
-
+	
 }

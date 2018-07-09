@@ -667,7 +667,7 @@ public class StructSimple_DataObjectMap_test {
 		assertNotNull(qRes = mtObj.query("_oid = ?", new Object[] { ref._oid() }));
 		assertEquals(1, qRes.length);
 		assertEquals(ref._oid(), qRes[0]._oid());
-
+		
 		// Lets query to make sure it works
 		qRes = null;
 		assertNotNull(qRes = mtObj.query("num != ? AND _oid = ?", new Object[] { -1, ref._oid() }));

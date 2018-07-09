@@ -697,9 +697,9 @@ public class JSql_DataObjectMapUtil {
 			type == Core_DataType.INTEGER || //
 				type == Core_DataType.FLOAT || //
 				type == Core_DataType.DOUBLE || type == Core_DataType.LONG) { //
-																					 //---------------------------
-																					 // Numeric column processing
-																					 //---------------------------
+				//---------------------------
+				// Numeric column processing
+				//---------------------------
 				
 				// Get numeric column
 				select.append(", N" + joinCount + ".nVl AS ");
@@ -1028,8 +1028,8 @@ public class JSql_DataObjectMapUtil {
 	) { //
 		JSqlResult r = runComplexQuery(
 			//
-			dataObjectMapObj, sql, tablename, "DISTINCT \"oID\"", whereClause, whereValues, orderByStr,
-			offset, limit);
+			dataObjectMapObj, sql, tablename, "DISTINCT \"oID\"", whereClause, whereValues,
+			orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
 		if (oID_list != null) {

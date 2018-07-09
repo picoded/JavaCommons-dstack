@@ -28,7 +28,7 @@ public interface Stack_CommonStructure extends CommonStructure {
 	 * @return  array of the internal common structure stack used by the Stack_ implementation
 	 */
 	CommonStructure[] commonStructureStack();
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Backend system setup / teardown / maintenance
@@ -40,7 +40,7 @@ public interface Stack_CommonStructure extends CommonStructure {
 	 * The SQL equivalent would be "CREATE TABLE {TABLENAME} IF NOT EXISTS"
 	 **/
 	default void systemSetup() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.systemSetup();
 		}
 	}
@@ -50,7 +50,7 @@ public interface Stack_CommonStructure extends CommonStructure {
 	 * The SQL equivalent would be "DROP TABLE {TABLENAME}"
 	 **/
 	default void systemDestroy() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.systemDestroy();
 		}
 	}
@@ -61,7 +61,7 @@ public interface Stack_CommonStructure extends CommonStructure {
 	 * running task, where its use case is backend specific
 	 **/
 	default void maintenance() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.maintenance();
 		}
 	}
@@ -72,7 +72,7 @@ public interface Stack_CommonStructure extends CommonStructure {
 	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"
 	 **/
 	default void clear() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.clear();
 		}
 	}

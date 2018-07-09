@@ -8,14 +8,14 @@ import picoded.core.struct.GenericConvertValue;
  * Implemented as part of KeyValueMap
  **/
 public interface KeyValue extends GenericConvertValue<String> {
-
+	
 	/**
 	 * Get and return the key used to store the value
 	 * 
 	 * @return  the key representing the value
 	 */
 	String getKey();
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling

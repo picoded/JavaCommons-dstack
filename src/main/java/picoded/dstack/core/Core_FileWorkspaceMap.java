@@ -12,9 +12,9 @@ import picoded.dstack.*;
  * Does not actually implement its required feature,
  * but helps provide a common base line for all the various implementation.
  **/
-abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace> implements FileWorkspaceMap {
+abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace>
+	implements FileWorkspaceMap {
 	
-
 	//--------------------------------------------------------------------------
 	//
 	// FileWorkspace removal
@@ -38,7 +38,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		}
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
@@ -113,7 +113,7 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 	 * @param   data to write the file with
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -175,10 +175,10 @@ abstract public class  Core_FileWorkspaceMap extends Core_DataStructure<String, 
 		}
 		
 		// Get if workspace exists
-		if( backend_workspaceExist(soid) ) {
+		if (backend_workspaceExist(soid)) {
 			return new Core_FileWorkspace(this, soid);
 		}
-
+		
 		// Return null if not exist
 		return null;
 	}

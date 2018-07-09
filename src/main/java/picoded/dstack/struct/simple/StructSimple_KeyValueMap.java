@@ -71,11 +71,11 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 			for (String key : valuekeySet) {
 				
 				// Get the value pair, if it has a valid value
-				MutablePair<String,Long> pair = getValueExpiryRaw_noLocking(key, now);
-				if( pair == null ) {
+				MutablePair<String, Long> pair = getValueExpiryRaw_noLocking(key, now);
+				if (pair == null) {
 					continue;
 				}
-
+				
 				// Validate the rawValue
 				String rawValue = pair.getLeft();
 				if (rawValue != null && (value == null || rawValue.equals(value))) {
@@ -136,7 +136,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @return String value, and expiry pair
 	 **/
-	protected MutablePair<String,Long> getValueExpiryRaw_noLocking(String key, long now) {
+	protected MutablePair<String, Long> getValueExpiryRaw_noLocking(String key, long now) {
 		String val = valueMap.get(key);
 		if (val == null) {
 			return null;
@@ -144,20 +144,20 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 		
 		// Get the expire object
 		Long expireObj = expireMap.get(key);
-		if(expireObj == null) {
+		if (expireObj == null) {
 			expireObj = 0L;
 		}
-
+		
 		// Note: 0 = no timestamp, hence valid value
 		long expiry = expireObj.longValue();
 		if (expiry != 0 && expiry < now) {
 			return null;
 		}
-
+		
 		// Return the expirary pair
-		return new MutablePair<String,Long>(val,expiry);
+		return new MutablePair<String, Long>(val, expiry);
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -170,7 +170,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @return String value, and expiry pair
 	 **/
-	public MutablePair<String,Long> getValueExpiryRaw(String key, long now) {
+	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
 		try {
 			accessLock.readLock().lock();
 			return getValueExpiryRaw_noLocking(key, now);
@@ -178,7 +178,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 			accessLock.readLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 * Sets the expire time stamp value, raw without validation

@@ -15,14 +15,13 @@ import picoded.core.common.ObjectToken;
 import picoded.dstack.*;
 import picoded.dstack.core.*;
 
-
 /**
  * Stacked implementation of DataObjectMap data structure.
  *
  * Built ontop of the Core_DataObjectMap implementation.
  **/
 public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_CommonStructure {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor vars
@@ -31,10 +30,10 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	
 	// Data layers to apply basic read/write against
 	protected Core_DataObjectMap[] dataLayers = null;
-
+	
 	// Data layer to apply query against
 	protected Core_DataObjectMap queryLayer = null;
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
@@ -43,17 +42,17 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 */
 	public Stack_DataObjectMap(Core_DataObjectMap[] inDataLayers, Core_DataObjectMap inQueryLayer) {
 		// Ensure that stack is configured with the respective datalayers
-		if( inDataLayers == null || inDataLayers.length <= 0 ) {
+		if (inDataLayers == null || inDataLayers.length <= 0) {
 			throw new IllegalArgumentException("Missing valid dataLayers configuration");
 		}
 		// Configure the query layer, to the last data layer if not set
-		if( inQueryLayer == null ) {
-			inQueryLayer = inDataLayers[ inDataLayers.length - 1 ];
+		if (inQueryLayer == null) {
+			inQueryLayer = inDataLayers[inDataLayers.length - 1];
 		}
 		dataLayers = inDataLayers;
 		queryLayer = inQueryLayer;
 	}
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
@@ -63,7 +62,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	public Stack_DataObjectMap(Core_DataObjectMap[] inDataLayers) {
 		this(inDataLayers, null);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Interface to ovewrite for `Stack_CommonStructure` implmentation
@@ -74,9 +73,9 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * @return  array of the internal common structure stack used by the Stack_ implementation
 	 */
 	public CommonStructure[] commonStructureStack() {
-		return (CommonStructure[])dataLayers;
+		return (CommonStructure[]) dataLayers;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Internal functions, used by DataObject to implement
@@ -95,7 +94,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
 		// Remove data from the lowest layer upwards
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].DataObjectRemoteDataMap_remove(oid);
 		}
 	}
@@ -106,12 +105,12 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
 		// Get the data from the first "source" layer
-		for(int i = 0; i < dataLayers.length; ++i) {
+		for (int i = 0; i < dataLayers.length; ++i) {
 			Map<String, Object> res = dataLayers[i].DataObjectRemoteDataMap_get(oid);
-			if( res != null ) {
+			if (res != null) {
 				// Populate the data back upwards
 				Set<String> resKeySet = res.keySet();
-				for(i = i-1; i>=0; --i) {
+				for (i = i - 1; i >= 0; --i) {
 					dataLayers[i].DataObjectRemoteDataMap_update(oid, res, resKeySet);
 				}
 				return res;
@@ -127,7 +126,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		// Write data from the lowest layer upwards
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].DataObjectRemoteDataMap_update(oid, fullMap, keys);
 		}
 	}
@@ -152,7 +151,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	
 	/// Internal reuse DataObject array representing "no data found"
 	protected static final DataObject[] BLANK_DATA_OBJECTS = new DataObject[] {};
-
+	
 	/**
 	 * Single object query optimization, this is done to optimize Query calls with _oid = ?
 	 * This is kinda micro-optimization, but developers are humans.
@@ -167,52 +166,52 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * @return the single DataObject, if found and valid
 	 */
 	public DataObject[] singleObjectQuery(Query queryClause) {
-
+		
 		// No queryClause, no possible result
-		if( queryClause == null ) {
+		if (queryClause == null) {
 			return null;
 		}
-
+		
 		// Get the where clause as SQL string
 		String whereClause = queryClause.toSqlString();
-
+		
 		// Assert that it has an _oid clause, and no OR clause
 		// if it doesnt, return null
 		String oidQuery = "\"_oid\" = ?";
 		int oidQueryPos = whereClause.indexOf(oidQuery);
-		if( oidQueryPos < 0 || whereClause.contains("OR") ) {
+		if (oidQueryPos < 0 || whereClause.contains("OR")) {
 			return null;
 		}
-
+		
 		// There is no OR clause, assume only AND clauses
 		// now is to find the argument index position
 		int argumentIndex = 0;
 		int argumentPos = whereClause.indexOf("?");
-		int targetPos = oidQueryPos+oidQuery.length()-1;
-
+		int targetPos = oidQueryPos + oidQuery.length() - 1;
+		
 		// Iterate possible ? positions, till its actual index is found
-		while( argumentPos > 0 && argumentPos < targetPos ) {
+		while (argumentPos > 0 && argumentPos < targetPos) {
 			++argumentIndex;
-			argumentPos = whereClause.indexOf("?", argumentPos+1);
+			argumentPos = whereClause.indexOf("?", argumentPos + 1);
 		}
-
+		
 		// Get the query argument to use, and get directly
-		DataObject direct = get( queryClause.queryArgumentsArray()[argumentIndex] );
-
+		DataObject direct = get(queryClause.queryArgumentsArray()[argumentIndex]);
+		
 		// No object found, terminates
-		if( direct == null ) {
+		if (direct == null) {
 			return BLANK_DATA_OBJECTS;
 		}
-
+		
 		// Object found validate it
-		if( queryClause.test(direct) ) {
+		if (queryClause.test(direct)) {
 			return new DataObject[] { direct };
 		}
 		
 		// Validation failed, return null
 		return BLANK_DATA_OBJECTS;
 	}
-
+	
 	/**
 	 * Performs a search query, and returns the respective DataObject keys.
 	 *
@@ -225,19 +224,18 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 *
 	 * @return  The String[] array
 	 **/
-	public String[] query_id(Query queryClause, String orderByStr,
-		int offset, int limit) {
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 		
 		// Optimize for _oid = ? without or clauses
 		DataObject[] singleQueryCheck = singleObjectQuery(queryClause);
-		if( singleQueryCheck != null ) {
-			if( singleQueryCheck == BLANK_DATA_OBJECTS ) {
+		if (singleQueryCheck != null) {
+			if (singleQueryCheck == BLANK_DATA_OBJECTS) {
 				return EmptyArray.STRING;
 			}
 			String _oid = singleQueryCheck[0]._oid();
 			return new String[] { _oid };
 		}
-
+		
 		// Standard call against query layer
 		return queryLayer.query_id(queryClause, orderByStr, offset, limit);
 	}
@@ -254,13 +252,13 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	public long queryCount(String whereClause, Object[] whereValues) {
 		
 		// Optimize for _oid = ? without or clauses
-		if( whereClause != null ) {
+		if (whereClause != null) {
 			DataObject[] singleQueryCheck = singleObjectQuery(Query.build(whereClause, whereValues));
-			if( singleQueryCheck != null ) {
+			if (singleQueryCheck != null) {
 				return singleQueryCheck.length;
 			}
 		}
-
+		
 		// Standard call against query layer
 		return queryLayer.queryCount(whereClause, whereValues);
 	}
@@ -307,7 +305,7 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	// Copy pasta code, I wished could have worked in an interface
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 * 
@@ -315,9 +313,9 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	 * of clear from being valid, this seems to be a needed copy-pasta code
 	 **/
 	public void clear() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.clear();
 		}
 	}
-
+	
 }

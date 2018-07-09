@@ -22,7 +22,8 @@ import picoded.dstack.*;
  * Does not actually implement its required feature,
  * but helps provide a common base line for all the various implementation.
  **/
-abstract public class Core_DataObjectMap extends Core_DataStructure<String, DataObject> implements DataObjectMap {
+abstract public class Core_DataObjectMap extends Core_DataStructure<String, DataObject> implements
+	DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -114,8 +115,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 *
 	 * @return  The String[] array
 	 **/
-	public String[] query_id(Query queryClause, String orderByStr,
-		int offset, int limit) {
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 		
 		// The return list of DataObjects
 		List<DataObject> retList = null;
@@ -275,7 +275,7 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 		}
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// DataObject operations

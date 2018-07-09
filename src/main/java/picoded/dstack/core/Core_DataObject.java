@@ -88,8 +88,8 @@ public class Core_DataObject implements DataObject {
 			if (_oid == null) {
 				_oid = GUID.base58();
 			}
-
-			if(_oid.length() < 4) {
+			
+			if (_oid.length() < 4) {
 				throw new RuntimeException("_oid should be atleast 4 character long");
 			}
 			
@@ -254,17 +254,17 @@ public class Core_DataObject implements DataObject {
 	public void saveDelta() {
 		// Get the delta change set
 		Set<String> deltaKeySet = deltaDataMap.keySet();
-
+		
 		// Lets perform the save ONLY if changes are detected
-		if( deltaKeySet.size() > 0 ) {
-
+		if (deltaKeySet.size() > 0) {
+			
 			// Add update timestamp
 			deltaDataMap.put("_updateTimestamp", System.currentTimeMillis());
-
+			
 			// Lets sync up all the data !
 			ensureCompleteRemoteDataMap();
 			mainTable.DataObjectRemoteDataMap_update(_oid, this, deltaKeySet);
-
+			
 			// Clear up the delta object, after sync
 			collapseDeltaToRemoteMap();
 		}
@@ -278,10 +278,10 @@ public class Core_DataObject implements DataObject {
 	 **/
 	@Override
 	public void saveAll() {
-
+		
 		// Add update timestamp
 		deltaDataMap.put("_updateTimestamp", System.currentTimeMillis());
-
+		
 		// Lets sync up all the data !
 		ensureCompleteRemoteDataMap();
 		Set<String> keySet = new HashSet<String>(deltaDataMap.keySet());
@@ -331,7 +331,7 @@ public class Core_DataObject implements DataObject {
 		}
 		
 		// Returns valid value
-		return Core_DataObjectMap.deepCopy( ret );
+		return Core_DataObjectMap.deepCopy(ret);
 	}
 	
 	/**
@@ -352,10 +352,10 @@ public class Core_DataObject implements DataObject {
 		// }
 		
 		// Silently ignore reserved _underscore namespace data
-		if(key.toString().substring(0,1).equalsIgnoreCase("_")) {
+		if (key.toString().substring(0, 1).equalsIgnoreCase("_")) {
 			return get(key);
 		}
-
+		
 		// Get the previous value
 		Object ret = get(key);
 		

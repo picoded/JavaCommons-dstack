@@ -34,7 +34,7 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 **/
 	@Override
 	public KeyValue getKeyValue(Object key) {
-		if( key == null ) {
+		if (key == null) {
 			throw new RuntimeException("key parameter cannot be NULL");
 		}
 		return new Core_KeyValue(this, key.toString());
@@ -88,7 +88,7 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 *
 	 * @return String value, and expiry pair
 	 **/
-	abstract public MutablePair<String,Long> getValueExpiryRaw(String key, long now);
+	abstract public MutablePair<String, Long> getValueExpiryRaw(String key, long now);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -103,8 +103,8 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 * @return String value
 	 **/
 	public String getValueRaw(String key, long now) {
-		MutablePair<String,Long> pair = getValueExpiryRaw(key, now);
-		if( pair != null ) {
+		MutablePair<String, Long> pair = getValueExpiryRaw(key, now);
+		if (pair != null) {
 			return pair.getLeft();
 		}
 		return null;
@@ -123,13 +123,13 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 * @return long, 0 means no expiry, -1 means record does not exist
 	 **/
 	public long getExpiryRaw(String key, long now) {
-		MutablePair<String,Long> pair = getValueExpiryRaw(key, now);
-		if( pair != null ) {
+		MutablePair<String, Long> pair = getValueExpiryRaw(key, now);
+		if (pair != null) {
 			return pair.getRight().longValue();
 		}
 		return -1;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Basic get and put
@@ -164,9 +164,9 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	 **/
 	@Override
 	public String getValue(Object key) {
-		return getValueRaw( (key != null)? key.toString() : null, System.currentTimeMillis() );
+		return getValueRaw((key != null) ? key.toString() : null, System.currentTimeMillis());
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
@@ -185,13 +185,13 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	@Override
 	public long getExpiry(String key) {
 		// Get the value / expiry value pair
-		MutablePair<String,Long> pair = getValueExpiryRaw(key, System.currentTimeMillis());
-
+		MutablePair<String, Long> pair = getValueExpiryRaw(key, System.currentTimeMillis());
+		
 		// No data found
-		if( pair == null ) {
+		if (pair == null) {
 			return -1;
 		}
-
+		
 		// Return expirary
 		return pair.getRight().longValue();
 	}
@@ -207,20 +207,20 @@ public abstract class Core_KeyValueMap extends Core_DataStructure<String, KeyVal
 	public long getLifespan(String key) {
 		// Time stamp to use now
 		long now = System.currentTimeMillis();
-
+		
 		// Get the value / expiry value pair
-		MutablePair<String,Long> pair = getValueExpiryRaw(key, now);
+		MutablePair<String, Long> pair = getValueExpiryRaw(key, now);
 		
 		// No data found
-		if( pair == null ) {
+		if (pair == null) {
 			return -1;
 		}
-
+		
 		// Get expire timestamp
 		long expire = pair.getRight();
-
+		
 		//0 = no timestamp, -1 = no data
-		if (expire <= 0) { 
+		if (expire <= 0) {
 			return expire;
 		}
 		

@@ -26,33 +26,33 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	// Constructor vars
 	//
 	//--------------------------------------------------------------------------
-
-
+	
 	// Data layers to apply basic read/write against
 	protected Core_FileWorkspaceMap[] dataLayers = null;
-
+	
 	// Data layer to apply query against
 	protected Core_FileWorkspaceMap queryLayer = null;
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
 	 * @param  inDataLayers data layers to get / set data from, 0 index first
 	 * @param  inQueryLayer query layer for queries. Defaults to last data layer
 	 */
-	public Stack_FileWorkspaceMap(Core_FileWorkspaceMap[] inDataLayers, Core_FileWorkspaceMap inQueryLayer) {
+	public Stack_FileWorkspaceMap(Core_FileWorkspaceMap[] inDataLayers,
+		Core_FileWorkspaceMap inQueryLayer) {
 		// Ensure that stack is configured with the respective datalayers
-		if( inDataLayers == null || inDataLayers.length <= 0 ) {
+		if (inDataLayers == null || inDataLayers.length <= 0) {
 			throw new IllegalArgumentException("Missing valid dataLayers configuration");
 		}
 		// Configure the query layer, to the last data layer if not set
-		if( inQueryLayer == null ) {
-			inQueryLayer = inDataLayers[ inDataLayers.length - 1 ];
+		if (inQueryLayer == null) {
+			inQueryLayer = inDataLayers[inDataLayers.length - 1];
 		}
 		dataLayers = inDataLayers;
 		queryLayer = inQueryLayer;
 	}
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
@@ -62,7 +62,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	public Stack_FileWorkspaceMap(Core_FileWorkspaceMap[] inDataLayers) {
 		this(inDataLayers, null);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Interface to ovewrite for `Stack_CommonStructure` implmentation
@@ -73,9 +73,9 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * @return  array of the internal common structure stack used by the Stack_ implementation
 	 */
 	public CommonStructure[] commonStructureStack() {
-		return (CommonStructure[])dataLayers;
+		return (CommonStructure[]) dataLayers;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
@@ -92,11 +92,11 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	@Override
 	public void backend_workspaceRemove(String oid) {
 		// Remove layer by layer starting from the lowest layer
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_workspaceRemove(oid);
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -109,15 +109,15 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	@Override
 	public boolean backend_workspaceExist(String oid) {
 		// Once a workspace is found in any layers
-		for(int i = 0; i < dataLayers.length ; i++) {
-			if(dataLayers[i].backend_workspaceExist(oid)){
+		for (int i = 0; i < dataLayers.length; i++) {
+			if (dataLayers[i].backend_workspaceExist(oid)) {
 				return true;
 			}
 		}
 		// If all layers did not find the workspace
 		return false;
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -131,14 +131,14 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	@Override
 	public byte[] backend_fileRead(String oid, String filepath) {
 		// Retrieve from higher level to the source of truth
-		for(int i = 0; i < dataLayers.length; ++i) {
+		for (int i = 0; i < dataLayers.length; ++i) {
 			// Retrieve the data of the file
 			byte[] data = dataLayers[i].backend_fileRead(oid, filepath);
-
+			
 			// Write back to the upper levels if data is found
 			// return the data
-			if(data != null){
-				for(i = i-1; i>=0; --i) {
+			if (data != null) {
+				for (i = i - 1; i >= 0; --i) {
 					dataLayers[i].backend_fileWrite(oid, filepath, data);
 				}
 				return data;
@@ -146,9 +146,9 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		}
 		// No data exist
 		return null;
-
+		
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -161,11 +161,11 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		// Write the data starting from the lowest layer
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_fileWrite(oid, filepath, data);
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -177,7 +177,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
 		// Remove the file starting from the lowest layer
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_removeFile(oid, filepath);
 		}
 	}
@@ -187,7 +187,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	// Copy pasta code, I wished could have worked in an interface
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 * 
@@ -195,7 +195,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * of clear from being valid, this seems to be a needed copy-pasta code
 	 **/
 	public void clear() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.clear();
 		}
 	}

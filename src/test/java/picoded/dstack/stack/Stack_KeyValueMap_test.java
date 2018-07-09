@@ -28,10 +28,10 @@ public class Stack_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	
 	/// Top layer DataObjectMap implmentation used
 	public Core_KeyValueMap layer1;
-
+	
 	/// Secondary layer DataObjectMap implmentation used
 	public Core_KeyValueMap layer2;
-
+	
 	/// Impomentation constructor for stack setup
 	public KeyValueMap implementationConstructor() {
 		layer1 = new StructSimple_KeyValueMap();
@@ -49,11 +49,11 @@ public class Stack_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	@Test
 	public void lowerLayerRead() {
 		// Setup the lower layer
-		layer2.put("hello","world");
+		layer2.put("hello", "world");
 		assertEquals("world", testObj.getString("hello"));
 		
 		// Setup the upper layer
-		layer1.put("hello","meow");
+		layer1.put("hello", "meow");
 		assertEquals("meow", testObj.getString("hello"));
 	}
 }

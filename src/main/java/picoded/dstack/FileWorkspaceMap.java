@@ -15,8 +15,9 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  * 
  * @TODO : Future consideration - integration as a FileSystemProvider : https://docs.oracle.com/javase/7/docs/api/java/nio/file/spi/FileSystemProvider.html#getScheme()
  **/
-public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWorkspace>, CommonStructure {
-
+public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWorkspace>,
+	CommonStructure {
+	
 	// FileWorkspaceMap optimizations
 	//--------------------------------------------------------------------------
 	

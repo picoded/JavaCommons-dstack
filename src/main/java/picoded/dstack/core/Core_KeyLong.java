@@ -5,30 +5,30 @@ import picoded.dstack.KeyLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Core_KeyLong implements KeyLong {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Core variables
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Core_KeyValueMap used for the object
 	 * Used to provide the underlying backend implementation
 	 **/
 	protected Core_KeyLongMap main = null;
-
+	
 	/**
 	 * Current keyname used to identify the stored value
 	 */
 	protected String key = null;
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Setup a Core_KeyLong against a Core_KeyLongMap backend.
 	 *
@@ -41,13 +41,13 @@ public class Core_KeyLong implements KeyLong {
 		main = keyLongMap;
 		key = inKey;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Incremental implementation
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Increment the value of the key and return the updated value.
 	 *
@@ -58,47 +58,46 @@ public class Core_KeyLong implements KeyLong {
 		Long value = main.incrementAndGet(key);
 		return value;
 	}
-
+	
 	/**
 	 * Return the current value of the key and increment by 1
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long getAndIncrement(Object key){
+	public Long getAndIncrement(Object key) {
 		Long value = main.getAndIncrement(key);
 		return value;
 	}
-
+	
 	/**
 	 * Decrement the value of the key and return the updated value.
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long decrementAndGet(Object key){
+	public Long decrementAndGet(Object key) {
 		Long value = main.decrementAndGet(key);
 		return value;
 	}
-
+	
 	/**
 	 * Return the current value of the key and decrement by 1
 	 *
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long getAndDecrement(Object key){
+	public Long getAndDecrement(Object key) {
 		Long value = main.getAndDecrement(key);
 		return value;
 	}
-
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Generic convert value implementation
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Update the currently stored value
 	 *
@@ -107,14 +106,14 @@ public class Core_KeyLong implements KeyLong {
 	public void putValue(Long value) {
 		main.putValue(key, value);
 	}
-
+	
 	/**
 	 * Remove the currently stored value
 	 **/
 	public void removeValue() {
 		main.remove(key);
 	}
-
+	
 	/**
 	 * [Needs to be overriden, currently throws UnsupportedOperationException]
 	 *
@@ -125,7 +124,7 @@ public class Core_KeyLong implements KeyLong {
 	public Long getValue() {
 		return main.getValue(key);
 	}
-
+	
 	/**
 	 * Default to String conversion of generic value
 	 *
@@ -135,13 +134,13 @@ public class Core_KeyLong implements KeyLong {
 	public String toString() {
 		return getValue().toString();
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Key name identifier handling
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Get and return the key used to store the value
 	 *
@@ -150,13 +149,13 @@ public class Core_KeyLong implements KeyLong {
 	public String getKey() {
 		return key;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Returns the expire time stamp value, if still valid
 	 *
@@ -165,7 +164,7 @@ public class Core_KeyLong implements KeyLong {
 	public long getExpiry() {
 		return main.getExpiry(key);
 	}
-
+	
 	/**
 	 * Returns the lifespan time stamp value
 	 *
@@ -174,7 +173,7 @@ public class Core_KeyLong implements KeyLong {
 	public long getLifespan() {
 		return main.getLifespan(key);
 	}
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -183,7 +182,7 @@ public class Core_KeyLong implements KeyLong {
 	public void setExpiry(long expireTimestamp) {
 		main.setExpiry(key, expireTimestamp);
 	}
-
+	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
@@ -192,7 +191,7 @@ public class Core_KeyLong implements KeyLong {
 	public void setLifeSpan(long lifespan) {
 		main.setLifeSpan(key, lifespan);
 	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 * with lifespan value.
@@ -207,7 +206,7 @@ public class Core_KeyLong implements KeyLong {
 	public Long putWithLifespan(Long value, long lifespan) {
 		return main.putWithLifespan(key, value, lifespan);
 	}
-
+	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
 	 * with expiry value.

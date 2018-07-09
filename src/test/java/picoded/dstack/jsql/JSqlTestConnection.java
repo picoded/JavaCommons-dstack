@@ -12,13 +12,13 @@ public class JSqlTestConnection {
 	
 	/// MYSQL connection
 	public static JSql mysql() {
-		return JSql.mysql(JSqlTestConfig.MYSQL_CONN(), JSqlTestConfig.MYSQL_DATA(), JSqlTestConfig.MYSQL_USER(),
-		JSqlTestConfig.MYSQL_PASS());
+		return JSql.mysql(JSqlTestConfig.MYSQL_CONN(), JSqlTestConfig.MYSQL_DATA(),
+			JSqlTestConfig.MYSQL_USER(), JSqlTestConfig.MYSQL_PASS());
 	}
 	
 	/// MSSQL connection
 	public static JSql mssql() {
-		return JSql.mssql(JSqlTestConfig.MSSQL_CONN(), JSqlTestConfig.MSSQL_NAME(), JSqlTestConfig.MSSQL_USER(),
-		JSqlTestConfig.MSSQL_PASS());
+		return JSql.mssql(JSqlTestConfig.MSSQL_CONN(), JSqlTestConfig.MSSQL_NAME(),
+			JSqlTestConfig.MSSQL_USER(), JSqlTestConfig.MSSQL_PASS());
 	}
 }

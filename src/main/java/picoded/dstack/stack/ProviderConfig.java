@@ -17,13 +17,13 @@ import picoded.dstack.core.CoreStack;
  * and gneerate the provider specific data structures in the process.
  */
 public class ProviderConfig {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor 
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Load the provider config with provider list
 	 **/
@@ -36,12 +36,12 @@ public class ProviderConfig {
 	// Config loading
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Stores the internal config mapping by its name
 	 **/
-	protected Map<String,GenericConvertMap<String,Object>> providerConfigMap = new HashMap<>();;
-
+	protected Map<String, GenericConvertMap<String, Object>> providerConfigMap = new HashMap<>();;
+	
 	/**
 	 * Loads a configuration array of backend providers for dstack, into the provider map
 	 * 
@@ -50,26 +50,26 @@ public class ProviderConfig {
 	protected void loadConfigArray(List<Object> inConfigList) {
 		// Map it as a generic list 
 		GenericConvertList<Object> configList = GenericConvertList.build(inConfigList);
-
+		
 		// Iterate each config item
 		int size = configList.size();
-		for(int i=0; i<size; ++i) {
+		for (int i = 0; i < size; ++i) {
 			// Get the provider config object
-			GenericConvertMap<String,Object> config = configList.getGenericConvertStringMap(i,null);
-
+			GenericConvertMap<String, Object> config = configList.getGenericConvertStringMap(i, null);
+			
 			// Validate the provider object
-			if( config == null ) {
-				throw new IllegalArgumentException("Missing provider config at index : "+i);
+			if (config == null) {
+				throw new IllegalArgumentException("Missing provider config at index : " + i);
 			}
-			if( config.getString("name") == null ) {
-				throw new IllegalArgumentException("Missing provider name at index : "+i);
+			if (config.getString("name") == null) {
+				throw new IllegalArgumentException("Missing provider name at index : " + i);
 			}
-
+			
 			// Add to provider config map
-			providerConfigMap.put( config.getString("name"), config );
+			providerConfigMap.put(config.getString("name"), config);
 		}
 	}
-
+	
 	/**
 	 * Get and return the config selected by name
 	 * 
@@ -77,21 +77,21 @@ public class ProviderConfig {
 	 * 
 	 * @return  config map if found
 	 */
-	protected GenericConvertMap<String,Object> getStackConfig(String name) {
+	protected GenericConvertMap<String, Object> getStackConfig(String name) {
 		return providerConfigMap.get(name);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Provider stack handling
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Stores the respective stack providers
 	 */
-	protected Map<String,CoreStack> providerStackMap = new HashMap<>(); 
-
+	protected Map<String, CoreStack> providerStackMap = new HashMap<>();
+	
 	/**
 	 * Get the stack of the provider specified by the name,
 	 * initializing the stack if necessary
@@ -103,34 +103,34 @@ public class ProviderConfig {
 	public CoreStack getProviderStack(String name) {
 		// Get and return from cache if found
 		CoreStack cache = providerStackMap.get(name);
-		if(cache != null) {
+		if (cache != null) {
 			return cache;
 		}
-
+		
 		// Cache not found, get config to initialize a new stack
 		GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
-		if(providerConfig == null) {
-			throw new IllegalArgumentException("Unknown provider name, config not found : "+name);
+		if (providerConfig == null) {
+			throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
 		}
-
+		
 		// Initialization of stack and store into cache
 		cache = initStack(providerConfig.getString("type"), providerConfig);
 		providerStackMap.put(name, cache);
-
+		
 		// Return result
 		return cache;
 	}
-
+	
 	/**
 	 * Initialize a new stack object based on the given type
 	 * 
 	 * @param  type of stack to initialize ( StructSimple / JSql / JConfig / Stack )
 	 */
-	protected CoreStack initStack(String type, GenericConvertMap<String,Object> config) {
-		if( type.equalsIgnoreCase("StructSimple") ) {
+	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
+		if (type.equalsIgnoreCase("StructSimple")) {
 			return new StructSimpleStack(config);
 		}
-		throw new IllegalArgumentException("Unknown stack configuration type : "+type);
+		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
-
+	
 }

@@ -26,7 +26,7 @@ public class Core_KeyValue implements KeyValue {
 	 * Used to provide the underlying backend implementation
 	 **/
 	protected Core_KeyValueMap main = null;
-
+	
 	/**
 	 * Current keyname used to identify the stored value
 	 */
@@ -50,7 +50,7 @@ public class Core_KeyValue implements KeyValue {
 		main = keyValueMap;
 		key = inKey;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Generic convert value implementation
@@ -83,7 +83,7 @@ public class Core_KeyValue implements KeyValue {
 	public String getValue() {
 		return main.getValue(key);
 	}
-
+	
 	/**
 	 * Default to String conversion of generic value
 	 *
@@ -108,7 +108,7 @@ public class Core_KeyValue implements KeyValue {
 	public String getKey() {
 		return key;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling

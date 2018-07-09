@@ -28,7 +28,7 @@ public class Stack_KeyLongMap_test extends StructSimple_KeyLongMap_test {
 	
 	/// Top layer DataObjectMap implmentation used
 	public Core_KeyLongMap layer1;
-
+	
 	/// Impomentation constructor for stack setup
 	public KeyLongMap implementationConstructor() {
 		layer1 = new StructSimple_KeyLongMap();

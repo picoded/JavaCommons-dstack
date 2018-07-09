@@ -29,10 +29,10 @@ public class Stack_FileWorkspaceMap_test extends StructSimple_FileWorkspaceMap_t
 	
 	/// Top layer Stack_FileWorkspaceMap implmentation used
 	public Core_FileWorkspaceMap layer1;
-
+	
 	/// Secondary layer Stack_FileWorkspaceMap implmentation used
 	public Core_FileWorkspaceMap layer2;
-
+	
 	/// Impomentation constructor for stack setup
 	public FileWorkspaceMap implementationConstructor() {
 		layer1 = new StructSimple_FileWorkspaceMap();
@@ -51,9 +51,9 @@ public class Stack_FileWorkspaceMap_test extends StructSimple_FileWorkspaceMap_t
 	public void lowerLayerRead() {
 		// Setup the lower layer
 		FileWorkspace data = layer2.newEntry();
-		data.writeByteArray("hello","world".getBytes());
+		data.writeByteArray("hello", "world".getBytes());
 		String oid = data._oid();
-
+		
 		// Gettign from the stack
 		data = testObj.get(oid);
 		assertNotNull(data);

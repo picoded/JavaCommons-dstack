@@ -28,10 +28,10 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	
 	// Data layers to apply basic read/write against
 	protected Core_KeyValueMap[] dataLayers = null;
-
+	
 	// Data layer to apply query against
 	protected Core_KeyValueMap queryLayer = null;
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
@@ -40,17 +40,17 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 */
 	public Stack_KeyValueMap(Core_KeyValueMap[] inDataLayers, Core_KeyValueMap inQueryLayer) {
 		// Ensure that stack is configured with the respective datalayers
-		if( inDataLayers == null || inDataLayers.length <= 0 ) {
+		if (inDataLayers == null || inDataLayers.length <= 0) {
 			throw new IllegalArgumentException("Missing valid dataLayers configuration");
 		}
 		// Configure the query layer, to the last data layer if not set
-		if( inQueryLayer == null ) {
-			inQueryLayer = inDataLayers[ inDataLayers.length - 1 ];
+		if (inQueryLayer == null) {
+			inQueryLayer = inDataLayers[inDataLayers.length - 1];
 		}
 		dataLayers = inDataLayers;
 		queryLayer = inQueryLayer;
 	}
-
+	
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 * 
@@ -60,7 +60,7 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	public Stack_KeyValueMap(Core_KeyValueMap[] inDataLayers) {
 		this(inDataLayers, null);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Interface to ovewrite for `Stack_CommonStructure` implmentation
@@ -71,9 +71,9 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 * @return  array of the internal common structure stack used by the Stack_ implementation
 	 */
 	public CommonStructure[] commonStructureStack() {
-		return (CommonStructure[])dataLayers;
+		return (CommonStructure[]) dataLayers;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Fundemental set/get value (core)
@@ -91,11 +91,11 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 *
 	 * @return String value
 	 **/
-	public MutablePair<String,Long> getValueExpiryRaw(String key, long now) {
-		for(int i = 0; i < dataLayers.length; ++i) {
-			MutablePair<String,Long>  res = dataLayers[i].getValueExpiryRaw(key, now);
-			if(res != null) {
-				for(i = i-1; i>=0; --i) {
+	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
+		for (int i = 0; i < dataLayers.length; ++i) {
+			MutablePair<String, Long> res = dataLayers[i].getValueExpiryRaw(key, now);
+			if (res != null) {
+				for (i = i - 1; i >= 0; --i) {
 					dataLayers[i].setValueRaw(key, res.getLeft(), res.getRight());
 				}
 				return res;
@@ -118,7 +118,7 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 **/
 	public String setValueRaw(String key, String value, long expire) {
 		// Write data from the lowest layer upwards
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].setValueRaw(key, value, expire);
 		}
 		return null;
@@ -137,7 +137,7 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 **/
 	public void setExpiryRaw(String key, long time) {
 		// Write data from the lowest layer upwards
-		for(int i = dataLayers.length - 1; i >= 0; --i) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].setExpiryRaw(key, time);
 		}
 	}
@@ -167,7 +167,7 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	// Copy pasta code, I wished could have worked in an interface
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 * 
@@ -175,7 +175,7 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	 * of clear from being valid, this seems to be a needed copy-pasta code
 	 **/
 	public void clear() {
-		for(CommonStructure layer : commonStructureStack()) {
+		for (CommonStructure layer : commonStructureStack()) {
 			layer.clear();
 		}
 	}

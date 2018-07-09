@@ -28,10 +28,10 @@ public class Stack_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	
 	/// Top layer DataObjectMap implmentation used
 	public Core_DataObjectMap layer1;
-
+	
 	/// Secondary layer DataObjectMap implmentation used
 	public Core_DataObjectMap layer2;
-
+	
 	/// Impomentation constructor for stack setup
 	public DataObjectMap implementationConstructor() {
 		layer1 = new StructSimple_DataObjectMap();
@@ -50,10 +50,10 @@ public class Stack_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	public void lowerLayerRead() {
 		// Setup the lower layer
 		DataObject data = layer2.newEntry();
-		data.put("hello","world");
+		data.put("hello", "world");
 		data.saveAll();
 		String oid = data._oid();
-
+		
 		// Gettign from the stack
 		data = mtObj.get(oid);
 		assertNotNull(data);

@@ -367,7 +367,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			);
 		
 		// Does the data append
-		JSql_DataObjectMapUtil.jSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys, true);
+		JSql_DataObjectMapUtil.jSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys,
+			true);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -410,21 +411,20 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * @return  The String[] array
 	 **/
-	public String[] query_id(Query queryClause, String orderByStr,
-		int offset, int limit) {
-		if(queryClause == null) {
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+		if (queryClause == null) {
 			return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
 				this, sqlObj, dataStorageTable, //
 				null, null, //
 				orderByStr, offset, limit //
-			);
+				);
 		}
 		return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
 			this, sqlObj, dataStorageTable, //
 			queryClause.toSqlString(), //
 			queryClause.queryArgumentsArray(), //
 			orderByStr, offset, limit //
-		);
+			);
 	}
 	
 	/**
@@ -529,8 +529,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		if (currentID == null) {
 			r = sqlObj.select(primaryKeyTable, "oID", null, null, "oID ASC", 1, 0);
 		} else {
-			r = sqlObj.select(primaryKeyTable, "oID", "oID > ?", new Object[] { currentID }, "oID ASC",
-				1, 0);
+			r = sqlObj.select(primaryKeyTable, "oID", "oID > ?", new Object[] { currentID },
+				"oID ASC", 1, 0);
 		}
 		
 		// No result : NULL
