@@ -92,6 +92,21 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 	}
 	
 	/**
+	 * Convinence varient of put, where string value is used instead
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param value as Long, as such its "key" is ignored when used here
+	 *
+	 * @return null
+	 **/
+	default KeyLong putLong(String key, Long value) {
+		putValue(key, value);
+		return null;
+	}
+	
+	/**
 	 * Remove the value, given the key
 	 *
 	 * @param key where the value is stored

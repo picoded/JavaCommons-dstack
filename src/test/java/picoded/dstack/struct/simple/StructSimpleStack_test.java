@@ -17,8 +17,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import picoded.core.struct.GenericConvertHashMap;
+import picoded.core.conv.StringConv;
 // Test depends
 import picoded.dstack.*;
+import picoded.dstack.jsql.*;
 import picoded.dstack.core.CoreStack;
 import picoded.dstack.struct.simple.*;
 
@@ -65,4 +67,53 @@ public class StructSimpleStack_test {
 		testObj.incrementalMaintenance();
 	}
 	
+	// Get and intialize various data structure objects
+	//-----------------------------------------------------
+
+	@Test
+	public void testDataObject() {
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		dataObjectMap.systemSetup();
+
+		DataObject newEntry = dataObjectMap.newEntry();
+		newEntry.put("Testing", "value");
+		newEntry.saveAll();
+
+		DataObject getObject = dataObjectMap.get(newEntry._oid());
+		assertEquals("value", getObject.getString("Testing"));
+	}
+
+	@Test
+	public void testFileWorkspaceMap(){
+		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(JSqlTestConfig.randomTablePrefix());
+		fileWorkspaceMap.systemSetup();
+
+		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
+		newEntry.writeByteArray("testing path", "testing value".getBytes());
+
+		FileWorkspace getObject = fileWorkspaceMap.get(newEntry._oid());
+		assertEquals("testing value", StringConv.fromByteArray(getObject.readByteArray("testing path")));
+	}
+	
+	@Test
+	public void testKeyLongMap(){
+		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		keyLongMap.systemSetup();
+
+		keyLongMap.putLong("testing", 5L);
+		assertEquals(5L, keyLongMap.getLong("testing"));
+	}
+
+	// @Test
+	// public void testKeyValueMap(){
+	// 	KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+	// 	keyValueMap.systemSetup();
+
+	// 	KeyValue newEntry = keyValueMap.newEntry();
+	// 	newEntry.put("Testing", "value");
+	// 	newEntry.saveAll();
+
+	// 	KeyValue getObject = keyValueMap.get(newEntry._oid());
+	// 	assertEquals("value", getObject.getString("Testing"));
+	// }
 }

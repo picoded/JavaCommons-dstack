@@ -9,12 +9,36 @@ import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.struct.simple.StructSimpleStack;
 import picoded.dstack.core.CoreStack;
+import picoded.dstack.jsql.JSqlStack;
 
 /**
  * [Internal use only]
  * 
  * Utility class used to read the provider configruation list,
  * and generate the provider specific data stacks in the process.
+ * 
+ * This takes in a list of provider config, for example (in json form)
+ * 
+ * @TODO
+ * + Read-Only support
+ * + Caching / Query priority support
+ * 
+ * ```
+ * [
+ * 	{
+ * 		"type" : "StructSimple",
+ * 		"name" : "requestCache"
+ * 	},
+ * 	{
+ * 		"type" : "jsql",
+ * 		"name" : "db_a",
+ * 		"db" : {
+ * 			"type" : "sqlite",
+ * 			"path" : "./shared.db"
+ * 		}
+ * 	}
+ * ]
+ * ```
  */
 public class ProviderConfig {
 	
@@ -132,6 +156,9 @@ public class ProviderConfig {
 	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
 		if (type.equalsIgnoreCase("StructSimple")) {
 			return new StructSimpleStack(config);
+		}
+		if (type.equalsIgnoreCase("JSql")) {
+			return new JSqlStack(config);
 		}
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
