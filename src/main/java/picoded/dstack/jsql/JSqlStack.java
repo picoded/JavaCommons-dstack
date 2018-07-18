@@ -51,9 +51,9 @@ public class JSqlStack extends CoreStack {
 		if (type.equalsIgnoreCase("KeyValueMap")) {
 			return new JSql_KeyValueMap(conn, name);
 		}
-		// if (type.equalsIgnoreCase("KeyLongMap")) {
-		// 	return new JSql_KeyLongMap(conn, name);
-		// }
+		if (type.equalsIgnoreCase("KeyLongMap")) {
+			return new JSql_KeyLongMap(conn, name);
+		}
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
 			return new JSql_FileWorkspaceMap(conn, name);
 		}

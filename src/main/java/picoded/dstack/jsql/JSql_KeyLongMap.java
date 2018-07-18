@@ -2,6 +2,7 @@ package picoded.dstack.jsql;
 
 import picoded.core.conv.GenericConvert;
 import picoded.core.conv.ListValueConv;
+import picoded.core.struct.MutablePair;
 import picoded.dstack.KeyLong;
 import picoded.dstack.core.Core_KeyLongMap;
 import picoded.dstack.jsql.connector.JSql;
@@ -75,31 +76,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Returns the value, with validation against the current timestamp
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
-	 *
-	 * @return Long value
-	 **/
-	protected Long getValueRaw(String key, long now){
-		// Search for the key
-		JSqlResult r = sqlObj.select(keyLongMapName, "*", "kID = ?", new Object[] { key });
-		long expiry = getExpiryRaw(r);
-
-		if (expiry != 0 && expiry < now) {
-			return null;
-		}
-
-		return new Long(GenericConvert.toLong(r.get("kVl")[0]));
-	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -113,7 +90,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * @return null
 	 **/
-	protected Long setValueRaw(String key, Long value, long expire){
+	public Long setValueRaw(String key, Long value, long expire) {
 		long now = System.currentTimeMillis();
 
 		// Null values are returned and not added to the database
@@ -134,26 +111,10 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			throw new RuntimeException(e);
 		}
 
-
 		return null;
 	}
 
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Returns the expire time stamp value, raw without validation
-	 *
-	 * Handles re-entrant lock where applicable
-	 *
-	 * @param key as String
-	 *
-	 * @return long
-	 **/
-	protected long getExpiryRaw(String key){
-		return getExpiryRaw( //
-				sqlObj.select(keyLongMapName, "eTm", "kID=?", new Object[] { key }));
-	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -166,41 +127,54 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 *
 	 * @return long
 	 **/
-	public void setExpiryRaw(String key, long expire){
+	public void setExpiryRaw(String key, long expire) {
 		sqlObj.update("UPDATE " + keyLongMapName + " SET eTm=? WHERE kID=?", expire, key);
 	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return Long value, and expiry pair
+	 **/
+	public MutablePair<Long, Long> getValueExpiryRaw(String key, long now) {
+		// Search for the key
+		JSqlResult r = sqlObj.select(keyLongMapName, "*", "kID = ?", new Object[] { key });
+		long expiry = getExpiryRaw(r);
 
-	public Long getAndAdd(Object key, Object delta) {
-		// Tries limits
-		int limit = 100;
-		int tries = 0;
-
-		// Try 100 tries
-		while (tries < limit) {
-			// Get the "old" value
-			JSqlResult r = sqlObj.select(keyLongMapName, "*", "kID = ?", new Object[] { key });
-
-			Long oldVal = null;
-			if (r.get("kVl") != null && r.get("kVl").length > 0 && r.get("kVl")[0] != null) {
-				oldVal = GenericConvert.toLong(r.get("kVl")[0], 0);
-			} else {
-				oldVal = 0l;
-			}
-			Long newVal = oldVal.longValue() + GenericConvert.toLong(delta, 0);
-
-			// If old value holds true, update to new value
-			if (weakCompareAndSet(key.toString(), oldVal, newVal)) {
-				return oldVal; //return old value on success
-			}
-			tries++;
+		if (expiry != 0 && expiry < now) {
+			return null;
 		}
 
-		throw new RuntimeException("Max tries reached : " + tries);
+		return new MutablePair<Long,Long>( new Long(GenericConvert.toLong(r.get("kVl")[0])), new Long(expiry) );
 	}
-
+	
+	//--------------------------------------------------------------------------
+	//
+	// Incremental operations
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-
-		// Potentially a new upsert, ensure there is something to "delete" atleast
+		// Potentially a new upsert, ensure there is something to "update" atleast
+		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
 			// Does a blank upsert, with default values (No actual insert)
 			long now = System.currentTimeMillis();
@@ -212,7 +186,6 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 						// insert (ignore)
 						null, null,
 						// default value
-
 						new String[] { "cTm", "eTm", "kVl" }, //insert cols
 						new Object[] { now, 0l, 0l }, //insert values
 						// misc (ignore)
@@ -230,7 +203,6 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 				+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
 		return (r.affectedRows() > 0);
 	}
-
 
 	//--------------------------------------------------------------------------
 	//
