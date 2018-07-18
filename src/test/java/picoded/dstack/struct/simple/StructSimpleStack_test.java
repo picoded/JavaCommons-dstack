@@ -71,7 +71,7 @@ public class StructSimpleStack_test {
 	//-----------------------------------------------------
 
 	@Test
-	public void testDataObject() {
+	public void test_retrieveDataObject() {
 		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
 		dataObjectMap.systemSetup();
 
@@ -84,7 +84,7 @@ public class StructSimpleStack_test {
 	}
 
 	@Test
-	public void testFileWorkspaceMap(){
+	public void test_retrieveFileWorkspaceMap(){
 		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(JSqlTestConfig.randomTablePrefix());
 		fileWorkspaceMap.systemSetup();
 
@@ -96,7 +96,7 @@ public class StructSimpleStack_test {
 	}
 	
 	@Test
-	public void testKeyLongMap(){
+	public void test_retrieveKeyLongMap(){
 		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
 		keyLongMap.systemSetup();
 
@@ -105,11 +105,70 @@ public class StructSimpleStack_test {
 	}
 
 	@Test
-	public void testKeyValueMap(){
+	public void test_retrieveKeyValueMap(){
 		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
 		keyValueMap.systemSetup();
 
 		keyValueMap.put("testing", "value");
 		assertEquals("value", keyValueMap.getString("testing"));
+	}
+
+	@Test
+	public void test_deleteDataObject(){
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		dataObjectMap.systemSetup();
+
+		DataObject newEntry = dataObjectMap.newEntry();
+		newEntry.put("Testing", "value");
+		newEntry.saveAll();
+
+		DataObject getObject = dataObjectMap.get(newEntry._oid());
+		assertEquals("value", getObject.getString("Testing"));
+
+		dataObjectMap.remove(getObject._oid());
+
+		getObject = dataObjectMap.get(newEntry._oid());
+		assertNull(getObject);
+	}
+
+	@Test
+	public void test_deleteFileWorkspace(){
+		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(JSqlTestConfig.randomTablePrefix());
+		fileWorkspaceMap.systemSetup();
+
+		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
+		newEntry.writeByteArray("testing path", "testing value".getBytes());
+
+		FileWorkspace getObject = fileWorkspaceMap.get(newEntry._oid());
+		assertEquals("testing value", StringConv.fromByteArray(getObject.readByteArray("testing path")));
+
+		fileWorkspaceMap.remove(getObject._oid());
+
+		getObject = fileWorkspaceMap.get(newEntry._oid());
+		assertNull(getObject);
+	}
+
+	@Test
+	public void test_deleteKeyLong(){
+		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		keyLongMap.systemSetup();
+
+		keyLongMap.putLong("testing", 5L);
+		assertEquals(5L, keyLongMap.getLong("testing"));
+
+		keyLongMap.remove("testing");
+		assertEquals(0, keyLongMap.getLong("testing"));
+	}
+
+	@Test
+	public void test_deleteKeyValue(){
+		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		keyValueMap.systemSetup();
+
+		keyValueMap.put("testing", "value");
+		assertEquals("value", keyValueMap.getString("testing"));
+
+		keyValueMap.remove("testing");
+		assertEquals(null, keyValueMap.getString("testing"));
 	}
 }
