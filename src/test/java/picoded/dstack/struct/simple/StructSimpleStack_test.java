@@ -104,16 +104,12 @@ public class StructSimpleStack_test {
 		assertEquals(5L, keyLongMap.getLong("testing"));
 	}
 
-	// @Test
-	// public void testKeyValueMap(){
-	// 	KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
-	// 	keyValueMap.systemSetup();
+	@Test
+	public void testKeyValueMap(){
+		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		keyValueMap.systemSetup();
 
-	// 	KeyValue newEntry = keyValueMap.newEntry();
-	// 	newEntry.put("Testing", "value");
-	// 	newEntry.saveAll();
-
-	// 	KeyValue getObject = keyValueMap.get(newEntry._oid());
-	// 	assertEquals("value", getObject.getString("Testing"));
-	// }
+		keyValueMap.put("testing", "value");
+		assertEquals("value", keyValueMap.getString("testing"));
+	}
 }
