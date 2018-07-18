@@ -232,4 +232,52 @@ public class StructSimpleStack_test {
 		Thread.sleep(300);
 		assertEquals(null, keyValueMap.getString("testing"));
 	}
+
+	// keySet operations for various data structure objects
+	//-----------------------------------------------------
+
+	@Test
+	public void test_keySetDataObjectMap(){
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		dataObjectMap.systemSetup();
+
+		DataObject newEntry = dataObjectMap.newEntry();
+		newEntry.put("Testing", "value");
+		newEntry.saveAll();
+
+		List<String> keys = new ArrayList<>();
+		keys.add(newEntry._oid());
+		for(String key : dataObjectMap.keySet()){
+			keys.remove(key);
+		}
+		assertTrue(keys.size() == 0);
+	}
+	
+	@Test
+	public void test_keySetKeyLongMap(){
+		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		keyLongMap.systemSetup();
+
+		keyLongMap.putLong("testing", 5L);
+		List<String> keys = new ArrayList<>();
+		keys.add("testing");
+		for(String key : keyLongMap.keySet()){
+			keys.remove(key);
+		}
+		assertTrue(keys.size() == 0);
+	}
+
+	@Test
+	public void test_keySetKeyValueMap(){
+		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		keyValueMap.systemSetup();
+
+		keyValueMap.put("testing", "value");
+		List<String> keys = new ArrayList<>();
+		keys.add("testing");
+		for(String key : keyValueMap.keySet()){
+			keys.remove(key);
+		}
+		assertTrue(keys.size() == 0);
+	}
 }
