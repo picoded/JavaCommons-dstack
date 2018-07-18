@@ -7,9 +7,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 // Test Case include
 import org.junit.After;
@@ -18,6 +20,7 @@ import org.junit.Test;
 
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.conv.StringConv;
+import picoded.core.conv.ConvertJSON;
 // Test depends
 import picoded.dstack.*;
 import picoded.dstack.jsql.*;
@@ -113,6 +116,9 @@ public class StructSimpleStack_test {
 		assertEquals("value", keyValueMap.getString("testing"));
 	}
 
+	// Delete operations for various data structure objects
+	//-----------------------------------------------------
+
 	@Test
 	public void test_deleteDataObject(){
 		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
@@ -169,6 +175,61 @@ public class StructSimpleStack_test {
 		assertEquals("value", keyValueMap.getString("testing"));
 
 		keyValueMap.remove("testing");
+		assertEquals(null, keyValueMap.getString("testing"));
+	}
+
+	// Expiry and lifespan operations for various data structure objects
+	//-----------------------------------------------------
+
+	@Test
+	public void test_expiryKeyLong() throws Exception{
+		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		keyLongMap.systemSetup();
+
+		long now = System.currentTimeMillis();
+		keyLongMap.putWithExpiry("testing", 5L, now+300);
+		assertEquals(5L, keyLongMap.getLong("testing"));
+
+		Thread.sleep(300);
+		assertEquals(0, keyLongMap.getLong("testing"));
+	}
+
+	@Test
+	public void test_expiryKeyValue() throws Exception{
+		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		keyValueMap.systemSetup();
+
+		long now = System.currentTimeMillis();
+		keyValueMap.putWithExpiry("testing", "value", now+300);
+		assertEquals("value", keyValueMap.getString("testing"));
+
+		Thread.sleep(300);
+		assertEquals(null, keyValueMap.getString("testing"));
+	}
+
+	@Test
+	public void test_lifeSpanKeyLong() throws Exception{
+		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		keyLongMap.systemSetup();
+
+		long now = System.currentTimeMillis();
+		keyLongMap.putWithLifespan("testing", 5L, 300);
+		assertEquals(5L, keyLongMap.getLong("testing"));
+
+		Thread.sleep(300);
+		assertEquals(0, keyLongMap.getLong("testing"));
+	}
+
+	@Test
+	public void test_lifeSpanKeyValue() throws Exception{
+		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		keyValueMap.systemSetup();
+
+		long now = System.currentTimeMillis();
+		keyValueMap.putWithLifespan("testing", "value", 300);
+		assertEquals("value", keyValueMap.getString("testing"));
+
+		Thread.sleep(300);
 		assertEquals(null, keyValueMap.getString("testing"));
 	}
 }
