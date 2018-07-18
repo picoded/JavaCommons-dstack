@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import picoded.core.common.SystemSetupInterface;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.*;
 
@@ -14,7 +15,7 @@ import picoded.dstack.*;
  * 
  * @return initialized data structure if type is supported
  **/
-public abstract class CoreStack {
+public abstract class CoreStack implements SystemSetupInterface {
 	
 	//-------------------------------------------------------------
 	//
@@ -123,4 +124,65 @@ public abstract class CoreStack {
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
 	 */
 	protected abstract Core_DataStructure initDataStructure(String name, String type);
+
+	//-------------------------------------------------------------
+	//
+	//  System Setup interface implementation
+	//
+	//-------------------------------------------------------------
+	
+	/**
+	 * Calls systemSetup on each of the cached data structure
+	 */
+	public void systemSetup() {
+		structureCache.forEach((k,v)->{
+			v.systemSetup();
+		});
+	}
+
+	/**
+	 * Calls systemDestroy on each of the cached data structure
+	 */
+	public void systemDestroy() {
+		structureCache.forEach((k,v)->{
+			v.systemDestroy();
+		});
+	}
+
+	/**
+	 * Calls maintenance on each of the cached data structure
+	 */
+	public void maintenance() {
+		structureCache.forEach((k,v)->{
+			v.maintenance();
+		});
+	}
+
+	/**
+	 * Calls incrementalMaintenance on each of the cached data structure
+	 */
+	public void incrementalMaintenance() {
+		structureCache.forEach((k,v)->{
+			v.incrementalMaintenance();
+		});
+	}
+
+	/**
+	 * Calls clear on each of the cached data structure
+	 */
+	public void clear() {
+		structureCache.forEach((k,v)->{
+			v.clear();
+		});
+	}
+
+	/**
+	 * Calls close on each of the cached data structure
+	 */
+	public void close() {
+		structureCache.forEach((k,v)->{
+			v.close();
+		});
+	}
+
 }

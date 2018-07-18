@@ -61,6 +61,9 @@ public class ProviderConfig {
 			if (config == null) {
 				throw new IllegalArgumentException("Missing provider config at index : " + i);
 			}
+			if (config.getString("type") == null) {
+				throw new IllegalArgumentException("Missing provider type at index : " + i);
+			}
 			if (config.getString("name") == null) {
 				throw new IllegalArgumentException("Missing provider name at index : " + i);
 			}
