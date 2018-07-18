@@ -4,7 +4,7 @@ import picoded.dstack.KeyLong;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Core_KeyLong implements KeyLong {
+public class Core_KeyLong extends KeyLong {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -54,7 +54,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long incrementAndGet(Object key) {
+	public long incrementAndGet(Object key) {
 		Long value = main.incrementAndGet(key);
 		return value;
 	}
@@ -65,7 +65,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long getAndIncrement(Object key) {
+	public long getAndIncrement(Object key) {
 		Long value = main.getAndIncrement(key);
 		return value;
 	}
@@ -76,7 +76,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long decrementAndGet(Object key) {
+	public long decrementAndGet(Object key) {
 		Long value = main.decrementAndGet(key);
 		return value;
 	}
@@ -87,7 +87,7 @@ public class Core_KeyLong implements KeyLong {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	public Long getAndDecrement(Object key) {
+	public long getAndDecrement(Object key) {
 		Long value = main.getAndDecrement(key);
 		return value;
 	}
@@ -121,7 +121,7 @@ public class Core_KeyLong implements KeyLong {
 	 *
 	 * @return value used for generic convert where applicable
 	 **/
-	public Long getValue() {
+	public long getValue() {
 		return main.getValue(key);
 	}
 	
@@ -132,7 +132,7 @@ public class Core_KeyLong implements KeyLong {
 	 **/
 	@Override
 	public String toString() {
-		return getValue().toString();
+		return String.valueOf(getValue());
 	}
 	
 	//--------------------------------------------------------------------------
@@ -203,7 +203,7 @@ public class Core_KeyLong implements KeyLong {
 	 *
 	 * @return null
 	 **/
-	public Long putWithLifespan(Long value, long lifespan) {
+	public long putWithLifespan(Long value, long lifespan) {
 		return main.putWithLifespan(key, value, lifespan);
 	}
 	
@@ -218,7 +218,7 @@ public class Core_KeyLong implements KeyLong {
 	 *
 	 * @return String
 	 **/
-	public Long putWithExpiry(Long value, long expireTimestamp) {
+	public long putWithExpiry(Long value, long expireTimestamp) {
 		return main.putWithExpiry(key, value, expireTimestamp);
 	}
 }
