@@ -9,8 +9,6 @@ import picoded.dstack.*;
  * [Internal use only]
  * 
  * StructSimple configuration based stack provider
- * 
- * @return initialized data structure if type is supported
  **/
 public class StructSimpleStack extends CoreStack {
 	
