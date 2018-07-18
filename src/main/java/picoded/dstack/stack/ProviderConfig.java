@@ -14,7 +14,7 @@ import picoded.dstack.core.CoreStack;
  * [Internal use only]
  * 
  * Utility class used to read the provider configruation list,
- * and gneerate the provider specific data structures in the process.
+ * and generate the provider specific data structures in the process.
  */
 public class ProviderConfig {
 	

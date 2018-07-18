@@ -102,11 +102,11 @@ public interface FileWorkspace {
 	
 	// @TODO - once this API is more stable
 	//
-	// + File exists check
-	// + File deletion
 	// + String handling
 	// + File copies within workspace
 	// + File moving within workspace
+	// + Folder deletion
+	// + Folder listing
 	//--------------------------------------------------------------------------
 	
 }
