@@ -71,25 +71,19 @@ public class DStack extends CoreStack {
 			throw new RuntimeException("No `providers` found in namespaceConfig of "+prefix);
 		}
 
-		// For each of the provider inside the providerList, grab the dataObjectMap from it
-		
-		List<Core_KeyLongMap> stackKeyLongMapList = new ArrayList<>();
-		List<Core_KeyValueMap> stackKeyValuetMapList = new ArrayList<>();
-		List<Core_FileWorkspaceMap> stackFileWorkspaceMapList = new ArrayList<>();
-
-			// Initialize for the respective type
-			if (type.equalsIgnoreCase("DataObjectMap")) {
-				return returnStackDataObjectMap(providerList, name, prefix);
-			}
-			if (type.equalsIgnoreCase("KeyValueMap")) {
-				return returnStackKeyValueMap(providerList, name, prefix);
-			}
-			if (type.equalsIgnoreCase("KeyLongMap")) {
-				return returnStackKeyLongMap(providerList, name, prefix);
-			}
-			if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-				return returnStackFileWorkspaceMap(providerList, name, prefix);
-			}
+		// Initialize for the respective type
+		if (type.equalsIgnoreCase("DataObjectMap")) {
+			return returnStackDataObjectMap(providerList, name, prefix);
+		}
+		if (type.equalsIgnoreCase("KeyValueMap")) {
+			return returnStackKeyValueMap(providerList, name, prefix);
+		}
+		if (type.equalsIgnoreCase("KeyLongMap")) {
+			return returnStackKeyLongMap(providerList, name, prefix);
+		}
+		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
+			return returnStackFileWorkspaceMap(providerList, name, prefix);
+		}
 
 		return null;
 	}
