@@ -43,7 +43,6 @@ public class DStack extends CoreStack {
 		}
 
 		providerConfig = new ProviderConfig(providerConfigList);
-
 		namespace = inConfig.fetchGenericConvertList("namespace");
 
 	}
@@ -218,12 +217,10 @@ public class DStack extends CoreStack {
 	 */
 	protected GenericConvertMap<String, Object> resolveNamespaceConfig(String name) {
 		for(Object object : namespace){
-			if( object instanceof Map){
-				GenericConvertMap<String, Object> namespaceConfig = GenericConvert.toGenericConvertStringMap(object);
-				String pattern = namespaceConfig.getString("prefix", "");
-				if(regexNameMatcher(name, pattern)){
-					return namespaceConfig;
-				}
+			GenericConvertMap<String, Object> namespaceConfig = GenericConvert.toGenericConvertStringMap(object);
+			String pattern = namespaceConfig.getString("prefix", "");
+			if(regexNameMatcher(name, pattern)){
+				return namespaceConfig;
 			}
 		}
 		return null;

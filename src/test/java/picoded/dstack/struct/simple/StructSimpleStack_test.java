@@ -31,6 +31,8 @@ public class StructSimpleStack_test {
 
 	// Test object for reuse
 	public CoreStack testObj = null;
+
+	public String tablePrefix = "";
 	
 	// To override for implementation
 	//-----------------------------------------------------
@@ -46,6 +48,7 @@ public class StructSimpleStack_test {
 	//-----------------------------------------------------
 	@Before
 	public void systemSetup() {
+		tablePrefix = retrieveTablePrefix();
 		testObj = implementationConstructor();
 		testObj.systemSetup();
 	}
@@ -69,13 +72,17 @@ public class StructSimpleStack_test {
 		// run incremental maintaince, no exception?
 		testObj.incrementalMaintenance();
 	}
+
+	public String retrieveTablePrefix(){
+		return JSqlTestConfig.randomTablePrefix();
+	}
 	
 	// Get and intialize various data structure objects
 	//-----------------------------------------------------
 
 	@Test
 	public void test_retrieveDataObject() {
-		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
 
 		DataObject newEntry = dataObjectMap.newEntry();
@@ -88,7 +95,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_retrieveFileWorkspaceMap(){
-		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(JSqlTestConfig.randomTablePrefix());
+		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(tablePrefix);
 		fileWorkspaceMap.systemSetup();
 
 		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
@@ -100,7 +107,7 @@ public class StructSimpleStack_test {
 	
 	@Test
 	public void test_retrieveKeyLongMap(){
-		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
 
 		keyLongMap.putLong("testing", 5L);
@@ -109,7 +116,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_retrieveKeyValueMap(){
-		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
 
 		keyValueMap.put("testing", "value");
@@ -121,7 +128,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_deleteDataObject(){
-		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
 
 		DataObject newEntry = dataObjectMap.newEntry();
@@ -139,7 +146,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_deleteFileWorkspace(){
-		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(JSqlTestConfig.randomTablePrefix());
+		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(tablePrefix);
 		fileWorkspaceMap.systemSetup();
 
 		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
@@ -156,7 +163,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_deleteKeyLong(){
-		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
 
 		keyLongMap.putLong("testing", 5L);
@@ -168,7 +175,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_deleteKeyValue(){
-		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
 
 		keyValueMap.put("testing", "value");
@@ -183,7 +190,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_expiryKeyLong() throws Exception{
-		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
 
 		long now = System.currentTimeMillis();
@@ -196,7 +203,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_expiryKeyValue() throws Exception{
-		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
 
 		long now = System.currentTimeMillis();
@@ -209,7 +216,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_lifeSpanKeyLong() throws Exception{
-		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
 
 		long now = System.currentTimeMillis();
@@ -222,7 +229,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_lifeSpanKeyValue() throws Exception{
-		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
 
 		long now = System.currentTimeMillis();
@@ -238,7 +245,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_keySetDataObjectMap(){
-		DataObjectMap dataObjectMap = testObj.dataObjectMap(JSqlTestConfig.randomTablePrefix());
+		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
 
 		DataObject newEntry = dataObjectMap.newEntry();
@@ -255,7 +262,7 @@ public class StructSimpleStack_test {
 	
 	@Test
 	public void test_keySetKeyLongMap(){
-		KeyLongMap keyLongMap = testObj.keyLongMap(JSqlTestConfig.randomTablePrefix());
+		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
 
 		keyLongMap.putLong("testing", 5L);
@@ -269,7 +276,7 @@ public class StructSimpleStack_test {
 
 	@Test
 	public void test_keySetKeyValueMap(){
-		KeyValueMap keyValueMap = testObj.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
 
 		keyValueMap.put("testing", "value");

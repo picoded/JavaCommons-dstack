@@ -74,7 +74,7 @@ public class ProviderConfig {
 	protected void loadConfigArray(List<Object> inConfigList) {
 		// Map it as a generic list 
 		GenericConvertList<Object> configList = GenericConvertList.build(inConfigList);
-		
+
 		// Iterate each config item
 		int size = configList.size();
 		for (int i = 0; i < size; ++i) {
