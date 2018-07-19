@@ -26,10 +26,11 @@ import picoded.dstack.stack.Stack_KeyValueMap;
 
 public class DStack extends CoreStack {
 	
+	// List of provider backends - to fetch / initialize from
 	protected ProviderConfig providerConfig;
 
+	// Namespace listing
 	protected GenericConvertList<Object> namespace;
-	protected GenericConvertList<Object> providerConfigList;
 
 	/**
 	 * Constructor with configuration map
@@ -37,14 +38,13 @@ public class DStack extends CoreStack {
 	public DStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
 
-		providerConfigList = inConfig.fetchGenericConvertList("provider");
+		GenericConvertList<Object> providerConfigList = inConfig.fetchGenericConvertList("provider");
 		if(providerConfigList == null) {
 			throw new IllegalArgumentException("Missing `provider` config list");
 		}
 
 		providerConfig = new ProviderConfig(providerConfigList);
 		namespace = inConfig.fetchGenericConvertList("namespace");
-
 	}
 	
 	/**
@@ -56,40 +56,23 @@ public class DStack extends CoreStack {
 	 * @return initialized data structure if type is supported
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
-
-		// Grab the first match namepsace configuration
-		GenericConvertMap<String,Object> namespaceConfig = resolveNamespaceConfig(name);
-		if ( namespaceConfig == null ) {
-			throw new RuntimeException("No namespace configuration found for " + name);
-		}
-
-		// Obtain the regex and the providers from the name space to search through
-		String regex = namespaceConfig.getString("regex");
-		List<Object> providerList = namespaceConfig.getObjectList("providers");
-		if ( providerList == null ) {
-			throw new RuntimeException("No `providers` found in namespaceConfig of "+regex);
-		}
-
 		// Initialize for the respective type
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			return returnStackDataObjectMap(providerList, name, regex);
+			return new Stack_DataObjectMap( fetchCommonStructureImplementation(name, "DataObjectMap", new Core_DataObjectMap[]{}) );
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
-			return returnStackKeyValueMap(providerList, name, regex);
+			return new Stack_KeyValueMap( fetchCommonStructureImplementation(name, "KeyValueMap", new Core_KeyValueMap[]{}) );
 		}
 		if (type.equalsIgnoreCase("KeyLongMap")) {
-			return returnStackKeyLongMap(providerList, name, regex);
+			return new Stack_KeyLongMap( fetchCommonStructureImplementation(name, "KeyLongMap", new Core_KeyLongMap[]{}) );
 		}
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return returnStackFileWorkspaceMap(providerList, name, regex);
+			return new Stack_FileWorkspaceMap( fetchCommonStructureImplementation(name, "FileWorkspaceMap", new Core_FileWorkspaceMap[]{}) );
 		}
 
+		// No valid type supported
 		return null;
 	}
-
-	//
-	// 
-	//
 
 	/**
 	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
@@ -144,109 +127,6 @@ public class DStack extends CoreStack {
 		// returning as array
 		return retList.toArray(refrenceType);
 	}
-
-	protected Stack_DataObjectMap returnStackDataObjectMap(List<Object> providersList, String name, String regex){
-		return new Stack_DataObjectMap( fetchCommonStructureImplementation(name, "DataObjectMap", new Core_DataObjectMap[]{}) );
-	}
-
-	protected Stack_KeyValueMap returnStackKeyValueMap(List<Object> providersList, String name, String regex){
-		List<Core_KeyValueMap> keyValueMapList = retrieveKeyValueMapList(providersList, name, regex);
-
-		Core_KeyValueMap[] keyValueMapArray = keyValueMapList.toArray(new Core_KeyValueMap[keyValueMapList.size()]);
-
-		Stack_KeyValueMap ret = new Stack_KeyValueMap( keyValueMapArray );
-
-		return ret;
-	}
-
-	protected Stack_KeyLongMap returnStackKeyLongMap(List<Object> providersList, String name, String regex){
-		List<Core_KeyLongMap> keyLongMapList = retrieveKeyLongMapList(providersList, name, regex);
-
-		Core_KeyLongMap[] keyLongMapArray = keyLongMapList.toArray(new Core_KeyLongMap[keyLongMapList.size()]);
-
-		Stack_KeyLongMap ret = new Stack_KeyLongMap( keyLongMapArray );
-
-		return ret;
-	}
-
-	protected Stack_FileWorkspaceMap returnStackFileWorkspaceMap(List<Object> providersList, String name, String regex){
-		List<Core_FileWorkspaceMap> fileWorkspaceMapList = retrieveFileWorkspaceMapList(providersList, name, regex);
-
-		Core_FileWorkspaceMap[] fileWorkspaceMapArray = fileWorkspaceMapList.toArray(new Core_FileWorkspaceMap[fileWorkspaceMapList.size()]);
-
-		Stack_FileWorkspaceMap ret = new Stack_FileWorkspaceMap( fileWorkspaceMapArray );
-
-		return ret;
-	}
-
-	protected List<Core_DataObjectMap> retrieveDataObjectMapList(List<Object> providersList, String name, String regex){
-		List<Core_DataObjectMap> stackDataObjectMapList = new ArrayList<>();
-		for ( Object object : providersList ) {
-			String nameOfProvider = "";
-			if ( object instanceof String ) {
-				 nameOfProvider = object.toString();
-			}
-
-			Core_DataObjectMap dataObjectMap = providerConfig.getProviderStack(nameOfProvider).dataObjectMap(name);
-			if ( dataObjectMap == null ) {
-				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `regex`"+regex+" cannot be found.");
-			}
-			stackDataObjectMapList.add(dataObjectMap);
-		}
-		return stackDataObjectMapList;
-	}
-
-	protected List<Core_KeyValueMap> retrieveKeyValueMapList(List<Object> providersList, String name, String regex){
-		List<Core_KeyValueMap> stackKeyValueMapList = new ArrayList<>();
-		for ( Object object : providersList ) {
-			String nameOfProvider = "";
-			if ( object instanceof String ) {
-				 nameOfProvider = object.toString();
-			}
-
-			Core_KeyValueMap keyValueMap = providerConfig.getProviderStack(nameOfProvider).keyValueMap(name);
-			if ( keyValueMap == null ) {
-				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `regex`"+regex+" cannot be found.");
-			}
-			stackKeyValueMapList.add(keyValueMap);
-		}
-		return stackKeyValueMapList;
-	}
-
-	protected List<Core_KeyLongMap> retrieveKeyLongMapList(List<Object> providersList, String name, String regex){
-		List<Core_KeyLongMap> stackKeyLongMapList = new ArrayList<>();
-		for ( Object object : providersList ) {
-			String nameOfProvider = "";
-			if ( object instanceof String ) {
-				 nameOfProvider = object.toString();
-			}
-
-			Core_KeyLongMap keyLongMap = providerConfig.getProviderStack(nameOfProvider).keyLongMap(name);
-			if ( keyLongMap == null ) {
-				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `regex`"+regex+" cannot be found.");
-			}
-			stackKeyLongMapList.add(keyLongMap);
-		}
-		return stackKeyLongMapList;
-	}
-
-	protected List<Core_FileWorkspaceMap> retrieveFileWorkspaceMapList(List<Object> providersList, String name, String regex){
-		List<Core_FileWorkspaceMap> stackFileWorkspaceMapList = new ArrayList<>();
-		for ( Object object : providersList ) {
-			String nameOfProvider = "";
-			if ( object instanceof String ) {
-				 nameOfProvider = object.toString();
-			}
-
-			Core_FileWorkspaceMap fileWorkspaceMap = providerConfig.getProviderStack(nameOfProvider).fileWorkspaceMap(name);
-			if ( fileWorkspaceMap == null ) {
-				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `regex`"+regex+" cannot be found.");
-			}
-			stackFileWorkspaceMapList.add(fileWorkspaceMap);
-		}
-		return stackFileWorkspaceMapList;
-	}
-
 
 	//
 	// Helper Functions
