@@ -91,14 +91,62 @@ public class DStack extends CoreStack {
 	// 
 	//
 
+	/**
+	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
+	 * 
+	 * @param  name of data structure to use
+	 * @param  type of data structure to implement
+	 * @param  refrenceType return array to use for type reference (not actually used)
+	 * 
+	 * @return  array of data structures found applicable, which is the same as referenceType
+	 */
+	protected <V extends Core_DataStructure> V[] fetchCommonStructureImplementation(String name, String type, V[] refrenceType) {
+		// Get the relevent namespace config
+		GenericConvertMap<String,Object> namespaceConfig = resolveNamespaceConfig(name);
+		if ( namespaceConfig == null ) {
+			throw new RuntimeException("No `namespace` configuration found for " + name);
+		}
+
+		// Get the provider list
+		List<Object> providerList = namespaceConfig.getObjectList("providers");
+		if ( providerList == null ) {
+			throw new RuntimeException("No `providers` found in namespaceConfig for "+name);
+		}
+
+		// return list to use, time to fill it up with objects from the providers
+		List<V> retList = new ArrayList<>();
+
+		// Iterate the provider
+		for(Object provider : providerList) {
+			// Get the relevent provider CoreStack
+			// Skip if null
+			CoreStack providerStack = providerConfig.getProviderStack(provider.toString());
+			if( providerStack == null ) {
+				continue;
+			}
+
+			// Get the relevent data structure
+			// Skip if null
+			Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(name, type, null);
+			if( providerDataStructure == null ) {
+				continue;
+			}
+
+			// Add to response
+			retList.add( (V)providerDataStructure );
+		}
+
+		// Throw an exception if empty
+		if(retList.isEmpty()) {
+			throw new RuntimeException("No `providers` returned a valid DataStructure");
+		}
+
+		// returning as array
+		return retList.toArray(refrenceType);
+	}
+
 	protected Stack_DataObjectMap returnStackDataObjectMap(List<Object> providersList, String name, String regex){
-		List<Core_DataObjectMap> dataObjectMapList = retrieveDataObjectMapList(providersList, name, regex);
-
-		Core_DataObjectMap[] dataObjectMapArray = dataObjectMapList.toArray(new Core_DataObjectMap[dataObjectMapList.size()]);
-
-		Stack_DataObjectMap ret = new Stack_DataObjectMap( dataObjectMapArray );
-
-		return ret;
+		return new Stack_DataObjectMap( fetchCommonStructureImplementation(name, "DataObjectMap", new Core_DataObjectMap[]{}) );
 	}
 
 	protected Stack_KeyValueMap returnStackKeyValueMap(List<Object> providersList, String name, String regex){

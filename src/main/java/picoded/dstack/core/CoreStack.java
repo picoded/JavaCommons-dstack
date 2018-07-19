@@ -81,7 +81,7 @@ public abstract class CoreStack implements SystemSetupInterface {
 	 * 
 	 * @param  name  name of the datastructure to initialize
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
-	 * @param  cObj  class type to validate for
+	 * @param  cObj  class type to validate for (optional)
 	 * 
 	 * @return  the cached data structure
 	 */
@@ -89,8 +89,8 @@ public abstract class CoreStack implements SystemSetupInterface {
 		// Get and validate cache if found
 		Core_DataStructure cache = structureCache.get(name);
 		if (cache != null) {
-			// Class object to validate for
-			if (cObj.isInstance(cache)) {
+			// Class object to validate for (if validation class is provided)
+			if (cObj == null || cObj.isInstance(cache)) {
 				return cache;
 			}
 			// Validation failed, thros an exception
