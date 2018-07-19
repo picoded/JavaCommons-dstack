@@ -156,7 +156,7 @@ public class DStack extends CoreStack {
 	 * @param nameToMatch is the string to check if it matches with the pattern
 	 * @param pattern     is the `regex` that is set in the namespace 
 	 * 
-	 * @return 
+	 * @return true if match is valid
 	 */
 	protected boolean regexNameMatcher(String nameToMatch, String pattern) {
 		return nameToMatch.matches(pattern);
