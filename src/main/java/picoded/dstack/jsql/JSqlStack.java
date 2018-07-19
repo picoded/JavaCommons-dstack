@@ -1,22 +1,38 @@
-package picoded.dstack.struct.simple;
+package picoded.dstack.jsql;
 
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.core.*;
-import picoded.dstack.struct.simple.*;
 import picoded.dstack.*;
+import picoded.dstack.jsql.connector.JSql;
 
 /**
  * [Internal use only]
  * 
- * StructSimple configuration based stack provider
+ * JSQL configuration based stack provider
  **/
-public class StructSimpleStack extends CoreStack {
+public class JSqlStack extends CoreStack {
 	
+	/**
+	 * The internal JSql connection
+	 */
+	protected JSql conn = null;
+
 	/**
 	 * Constructor with configuration map
 	 */
-	public StructSimpleStack(GenericConvertMap<String, Object> inConfig) {
+	public JSqlStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
+
+		// Extract the connection config object
+		GenericConvertMap<String,Object> dbConfig = inConfig.fetchGenericConvertStringMap("db");
+
+		// If DB config is missing, throw
+		if( dbConfig == null ) {
+			throw new IllegalArgumentException("Missing 'db' config object for JSql stack provider");
+		}
+
+		// Get the JSql connection
+		conn = JSql.setupFromConfig(dbConfig);
 	}
 	
 	/**
@@ -30,16 +46,16 @@ public class StructSimpleStack extends CoreStack {
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		// Initialize for the respective type
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			return new StructSimple_DataObjectMap();
+			return new JSql_DataObjectMap(conn, name);
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
-			return new StructSimple_KeyValueMap();
+			return new JSql_KeyValueMap(conn, name);
 		}
 		if (type.equalsIgnoreCase("KeyLongMap")) {
-			return new StructSimple_KeyLongMap();
+			return new JSql_KeyLongMap(conn, name);
 		}
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new StructSimple_FileWorkspaceMap();
+			return new JSql_FileWorkspaceMap(conn, name);
 		}
 		// No valid type, return null
 		return null;

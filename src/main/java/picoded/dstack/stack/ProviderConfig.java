@@ -9,12 +9,36 @@ import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.struct.simple.StructSimpleStack;
 import picoded.dstack.core.CoreStack;
+import picoded.dstack.jsql.JSqlStack;
 
 /**
  * [Internal use only]
  * 
  * Utility class used to read the provider configruation list,
- * and generate the provider specific data structures in the process.
+ * and generate the provider specific data stacks in the process.
+ * 
+ * This takes in a list of provider config, for example (in json form)
+ * 
+ * @TODO
+ * + Read-Only support
+ * + Caching / Query priority support
+ * 
+ * ```
+ * [
+ * 	{
+ * 		"type" : "StructSimple",
+ * 		"name" : "requestCache"
+ * 	},
+ * 	{
+ * 		"type" : "jsql",
+ * 		"name" : "db_a",
+ * 		"db" : {
+ * 			"type" : "sqlite",
+ * 			"path" : "./shared.db"
+ * 		}
+ * 	}
+ * ]
+ * ```
  */
 public class ProviderConfig {
 	
@@ -50,7 +74,7 @@ public class ProviderConfig {
 	protected void loadConfigArray(List<Object> inConfigList) {
 		// Map it as a generic list 
 		GenericConvertList<Object> configList = GenericConvertList.build(inConfigList);
-		
+
 		// Iterate each config item
 		int size = configList.size();
 		for (int i = 0; i < size; ++i) {
@@ -60,6 +84,9 @@ public class ProviderConfig {
 			// Validate the provider object
 			if (config == null) {
 				throw new IllegalArgumentException("Missing provider config at index : " + i);
+			}
+			if (config.getString("type") == null) {
+				throw new IllegalArgumentException("Missing provider type at index : " + i);
 			}
 			if (config.getString("name") == null) {
 				throw new IllegalArgumentException("Missing provider name at index : " + i);
@@ -129,6 +156,9 @@ public class ProviderConfig {
 	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
 		if (type.equalsIgnoreCase("StructSimple")) {
 			return new StructSimpleStack(config);
+		}
+		if (type.equalsIgnoreCase("JSql")) {
+			return new JSqlStack(config);
 		}
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}

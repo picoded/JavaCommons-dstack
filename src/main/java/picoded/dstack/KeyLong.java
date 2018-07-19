@@ -1,15 +1,18 @@
 package picoded.dstack;
 
 import picoded.core.struct.GenericConvertValue;
+import java.lang.Number;
 
-public interface KeyLong extends GenericConvertValue<Long> {
+public abstract class KeyLong extends Number {
 	
-	/**
-	 * Get and return the key used to store the value
-	 *
-	 * @return  the key representing the value
-	 */
-	String getKey();
+
+
+	// /**
+	//  * Get and return the key used to store the value
+	//  *
+	//  * @return  the key representing the value
+	//  */
+	// String getKey();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -22,28 +25,28 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 *
 	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
-	long getExpiry();
+	abstract public long getExpiry();
 	
 	/**
 	 * Returns the lifespan time stamp value
 	 *
 	 * @return long, 0 means no expiry, -1 no data / expired
 	 **/
-	long getLifespan();
+	abstract public long getLifespan();
 	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
 	 * @param expireTimestamp expire unix timestamp value in milliseconds
 	 **/
-	void setExpiry(long expireTimestamp);
+	abstract public void setExpiry(long expireTimestamp);
 	
 	/**
 	 * Sets the expire time stamp value, if still valid
 	 *
 	 * @param lifespan time to expire in milliseconds
 	 **/
-	void setLifeSpan(long lifespan);
+	abstract public void setLifeSpan(long lifespan);
 	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
@@ -56,7 +59,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 *
 	 * @return null
 	 **/
-	Long putWithLifespan(Long value, long lifespan);
+	abstract public long putWithLifespan(Long value, long lifespan);
 	
 	/**
 	 * Stores (and overwrites if needed) key, value pair
@@ -69,7 +72,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 *
 	 * @return Long
 	 **/
-	Long putWithExpiry(Long value, long expireTimestamp);
+	abstract public long putWithExpiry(Long value, long expireTimestamp);
 	
 	/**
 	 * Increment the value of the key and return the updated value.
@@ -77,7 +80,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long incrementAndGet(Object key);
+	abstract public long incrementAndGet(Object key);
 	
 	/**
 	 * Return the current value of the key and increment by 1
@@ -85,7 +88,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndIncrement(Object key);
+	abstract public long getAndIncrement(Object key);
 	
 	/**
 	 * Decrement the value of the key and return the updated value.
@@ -93,7 +96,7 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long decrementAndGet(Object key);
+	abstract public long decrementAndGet(Object key);
 	
 	/**
 	 * Return the current value of the key and decrement by 1
@@ -101,6 +104,47 @@ public interface KeyLong extends GenericConvertValue<Long> {
 	 * @param key to retrieve
 	 * @return Long
 	 */
-	Long getAndDecrement(Object key);
+	abstract public long getAndDecrement(Object key);
+	
+	// /**
+	//  * Return the current value of the key
+	//  *
+	//  * @return Long
+	//  */
+	abstract public long getValue();
+
+	//
+	// Overriding the default Number functions
+	//
+
+	/**
+	 * Returns the value of the specified number as a byte, which may involve rounding or truncation.
+	 */
+	abstract public byte byteValue();
+
+	/**
+	 * Returns the value of the specified number as a double, which may involve rounding.
+	 */
+	abstract public double doubleValue();
+
+	/**
+	 * Returns the value of the specified number as a float, which may involve rounding.
+	 */
+	abstract public float floatValue();
+
+	/**
+	 * Returns the value of the specified number as an int, which may involve rounding or truncation.
+	 */
+	abstract public int intValue();
+	
+	/**
+	 * Returns the value of the specified number as a long, which may involve rounding or truncation.
+	 */
+	abstract public long longValue();
+
+	/**
+	 * Returns the value of the specified number as a short, which may involve rounding or truncation.
+	 */
+	abstract public short shortValue();
 	
 }
