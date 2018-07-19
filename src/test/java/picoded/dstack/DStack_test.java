@@ -36,7 +36,7 @@ public class DStack_test extends StructSimpleStack_test {
 
 		ArrayList<String> namespace_providers = new ArrayList<>();
 		namespace_providers.add("db_main");
-		namespace.put("prefix", ".*");
+		namespace.put("regex", ".*");
 		namespace.put("providers", namespace_providers);
 
 		namespaces.add(namespace);
