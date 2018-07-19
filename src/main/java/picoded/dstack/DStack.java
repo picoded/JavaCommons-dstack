@@ -51,18 +51,20 @@ public class DStack extends CoreStack {
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
 
+		// Grab the first match namepsace configuration
 		GenericConvertMap<String,Object> namespaceConfig = resolveNamespaceConfig(name);
 		if ( namespaceConfig == null ) {
 			throw new RuntimeException("No namespace configuration found for " + name);
 		}
 
+		// Obtain the prefix and the providers from the name space to search through
 		String prefix = namespaceConfig.getString("prefix");
-
 		List<Object> providerList = namespaceConfig.getObjectList("providers");
 		if ( providerList == null ) {
 			throw new RuntimeException("No `providers` found in namespaceConfig of "+prefix);
 		}
 
+		// For each of the provider inside the providerList, grab the dataObjectMap from it
 		List<Core_DataObjectMap> stackDataObjectMapList = new ArrayList<>();
 		for ( Object object : providerList ) {
 			String nameOfProvider = "";
@@ -79,6 +81,7 @@ public class DStack extends CoreStack {
 			stackDataObjectMapList.add(dataObjectMap);
 		}
 
+		// Add the found dataObjectMap list and initialize the Stack DataObject 
 		Core_DataObjectMap[] dataObjectMapsArray = stackDataObjectMapList.toArray(new Core_DataObjectMap[stackDataObjectMapList.size()]);
 
 		Stack_DataObjectMap ret = new Stack_DataObjectMap( dataObjectMapsArray );
@@ -106,6 +109,14 @@ public class DStack extends CoreStack {
 		return null;
 	}
 
+	/**
+	 * Attempts to match the name with the regex pattern given in the param
+	 * 
+	 * @param nameToMatch is the string to check if it matches with the pattern
+	 * @param pattern     is the `prefix` that is set in the namespace 
+	 * 
+	 * @return 
+	 */
 	protected boolean regexNameMatcher(String nameToMatch, String pattern) {
 		return nameToMatch.matches(pattern);
 	}
