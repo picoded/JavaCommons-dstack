@@ -13,9 +13,16 @@ import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.core.CoreStack;
 import picoded.dstack.core.Core_DataStructure;
+import picoded.dstack.core.Core_FileWorkspaceMap;
+import picoded.dstack.core.Core_KeyLong;
+import picoded.dstack.core.Core_KeyLongMap;
+import picoded.dstack.core.Core_KeyValueMap;
 import picoded.dstack.core.Core_DataObjectMap;
 import picoded.dstack.stack.ProviderConfig;
 import picoded.dstack.stack.Stack_DataObjectMap;
+import picoded.dstack.stack.Stack_FileWorkspaceMap;
+import picoded.dstack.stack.Stack_KeyLongMap;
+import picoded.dstack.stack.Stack_KeyValueMap;
 
 public class DStack extends CoreStack {
 	
@@ -65,29 +72,148 @@ public class DStack extends CoreStack {
 		}
 
 		// For each of the provider inside the providerList, grab the dataObjectMap from it
+		
+		List<Core_KeyLongMap> stackKeyLongMapList = new ArrayList<>();
+		List<Core_KeyValueMap> stackKeyValuetMapList = new ArrayList<>();
+		List<Core_FileWorkspaceMap> stackFileWorkspaceMapList = new ArrayList<>();
+
+			// Initialize for the respective type
+			if (type.equalsIgnoreCase("DataObjectMap")) {
+				return returnStackDataObjectMap(providerList, name, prefix);
+			}
+			if (type.equalsIgnoreCase("KeyValueMap")) {
+				return returnStackKeyValueMap(providerList, name, prefix);
+			}
+			if (type.equalsIgnoreCase("KeyLongMap")) {
+				return returnStackKeyLongMap(providerList, name, prefix);
+			}
+			if (type.equalsIgnoreCase("FileWorkspaceMap")) {
+				return returnStackFileWorkspaceMap(providerList, name, prefix);
+			}
+
+		return null;
+	}
+
+	//
+	// 
+	//
+
+	protected Stack_DataObjectMap returnStackDataObjectMap(List<Object> providersList, String name, String prefix){
+		List<Core_DataObjectMap> dataObjectMapList = retrieveDataObjectMapList(providersList, name, prefix);
+
+		Core_DataObjectMap[] dataObjectMapArray = dataObjectMapList.toArray(new Core_DataObjectMap[dataObjectMapList.size()]);
+
+		Stack_DataObjectMap ret = new Stack_DataObjectMap( dataObjectMapArray );
+
+		return ret;
+	}
+
+	protected Stack_KeyValueMap returnStackKeyValueMap(List<Object> providersList, String name, String prefix){
+		List<Core_KeyValueMap> keyValueMapList = retrieveKeyValueMapList(providersList, name, prefix);
+
+		Core_KeyValueMap[] keyValueMapArray = keyValueMapList.toArray(new Core_KeyValueMap[keyValueMapList.size()]);
+
+		Stack_KeyValueMap ret = new Stack_KeyValueMap( keyValueMapArray );
+
+		return ret;
+	}
+
+	protected Stack_KeyLongMap returnStackKeyLongMap(List<Object> providersList, String name, String prefix){
+		List<Core_KeyLongMap> keyLongMapList = retrieveKeyLongMapList(providersList, name, prefix);
+
+		Core_KeyLongMap[] keyLongMapArray = keyLongMapList.toArray(new Core_KeyLongMap[keyLongMapList.size()]);
+
+		Stack_KeyLongMap ret = new Stack_KeyLongMap( keyLongMapArray );
+
+		return ret;
+	}
+
+	protected Stack_FileWorkspaceMap returnStackFileWorkspaceMap(List<Object> providersList, String name, String prefix){
+		List<Core_FileWorkspaceMap> fileWorkspaceMapList = retrieveFileWorkspaceMapList(providersList, name, prefix);
+
+		Core_FileWorkspaceMap[] fileWorkspaceMapArray = fileWorkspaceMapList.toArray(new Core_FileWorkspaceMap[fileWorkspaceMapList.size()]);
+
+		Stack_FileWorkspaceMap ret = new Stack_FileWorkspaceMap( fileWorkspaceMapArray );
+
+		return ret;
+	}
+
+	//
+	//
+	//
+
+	protected List<Core_DataObjectMap> retrieveDataObjectMapList(List<Object> providersList, String name, String prefix){
 		List<Core_DataObjectMap> stackDataObjectMapList = new ArrayList<>();
-		for ( Object object : providerList ) {
+		for ( Object object : providersList ) {
 			String nameOfProvider = "";
 			if ( object instanceof String ) {
 				 nameOfProvider = object.toString();
 			}
 
 			Core_DataObjectMap dataObjectMap = providerConfig.getProviderStack(nameOfProvider).dataObjectMap(name);
-
 			if ( dataObjectMap == null ) {
 				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `prefix`"+prefix+" cannot be found.");
 			}
-
 			stackDataObjectMapList.add(dataObjectMap);
 		}
-
-		// Add the found dataObjectMap list and initialize the Stack DataObject 
-		Core_DataObjectMap[] dataObjectMapsArray = stackDataObjectMapList.toArray(new Core_DataObjectMap[stackDataObjectMapList.size()]);
-
-		Stack_DataObjectMap ret = new Stack_DataObjectMap( dataObjectMapsArray );
-
-		return ret;
+		return stackDataObjectMapList;
 	}
+
+	protected List<Core_KeyValueMap> retrieveKeyValueMapList(List<Object> providersList, String name, String prefix){
+		List<Core_KeyValueMap> stackKeyValueMapList = new ArrayList<>();
+		for ( Object object : providersList ) {
+			String nameOfProvider = "";
+			if ( object instanceof String ) {
+				 nameOfProvider = object.toString();
+			}
+
+			Core_KeyValueMap keyValueMap = providerConfig.getProviderStack(nameOfProvider).keyValueMap(name);
+			if ( keyValueMap == null ) {
+				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `prefix`"+prefix+" cannot be found.");
+			}
+			stackKeyValueMapList.add(keyValueMap);
+		}
+		return stackKeyValueMapList;
+	}
+
+	protected List<Core_KeyLongMap> retrieveKeyLongMapList(List<Object> providersList, String name, String prefix){
+		List<Core_KeyLongMap> stackKeyLongMapList = new ArrayList<>();
+		for ( Object object : providersList ) {
+			String nameOfProvider = "";
+			if ( object instanceof String ) {
+				 nameOfProvider = object.toString();
+			}
+
+			Core_KeyLongMap keyLongMap = providerConfig.getProviderStack(nameOfProvider).keyLongMap(name);
+			if ( keyLongMap == null ) {
+				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `prefix`"+prefix+" cannot be found.");
+			}
+			stackKeyLongMapList.add(keyLongMap);
+		}
+		return stackKeyLongMapList;
+	}
+
+	protected List<Core_FileWorkspaceMap> retrieveFileWorkspaceMapList(List<Object> providersList, String name, String prefix){
+		List<Core_FileWorkspaceMap> stackFileWorkspaceMapList = new ArrayList<>();
+		for ( Object object : providersList ) {
+			String nameOfProvider = "";
+			if ( object instanceof String ) {
+				 nameOfProvider = object.toString();
+			}
+
+			Core_FileWorkspaceMap fileWorkspaceMap = providerConfig.getProviderStack(nameOfProvider).fileWorkspaceMap(name);
+			if ( fileWorkspaceMap == null ) {
+				throw new RuntimeException(nameOfProvider +" in `providers` of `namespace` under the `prefix`"+prefix+" cannot be found.");
+			}
+			stackFileWorkspaceMapList.add(fileWorkspaceMap);
+		}
+		return stackFileWorkspaceMapList;
+	}
+
+
+	//
+	// Helper Functions
+	//
 
 	/**
 	 * This function will find the first namespaceConfig that matches the requested name
