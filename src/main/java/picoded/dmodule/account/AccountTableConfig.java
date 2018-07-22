@@ -269,6 +269,21 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	// 	//@TODO : implement config loading
 	// }
 	
+	/**
+	 * Utility function to get the configured cookie lifetime, with the relevent settings
+	 *
+	 * @param  remember configuration boolean
+	 *
+	 * @return configured lifetime (not expire time)
+	 **/
+	protected int getLifeTime(boolean rememberMe) {
+		if (rememberMe) {
+			return rememberMeLifetime;
+		} else {
+			return loginLifetime;
+		}
+	}
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Login throttling configuration
