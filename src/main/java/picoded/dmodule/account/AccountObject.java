@@ -38,153 +38,180 @@ public class AccountObject extends Core_DataObject {
 		mainTable = accTable;
 	}
 	
+	/**
+	 * [INTERNAL USE ONLY]
+	 *
+	 * Cosntructor setup, using an account table,
+	 * and the account GUID
+	 **/
+	protected AccountObject(AccountTableCore accTable, String inOID) {
+		this( (AccountTable)accTable, inOID );
+	}
+	
 	//#endregion constructor and setup
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Getting and setting login ID's
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	// //#region login id handling
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Getting login ID's
+	//
+	///////////////////////////////////////////////////////////////////////////
+	//#region login id getters
+
+	/**
+	 * Checks if the current account has the provided LoginName
+	 *
+	 * @param  LoginName to use
+	 *
+	 * @return TRUE if login ID belongs to this account
+	 **/
+	public boolean hasLoginName(String name) {
+		return _oid.equals(mainTable.accountLoginNameMap.get(name));
+	}
 	
-	// /**
-	//  * Checks if the current account has the provided LoginName
-	//  *
-	//  * @param  LoginName to use
-	//  *
-	//  * @return TRUE if login ID belongs to this account
-	//  **/
-	// public boolean hasLoginName(String name) {
-	// 	return _oid.equals(mainTable.accountLoginNameMap.get(name));
-	// }
+	/**
+	 * Gets and return the various login "nice-name" (not UUID) for this account
+	 *
+	 * @return  Set of LoginName's used by this account
+	 **/
+	public Set<String> getLoginNameSet() {
+		return mainTable.accountLoginNameMap.keySet(_oid);
+	}
 	
-	// /**
-	//  * Gets and return the various login "nice-name" (not UUID) for this account
-	//  *
-	//  * @return  Set of LoginName's used by this account
-	//  **/
-	// public Set<String> getLoginNameSet() {
-	// 	return mainTable.accountLoginNameMap.keySet(_oid);
-	// }
+	//#endregion login id getters
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Syncronsing data from authentication related tables to
+	// queryable data table objects.
+	//
+	// NOTE: This is not actually used for authentication,
+	//       but for convienience in places such as admin tables
+	//
+	///////////////////////////////////////////////////////////////////////////
+	//#region auth tables data sync
 	
-	// /**
-	//  * Sets the name for the account, returns true or false if it succed.
-	//  *
-	//  * @param  LoginName to setup for this account
-	//  *
-	//  * @return TRUE if login ID is configured to this account
-	//  **/
-	// public boolean setLoginName(String name) {
-	// 	if (name == null || name.length() <= 0) {
-	// 		throw new RuntimeException("AccountObject loding ID cannot be blank");
-	// 	}
+	/**
+	 * Syncs the current user name list, with its metaobject
+	 * This is mainly for data table listing "convinence"
+	 */
+	protected void syncLoginNameList() {
+		// Only perform mainTable.syncLoginNameList if configured
+		if( mainTable.syncLoginNameList == null || 
+			mainTable.syncLoginNameList.length() <= 0 ) {
+			return;
+		}
+
+		// Get the raw name list
+		Set<String> rawList = getLoginNameSet();
 	
-	// 	if (mainTable.hasLoginName(name)) {
-	// 		return false;
-	// 	}
+		// Sort it out as an array
+		ArrayList<String> nameList = new ArrayList<>(rawList);
+		Collections.sort(nameList);
 	
-	// 	// ensure its own OID is registered
-	// 	saveDelta();
+		// Update the meta data
+		this.put(mainTable.syncLoginNameList, nameList);
 	
-	// 	// Technically a race condition =X
-	// 	// Especially if its a name collision, if its an email collision should be a very rare event.
-	// 	//
-	// 	// @TODO : Consider using name locks? to prevent such situations?
-	// 	mainTable.accountLoginNameMap.put(name, _oid);
+		// Save the changes
+		this.saveDelta();
+	}
 	
-	// 	// Sync up the namelist in dataobject
-	// 	syncLoginNameList();
+	//#endregion auth tables data sync
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Setting login ID's
+	//
+	///////////////////////////////////////////////////////////////////////////
+	//#region login id handling
 	
-	// 	// Success of failure
-	// 	return hasLoginName(name);
-	// }
+	/**
+	 * Sets the name for the account, returns true or false if it succeded.
+	 *
+	 * @param  LoginName to setup for this account
+	 *
+	 * @return TRUE if login ID is configured to this account
+	 **/
+	public boolean setLoginName(String name) {
+		// Argument checks
+		if (name == null || name.trim().length() <= 0) {
+			throw new IllegalArgumentException("AccountObject login name cannot be blank");
+		}
+		
+		// Name trim safety
+		name = name.trim();
+
+		// Quick fail check
+		if (mainTable.hasLoginName(name)) {
+			return false;
+		}
 	
-	// /**
-	//  * Removes the old name from the database
-	//  *
-	//  * @param  LoginName to setup for this account
-	//  **/
-	// public void removeLoginName(String name) {
-	// 	// If login name exists
-	// 	if (hasLoginName(name)) {
-	// 		// Remove name list from authtentication table
-	// 		mainTable.accountLoginNameMap.remove(name);
-	// 		// Sync up the namelist in dataobject
-	// 		syncLoginNameList();
-	// 	}
-	// }
+		// ensure its own OID is registered
+		saveDelta();
 	
-	// /**
-	//  * Sets the name as a unique value, delete all previous alias
-	//  *
-	//  * @param  LoginName to setup for this account
-	//  *
-	//  * @return TRUE if login ID is configured to this account
-	//  **/
-	// public boolean setUniqueLoginName(String name) {
+		// Technically a race condition =X
+		// Especially if its a name collision, if its an email collision should be a very rare event.
+		//
+		// @TODO : Consider using name locks? to prevent such situations?
+		mainTable.accountLoginNameMap.put(name, _oid);
 	
-	// 	// The old name list, to check if new name already is set
-	// 	Set<String> oldNamesList = getLoginNameSet();
+		// Sync up the namelist in dataobject
+		syncLoginNameList();
 	
-	// 	// Check if name exist in list
-	// 	if (Arrays.asList(oldNamesList).contains(name)) {
-	// 		// Already exists in the list, does nothing
-	// 	} else {
-	// 		// Name does not exist, attempt to set the name
-	// 		if (!setLoginName(name)) {
-	// 			// Failed to setup the name, terminate
-	// 			return false;
-	// 		}
-	// 	}
+		// Success configuration of loginName
+		return true;
+	}
 	
-	// 	// Iterate the names, delete uneeded ones
-	// 	for (String oldName : oldNamesList) {
-	// 		// Skip the unique name,
-	// 		// prevent it from being deleted
-	// 		if (oldName.equals(name)) {
-	// 			continue;
-	// 		}
-	// 		// Remove the login ID
-	// 		mainTable.accountLoginNameMap.remove(oldName);
-	// 	}
+	/**
+	 * Removes the old name from the database
+	 *
+	 * @param  LoginName to setup for this account
+	 **/
+	public void removeLoginName(String name) {
+		// If login name exists
+		if (hasLoginName(name)) {
+			// Remove name list from authtentication table
+			mainTable.accountLoginNameMap.remove(name);
+			// Sync up the namelist in dataobject
+			syncLoginNameList();
+		}
+	}
 	
-	// 	// Sync up the namelist in dataobject
-	// 	syncLoginNameList();
+	/**
+	 * Sets the name as a unique value, delete all previous alias
+	 *
+	 * @param  LoginName to setup for this account
+	 *
+	 * @return TRUE if login ID is configured to this account
+	 **/
+	public boolean setUniqueLoginName(String name) {
+		// The old name list, to check if new name already is set
+		Set<String> oldNamesList = getLoginNameSet();
 	
-	// 	return true;
-	// }
+		// Check if name exist in list
+		if (Arrays.asList(oldNamesList).contains(name)) {
+			// Already exists in the list, does nothing
+		} else {
+			// Name does not exist, attempt to set the name
+			if (!setLoginName(name)) {
+				// Failed to setup the name, terminate
+				return false;
+			}
+		}
 	
-	// //#endregion login id handling
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Syncronysing data from authentication related tables to
-	// // queryable data table objects.
-	// //
-	// // NOTE: This is not actually used for authentication,
-	// //       but for convienience in places such as admin tables
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	// //#region auth tables data sync
+		// Iterate the names, delete uneeded ones
+		for (String oldName : oldNamesList) {
+			// Skip the unique name,
+			// prevent it from being deleted
+			if (oldName.equals(name)) {
+				continue;
+			}
+			// Remove the login ID
+			mainTable.accountLoginNameMap.remove(oldName);
+		}
 	
-	// /**
-	//  * Syncs the current user name list, with its metaobject
-	//  * This is mainly for data table listing "convinence"
-	//  */
-	// protected void syncLoginNameList() {
-	// 	// Get the raw name list
-	// 	Set<String> rawList = getLoginNameSet();
+		// Sync up the namelist in dataobject
+		syncLoginNameList();
+		return true;
+	}
 	
-	// 	// Sort it out as an array
-	// 	ArrayList<String> nameList = new ArrayList<>(rawList);
-	// 	Collections.sort(nameList);
-	
-	// 	// Update the meta data
-	// 	this.put(LOGINNAMELIST, nameList);
-	
-	// 	// Save the changes
-	// 	this.saveDelta();
-	// }
-	
-	// //#endregion auth tables data sync
+	//#endregion login id handling
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
 	// // Password management
@@ -194,17 +221,17 @@ public class AccountObject extends Core_DataObject {
 	
 	// /**
 	//  * Gets and returns the stored password hash,
-	//  * Intentionally made protected to avoid accidental use externally
+	//  * Intentionally made private to avoid accidental use externally
 	//  *
 	//  * @return  Password salted hash, as per NxtCrypt usage
 	//  **/
-	// protected String getPasswordHash() {
+	// private String getPasswordHash() {
 	// 	return mainTable.accountAuthMap.get(_oid);
 	// }
 	
 	// /**
-	//  * Indicates if the current account has a configured password, it is possible there is no password
-	//  * if it functions as a group. Or is passwordless login
+	//  * Indicates if the current account has a configured password, 
+	//  * it is possible there is no password for passwordless login
 	//  *
 	//  * @return  True if password was configured
 	//  **/
@@ -215,7 +242,6 @@ public class AccountObject extends Core_DataObject {
 	
 	// /**
 	//  * Remove the account password
-	//  * This should only be used for group type account objects
 	//  **/
 	// public void removePassword() {
 	// 	mainTable.accountAuthMap.remove(_oid);
@@ -269,7 +295,7 @@ public class AccountObject extends Core_DataObject {
 	// 	return false;
 	// }
 	
-	// //#endregion password management
+	//#endregion password management
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
 	// // Login throttling

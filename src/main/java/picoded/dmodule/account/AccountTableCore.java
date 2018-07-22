@@ -102,7 +102,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		if (oid != null) {
 			String _oid = oid.toString();
 			if (containsKey(_oid)) {
-				return new AccountObject((AccountTable)this, _oid);
+				return new AccountObject(this, _oid);
 			}
 		}
 		// Account object invalid here
@@ -138,4 +138,142 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return null;
 	}
+	/**
+	 * Gets the account using the object ID array,
+	 * and returns an account object array
+	 *
+	 * @param   Account object ID array
+	 *
+	 * @return  Array of corresponding account objects
+	 **/
+	public AccountObject[] getFromArray(String[] _oidList) {
+		AccountObject[] mList = new AccountObject[_oidList.length];
+		for (int a = 0; a < _oidList.length; ++a) {
+			mList[a] = get(_oidList[a]);
+		}
+		return mList;
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Account object "newEntry"
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+
+	/**
+	 * Generates a new account object.
+	 *
+	 * Note without setting a name, or any additional values.
+	 * This call in some sense is quite, err useless.
+	 **/
+	public AccountObject newEntry() {
+		AccountObject ret = new AccountObject(this, null);
+		// ret.saveAll(); //ensures the blank object is now in DB
+		return ret;
+	}
+	
+	/**
+	 * Generates a new account object with the given nice name
+	 *
+	 * @param  Unique Login ID to use, normally this is an email, or nice username
+	 *
+	 * @return AccountObject if succesfully created
+	 **/
+	public AccountObject newEntry(String name) {
+		// Quick fail check
+		if (hasLoginName(name)) {
+			return null;
+		}
+	
+		// Creating account object, setting the name if valid
+		AccountObject ret = newEntry();
+		if (ret.setLoginName(name)) {
+			return ret;
+		} else {
+			// Removal step is required on failure,
+			// as it helps prevent "orphaned" account objects
+			// in new account race conditions
+			remove(ret._oid());
+		}
+	
+		// Return null on failure
+		return null;
+	}
+	
+	/**
+	 * Removes the accountObject using the ID
+	 *
+	 * @param  Account OID to use, or alternatively its object
+	 *
+	 * @return NULL
+	 **/
+	public AccountObject remove(Object inOid) {
+		if (inOid != null) {
+	
+			// Alternatively, instead of string use DataObject
+			if (inOid instanceof DataObject) {
+				inOid = ((DataObject) inOid)._oid();
+			}
+	
+			// Get oid as a string, and fetch the account object
+			String oid = inOid.toString();
+			// AccountObject ao = this.get(oid);
+	
+			// Remove login ID's AKA nice names
+			Set<String> loginIdMapNames = accountLoginNameMap.keySet(oid);
+			if (loginIdMapNames != null) {
+				for (String name : loginIdMapNames) {
+					accountLoginNameMap.remove(name, oid);
+				}
+			}
+			
+			// Remove login authentication details
+			accountAuthMap.remove(oid);
+
+			// Remove account meta information
+			accountDataObjectMap.remove(oid);
+	
+			// Remove thorttling information
+			loginThrottlingAttemptMap.remove(oid);
+			loginThrottlingExpiryMap.remove(oid);
+
+			// System.out.println("Account Object: " + oid + " has been successfully removed.");
+			// @TODO : proper info logger
+		}
+	
+		return null;
+	}
+	
+	
+	// ///////////////////////////////////////////////////////////////////////////
+	// //
+	// // Additional functionality add on
+	// //
+	// ///////////////////////////////////////////////////////////////////////////
+	
+	// /** Returns the accountDataObjectMap
+	//  *
+	//  * @return accountDataObjectMap
+	//  **/
+	// public DataObjectMap accountDataObjectMap() {
+	// 	return accountDataObjectMap;
+	// }
+	
+	// /** Returns the accountVerificationMap
+	//  *
+	//  * @return list of accountVerification data
+	//  **/
+	// public KeyValueMap accountVerificationMap() {
+	// 	return accountVerificationMap;
+	// }
+	
+	// /** Returns the accountPasswordTokenMap
+	//  *
+	//  * @return list of accountPasswordToken data
+	//  **/
+	// public KeyValueMap accountPasswordTokenMap() {
+	// 	return accountPasswordTokenMap;
+	// }
+	
 }
