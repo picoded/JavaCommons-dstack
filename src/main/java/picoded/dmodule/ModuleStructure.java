@@ -41,7 +41,7 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	public ModuleStructure() {
 		// Intentionally left blank
 	}
-
+	
 	/**
 	 * Setup a module structure given a stack, and its name
 	 *
@@ -77,8 +77,7 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	 * subcalls via AbstractSystemSetupInterfaceCollection
 	 **/
 	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {
-		return (Collection<SystemSetupInterface>)(Object)(internalStructureList);
+		return (Collection<SystemSetupInterface>) (Object) (internalStructureList);
 	}
-
 	
 }

@@ -17,7 +17,7 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  * Any refences to the persona game, is completely coincidental !
  * (PS: old joke, the original name for this class was PersonaTable)
  **/
-public abstract class AccountTable extends AccountTableCore {
+public class AccountTable extends AccountTableCore {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -31,45 +31,6 @@ public abstract class AccountTable extends AccountTableCore {
 	public AccountTable(CommonStack inStack, String inName) {
 		super(inStack, inName);
 	}
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Basic account object existance checks, setup, and destruction
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * Checks if the email exists
-	//  *
-	//  * @param  email to check
-	//  *
-	//  * @return TRUE if email exists
-	//  */
-	// public boolean isEmailExist(String email) {
-	// 	return (accountLoginNameMap.get(email) == null) ? false : true;
-	// }
-	
-	// /**
-	//  * Returns if the name exists
-	//  *
-	//  * @param  Login ID to use, normally this is an email, or nice username
-	//  *
-	//  * @return TRUE if login ID exists
-	//  **/
-	// public boolean hasLoginName(String inLoginName) {
-	// 	return accountLoginNameMap.containsKey(inLoginName);
-	// }
-	
-	// /**
-	//  * Returns if the account object id exists
-	//  *
-	//  * @param  Account OID to use
-	//  *
-	//  * @return  TRUE of account ID exists
-	//  **/
-	// public boolean containsKey(Object oid) {
-	// 	return accountDataObjectMap.containsKey(oid);
-	// }
 	
 	// /**
 	//  * Generates a new account object.
@@ -95,7 +56,7 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	if (hasLoginName(name)) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Creating account object, setting the name if valid
 	// 	AccountObject ret = newEntry();
 	// 	if (ret.setLoginName(name)) {
@@ -106,7 +67,7 @@ public abstract class AccountTable extends AccountTableCore {
 	// 		// in new account race conditions
 	// 		remove(ret._oid());
 	// 	}
-		
+	
 	// 	return null;
 	// }
 	
@@ -119,16 +80,16 @@ public abstract class AccountTable extends AccountTableCore {
 	//  **/
 	// public AccountObject remove(Object inOid) {
 	// 	if (inOid != null) {
-			
+	
 	// 		// Alternatively, instead of string use DataObject
 	// 		if (inOid instanceof DataObject) {
 	// 			inOid = ((DataObject) inOid)._oid();
 	// 		}
-			
+	
 	// 		// Get oid as a string, and fetch the account object
 	// 		String oid = inOid.toString();
 	// 		AccountObject ao = this.get(oid);
-			
+	
 	// 		// Remove login ID's AKA nice names
 	// 		Set<String> loginIdMapNames = accountLoginNameMap.keySet(oid);
 	// 		if (loginIdMapNames != null) {
@@ -140,16 +101,16 @@ public abstract class AccountTable extends AccountTableCore {
 	// 		accountLoginNameMap.remove(oid);
 	// 		accountPrivateDataObjectMap.remove(oid);
 	// 		accountDataObjectMap.remove(oid);
-			
+	
 	// 		// Remove login authentication details
 	// 		accountAuthMap.remove(oid);
-			
+	
 	// 		// Remove thorttling information
 	// 		loginThrottlingAttemptMap.remove(oid);
 	// 		loginThrottlingExpiryMap.remove(oid);
 	// 		System.out.println("Account Object: " + oid + " has been successfully removed.");
 	// 	}
-		
+	
 	// 	return null;
 	// }
 	
@@ -176,17 +137,6 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	}
 	// 	// Account object invalid here
 	// 	return null;
-	// }
-	
-	// /**
-	//  * Gets the account UUID, using the configured name
-	//  *
-	//  * @param  The login ID (nice-name/email)
-	//  *
-	//  * @return  Account ID associated, if any
-	//  **/
-	// public String loginNameToAccountID(String name) {
-	// 	return accountLoginNameMap.get(name);
 	// }
 	
 	// /**
@@ -217,48 +167,6 @@ public abstract class AccountTable extends AccountTableCore {
 	// 		return get(_oid);
 	// 	}
 	// 	return null;
-	// }
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Login throttling configuration
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * Login throttling lambda function, which can be overwritten for
-	//  * custom login throttling requirements
-	//  *
-	//  * @param   Account object in which login failed
-	//  * @param   Login attempts failed
-	//  *
-	//  * @return  Number of seconds to lock the account,
-	//  *          0 means an account is not locked
-	//  *          -1 means an account is locked permenantly
-	//  **/
-	// public BiFunction<AccountObject, Long, Long> calculateDelay = (inAO, attempts) -> {
-	// 	// Tries - Seconds locked
-	// 	// 1     - 0
-	// 	// 2     - 1
-	// 	// 3     - 3
-	// 	// 4     - 7
-	// 	// 5     - 15
-	// 	return (long) (Math.pow(2, (attempts - 1)) - 1);
-	// };
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Map compliance
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * Returns all the account _oid in the system
-	//  *
-	//  * @return  Set of account oid's
-	//  **/
-	// public Set<String> keySet() {
-	// 	return accountDataObjectMap.keySet();
 	// }
 	
 	// /** Returns the accountDataObjectMap
@@ -309,81 +217,6 @@ public abstract class AccountTable extends AccountTableCore {
 	
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
-	// // Static login settings,
-	// //
-	// // highly doubt any of these needs to be changed.
-	// // but who knows in the future
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * New session lifespan without token
-	//  **/
-	// public static int SESSION_NEW_LIFESPAN = 30;
-	
-	// /**
-	//  * Race condition buffer for tokens
-	//  **/
-	// public static int SESSION_RACE_BUFFER = 10;
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Login configuration and utilities
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * defined login lifetime, default as 3600 seconds (aka 1 hr)
-	//  **/
-	// public int loginLifetime = 3600; // 1 hr = 60 (mins) * 60 (seconds) = 3600 seconds
-	
-	// /**
-	//  * lifetime for http login token required for renewal, 1800 seconds (or half an hour)
-	//  **/
-	// public int loginRenewal = loginLifetime / 2; //
-	
-	// /**
-	//  * Remember me lifetime, default as 2592000 seconds (aka 30 days)
-	//  **/
-	// public int rememberMeLifetime = 2592000; // 1 mth ~= 30 (days) * 24 (hrs) * 3600 (seconds in an hr)
-	
-	// /**
-	//  * Remember me lifetime, default the same as loginRenewal
-	//  **/
-	// public int rememberMeRenewal = loginRenewal;
-	
-	// /**
-	//  * Sets the cookie to be limited to http only
-	//  **/
-	// public boolean isHttpOnly = false;
-	
-	// /**
-	//  * Sets the cookie to be via https only
-	//  **/
-	// public boolean isSecureOnly = false;
-	
-	// /**
-	//  * Sets the cookie namespace prefix
-	//  **/
-	// public String cookiePrefix = "account_";
-	
-	// /**
-	//  * Sets teh cookie domain, defaults is null
-	//  **/
-	// public String cookieDomain = null;
-	
-	// /**
-	//  * The nonce size
-	//  **/
-	// public int nonceSize = 22;
-	
-	// /**
-	//  * Cookie path settings to overwrite, use NULL to use contextPath (as detected)
-	//  **/
-	// public String cookiePath = null;
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
 	// // Actual login handling
 	// //
 	// // These features depends on the following packages
@@ -409,20 +242,20 @@ public abstract class AccountTable extends AccountTableCore {
 	// protected boolean storeCookiesInsideTheCookieJar(javax.servlet.http.HttpServletRequest request,
 	// 	javax.servlet.http.HttpServletResponse response, String sessionID, String tokenID,
 	// 	boolean rememberMe, int lifeTime, long expireTime) {
-		
+	
 	// 	// instant failure without response object
 	// 	if (response == null) {
 	// 		return false;
 	// 	}
-		
+	
 	// 	// Setup the cookie jar
 	// 	int noOfCookies = 4;
 	// 	javax.servlet.http.Cookie cookieJar[] = new javax.servlet.http.Cookie[noOfCookies];
-		
+	
 	// 	// Store session and token cookies
 	// 	cookieJar[0] = new javax.servlet.http.Cookie(cookiePrefix + "ses", sessionID);
 	// 	cookieJar[1] = new javax.servlet.http.Cookie(cookiePrefix + "tok", tokenID);
-		
+	
 	// 	// Remember me configuration
 	// 	// Should this be handled usign server side storage data?
 	// 	// If its not a valid security threat, this should be ok right?
@@ -431,17 +264,17 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	} else {
 	// 		cookieJar[2] = new javax.servlet.http.Cookie(cookiePrefix + "rmb", "0");
 	// 	}
-		
+	
 	// 	// The cookie "exp"-iry store the other cookies (Rmbr, user, Nonc etc.) expiry life time in seconds.
 	// 	// This cookie value is used in JS (checkLogoutTime.js) for validating the login expiry time
 	// 	// and show a message to user accordingly.
 	// 	//
 	// 	// Note that this cookie IGNORES isHttpOnly setting
 	// 	cookieJar[3] = new javax.servlet.http.Cookie(cookiePrefix + "exp", String.valueOf(expireTime));
-		
+	
 	// 	// Storing the cookie jar with the browser
 	// 	for (int a = 0; a < noOfCookies; ++a) {
-			
+	
 	// 		/**
 	// 		 * Cookie Path is required for cross AJAX / domain requests,
 	// 		 * This is taken from the request settings, if not defined
@@ -455,34 +288,34 @@ public abstract class AccountTable extends AccountTableCore {
 	// 			}
 	// 		}
 	// 		cookieJar[a].setPath(cPath);
-			
+	
 	// 		// If remember me is configured
 	// 		if (rememberMe || lifeTime == 0) {
 	// 			cookieJar[a].setMaxAge(lifeTime);
 	// 		} else {
 	// 			cookieJar[a].setMaxAge(-1);
 	// 		}
-			
+	
 	// 		// Set isHttpOnly flag, to prevent JS based session attacks
 	// 		// this is ignored for the expire timestamp field (index = 3)
 	// 		if (isHttpOnly && a != 3) {
 	// 			cookieJar[a].setHttpOnly(isHttpOnly);
 	// 		}
-			
+	
 	// 		// Set it to be https strict if relevent
 	// 		if (isSecureOnly) {
 	// 			cookieJar[a].setSecure(isSecureOnly);
 	// 		}
-			
+	
 	// 		// Set a strict cookie domain
 	// 		if (cookieDomain != null && cookieDomain.length() > 0) {
 	// 			cookieJar[a].setDomain(cookieDomain);
 	// 		}
-			
+	
 	// 		// Actually inserts the cookie
 	// 		response.addCookie(cookieJar[a]);
 	// 	}
-		
+	
 	// 	// Valid
 	// 	return true;
 	// }
@@ -531,34 +364,34 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	if (request == null) {
 	// 		return false;
 	// 	}
-		
+	
 	// 	// Prepare the vars
 	// 	//-----------------------------------------------------
 	// 	String aoid = ao._oid();
-		
+	
 	// 	// Detirmine the login lifetime
 	// 	int lifeTime = getLifeTime(rememberMe);
 	// 	long expireTime = (System.currentTimeMillis()) / 1000L + lifeTime;
-		
+	
 	// 	// Session info handling
 	// 	//-----------------------------------------------------
-		
+	
 	// 	// Prepare the session info
 	// 	if (sessionInfo == null) {
 	// 		sessionInfo = new HashMap<String, Object>();
 	// 	}
-		
+	
 	// 	// Lets do some USER_AGENT sniffing
 	// 	sessionInfo.put("USER_AGENT", request.getHeader("USER_AGENT"));
-		
+	
 	// 	// @TODO : Conisder sniffing additional info such as IP address
-		
+	
 	// 	// Generate the session and tokens
 	// 	//-----------------------------------------------------
-		
+	
 	// 	String sessionID = ao.newSession(sessionInfo);
 	// 	String tokenID = ao.newToken(sessionID, expireTime);
-		
+	
 	// 	// Store the cookies, and end
 	// 	//-----------------------------------------------------
 	// 	return storeCookiesInsideTheCookieJar(request, response, sessionID, tokenID, rememberMe,
@@ -578,7 +411,7 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	if (response == null) {
 	// 		return false;
 	// 	}
-		
+	
 	// 	return storeCookiesInsideTheCookieJar(request, response, "-", "-", false, 0, 0);
 	// }
 	
@@ -598,21 +431,21 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	if (request == null) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	javax.servlet.http.Cookie[] cookieJar = request.getCookies();
 	// 	if (cookieJar == null) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Gets the existing cookie settings
 	// 	//----------------------------------------------------------
 	// 	String sessionID = null;
 	// 	String tokenID = null;
 	// 	boolean rememberMe = false;
-		
+	
 	// 	for (javax.servlet.http.Cookie crumbs : cookieJar) {
 	// 		String crumbsFlavour = crumbs.getName();
-			
+	
 	// 		if (crumbsFlavour == null) {
 	// 			continue;
 	// 		} else if (crumbsFlavour.equals(cookiePrefix + "ses")) {
@@ -623,25 +456,25 @@ public abstract class AccountTable extends AccountTableCore {
 	// 			rememberMe = "1".equals(crumbs.getValue());
 	// 		}
 	// 	}
-		
+	
 	// 	// Time to validate the cookie settings
 	// 	//----------------------------------------------------------
-		
+	
 	// 	// Check if a session id and token id was provided
 	// 	// in a valid format
 	// 	if (sessionID == null || tokenID == null || sessionID.length() < 22 || tokenID.length() < 22) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// If an invalid session / token ID is provided, assume logout
 	// 	AccountObject ret = getFromSessionID(sessionID);
-		
+	
 	// 	// Session ID fails to fetch an account object
 	// 	if (ret == null) {
 	// 		logoutAccount(request, response);
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Get the token lifespan, not that this also
 	// 	// check for invalid session and token
 	// 	long tokenLifespan = ret.getTokenLifespan(sessionID, tokenID);
@@ -650,11 +483,11 @@ public abstract class AccountTable extends AccountTableCore {
 	// 		logoutAccount(request, response);
 	// 		return null;
 	// 	}
-		
+	
 	// 	// From this point onwards, the session is valid. Now it performs checks for the renewal process
 	// 	// Does nothing if response object is not given
 	// 	//---------------------------------------------------------------------------------------------------
-		
+	
 	// 	// Do not set cookies if it is logout request, and return the result.
 	// 	// This is to prevent session renewal and revoking from happening simultainously
 	// 	// creating unexpected behaviour
@@ -663,9 +496,9 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	if (request.getPathInfo() != null && request.getPathInfo().indexOf("logout") > 0) {
 	// 		return ret;
 	// 	}
-		
+	
 	// 	if (response != null) {
-			
+	
 	// 		// Renewal checking
 	// 		boolean needRenewal = false;
 	// 		if (rememberMe) {
@@ -677,33 +510,33 @@ public abstract class AccountTable extends AccountTableCore {
 	// 				needRenewal = true;
 	// 			}
 	// 		}
-			
+	
 	// 		// Actual renewal process
 	// 		if (needRenewal) {
 	// 			// Detirmine the renewed login lifetime and expirary to set (if new issued token)
 	// 			long expireTime = (System.currentTimeMillis()) / 1000L + getLifeTime(rememberMe);
-				
+	
 	// 			// Issue the next token
 	// 			String nextTokenID = ret.issueNextToken(sessionID, tokenID, expireTime);
-				
+	
 	// 			// Get the actual expiry of the next token (if it was previously issued)
 	// 			expireTime = ret.getTokenExpiry(sessionID, nextTokenID);
-				
+	
 	// 			// If nextTokenID and expireTime fails, assume login failure
 	// 			if (nextTokenID == null || expireTime < 0) {
 	// 				logoutAccount(request, response);
 	// 				return null;
 	// 			}
-				
+	
 	// 			// Get lifespan
 	// 			long lifespan = expireTime - (System.currentTimeMillis()) / 1000L;
-				
+	
 	// 			// Setup the next token
 	// 			storeCookiesInsideTheCookieJar(request, response, sessionID, nextTokenID, rememberMe,
 	// 				(int) lifespan, expireTime);
 	// 		}
 	// 	}
-		
+	
 	// 	// Return the validated account object
 	// 	//---------------------------------------------------------------------------------------------------
 	// 	return ret;
@@ -747,5 +580,5 @@ public abstract class AccountTable extends AccountTableCore {
 	// 	boolean rememberMe) {
 	// 	return loginAccount(request, response, getFromLoginName(nicename), rawPassword, rememberMe);
 	// }
-
+	
 }

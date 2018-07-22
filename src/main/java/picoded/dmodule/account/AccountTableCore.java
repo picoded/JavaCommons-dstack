@@ -9,124 +9,13 @@ import picoded.core.conv.*;
 import picoded.core.struct.*;
 import picoded.core.struct.template.UnsupportedDefaultMap;
 
+// import static picoded.servlet.api.module.account.AccountConstantStrings.*;
+
 /**
- * Some of the core underlying implementations and variables of account table,
- * this is mainly used to help organise out the large segments of data structure
- * setup, and config variables house keeping
+ * Core key features used for account table
+ * before the servlet request abstraction layer
  **/
-abstract class AccountTableCore extends ModuleStructure implements UnsupportedDefaultMap<String, AccountObject> {
-	
-	///////////////////////////////////////////////////////////////////////////
-	//
-	// Underlying data structures
-	//
-	///////////////////////////////////////////////////////////////////////////
-	
-	//
-	// Login authentication
-	//
-	//-----------------------------------------
-	
-	/**
-	 * Provides a key value pair mapping of the account login ID to AccountID (GUID)
-	 *
-	 * KeyValueMap<uniqueLoginName,AccountID>
-	 *
-	 * login ID are unique, and are usually usernames or emails
-	 * AccountID's are not unique, as a single AccountID can have multiple "names"
-	 **/
-	protected KeyValueMap accountLoginNameMap = null; //to delete from
-	
-	/**
-	 * Stores the account authentication hash, used for password based authentication
-	 *
-	 * KeyValueMap<AccountID,passwordHash>
-	 **/
-	protected KeyValueMap accountAuthMap = null; //to delete from
-	
-	//
-	// Login session
-	//
-	//-----------------------------------------
-	
-	/**
-	 * Stores the account session key, to accountID link
-	 *
-	 * KeyValueMap<sessionID, accountID>
-	 **/
-	protected KeyValueMap sessionLinkMap = null;
-	
-	/**
-	 * Stores the account token key, to session key
-	 *
-	 * KeyValueMap<tokenID, sessionID>
-	 **/
-	protected KeyValueMap sessionTokenMap = null;
-	
-	/**
-	 * Stores the next token ID to reissue
-	 * This limits race conditions where multiple tokens are issued
-	 *
-	 * KeyValueMap<tokenID, next-tokenID>
-	 **/
-	protected KeyValueMap sessionNextTokenMap = null;
-	
-	// /**
-	//  * Stores the account meta information
-	//  *
-	//  * KeyValueMap<sessionID, info-about-access>
-	//  **/
-	// protected KeyValueMap sessionInfoMap = null;
-	
-	//
-	// Account meta information
-	//
-	//-----------------------------------------
-	
-	/**
-	 * Account meta information
-	 * Used to pretty much store all individual information
-	 * directly associated with the account
-	 *
-	 * Note: Consider this the "PRIMARY TABLE"
-	 *
-	 * DataObjectMap<AccountOID, DataObject>
-	 **/
-	protected DataObjectMap accountDataObjectMap = null;
-	
-	//
-	// Login throttling information
-	//
-	//-----------------------------------------
-	
-	/**
-	 * Handles the Login Throttling Attempt Key (AccountID) Value (Attempt) field mapping
-	 *
-	 * KeyLongMap<UserOID, attempts>
-	 **/
-	protected KeyLongMap loginThrottlingAttemptMap = null;
-	
-	/**
-	 * Handles the Login Throttling Attempt Key (AccountID) Value (Timeout) field mapping
-	 *
-	 * KeyLongMap<UserOID, expireTimestamp>
-	 **/
-	protected KeyLongMap loginThrottlingExpiryMap = null;
-	
-	//
-	// Account Related Token Maps
-	//
-	//-----------------------------------------
-	
-	/**
-	 * Stores the verification token against the account ID together with the expiry time
-	 **/
-	protected KeyValueMap accountVerificationMap = null;
-	
-	/**
-	 * Stores the verification token for account password resets with expiry time
-	 **/
-	protected KeyValueMap accountPasswordTokenMap = null;
+public abstract class AccountTableCore extends AccountTableConfig {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -139,66 +28,60 @@ abstract class AccountTableCore extends ModuleStructure implements UnsupportedDe
 	 **/
 	public AccountTableCore(CommonStack inStack, String inName) {
 		super(inStack, inName);
-		internalStructureList = setupInternalStructureList();
-	}
-	
-	/**
-	 * Initialize the various internal data structures, 
-	 * used by account from the stack.
-	 **/
-	protected List<CommonStructure> setupInternalStructureList() {
-		
-		// Login auth information
-		accountLoginNameMap = stack.keyValueMap(name + "_ID");
-		accountAuthMap = stack.keyValueMap(name + "_IH");
-		
-		// Login session infromation
-		sessionLinkMap = stack.keyValueMap(name + "_LS");
-		sessionTokenMap = stack.keyValueMap(name + "_LT");
-		sessionNextTokenMap = stack.keyValueMap(name + "_LN");
-		// sessionInfoMap = stack.keyValueMap(name + SUFFIX_LOGIN_SESSION_INFO);
-		
-		// Account meta information
-		accountDataObjectMap = stack.dataObjectMap(name + "_AM");
-		
-		// Login throttling information
-		loginThrottlingAttemptMap = stack.keyLongMap(name + "_TA");
-		loginThrottlingExpiryMap = stack.keyLongMap(name + "_TE");
-		
-		// Account Verification information
-		accountVerificationMap = stack.keyValueMap(name + "_AV");
-		
-		// Account Password Token information
-		accountPasswordTokenMap = stack.keyValueMap(name + "_PT");
-		
-		// Side note: For new table, edit here and add into the return List
-		// @TODO - Consider adding support for temporary tables typehints
-		
-		// Return it as a list
-		return Arrays.asList( //
-			accountLoginNameMap, accountAuthMap, //
-			sessionLinkMap, sessionTokenMap, sessionNextTokenMap, //
-			accountDataObjectMap, //
-			loginThrottlingAttemptMap, loginThrottlingExpiryMap, //
-			accountVerificationMap, //
-			accountPasswordTokenMap //
-		);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
-	// UnsupportedDefaultMap compliance
+	// Basic account interaction (without AccountObject)
 	//
 	///////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Removes all data, without tearing down setup
-	 * (Reimplemented to work around interface conflict)
+	 * Returns if the name exists
 	 *
-	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"
+	 * @param  Login ID to use, normally this is an email, or nice username
+	 *
+	 * @return TRUE if login ID exists
 	 **/
-	public void clear() {
-		systemSetupInterfaceCollection().forEach(item -> item.clear());
+	public boolean hasLoginName(String inLoginName) {
+		return accountLoginNameMap.containsKey(inLoginName);
+	}
+	
+	/**
+	 * Returns if the account object id exists
+	 *
+	 * @param  Account OID to use
+	 *
+	 * @return  TRUE of account ID exists
+	 **/
+	public boolean containsKey(Object oid) {
+		return accountDataObjectMap.containsKey(oid);
+	}
+	
+	/**
+	 * Gets the account UUID, using the configured name
+	 *
+	 * @param  accountName (nice-name/email)
+	 *
+	 * @return  Account ID associated, if any
+	 **/
+	public String loginNameToAccountID(String accountName) {
+		return accountLoginNameMap.getValue(accountName);
+	}
+	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Map compliance (without account object)
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns all the account _oid in the system
+	 *
+	 * @return  Set of account oid's
+	 **/
+	public Set<String> keySet() {
+		return accountDataObjectMap.keySet();
 	}
 	
 }
