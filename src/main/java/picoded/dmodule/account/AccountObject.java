@@ -2,46 +2,43 @@ package picoded.dmodule.account;
 
 import java.util.*;
 
-// import picoded.dstack.*;
-// import picoded.dstack.core.*;
-// import picoded.core.conv.*;
-// import picoded.core.struct.*;
-// import picoded.util.security.*;
+import picoded.dstack.*;
+import picoded.dstack.core.*;
+import picoded.core.conv.*;
+import picoded.core.struct.*;
 
 // import static picoded.servlet.api.module.account.AccountConstantStrings.*;
 
 /**
  * Represents a single group / user account.
  **/
-public class AccountObject 
-//extends Core_DataObject 
-{
+public class AccountObject extends Core_DataObject {
 	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Constructor and setup
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	// //#region constructor and setup
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Constructor and setup
+	//
+	///////////////////////////////////////////////////////////////////////////
+	//#region constructor and setup
 	
-	// /**
-	//  * The original account table
-	//  **/
-	// protected AccountTable mainTable = null;
+	/**
+	 * The original account table
+	 **/
+	protected AccountTable mainTable = null;
 	
-	// /**
-	//  * [INTERNAL USE ONLY]
-	//  *
-	//  * Cosntructor setup, using an account table,
-	//  * and the account GUID
-	//  **/
-	// protected AccountObject(AccountTable accTable, String inOID) {
-	// 	// Inherit all the default data table methods
-	// 	super((Core_DataTable) (accTable.accountDataTable), inOID);
-	// 	mainTable = accTable;
-	// }
+	/**
+	 * [INTERNAL USE ONLY]
+	 *
+	 * Cosntructor setup, using an account table,
+	 * and the account GUID
+	 **/
+	protected AccountObject(AccountTable accTable, String inOID) {
+		// Inherit all the default data table methods
+		super((Core_DataObjectMap) (accTable.accountDataObjectMap), inOID);
+		mainTable = accTable;
+	}
 	
-	// //#endregion constructor and setup
+	//#endregion constructor and setup
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
 	// // Getting and setting login ID's
@@ -80,23 +77,23 @@ public class AccountObject
 	// 	if (name == null || name.length() <= 0) {
 	// 		throw new RuntimeException("AccountObject loding ID cannot be blank");
 	// 	}
-		
+	
 	// 	if (mainTable.hasLoginName(name)) {
 	// 		return false;
 	// 	}
-		
+	
 	// 	// ensure its own OID is registered
 	// 	saveDelta();
-		
+	
 	// 	// Technically a race condition =X
 	// 	// Especially if its a name collision, if its an email collision should be a very rare event.
 	// 	//
 	// 	// @TODO : Consider using name locks? to prevent such situations?
 	// 	mainTable.accountLoginNameMap.put(name, _oid);
-		
+	
 	// 	// Sync up the namelist in dataobject
 	// 	syncLoginNameList();
-		
+	
 	// 	// Success of failure
 	// 	return hasLoginName(name);
 	// }
@@ -124,10 +121,10 @@ public class AccountObject
 	//  * @return TRUE if login ID is configured to this account
 	//  **/
 	// public boolean setUniqueLoginName(String name) {
-		
+	
 	// 	// The old name list, to check if new name already is set
 	// 	Set<String> oldNamesList = getLoginNameSet();
-		
+	
 	// 	// Check if name exist in list
 	// 	if (Arrays.asList(oldNamesList).contains(name)) {
 	// 		// Already exists in the list, does nothing
@@ -138,7 +135,7 @@ public class AccountObject
 	// 			return false;
 	// 		}
 	// 	}
-		
+	
 	// 	// Iterate the names, delete uneeded ones
 	// 	for (String oldName : oldNamesList) {
 	// 		// Skip the unique name,
@@ -149,10 +146,10 @@ public class AccountObject
 	// 		// Remove the login ID
 	// 		mainTable.accountLoginNameMap.remove(oldName);
 	// 	}
-		
+	
 	// 	// Sync up the namelist in dataobject
 	// 	syncLoginNameList();
-		
+	
 	// 	return true;
 	// }
 	
@@ -175,14 +172,14 @@ public class AccountObject
 	// protected void syncLoginNameList() {
 	// 	// Get the raw name list
 	// 	Set<String> rawList = getLoginNameSet();
-		
+	
 	// 	// Sort it out as an array
 	// 	ArrayList<String> nameList = new ArrayList<>(rawList);
 	// 	Collections.sort(nameList);
-		
+	
 	// 	// Update the meta data
 	// 	this.put(LOGINNAMELIST, nameList);
-		
+	
 	// 	// Save the changes
 	// 	this.saveDelta();
 	// }
@@ -247,7 +244,7 @@ public class AccountObject
 	// public void setPassword(String pass) {
 	// 	// ensure its own OID is registered
 	// 	saveDelta();
-		
+	
 	// 	// Setup the password
 	// 	if (pass == null) {
 	// 		removePassword();
@@ -387,7 +384,7 @@ public class AccountObject
 	// 	if (!hasSession(sessionID)) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Return the session information
 	// 	return mainTable.sessionInfoMap.getStringMap(sessionID, null);
 	// }
@@ -413,29 +410,29 @@ public class AccountObject
 	//  * @return  The session ID used
 	//  **/
 	// public String newSession(Map<String, Object> info) {
-		
+	
 	// 	// Normalize the info object map
 	// 	if (info == null) {
 	// 		info = new HashMap<String, Object>();
 	// 	}
-		
+	
 	// 	// Set the session expirary time : 30 seconds (before tokens)
-	// 	long expireTime = (System.currentTimeMillis()) / 1000L + AccountTable.SESSION_NEW_LIFESPAN;
-		
+	// 	long expireTime = (System.currentTimeMillis()) / 1000L + AccountTable.initSessionSetupLifespan;
+	
 	// 	// Generate a base58 guid for session key
 	// 	String sessionID = GUID.base58();
-		
+	
 	// 	// As unlikely as it is, on GUID collision,
 	// 	// we do not want any session swarp EVER
 	// 	if (mainTable.sessionLinkMap.get(sessionID) != null) {
 	// 		throw new RuntimeException("GUID collision for sessionID : " + sessionID);
 	// 	}
-		
+	
 	// 	// Time to set it all up, with expire timestamp
 	// 	mainTable.sessionLinkMap.putWithExpiry(sessionID, _oid, expireTime);
 	// 	mainTable.sessionInfoMap.putWithExpiry(sessionID, ConvertJSON.fromMap(info), expireTime
-	// 		+ AccountTable.SESSION_RACE_BUFFER);
-		
+	// 		+ AccountTable.sessionRaceConditionBuffer);
+	
 	// 	// Return the session key
 	// 	return sessionID;
 	// }
@@ -451,10 +448,10 @@ public class AccountObject
 	// 	// Validate the session belongs to this account !
 	// 	if (hasSession(sessionID)) {
 	// 		// Session ownership validated, time to revoke!
-			
+	
 	// 		// Revoke all tokens associated to this session
 	// 		revokeAllToken(sessionID);
-			
+	
 	// 		// Revoke the session info
 	// 		mainTable.sessionLinkMap.remove(sessionID);
 	// 		mainTable.sessionInfoMap.remove(sessionID);
@@ -518,18 +515,18 @@ public class AccountObject
 	//  * @return  The tokenID generated, null on invalid session
 	//  **/
 	// public String newToken(String sessionID, long expireTime) {
-		
+	
 	// 	// Terminate if session is invalid
 	// 	if (!hasSession(sessionID)) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Generate a base58 guid for session key
 	// 	String tokenID = GUID.base58();
-		
+	
 	// 	// Issue the token
 	// 	registerToken(sessionID, tokenID, GUID.base58(), expireTime);
-		
+	
 	// 	// Return the token
 	// 	return tokenID;
 	// }
@@ -551,7 +548,7 @@ public class AccountObject
 	// 	if (hasToken(sessionID, tokenID)) {
 	// 		return;
 	// 	}
-		
+	
 	// 	// Check if token has already been registered
 	// 	String existingTokenSession = mainTable.sessionTokenMap.getString(tokenID, null);
 	// 	if (existingTokenSession != null) {
@@ -566,12 +563,12 @@ public class AccountObject
 	// 				"FATAL : Unable to register token previously registered to another session ID");
 	// 		}
 	// 	}
-		
+	
 	// 	// Renew every session!
-	// 	mainTable.sessionLinkMap.setExpiry(sessionID, expireTime + AccountTable.SESSION_RACE_BUFFER);
-	// 	mainTable.sessionInfoMap.setExpiry(sessionID, expireTime + AccountTable.SESSION_RACE_BUFFER
+	// 	mainTable.sessionLinkMap.setExpiry(sessionID, expireTime + AccountTable.sessionRaceConditionBuffer);
+	// 	mainTable.sessionInfoMap.setExpiry(sessionID, expireTime + AccountTable.sessionRaceConditionBuffer
 	// 		* 2);
-		
+	
 	// 	// Register the token
 	// 	mainTable.sessionTokenMap.putWithExpiry(tokenID, sessionID, expireTime);
 	// 	mainTable.sessionNextTokenMap.putWithExpiry(tokenID, nextTokenID, expireTime);
@@ -631,12 +628,12 @@ public class AccountObject
 	// public long getTokenLifespan(String sessionID, String tokenID) {
 	// 	// Get expiry timestamp
 	// 	long expiry = getTokenExpiry(sessionID, tokenID);
-		
+	
 	// 	// Invalid tokens are -1
 	// 	if (expiry <= -1) {
 	// 		return -1;
 	// 	}
-		
+	
 	// 	long lifespan = expiry - (System.currentTimeMillis()) / 1000L;
 	// 	if (lifespan < -1) {
 	// 		return -1;
@@ -693,7 +690,7 @@ public class AccountObject
 	// 	if (nextToken == null) {
 	// 		return null;
 	// 	}
-		
+	
 	// 	// Issue next token
 	// 	registerToken(sessionID, nextToken, GUID.base58(), expireTime);
 	// 	// Return the next token, after its been issued
@@ -768,17 +765,17 @@ public class AccountObject
 	// 	if (privateDataObject != null) {
 	// 		return privateDataObject;
 	// 	}
-		
+	
 	// 	// The private data table to use
 	// 	DataTable pDataTable = mainTable.accountPrivateDataTable;
-		
+	
 	// 	// Initialize / get existing private data object
 	// 	if (pDataTable.get(this._oid()) == null) {
 	// 		privateDataObject = pDataTable.get(this._oid(), true);
 	// 	} else {
 	// 		privateDataObject = pDataTable.get(this._oid());
 	// 	}
-		
+	
 	// 	// private data object
 	// 	return privateDataObject;
 	// }

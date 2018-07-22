@@ -84,4 +84,58 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		return accountDataObjectMap.keySet();
 	}
 	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Account object getters
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Gets and return the accounts object using the account ID
+	 *
+	 * @param  Account ID to use
+	 *
+	 * @return  AccountObject representing the account ID if found
+	 **/
+	public AccountObject get(Object oid) {
+		// Possibly a valid OID?
+		if (oid != null) {
+			String _oid = oid.toString();
+			if (containsKey(_oid)) {
+				return new AccountObject((AccountTable)this, _oid);
+			}
+		}
+		// Account object invalid here
+		return null;
+	}
+	
+	/**
+	 * Gets the account using the nice name
+	 *
+	 * @param  The login ID (nice-name/email)
+	 *
+	 * @return  AccountObject representing the account ID if found
+	 **/
+	public AccountObject getFromLoginName(Object name) {
+		String _oid = loginNameToAccountID(name.toString());
+		if (_oid != null) {
+			return get(_oid);
+		}
+		return null;
+	}
+	
+	/**
+	 * Gets the account using the Session ID
+	 *
+	 * @param  The Session ID
+	 *
+	 * @return  AccountObject representing the account ID if found
+	 **/
+	public AccountObject getFromSessionID(String sessionID) {
+		String _oid = sessionLinkMap.getValue(sessionID);
+		if (_oid != null) {
+			return get(_oid);
+		}
+		return null;
+	}
 }
