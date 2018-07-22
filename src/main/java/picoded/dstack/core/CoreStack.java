@@ -1,11 +1,13 @@
 package picoded.dstack.core;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import picoded.core.common.SystemSetupInterface;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.template.AbstractSystemSetupInterfaceCollection;
 import picoded.dstack.*;
 
 /**
@@ -15,7 +17,7 @@ import picoded.dstack.*;
  * 
  * @return initialized data structure if type is supported
  **/
-public abstract class CoreStack implements SystemSetupInterface {
+public abstract class CoreStack implements CommonStack {
 	
 	//-------------------------------------------------------------
 	//
@@ -49,21 +51,21 @@ public abstract class CoreStack implements SystemSetupInterface {
 	/**
 	 * @return keyValueMap of the given name, null if stack provider does not support the given object
 	 */
-	public Core_KeyValueMap keyValueMap(String name) {
+	public KeyValueMap keyValueMap(String name) {
 		return (Core_KeyValueMap) cacheDataStructure(name, "KeyValueMap", Core_KeyValueMap.class);
 	}
 	
 	/**
 	 * @return keyLongMap of the given name, null if stack provider does not support the given object
 	 */
-	public Core_KeyLongMap keyLongMap(String name) {
+	public KeyLongMap keyLongMap(String name) {
 		return (Core_KeyLongMap) cacheDataStructure(name, "KeyLongMap", Core_KeyLongMap.class);
 	}
 	
 	/**
 	 * @return dataObjectMap of the given name, null if stack provider does not support the given object
 	 */
-	public Core_DataObjectMap dataObjectMap(String name) {
+	public DataObjectMap dataObjectMap(String name) {
 		return (Core_DataObjectMap) cacheDataStructure(name, "DataObjectMap",
 			Core_DataObjectMap.class);
 	}
@@ -71,7 +73,7 @@ public abstract class CoreStack implements SystemSetupInterface {
 	/**
 	 * @return fileWorkspaceMap of the given name, null if stack provider does not support the given object
 	 */
-	public Core_FileWorkspaceMap fileWorkspaceMap(String name) {
+	public FileWorkspaceMap fileWorkspaceMap(String name) {
 		return (Core_FileWorkspaceMap) cacheDataStructure(name, "FileWorkspaceMap",
 			Core_FileWorkspaceMap.class);
 	}
@@ -132,57 +134,11 @@ public abstract class CoreStack implements SystemSetupInterface {
 	//-------------------------------------------------------------
 	
 	/**
-	 * Calls systemSetup on each of the cached data structure
-	 */
-	public void systemSetup() {
-		structureCache.forEach((k,v)->{
-			v.systemSetup();
-		});
-	}
-
-	/**
-	 * Calls systemDestroy on each of the cached data structure
-	 */
-	public void systemDestroy() {
-		structureCache.forEach((k,v)->{
-			v.systemDestroy();
-		});
-	}
-
-	/**
-	 * Calls maintenance on each of the cached data structure
-	 */
-	public void maintenance() {
-		structureCache.forEach((k,v)->{
-			v.maintenance();
-		});
-	}
-
-	/**
-	 * Calls incrementalMaintenance on each of the cached data structure
-	 */
-	public void incrementalMaintenance() {
-		structureCache.forEach((k,v)->{
-			v.incrementalMaintenance();
-		});
-	}
-
-	/**
-	 * Calls clear on each of the cached data structure
-	 */
-	public void clear() {
-		structureCache.forEach((k,v)->{
-			v.clear();
-		});
-	}
-
-	/**
-	 * Calls close on each of the cached data structure
-	 */
-	public void close() {
-		structureCache.forEach((k,v)->{
-			v.close();
-		});
+	 * SystemSetupInterface collection used by subsequent  
+	 * subcalls via AbstractSystemSetupInterfaceCollection
+	 **/
+	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {
+		return (Collection<SystemSetupInterface>)(Object)(structureCache.values());
 	}
 
 }
