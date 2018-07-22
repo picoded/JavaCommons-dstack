@@ -72,12 +72,12 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 **/
 	protected KeyValueMap sessionNextTokenMap = null;
 	
-	// /**
-	//  * Stores the account meta information
-	//  *
-	//  * KeyValueMap<sessionID, info-about-access>
-	//  **/
-	// protected KeyValueMap sessionInfoMap = null;
+	/**
+	 * Stores the account meta information
+	 *
+	 * KeyValueMap<sessionID, info-about-access>
+	 **/
+	protected KeyValueMap sessionInfoMap = null;
 	
 	//
 	// Account meta information
@@ -154,10 +154,10 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		accountAuthMap = stack.keyValueMap(name + "_IH");
 		
 		// Login session infromation
-		sessionLinkMap = stack.keyValueMap(name + "_LS");
-		sessionTokenMap = stack.keyValueMap(name + "_LT");
-		sessionNextTokenMap = stack.keyValueMap(name + "_LN");
-		// sessionInfoMap = stack.keyValueMap(name + "_LI");
+		sessionLinkMap = stack.keyValueMap(name + "_SL");
+		sessionTokenMap = stack.keyValueMap(name + "_ST");
+		sessionNextTokenMap = stack.keyValueMap(name + "_SN");
+		sessionInfoMap = stack.keyValueMap(name + "_SI");
 		
 		// Account meta information
 		accountDataObjectMap = stack.dataObjectMap(name + "_AM");
@@ -169,7 +169,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// // Account Verification information
 		// accountVerificationMap = stack.keyValueMap(name + "_AV");
 		// // Account Password Token information
-		// accountPasswordTokenMap = stack.keyValueMap(name + "_PT");
+		// accountPasswordTokenMap = stack.keyValueMap(name + "_AR");
 		
 		// Side note: For new table, edit here and add into the return List
 		// @TODO - Consider adding support for temporary tables typehints
@@ -177,7 +177,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// Return it as a list
 		return Arrays.asList( //
 			accountLoginNameMap, accountAuthMap, //
-			sessionLinkMap, sessionTokenMap, sessionNextTokenMap, //
+			sessionLinkMap, sessionTokenMap, sessionNextTokenMap, sessionInfoMap, //
 			accountDataObjectMap, //
 			loginThrottlingAttemptMap, loginThrottlingExpiryMap//, //
 			// accountVerificationMap, //

@@ -245,7 +245,6 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		return null;
 	}
 	
-	
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
 	// // Additional functionality add on
