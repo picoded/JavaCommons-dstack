@@ -221,28 +221,28 @@ public class Core_KeyLong extends KeyLong {
 	public long putWithExpiry(Long value, long expireTimestamp) {
 		return main.putWithExpiry(key, value, expireTimestamp);
 	}
-
+	
 	/**
 	 * Returns the value of the specified number as a byte, which may involve rounding or truncation.
 	 */
 	public byte byteValue() {
 		return (byte) getValue();
 	}
-
+	
 	/**
 	 * Returns the value of the specified number as a double, which may involve rounding.
 	 */
 	public double doubleValue() {
 		return (double) getValue();
 	}
-
+	
 	/**
 	 * Returns the value of the specified number as a float, which may involve rounding.
 	 */
 	public float floatValue() {
 		return (float) getValue();
 	}
-
+	
 	/**
 	 * Returns the value of the specified number as an int, which may involve rounding or truncation.
 	 */
@@ -256,7 +256,7 @@ public class Core_KeyLong extends KeyLong {
 	public long longValue() {
 		return getValue();
 	}
-
+	
 	/**
 	 * Returns the value of the specified number as a short, which may involve rounding or truncation.
 	 */

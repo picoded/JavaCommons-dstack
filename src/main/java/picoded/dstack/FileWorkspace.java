@@ -100,27 +100,26 @@ public interface FileWorkspace {
 		// Write the new joint data
 		writeByteArray(filepath, jointData);
 	}
-
-
+	
 	//
 	// String support for FileWorkspace
 	//--------------------------------------------------------------------------
-
-	default String readString(final String filepath){
+	
+	default String readString(final String filepath) {
 		return readString(filepath, "UTF-8");
 	}
-
-	default String readString(final String filepath, final String encoding){
+	
+	default String readString(final String filepath, final String encoding) {
 		byte[] result = readByteArray(filepath);
 		return StringConv.fromByteArray(result, encoding);
-
+		
 	}
-
-	default void writeString(final String filepath, String content){
+	
+	default void writeString(final String filepath, String content) {
 		writeString(filepath, content, "UTF-8");
 	}
-
-	default void writeString(final String filepath, String content, String encoding){
+	
+	default void writeString(final String filepath, String content, String encoding) {
 		writeByteArray(filepath, StringConv.toByteArray(content, encoding));
 	}
 	

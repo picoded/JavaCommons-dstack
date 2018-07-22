@@ -99,7 +99,7 @@ public abstract class JSql {
 	// public static JSql oracle(String oraclePath, String dbUser, String dbPass) {
 	// 	return new picoded.dstack.jsql.connector.db.JSql_Oracle(oraclePath, dbUser, dbPass);
 	// }
-
+	
 	// public static JSql oracle(Connection inSqlConn) {
 	// 	return new picoded.dstack.jsql.connector.db.JSql_Oracle(inSqlConn);
 	// }
@@ -110,55 +110,55 @@ public abstract class JSql {
 	//
 	//-------------------------------------------------------------------------
 	
-	public static JSql setupFromConfig(Map<String,Object>configObj) {
-		GenericConvertMap<String,Object> config = GenericConvertMap.build(configObj);
-
+	public static JSql setupFromConfig(Map<String, Object> configObj) {
+		GenericConvertMap<String, Object> config = GenericConvertMap.build(configObj);
+		
 		// Get the minimum string values
 		String type = config.getString("type");
 		String path = config.getString("path");
-
+		
 		// Does validation
-		if( type == null || type.isEmpty() ) {
+		if (type == null || type.isEmpty()) {
 			throw new IllegalArgumentException("Missing DB type parameter in DB config object");
 		}
-
+		
 		// SQLite handling, only requires path (if given)
-		if( type.equalsIgnoreCase("sqlite") ) {
-			if( path == null || path.isEmpty() ) {
+		if (type.equalsIgnoreCase("sqlite")) {
+			if (path == null || path.isEmpty()) {
 				return JSql.sqlite();
 			} else {
 				return JSql.sqlite(path);
 			}
 		}
-
+		
 		// Remote SQL handling string values
 		String name = config.getString("name");
 		String user = config.getString("user");
 		String pass = config.getString("pass");
-
+		
 		// Does validation of remote params
-		if( name == null || name.isEmpty() ) {
+		if (name == null || name.isEmpty()) {
 			throw new IllegalArgumentException("Missing database name in DB config object");
 		}
-		if( user == null || user.isEmpty() ) {
+		if (user == null || user.isEmpty()) {
 			throw new IllegalArgumentException("Missing login username in DB config object");
 		}
-		if( pass == null || pass.isEmpty() ) {
+		if (pass == null || pass.isEmpty()) {
 			throw new IllegalArgumentException("Missing login password in DB config object");
 		}
-
+		
 		// Does the remote DB connection
-		if( type.equalsIgnoreCase("mysql") ) {
+		if (type.equalsIgnoreCase("mysql")) {
 			return JSql.mysql(path, name, user, pass);
 		}
-		if( type.equalsIgnoreCase("mssql") ) {
+		if (type.equalsIgnoreCase("mssql")) {
 			return JSql.mssql(path, name, user, pass);
 		}
-
+		
 		// Invalid / Unsupported db type
-		throw new IllegalArgumentException("Unsupported DB type in DB config object : "+type);
+		throw new IllegalArgumentException("Unsupported DB type in DB config object : " + type);
 	}
-
+	
 	//-------------------------------------------------------------------------
 	//
 	// Database connection handling

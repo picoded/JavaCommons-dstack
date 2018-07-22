@@ -13,23 +13,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class JSql_KeyLongMap extends Core_KeyLongMap {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor setup
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * The inner sql object
 	 **/
 	protected JSql sqlObj = null;
-
+	
 	/**
 	 * The tablename for the key value pair map
 	 **/
 	protected String keyLongMapName = null;
-
+	
 	/**
 	 * JSql setup
 	 *
@@ -41,35 +41,33 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		sqlObj = inJSql;
 		keyLongMapName = "KL_" + tablename;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Internal config vars
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Primary key type
 	 **/
 	protected String pKeyColumnType = "BIGINT PRIMARY KEY AUTOINCREMENT";
-
+	
 	/**
 	 * Timestamp field type
 	 **/
 	protected String tStampColumnType = "BIGINT";
-
+	
 	/**
 	 * Key name field type
 	 **/
 	protected String keyColumnType = "VARCHAR(64)";
-
+	
 	/**
 	 * Value field type
 	 **/
 	protected String valueColumnType = "DECIMAL(36,12)";
-
-
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// raw put & get, meant to be actually implemented.
@@ -92,28 +90,27 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	public Long setValueRaw(String key, Long value, long expire) {
 		long now = System.currentTimeMillis();
-
+		
 		// Null values are returned and not added to the database
-		if(value == null){
+		if (value == null) {
 			return null;
 		}
-
-		try{
+		
+		try {
 			sqlObj.upsert( //
-					keyLongMapName, //
-					new String[] { "kID" }, //unique cols
-					new Object[] { key }, //unique value
-					//
-					new String[] { "cTm", "eTm", "kVl" }, //insert cols
-					new Object[] { now, expire, value.longValue() } //insert values
-			);
-		} catch(Exception e) {
+				keyLongMapName, //
+				new String[] { "kID" }, //unique cols
+				new Object[] { key }, //unique value
+				//
+				new String[] { "cTm", "eTm", "kVl" }, //insert cols
+				new Object[] { now, expire, value.longValue() } //insert values
+				);
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		return null;
 	}
-
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -147,12 +144,13 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		// Search for the key
 		JSqlResult r = sqlObj.select(keyLongMapName, "*", "kID = ?", new Object[] { key });
 		long expiry = getExpiryRaw(r);
-
+		
 		if (expiry != 0 && expiry < now) {
 			return null;
 		}
-
-		return new MutablePair<Long,Long>( new Long(GenericConvert.toLong(r.get("kVl")[0])), new Long(expiry) );
+		
+		return new MutablePair<Long, Long>(new Long(GenericConvert.toLong(r.get("kVl")[0])),
+			new Long(expiry));
 	}
 	
 	//--------------------------------------------------------------------------
@@ -180,16 +178,16 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			long now = System.currentTimeMillis();
 			try {
 				sqlObj.upsert( //
-						keyLongMapName, // unique key
-						new String[] { "kID" }, //unique cols
-						new Object[] { key }, //unique value
-						// insert (ignore)
-						null, null,
-						// default value
-						new String[] { "cTm", "eTm", "kVl" }, //insert cols
-						new Object[] { now, 0l, 0l }, //insert values
-						// misc (ignore)
-						null);
+					keyLongMapName, // unique key
+					new String[] { "kID" }, //unique cols
+					new Object[] { key }, //unique value
+					// insert (ignore)
+					null, null,
+					// default value
+					new String[] { "cTm", "eTm", "kVl" }, //insert cols
+					new Object[] { now, 0l, 0l }, //insert values
+					// misc (ignore)
+					null);
 			} catch (JSqlException e) {
 				// silenced exception, if value already exists,
 				// the update call will work anyway
@@ -197,19 +195,19 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			// Expect is now atleast 0
 			expect = 0l;
 		}
-
+		
 		// Does the update from 0
 		JSqlResult r = sqlObj.query("UPDATE " + keyLongMapName
-				+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
+			+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
 		return (r.affectedRows() > 0);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Backend system setup / teardown / maintenance (DStackCommon)
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Setsup the backend storage table, etc. If needed
 	 **/
@@ -219,50 +217,48 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			// Table constructor
 			//-------------------
 			sqlObj.createTable( //
-					keyLongMapName, //
-					new String[] { //
-							// Primary key, as classic int, this is used to lower SQL
-							// fragmentation level, and index memory usage. And is not accessible.
-							// Sharding and uniqueness of system is still maintained by meta keys
-							"pKy", // primary key
-							// Time stamps
-							"uTm", //Updated timestamp
-							"cTm", //value created time
-							"eTm", //value expire time
-							// Storage keys
-							"kID", //
-							// Value storage
-							"kVl" //
-					}, //
-					new String[] { //
-							pKeyColumnType, //Primary key
-							// Time stamps
-							tStampColumnType,
-							tStampColumnType,
-							tStampColumnType,
-							// Storage keys
-							keyColumnType, //
-							// Value storage
-							valueColumnType } //
-			);
-
+				keyLongMapName, //
+				new String[] { //
+				// Primary key, as classic int, this is used to lower SQL
+				// fragmentation level, and index memory usage. And is not accessible.
+				// Sharding and uniqueness of system is still maintained by meta keys
+					"pKy", // primary key
+					// Time stamps
+					"uTm", //Updated timestamp
+					"cTm", //value created time
+					"eTm", //value expire time
+					// Storage keys
+					"kID", //
+					// Value storage
+					"kVl" //
+				}, //
+				new String[] { //
+				pKeyColumnType, //Primary key
+					// Time stamps
+					tStampColumnType, tStampColumnType, tStampColumnType,
+					// Storage keys
+					keyColumnType, //
+					// Value storage
+					valueColumnType } //
+				);
+			
 			// Unique index
 			//------------------------------------------------
 			sqlObj.createIndex( //
-					keyLongMapName, "kID", "UNIQUE", "unq" //
+				keyLongMapName, "kID", "UNIQUE", "unq" //
 			);
-
+			
 			// Value search index
 			//------------------------------------------------
 			sqlObj.createIndex( //
-					keyLongMapName, "kVl", null, "valMap" //
+				keyLongMapName, "kVl", null, "valMap" //
 			);
-
+			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	/**
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
@@ -270,7 +266,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	public void systemDestroy() {
 		sqlObj.dropTable(keyLongMapName);
 	}
-
+	
 	/**
 	 * Perform maintenance, this is meant for large maintenance jobs.
 	 * Such as weekly or monthly compaction. It may or may not be a long
@@ -279,11 +275,11 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	@Override
 	public void maintenance() {
 		sqlObj.delete( //
-				keyLongMapName, //
-				"eTm <= ? AND eTm > ?", //
-				new Object[] { System.currentTimeMillis(), 0 });
+			keyLongMapName, //
+			"eTm <= ? AND eTm > ?", //
+			new Object[] { System.currentTimeMillis(), 0 });
 	}
-
+	
 	@Override
 	public Set<String> keySet(Long value) {
 		long now = System.currentTimeMillis();
@@ -291,18 +287,18 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		if (value == null) {
 			r = sqlObj.select(keyLongMapName, "kID", "eTm <= ? OR eTm > ?", new Object[] { 0, now });
 		} else {
-			r = sqlObj.select(keyLongMapName, "kID", "kVl = ? AND (eTm <= ? OR eTm > ?)", new Object[] {
-					value.longValue(), 0, now });
+			r = sqlObj.select(keyLongMapName, "kID", "kVl = ? AND (eTm <= ? OR eTm > ?)",
+				new Object[] { value.longValue(), 0, now });
 		}
-
+		
 		if (r == null || r.get("kID") == null) {
 			return new HashSet<String>();
 		}
-
+		
 		// Gets the various key names as a set
 		return ListValueConv.toStringSet(r.getObjectList("kID", "[]"));
 	}
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 **/
@@ -310,7 +306,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	public void clear() {
 		sqlObj.delete(keyLongMapName);
 	}
-
+	
 	/**
 	 * Remove the value, given the key
 	 *
@@ -319,17 +315,17 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 * @return  null
 	 **/
 	@Override
-	public KeyLong remove(Object key){
+	public KeyLong remove(Object key) {
 		sqlObj.update("DELETE FROM `" + keyLongMapName + "` WHERE kID = ?", key.toString());
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Expiration and lifespan handling (core)
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 * Gets the expire time from the JSqlResult
@@ -337,14 +333,14 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	protected long getExpiryRaw(JSqlResult r) throws JSqlException {
 		// Search for the key
 		Object rawTime = null;
-
+		
 		// Has value
 		if (r != null && r.rowCount() > 0) {
 			rawTime = r.get("eTm")[0];
 		} else {
 			return -1; //No value (-1)
 		}
-
+		
 		// 0 represents expired value
 		long ret = 0;
 		if (rawTime != null) {
@@ -354,7 +350,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 				ret = Long.parseLong(rawTime.toString());
 			}
 		}
-
+		
 		if (ret <= 0) {
 			return 0;
 		} else {

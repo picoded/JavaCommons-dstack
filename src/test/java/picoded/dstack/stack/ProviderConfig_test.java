@@ -24,14 +24,14 @@ public class ProviderConfig_test {
 	 * 
 	 * @return  provider config map
 	 */
-	static public Map<String,Object> providerConfigTestMap(String name, String type) {
-		Map<String,Object> ret = new HashMap<>();
+	static public Map<String, Object> providerConfigTestMap(String name, String type) {
+		Map<String, Object> ret = new HashMap<>();
 		ret.put("name", name);
 		ret.put("type", type);
-
+		
 		return ret;
 	}
-
+	
 	/**
 	 * Test the minimum implementation, a single struct simple
 	 */
@@ -39,11 +39,11 @@ public class ProviderConfig_test {
 	public void singleLayer_struct() {
 		// The simplest config map possible
 		List<Object> inConfigList = new ArrayList<Object>();
-		inConfigList.add(providerConfigTestMap("local","StructSimple"));
-
+		inConfigList.add(providerConfigTestMap("local", "StructSimple"));
+		
 		// Initialize provider config
 		ProviderConfig provider = new ProviderConfig(inConfigList);
-
+		
 		// Get the provider stack
 		CoreStack stack = provider.getProviderStack("local");
 		assertNotNull(stack);

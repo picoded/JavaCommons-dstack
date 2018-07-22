@@ -5,8 +5,6 @@ import java.lang.Number;
 
 public abstract class KeyLong extends Number {
 	
-
-
 	// /**
 	//  * Get and return the key used to store the value
 	//  *
@@ -112,26 +110,26 @@ public abstract class KeyLong extends Number {
 	//  * @return Long
 	//  */
 	abstract public long getValue();
-
+	
 	//
 	// Overriding the default Number functions
 	//
-
+	
 	/**
 	 * Returns the value of the specified number as a byte, which may involve rounding or truncation.
 	 */
 	abstract public byte byteValue();
-
+	
 	/**
 	 * Returns the value of the specified number as a double, which may involve rounding.
 	 */
 	abstract public double doubleValue();
-
+	
 	/**
 	 * Returns the value of the specified number as a float, which may involve rounding.
 	 */
 	abstract public float floatValue();
-
+	
 	/**
 	 * Returns the value of the specified number as an int, which may involve rounding or truncation.
 	 */
@@ -141,7 +139,7 @@ public abstract class KeyLong extends Number {
 	 * Returns the value of the specified number as a long, which may involve rounding or truncation.
 	 */
 	abstract public long longValue();
-
+	
 	/**
 	 * Returns the value of the specified number as a short, which may involve rounding or truncation.
 	 */

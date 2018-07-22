@@ -16,21 +16,21 @@ public class JSqlStack extends CoreStack {
 	 * The internal JSql connection
 	 */
 	protected JSql conn = null;
-
+	
 	/**
 	 * Constructor with configuration map
 	 */
 	public JSqlStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
-
+		
 		// Extract the connection config object
-		GenericConvertMap<String,Object> dbConfig = inConfig.fetchGenericConvertStringMap("db");
-
+		GenericConvertMap<String, Object> dbConfig = inConfig.fetchGenericConvertStringMap("db");
+		
 		// If DB config is missing, throw
-		if( dbConfig == null ) {
+		if (dbConfig == null) {
 			throw new IllegalArgumentException("Missing 'db' config object for JSql stack provider");
 		}
-
+		
 		// Get the JSql connection
 		conn = JSql.setupFromConfig(dbConfig);
 	}

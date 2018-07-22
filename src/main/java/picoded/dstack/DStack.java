@@ -28,21 +28,21 @@ public class DStack extends CoreStack {
 	
 	// List of provider backends - to fetch / initialize from
 	protected ProviderConfig providerConfig;
-
+	
 	// Namespace listing
 	protected GenericConvertList<Object> namespace;
-
+	
 	/**
 	 * Constructor with configuration map
 	 */
 	public DStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
-
+		
 		GenericConvertList<Object> providerConfigList = inConfig.fetchGenericConvertList("provider");
-		if(providerConfigList == null) {
+		if (providerConfigList == null) {
 			throw new IllegalArgumentException("Missing `provider` config list");
 		}
-
+		
 		providerConfig = new ProviderConfig(providerConfigList);
 		namespace = inConfig.fetchGenericConvertList("namespace");
 	}
@@ -58,22 +58,26 @@ public class DStack extends CoreStack {
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		// Initialize for the respective type
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			return new Stack_DataObjectMap( fetchCommonStructureImplementation(name, "DataObjectMap", new Core_DataObjectMap[]{}) );
+			return new Stack_DataObjectMap(fetchCommonStructureImplementation(name, "DataObjectMap",
+				new Core_DataObjectMap[] {}));
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
-			return new Stack_KeyValueMap( fetchCommonStructureImplementation(name, "KeyValueMap", new Core_KeyValueMap[]{}) );
+			return new Stack_KeyValueMap(fetchCommonStructureImplementation(name, "KeyValueMap",
+				new Core_KeyValueMap[] {}));
 		}
 		if (type.equalsIgnoreCase("KeyLongMap")) {
-			return new Stack_KeyLongMap( fetchCommonStructureImplementation(name, "KeyLongMap", new Core_KeyLongMap[]{}) );
+			return new Stack_KeyLongMap(fetchCommonStructureImplementation(name, "KeyLongMap",
+				new Core_KeyLongMap[] {}));
 		}
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new Stack_FileWorkspaceMap( fetchCommonStructureImplementation(name, "FileWorkspaceMap", new Core_FileWorkspaceMap[]{}) );
+			return new Stack_FileWorkspaceMap(fetchCommonStructureImplementation(name,
+				"FileWorkspaceMap", new Core_FileWorkspaceMap[] {}));
 		}
-
+		
 		// No valid type supported
 		return null;
 	}
-
+	
 	/**
 	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
 	 * 
@@ -83,55 +87,57 @@ public class DStack extends CoreStack {
 	 * 
 	 * @return  array of data structures found applicable, which is the same as referenceType
 	 */
-	protected <V extends Core_DataStructure> V[] fetchCommonStructureImplementation(String name, String type, V[] refrenceType) {
+	protected <V extends Core_DataStructure> V[] fetchCommonStructureImplementation(String name,
+		String type, V[] refrenceType) {
 		// Get the relevent namespace config
-		GenericConvertMap<String,Object> namespaceConfig = resolveNamespaceConfig(name);
-		if ( namespaceConfig == null ) {
+		GenericConvertMap<String, Object> namespaceConfig = resolveNamespaceConfig(name);
+		if (namespaceConfig == null) {
 			throw new RuntimeException("No `namespace` configuration found for " + name);
 		}
-
+		
 		// Get the provider list
 		List<Object> providerList = namespaceConfig.getObjectList("providers");
-		if ( providerList == null ) {
-			throw new RuntimeException("No `providers` found in namespaceConfig for "+name);
+		if (providerList == null) {
+			throw new RuntimeException("No `providers` found in namespaceConfig for " + name);
 		}
-
+		
 		// return list to use, time to fill it up with objects from the providers
 		List<V> retList = new ArrayList<>();
-
+		
 		// Iterate the provider
-		for(Object provider : providerList) {
+		for (Object provider : providerList) {
 			// Get the relevent provider CoreStack
 			// Skip if null
 			CoreStack providerStack = providerConfig.getProviderStack(provider.toString());
-			if( providerStack == null ) {
+			if (providerStack == null) {
 				continue;
 			}
-
+			
 			// Get the relevent data structure
 			// Skip if null
-			Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(name, type, null);
-			if( providerDataStructure == null ) {
+			Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(name, type,
+				null);
+			if (providerDataStructure == null) {
 				continue;
 			}
-
+			
 			// Add to response
-			retList.add( (V)providerDataStructure );
+			retList.add((V) providerDataStructure);
 		}
-
+		
 		// Throw an exception if empty
-		if(retList.isEmpty()) {
+		if (retList.isEmpty()) {
 			throw new RuntimeException("No `providers` returned a valid DataStructure");
 		}
-
+		
 		// returning as array
 		return retList.toArray(refrenceType);
 	}
-
+	
 	//
 	// Helper Functions
 	//
-
+	
 	/**
 	 * This function will find the first namespaceConfig that matches the requested name
 	 * 
@@ -140,16 +146,17 @@ public class DStack extends CoreStack {
 	 * @return the configuration or null
 	 */
 	protected GenericConvertMap<String, Object> resolveNamespaceConfig(String name) {
-		for(Object object : namespace){
-			GenericConvertMap<String, Object> namespaceConfig = GenericConvert.toGenericConvertStringMap(object);
+		for (Object object : namespace) {
+			GenericConvertMap<String, Object> namespaceConfig = GenericConvert
+				.toGenericConvertStringMap(object);
 			String pattern = namespaceConfig.getString("regex", "");
-			if(regexNameMatcher(name, pattern)){
+			if (regexNameMatcher(name, pattern)) {
 				return namespaceConfig;
 			}
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Attempts to match the name with the regex pattern given in the param
 	 * 
@@ -161,5 +168,5 @@ public class DStack extends CoreStack {
 	protected boolean regexNameMatcher(String nameToMatch, String pattern) {
 		return nameToMatch.matches(pattern);
 	}
-
+	
 }

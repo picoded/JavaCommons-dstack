@@ -126,7 +126,7 @@ public abstract class CoreStack implements CommonStack {
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
 	 */
 	protected abstract Core_DataStructure initDataStructure(String name, String type);
-
+	
 	//-------------------------------------------------------------
 	//
 	//  System Setup interface implementation
@@ -138,7 +138,7 @@ public abstract class CoreStack implements CommonStack {
 	 * subcalls via AbstractSystemSetupInterfaceCollection
 	 **/
 	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {
-		return (Collection<SystemSetupInterface>)(Object)(structureCache.values());
+		return (Collection<SystemSetupInterface>) (Object) (structureCache.values());
 	}
-
+	
 }

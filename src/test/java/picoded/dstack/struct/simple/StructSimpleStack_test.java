@@ -28,10 +28,10 @@ import picoded.dstack.core.CoreStack;
 import picoded.dstack.struct.simple.*;
 
 public class StructSimpleStack_test {
-
+	
 	// Test object for reuse
 	public CoreStack testObj = null;
-
+	
 	public String tablePrefix = "";
 	
 	// To override for implementation
@@ -41,7 +41,7 @@ public class StructSimpleStack_test {
 	/// is to be overriden for the various backend
 	/// specific test cases
 	public CoreStack implementationConstructor() {
-		return new StructSimpleStack(new GenericConvertHashMap<String,Object>());
+		return new StructSimpleStack(new GenericConvertHashMap<String, Object>());
 	}
 	
 	// Setup and sanity test
@@ -72,217 +72,219 @@ public class StructSimpleStack_test {
 		// run incremental maintaince, no exception?
 		testObj.incrementalMaintenance();
 	}
-
-	public String retrieveTablePrefix(){
+	
+	public String retrieveTablePrefix() {
 		return JSqlTestConfig.randomTablePrefix();
 	}
 	
 	// Get and intialize various data structure objects
 	//-----------------------------------------------------
-
+	
 	@Test
 	public void test_retrieveDataObject() {
 		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
-
+		
 		DataObject newEntry = dataObjectMap.newEntry();
 		newEntry.put("Testing", "value");
 		newEntry.saveAll();
-
+		
 		DataObject getObject = dataObjectMap.get(newEntry._oid());
 		assertEquals("value", getObject.getString("Testing"));
-	}
-
-	@Test
-	public void test_retrieveFileWorkspaceMap(){
-		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(tablePrefix);
-		fileWorkspaceMap.systemSetup();
-
-		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
-		newEntry.writeByteArray("testing path", "testing value".getBytes());
-
-		FileWorkspace getObject = fileWorkspaceMap.get(newEntry._oid());
-		assertEquals("testing value", StringConv.fromByteArray(getObject.readByteArray("testing path")));
 	}
 	
 	@Test
-	public void test_retrieveKeyLongMap(){
+	public void test_retrieveFileWorkspaceMap() {
+		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(tablePrefix);
+		fileWorkspaceMap.systemSetup();
+		
+		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
+		newEntry.writeByteArray("testing path", "testing value".getBytes());
+		
+		FileWorkspace getObject = fileWorkspaceMap.get(newEntry._oid());
+		assertEquals("testing value",
+			StringConv.fromByteArray(getObject.readByteArray("testing path")));
+	}
+	
+	@Test
+	public void test_retrieveKeyLongMap() {
 		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
-
+		
 		keyLongMap.putLong("testing", 5L);
 		assertEquals(5L, keyLongMap.getLong("testing"));
 	}
-
+	
 	@Test
-	public void test_retrieveKeyValueMap(){
+	public void test_retrieveKeyValueMap() {
 		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
-
+		
 		keyValueMap.put("testing", "value");
 		assertEquals("value", keyValueMap.getString("testing"));
 	}
-
+	
 	// Delete operations for various data structure objects
 	//-----------------------------------------------------
-
+	
 	@Test
-	public void test_deleteDataObject(){
+	public void test_deleteDataObject() {
 		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
-
+		
 		DataObject newEntry = dataObjectMap.newEntry();
 		newEntry.put("Testing", "value");
 		newEntry.saveAll();
-
+		
 		DataObject getObject = dataObjectMap.get(newEntry._oid());
 		assertEquals("value", getObject.getString("Testing"));
-
+		
 		dataObjectMap.remove(getObject._oid());
-
+		
 		getObject = dataObjectMap.get(newEntry._oid());
 		assertNull(getObject);
 	}
-
+	
 	@Test
-	public void test_deleteFileWorkspace(){
+	public void test_deleteFileWorkspace() {
 		FileWorkspaceMap fileWorkspaceMap = testObj.fileWorkspaceMap(tablePrefix);
 		fileWorkspaceMap.systemSetup();
-
+		
 		FileWorkspace newEntry = fileWorkspaceMap.newEntry();
 		newEntry.writeByteArray("testing path", "testing value".getBytes());
-
+		
 		FileWorkspace getObject = fileWorkspaceMap.get(newEntry._oid());
-		assertEquals("testing value", StringConv.fromByteArray(getObject.readByteArray("testing path")));
-
+		assertEquals("testing value",
+			StringConv.fromByteArray(getObject.readByteArray("testing path")));
+		
 		fileWorkspaceMap.remove(getObject._oid());
-
+		
 		getObject = fileWorkspaceMap.get(newEntry._oid());
 		assertNull(getObject);
 	}
-
+	
 	@Test
-	public void test_deleteKeyLong(){
+	public void test_deleteKeyLong() {
 		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
-
+		
 		keyLongMap.putLong("testing", 5L);
 		assertEquals(5L, keyLongMap.getLong("testing"));
-
+		
 		keyLongMap.remove("testing");
 		assertEquals(0, keyLongMap.getLong("testing"));
 	}
-
+	
 	@Test
-	public void test_deleteKeyValue(){
+	public void test_deleteKeyValue() {
 		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
-
+		
 		keyValueMap.put("testing", "value");
 		assertEquals("value", keyValueMap.getString("testing"));
-
+		
 		keyValueMap.remove("testing");
 		assertEquals(null, keyValueMap.getString("testing"));
 	}
-
+	
 	// Expiry and lifespan operations for various data structure objects
 	//-----------------------------------------------------
-
+	
 	@Test
-	public void test_expiryKeyLong() throws Exception{
+	public void test_expiryKeyLong() throws Exception {
 		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
-
+		
 		long now = System.currentTimeMillis();
-		keyLongMap.putWithExpiry("testing", 5L, now+300);
+		keyLongMap.putWithExpiry("testing", 5L, now + 300);
 		assertEquals(5L, keyLongMap.getLong("testing"));
-
+		
 		Thread.sleep(300);
 		assertEquals(0, keyLongMap.getLong("testing"));
 	}
-
+	
 	@Test
-	public void test_expiryKeyValue() throws Exception{
+	public void test_expiryKeyValue() throws Exception {
 		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
-
+		
 		long now = System.currentTimeMillis();
-		keyValueMap.putWithExpiry("testing", "value", now+300);
+		keyValueMap.putWithExpiry("testing", "value", now + 300);
 		assertEquals("value", keyValueMap.getString("testing"));
-
+		
 		Thread.sleep(300);
 		assertEquals(null, keyValueMap.getString("testing"));
 	}
-
+	
 	@Test
-	public void test_lifeSpanKeyLong() throws Exception{
+	public void test_lifeSpanKeyLong() throws Exception {
 		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
-
+		
 		long now = System.currentTimeMillis();
 		keyLongMap.putWithLifespan("testing", 5L, 300);
 		assertEquals(5L, keyLongMap.getLong("testing"));
-
+		
 		Thread.sleep(300);
 		assertEquals(0, keyLongMap.getLong("testing"));
 	}
-
+	
 	@Test
-	public void test_lifeSpanKeyValue() throws Exception{
+	public void test_lifeSpanKeyValue() throws Exception {
 		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
-
+		
 		long now = System.currentTimeMillis();
 		keyValueMap.putWithLifespan("testing", "value", 300);
 		assertEquals("value", keyValueMap.getString("testing"));
-
+		
 		Thread.sleep(300);
 		assertEquals(null, keyValueMap.getString("testing"));
 	}
-
+	
 	// keySet operations for various data structure objects
 	//-----------------------------------------------------
-
+	
 	@Test
-	public void test_keySetDataObjectMap(){
+	public void test_keySetDataObjectMap() {
 		DataObjectMap dataObjectMap = testObj.dataObjectMap(tablePrefix);
 		dataObjectMap.systemSetup();
-
+		
 		DataObject newEntry = dataObjectMap.newEntry();
 		newEntry.put("Testing", "value");
 		newEntry.saveAll();
-
+		
 		List<String> keys = new ArrayList<>();
 		keys.add(newEntry._oid());
-		for(String key : dataObjectMap.keySet()){
+		for (String key : dataObjectMap.keySet()) {
 			keys.remove(key);
 		}
 		assertTrue(keys.size() == 0);
 	}
 	
 	@Test
-	public void test_keySetKeyLongMap(){
+	public void test_keySetKeyLongMap() {
 		KeyLongMap keyLongMap = testObj.keyLongMap(tablePrefix);
 		keyLongMap.systemSetup();
-
+		
 		keyLongMap.putLong("testing", 5L);
 		List<String> keys = new ArrayList<>();
 		keys.add("testing");
-		for(String key : keyLongMap.keySet()){
+		for (String key : keyLongMap.keySet()) {
 			keys.remove(key);
 		}
 		assertTrue(keys.size() == 0);
 	}
-
+	
 	@Test
-	public void test_keySetKeyValueMap(){
+	public void test_keySetKeyValueMap() {
 		KeyValueMap keyValueMap = testObj.keyValueMap(tablePrefix);
 		keyValueMap.systemSetup();
-
+		
 		keyValueMap.put("testing", "value");
 		List<String> keys = new ArrayList<>();
 		keys.add("testing");
-		for(String key : keyValueMap.keySet()){
+		for (String key : keyValueMap.keySet()) {
 			keys.remove(key);
 		}
 		assertTrue(keys.size() == 0);

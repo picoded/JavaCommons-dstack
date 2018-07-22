@@ -19,7 +19,7 @@ public interface CommonStack extends AbstractSystemSetupInterfaceCollection {
 	 * @return keyValueMap of the given name, null if stack provider does not support the given object
 	 */
 	public KeyValueMap keyValueMap(String name);
-
+	
 	/**
 	 * @return keyLongMap of the given name, null if stack provider does not support the given object
 	 */

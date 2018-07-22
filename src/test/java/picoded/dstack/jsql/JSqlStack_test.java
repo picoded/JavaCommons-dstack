@@ -16,7 +16,7 @@ public class JSqlStack_test extends StructSimpleStack_test {
 	/// is to be overriden for the various backend
 	/// specific test cases
 	public CoreStack implementationConstructor() {
-		GenericConvertHashMap<String, Object> config = new GenericConvertHashMap<String,Object>();
+		GenericConvertHashMap<String, Object> config = new GenericConvertHashMap<String, Object>();
 		config.put("db", ConvertJSON.toMap("{ \"type\" : \"sqlite\" }"));
 		return new JSqlStack(config);
 	}
