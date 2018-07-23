@@ -136,32 +136,32 @@ public abstract class MembershipTable extends ModuleStructure  {
 		}
 	}
 
-// 	/**
-// 	 * Gets and return the membership object, only if it exists.
-// 	 * 
-// 	 * @param  groupID   group id to fetch from
-// 	 * @param  memberID  member id to fetch from
-// 	 * 
-// 	 * @return  membership object ID
-// 	 */
-// 	protected String getMembershipID(String groupID, String memberID) {
-// 		// Basic id validation
-// 		validateMembership(groupID, memberID);
+	/**
+	 * Gets and return the membership object, only if it exists.
+	 * 
+	 * @param  groupID   group id to fetch from
+	 * @param  memberID  member id to fetch from
+	 * 
+	 * @return  membership object ID
+	 */
+	protected String getMembershipID(String groupID, String memberID) {
+		// Basic id validation
+		validateMembership(groupID, memberID);
 
-// 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to membership-id
-// 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
-// 		String[] ids = membershipTable.query_id("groupid=? AND memberid=?", new Object[] { groupID, memberID }, "DESC _oid");
-// 		if( ids != null && ids.length > 0 ) {
-// 			// Detecting more then one object match, remove collision
-// 			if( ids.length > 1 ) {
-// 				for(int i=1; i<ids.length; ++i) {
-// 					membershipTable.remove(ids[i]);
-// 				}
-// 			}
-// 			return ids[0];
-// 		}
-// 		return null;
-// 	}
+		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to membership-id
+		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
+		String[] ids = membershipTable.query_id("groupid=? AND memberid=?", new Object[] { groupID, memberID }, "DESC _oid");
+		if( ids != null && ids.length > 0 ) {
+			// Detecting more then one object match, remove collision
+			if( ids.length > 1 ) {
+				for(int i=1; i<ids.length; ++i) {
+					membershipTable.remove(ids[i]);
+				}
+			}
+			return ids[0];
+		}
+		return null;
+	}
 
 // 	/**
 // 	 * Utility function to cast membership DataObject to MembershipObject
