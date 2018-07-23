@@ -51,7 +51,7 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	public ModuleStructure(CommonStack inStack, String inName) {
 		stack = inStack;
 		name = inName;
-		internalStructureList = setupInternalStructureList();
+		internalStructureList = internalStructureList();
 	}
 	
 	//----------------------------------------------------------------
@@ -64,7 +64,7 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	 * [TO OVERWRITE] : Internal DataStrucutre list, 
 	 * to cache and pass forward to "SystemSetupInterface"
 	 **/
-	protected abstract List<CommonStructure> setupInternalStructureList();
+	protected abstract List<CommonStructure> internalStructureList();
 	
 	//----------------------------------------------------------------
 	//

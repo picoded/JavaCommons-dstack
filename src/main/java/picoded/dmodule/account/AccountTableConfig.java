@@ -140,15 +140,13 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 **/
 	public AccountTableConfig(CommonStack inStack, String inName) {
 		super(inStack, inName);
-		internalStructureList = setupInternalStructureList();
+		internalStructureList = internalStructureList();
 	}
-	
+
 	/**
-	 * Initialize the various internal data structures, 
-	 * used by account from the stack.
-	 **/
-	protected List<CommonStructure> setupInternalStructureList() {
-		
+	 * Setup data structure from stack using default naming
+	 */
+	protected void setupStructureList() {
 		// Login auth information
 		accountLoginNameMap = stack.keyValueMap(name + "_ID");
 		accountAuthMap = stack.keyValueMap(name + "_IH");
@@ -173,7 +171,13 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		
 		// Side note: For new table, edit here and add into the return List
 		// @TODO - Consider adding support for temporary tables typehints
-		
+	}
+	
+	/**
+	 * Initialize the various internal data structures, 
+	 * used by account from the stack.
+	 **/
+	protected List<CommonStructure> internalStructureList() {
 		// Return it as a list
 		return Arrays.asList( //
 			accountLoginNameMap, accountAuthMap, //
@@ -182,7 +186,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 			loginThrottlingAttemptMap, loginThrottlingExpiryMap//, //
 			// accountVerificationMap, //
 			// accountPasswordTokenMap //
-			);
+		);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////

@@ -14,124 +14,127 @@ import picoded.core.struct.*;
  **/
 public abstract class MembershipTable extends ModuleStructure  {
 	
-// 	///////////////////////////////////////////////////////////////////////////
-// 	//
-// 	// Underlying data structures
-// 	//
-// 	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Underlying data structures
+	//
+	///////////////////////////////////////////////////////////////////////////
 	
-// 	/**
-// 	 * Handles the storage of group data.
-// 	 * 
-// 	 * Note: Consider this the "PRIMARY TABLE"
-// 	 *
-// 	 * DataTable<GroupOID, DataObject>
-// 	 **/
-// 	protected DataTable groupTable = null;
+	/**
+	 * Handles the storage of group data.
+	 * 
+	 * Note: Consider this the "PRIMARY TABLE"
+	 *
+	 * DataObjectMap<GroupOID, DataObject>
+	 **/
+	protected DataObjectMap groupTable = null;
 	
-// 	/**
-// 	 * Member DataTable, to link. Note that this is designed,
-// 	 * intentionally to work with DataTable compatible interface.
-// 	 *
-// 	 * DataTable<AccountOID, DataObject>
-// 	 **/
-// 	protected DataTable memberTable = null;
+	/**
+	 * Member DataObjectMap, to link. Note that this is designed,
+	 * intentionally to work with DataObjectMap compatible interface.
+	 *
+	 * DataObjectMap<AccountOID, DataObject>
+	 **/
+	protected DataObjectMap memberTable = null;
 	
-// 	/**
-// 	 * Handles the storage of group to partipant link.
-// 	 *
-// 	 * DataTable<MembershipOID, DataObject>
-// 	 **/
-// 	protected DataTable membershipTable = null;
+	/**
+	 * Handles the storage of group to partipant link.
+	 *
+	 * DataObjectMap<MembershipOID, DataObject>
+	 **/
+	protected DataObjectMap membershipTable = null;
 	
-// 	///////////////////////////////////////////////////////////////////////////
-// 	//
-// 	// Constructor setup : Setup the actual tables, with the various names
-// 	//
-// 	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Constructor setup : Setup the actual tables, with the various names
+	//
+	///////////////////////////////////////////////////////////////////////////
 
-// 	/**
-// 	 * Blank constructor, used for more custom extensions
-// 	 **/
-// 	public MembershipTable() {
-// 		super();
-// 	}
+	/**
+	 * Blank constructor, used for more custom extensions
+	 **/
+	public MembershipTable() {
+		super();
+	}
 
-// 	/**
-// 	 * MembershipTable constructor using DataTable
-// 	 * 
-// 	 * @param  inGroup         group table to build / extend from
-// 	 * @param  inMember        partipant table to build / extend from
-// 	 * @param  membership      primary membership table to link the group / partipant table
-// 	 **/
-// 	public MembershipTable(
-// 		DataTable inGroup,
-// 		DataTable inMember,
-// 		DataTable membership
-// 	) {
-// 		super();
-// 		groupTable       = inGroup;
-// 		memberTable      = inMember;
-// 		membershipTable  = membership;
-// 	}
+	/**
+	 * MembershipTable constructor using DataObjectMap
+	 * 
+	 * @param  inGroup         group table to build / extend from
+	 * @param  inMember        partipant table to build / extend from
+	 * @param  membership      primary membership table to link the group / partipant table
+	 **/
+	public MembershipTable(
+		DataObjectMap inGroup,
+		DataObjectMap inMember,
+		DataObjectMap membership
+	) {
+		super();
+		groupTable       = inGroup;
+		memberTable      = inMember;
+		membershipTable  = membership;
+		// Setup the internal structure list
+		internalStructureList = internalStructureList();
+	}
 	
-// 	//----------------------------------------------------------------
-// 	//
-// 	//  Internal CommonStructure management
-// 	//
-// 	//----------------------------------------------------------------
+	//----------------------------------------------------------------
+	//
+	//  Internal CommonStructure management
+	//
+	//----------------------------------------------------------------
 	
-// 	/**
-// 	 * Setup the list of local CommonStructure's
-// 	 * this is used internally by setup/destroy/maintenance
-// 	 **/
-// 	protected List<CommonStructure> setupInternalStructureList() {
-// 		// Check for missing items
-// 		if( groupTable == null || memberTable == null || membershipTable == null ) {
-// 			throw new RuntimeException("Missing group/member/membership table");
-// 		}
-// 		// Return it as a list
-// 		return Arrays.asList( groupTable, memberTable, membershipTable );
-// 	}
+	/**
+	 * Setup the list of local CommonStructure's
+	 * this is used internally by setup/destroy/maintenance
+	 **/
+	protected List<CommonStructure> internalStructureList() {
+		// Check for missing items
+		if( groupTable == null || memberTable == null || membershipTable == null ) {
+			throw new RuntimeException("Missing group/member/membership table");
+		}
+		// Return it as a list
+		return Arrays.asList( groupTable, memberTable, membershipTable );
+	}
 	
-// 	///////////////////////////////////////////////////////////////////////////
-// 	//
-// 	// Membership based utility functions
-// 	//
-// 	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Membership based utility functions
+	//
+	///////////////////////////////////////////////////////////////////////////
 
-// 	/**
-// 	 * Validate group and member ID, throws runtime exception on failure
-// 	 * 
-// 	 * @param  groupID   group id to fetch from
-// 	 * @param  memberID  member id to fetch from
-// 	 */
-// 	protected void validateMembership(String groupID, String memberID) {
-// 		if( !groupTable.containsKey(groupID) ) {
-// 			cleanupMembership(groupID, null);
-// 			throw new RuntimeException("Missing/Invalid groupID : "+groupID);
-// 		}
-// 		if( !memberTable.containsKey(memberID) ) {
-// 			cleanupMembership(null, memberID);
-// 			throw new RuntimeException("Missing/Invalid memberID : "+memberID);
-// 		}
-// 	}
+	/**
+	 * Validate group and member ID, throws runtime exception on failure
+	 * 
+	 * @param  groupID   group id to fetch from
+	 * @param  memberID  member id to fetch from
+	 */
+	protected boolean validateMembership(String groupID, String memberID) {
+		if( !groupTable.containsKey(groupID) ) {
+			cleanupMembership(groupID, null);
+			return false;
+		}
+		if( !memberTable.containsKey(memberID) ) {
+			cleanupMembership(null, memberID);
+			return false;
+		}
+		return true;
+	}
 
-// 	/**
-// 	 * Clean up membership objects, if the parent objects orphaned them
-// 	 * 
-// 	 * @param  groupID   group id to remove, effectively ignored if null
-// 	 * @param  memberID  member id to remove, effectively ignored if null
-// 	 */
-// 	protected void cleanupMembership(String groupID, String memberID) {
-// 		String[] ids = membershipTable.query_id("groupid=? OR memberid=?", new Object[] { groupID, memberID }, null);
-// 		if( ids != null && ids.length > 0 ) {
-// 			// Detecting more then one object match, remove obseleted items
-// 			for(int i=0; i<ids.length; ++i) {
-// 				membershipTable.remove(ids[i]);
-// 			}
-// 		}
-// 	}
+	/**
+	 * Clean up membership objects, if the parent objects orphaned them
+	 * 
+	 * @param  groupID   group id to remove, effectively ignored if null
+	 * @param  memberID  member id to remove, effectively ignored if null
+	 */
+	protected void cleanupMembership(String groupID, String memberID) {
+		String[] ids = membershipTable.query_id("groupid=? OR memberid=?", new Object[] { groupID, memberID }, null);
+		if( ids != null && ids.length > 0 ) {
+			// Detecting more then one object match, remove obseleted items
+			for(int i=0; i<ids.length; ++i) {
+				membershipTable.remove(ids[i]);
+			}
+		}
+	}
 
 // 	/**
 // 	 * Gets and return the membership object, only if it exists.
@@ -270,7 +273,7 @@ public abstract class MembershipTable extends ModuleStructure  {
 
 // 	///////////////////////////////////////////////////////////////////////////
 // 	//
-// 	// Datatable based query
+// 	// DataObjectMap based query
 // 	//
 // 	// @TODO : Refactor this out to a core.struct.query.AbstractMapMapQuery
 // 	//
