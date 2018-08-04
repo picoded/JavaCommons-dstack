@@ -100,8 +100,18 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 			return null;
 		}
 		
+		// Check for null objects
+		Object strObj = r.get("kVl")[0];
+		if( strObj == null ) {
+			return null;
+		}
+
+		String val = strObj.toString();
+		if( val.isEmpty() ) {
+			return null;
+		}
+
 		// Get the value, and return the pair
-		String val = r.get("kVl")[0].toString();
 		return new MutablePair<String, Long>(val, expiry);
 	}
 	
@@ -120,7 +130,6 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 			rawTime = r.get("eTm")[0];
 		} else {
 			return -2; //No value (-2)
-			
 		}
 		
 		// Return valid rawTime value
@@ -241,10 +250,11 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 	 * Perform maintenance, mainly removing of expired data if applicable
 	 **/
 	public void maintenance() {
+		long currentTime =  System.currentTimeMillis();
 		sqlObj.delete( //
 			sqlTableName, //
 			"eTm <= ? AND eTm > ?", //
-			new Object[] { System.currentTimeMillis(), 0 });
+			new Object[] { currentTime, 0 });
 	}
 	
 	/**
@@ -298,7 +308,27 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	@Override
 	public KeyValue remove(Object key) {
-		sqlObj.update("DELETE FROM `" + sqlTableName + "` WHERE kID = ?", key.toString());
+		removeValue(key);
+		return null;
+	}
+	
+	/**
+	 * Remove the value, given the key
+	 *
+	 * Important note: It does not return the previously stored value
+	 * Its return String type is to maintain consistency with Map interfaces
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  null
+	 **/
+	@Override
+	public String removeValue(Object key) {
+		if( key == null ) {
+			throw new IllegalArgumentException("delete 'key' cannot be null");
+		}
+		String keyStr = key.toString();
+		sqlObj.delete(sqlTableName, "kID = ?", new Object[] { keyStr });
 		return null;
 	}
 	

@@ -149,8 +149,19 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			return null;
 		}
 		
-		return new MutablePair<Long, Long>(new Long(GenericConvert.toLong(r.get("kVl")[0])),
-			new Long(expiry));
+		// Check for null objects
+		Object longObj = r.get("kVl")[0];
+		if( longObj == null ) {
+			return null;
+		}
+
+		Long longVal = GenericConvert.toLong(longObj);
+		if( longVal == null ) {
+			return null;
+		}
+
+		// Return long value
+		return new MutablePair<Long, Long>(longVal, new Long(expiry));
 	}
 	
 	//--------------------------------------------------------------------------
@@ -274,10 +285,11 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public void maintenance() {
+		long currentTime =  System.currentTimeMillis();
 		sqlObj.delete( //
 			keyLongMapName, //
 			"eTm <= ? AND eTm > ?", //
-			new Object[] { System.currentTimeMillis(), 0 });
+			new Object[] { currentTime, 0 });
 	}
 	
 	@Override
@@ -316,7 +328,27 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public KeyLong remove(Object key) {
-		sqlObj.update("DELETE FROM `" + keyLongMapName + "` WHERE kID = ?", key.toString());
+		removeValue(key);
+		return null;
+	}
+	
+	/**
+	 * Remove the value, given the key
+	 *
+	 * Important note: It does not return the previously stored value
+	 * Its return String type is to maintain consistency with Map interfaces
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  null
+	 **/
+	@Override
+	public Long removeValue(Object key) {
+		if( key == null ) {
+			throw new IllegalArgumentException("delete 'key' cannot be null");
+		}
+		String keyStr = key.toString();
+		sqlObj.delete(keyLongMapName, "kID = ?", new Object[] { keyStr });
 		return null;
 	}
 	
