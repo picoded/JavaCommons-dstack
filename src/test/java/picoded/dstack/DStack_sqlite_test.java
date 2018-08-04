@@ -11,7 +11,7 @@ import picoded.dstack.jsql.connector.JSql;
 import picoded.dstack.struct.simple.StructSimpleStack_test;
 import picoded.dstack.core.CoreStack;
 
-public class DStack_test extends StructSimpleStack_test {
+public class DStack_sqlite_test extends DStack_test {
 	// To override for implementation
 	//-----------------------------------------------------
 	
@@ -25,7 +25,8 @@ public class DStack_test extends StructSimpleStack_test {
 		HashMap<String, Object> provider = new HashMap<>();
 		provider.put("name", "db_main");
 		
-		provider.put("type", "StructSimple");
+		provider.put("type", "jsql");
+		provider.put("db", ConvertJSON.toMap("{ \"type\" : \"sqlite\" }"));
 		
 		providers.add(provider);
 		
