@@ -92,7 +92,16 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
-		return workspaceDirObj(oid).isDirectory();
+		// Workspace directory file
+		File workspaceDir = workspaceDirObj(oid);
+		
+		// Invalid workspace format
+		if (workspaceDir == null) {
+			return false;
+		}
+		
+		// Validate that the workspace directory is initialized
+		return workspaceDir.isDirectory();
 	}
 	
 	/**
@@ -102,8 +111,11 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_workspaceRemove(String oid) {
+		// Workspace directory file
 		File workspaceDir = workspaceDirObj(oid);
-		if (workspaceDir.exists()) {
+		
+		// Remove workspace if found valid
+		if (workspaceDir != null && workspaceDir.exists()) {
 			FileUtil.forceDelete(workspaceDir);
 		}
 	}
@@ -126,21 +138,21 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Get workspace dir
 		File workspaceDir = workspaceDirObj(oid);
 		
-		// Return null on failure
-		if (workspaceDir == null) {
-			return null;
-		}
+		// // Return null on failure
+		// if (workspaceDir == null) {
+		// 	return null;
+		// }
 		
-		// Normalize filepath, and validate it
-		filepath = FileUtil.normalize(filepath);
-		if (filepath == null) {
-			return null;
-		}
+		// // Normalize filepath, and validate it
+		// filepath = FileUtil.normalize(filepath);
+		// if (filepath == null) {
+		// 	return null;
+		// }
 		
-		// Get without starting "/"
-		if (filepath.startsWith("/")) {
-			filepath = filepath.substring(1);
-		}
+		// // Get without starting "/"
+		// if (filepath.startsWith("/")) {
+		// 	filepath = filepath.substring(1);
+		// }
 		
 		// Get the file object
 		return new File(workspaceDir, filepath);
@@ -159,7 +171,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		File fileObj = workspaceFileObj(oid, filepath);
 		
 		// Check if its a file, return null if failed
-		if (!fileObj.isFile()) {
+		if (fileObj == null || !fileObj.isFile()) {
 			return null;
 		}
 		
@@ -177,6 +189,11 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
+		
+		// Invalid file path?
+		if (fileObj == null) {
+			return;
+		}
 		
 		// Check if its a file exist,
 		// if it doesnt ensure parent folder is intialized
@@ -198,6 +215,11 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_removeFile(String oid, String filepath) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
+		
+		// Invalid file path?
+		if (fileObj == null) {
+			return;
+		}
 		
 		// Check if its a file exist, and delete it
 		if (fileObj.isFile()) {
