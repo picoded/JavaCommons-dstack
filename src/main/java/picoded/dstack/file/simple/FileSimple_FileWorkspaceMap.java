@@ -10,7 +10,7 @@ import picoded.core.file.FileUtil;
  * Provide Crud operation backed by actual files
  */
 public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor vars
@@ -19,18 +19,18 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	/// The file directory to opreate from
 	protected File baseDir = null;
-
+	
 	/// The file suffix to use for JSON object records
-
+	
 	/**
 	 * Setup with file directory
 	 * 
 	 * @param  inDir folder directory to operate from
 	 */
-	public FileSimple_FileWorkspaceMap(File inDir) { 
+	public FileSimple_FileWorkspaceMap(File inDir) {
 		baseDir = inDir;
 	}
-
+	
 	/**
 	 * Setup with file directory
 	 * 
@@ -39,7 +39,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public FileSimple_FileWorkspaceMap(String inDir) {
 		baseDir = new File(inDir);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Workspace 
@@ -54,19 +54,19 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	protected boolean validateOid(String oid) {
 		// oid is null / invalid
-		if( oid == null || oid.length() <= 0 ) {
+		if (oid == null || oid.length() <= 0) {
 			return false;
 		}
-
+		
 		// Adding safety check for file operation, ensuring oid is alphanumeric
-		if( !oid.matches("[a-zA-Z0-9]+") ) {
+		if (!oid.matches("[a-zA-Z0-9]+")) {
 			return false;
 		}
-
+		
 		// All checks pass
 		return true;
 	}
-
+	
 	/**
 	 * Get and return the workspace file object
 	 * To be used for subsequent operations
@@ -75,14 +75,14 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	protected File workspaceDirObj(String oid) {
 		// oid failed validation
-		if( validateOid(oid) ) {
+		if (validateOid(oid)) {
 			return null;
 		}
-
+		
 		// Get the file directory
 		return new File(baseDir, oid);
 	}
-
+	
 	/**
 	 * Checks and return of a workspace exists
 	 *
@@ -94,7 +94,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public boolean backend_workspaceExist(String oid) {
 		return workspaceDirObj(oid).isDirectory();
 	}
-
+	
 	/**
 	 * Removes the FileWorkspace, used to nuke an entire workspace
 	 *
@@ -103,11 +103,11 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public void backend_workspaceRemove(String oid) {
 		File workspaceDir = workspaceDirObj(oid);
-		if( workspaceDir.exists() ) {
+		if (workspaceDir.exists()) {
 			FileUtil.forceDelete(workspaceDir);
 		}
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// File handling
@@ -125,27 +125,27 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	protected File workspaceFileObj(String oid, String filepath) {
 		// Get workspace dir
 		File workspaceDir = workspaceDirObj(oid);
-
+		
 		// Return null on failure
-		if( workspaceDir == null ) {
+		if (workspaceDir == null) {
 			return null;
 		}
-
+		
 		// Normalize filepath, and validate it
 		filepath = FileUtil.normalize(filepath);
-		if( filepath == null ) {
+		if (filepath == null) {
 			return null;
 		}
-
+		
 		// Get without starting "/"
-		if( filepath.startsWith("/") ) {
+		if (filepath.startsWith("/")) {
 			filepath = filepath.substring(1);
 		}
-
+		
 		// Get the file object
-		return new File( workspaceDir, filepath );
+		return new File(workspaceDir, filepath);
 	}
-
+	
 	/**
 	 * Read file content from its path
 	 * @param oid
@@ -154,19 +154,19 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return
 	 */
 	@Override
-	public byte[] backend_fileRead(String oid, String filepath){
+	public byte[] backend_fileRead(String oid, String filepath) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
-
+		
 		// Check if its a file, return null if failed
-		if( !fileObj.isFile() ) {
+		if (!fileObj.isFile()) {
 			return null;
 		}
-
+		
 		// Read the file
 		return FileUtil.readFileToByteArray(fileObj);
 	}
-
+	
 	/**
 	 * Write into a file, if does not exist create one
 	 * @param oid
@@ -177,18 +177,18 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
-
+		
 		// Check if its a file exist,
 		// if it doesnt ensure parent folder is intialized
-		if( !fileObj.exists() ) {
+		if (!fileObj.exists()) {
 			File parentFile = fileObj.getParentFile();
-			FileUtil.forceMkdir( parentFile );
+			FileUtil.forceMkdir(parentFile);
 		}
-
+		
 		// Write the file
 		FileUtil.writeByteArrayToFile(fileObj, data);
 	}
-
+	
 	/**
 	 * Remove a file from the workspace by its id
 	 * @param oid identifier to the workspace
@@ -198,32 +198,32 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_removeFile(String oid, String filepath) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
-
+		
 		// Check if its a file exist, and delete it
-		if( fileObj.isFile() ) {
+		if (fileObj.isFile()) {
 			FileUtil.forceDelete(fileObj);
 		}
 	}
-
+	
 	@Override
 	public void systemSetup() {
-		if( !baseDir.exists() ) {
+		if (!baseDir.exists()) {
 			// Ensure the base directory is initialized
 			FileUtil.forceMkdir(baseDir);
 		}
 	}
-
+	
 	@Override
 	public void systemDestroy() {
 		
 	}
-
+	
 	/**
 	 * Wipe out the entire fileWorkspace map
 	 */
 	@Override
 	public void clear() {
-		if( baseDir.isDirectory() ) {
+		if (baseDir.isDirectory()) {
 			// Delete the directory, and reinitialize it as empty
 			FileUtil.forceDelete(baseDir);
 			// Ensure the base directory is initialized

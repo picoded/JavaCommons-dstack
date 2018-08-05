@@ -31,7 +31,7 @@
 // 	// Constructor vars
 // 	//
 // 	//--------------------------------------------------------------------------
-	
+
 // 	/// The file directory to opreate from
 // 	protected File baseDir = null;
 

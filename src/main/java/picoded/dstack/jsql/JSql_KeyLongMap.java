@@ -151,15 +151,15 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		
 		// Check for null objects
 		Object longObj = r.get("kVl")[0];
-		if( longObj == null ) {
+		if (longObj == null) {
 			return null;
 		}
-
+		
 		Long longVal = GenericConvert.toLong(longObj);
-		if( longVal == null ) {
+		if (longVal == null) {
 			return null;
 		}
-
+		
 		// Return long value
 		return new MutablePair<Long, Long>(longVal, new Long(expiry));
 	}
@@ -285,7 +285,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public void maintenance() {
-		long currentTime =  System.currentTimeMillis();
+		long currentTime = System.currentTimeMillis();
 		sqlObj.delete( //
 			keyLongMapName, //
 			"eTm <= ? AND eTm > ?", //
@@ -344,7 +344,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public Long removeValue(Object key) {
-		if( key == null ) {
+		if (key == null) {
 			throw new IllegalArgumentException("delete 'key' cannot be null");
 		}
 		String keyStr = key.toString();

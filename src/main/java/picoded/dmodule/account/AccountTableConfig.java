@@ -142,7 +142,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		super(inStack, inName);
 		internalStructureList = internalStructureList();
 	}
-
+	
 	/**
 	 * Setup data structure from stack using default naming
 	 */
@@ -186,7 +186,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 			loginThrottlingAttemptMap, loginThrottlingExpiryMap//, //
 			// accountVerificationMap, //
 			// accountPasswordTokenMap //
-		);
+			);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 * DataObject parameter name to sync login names into
 	 */
 	public String syncLoginNameList = "LoginNameList";
-
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Login session settings

@@ -102,15 +102,15 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 		
 		// Check for null objects
 		Object strObj = r.get("kVl")[0];
-		if( strObj == null ) {
+		if (strObj == null) {
 			return null;
 		}
-
+		
 		String val = strObj.toString();
-		if( val.isEmpty() ) {
+		if (val.isEmpty()) {
 			return null;
 		}
-
+		
 		// Get the value, and return the pair
 		return new MutablePair<String, Long>(val, expiry);
 	}
@@ -250,7 +250,7 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 	 * Perform maintenance, mainly removing of expired data if applicable
 	 **/
 	public void maintenance() {
-		long currentTime =  System.currentTimeMillis();
+		long currentTime = System.currentTimeMillis();
 		sqlObj.delete( //
 			sqlTableName, //
 			"eTm <= ? AND eTm > ?", //
@@ -324,7 +324,7 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	@Override
 	public String removeValue(Object key) {
-		if( key == null ) {
+		if (key == null) {
 			throw new IllegalArgumentException("delete 'key' cannot be null");
 		}
 		String keyStr = key.toString();

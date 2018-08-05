@@ -19,7 +19,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
