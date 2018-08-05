@@ -91,7 +91,7 @@ public class StructSimple_FileWorkspaceMap_test {
 	//
 	// @TODO : Refactor the test cases below to make more sense for file systems
 	//
-
+	
 	@Test
 	public void checkFileExist() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
