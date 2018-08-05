@@ -19,23 +19,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the FileWorkspace, used to nuke an entire workspace
-	 *
-	 * @param ObjectID of workspace to remove
-	 **/
-	@Override
-	public void backend_workspaceRemove(String oid) {
-		try {
-			accessLock.writeLock().lock();
-			fileContentMap.remove(oid);
-		} finally {
-			accessLock.writeLock().unlock();
-		}
-	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -55,6 +39,23 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 		} finally {
 			accessLock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the FileWorkspace, used to nuke an entire workspace
+	 *
+	 * @param ObjectID of workspace to remove
+	 **/
+	@Override
+	public void backend_workspaceRemove(String oid) {
+		try {
+			accessLock.writeLock().lock();
+			fileContentMap.remove(oid);
+		} finally {
+			accessLock.writeLock().unlock();
 		}
 	}
 	
