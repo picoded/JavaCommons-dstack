@@ -1,4 +1,4 @@
-package picoded.dstack.struct.simple;
+package picoded.dstack.struct.cache;
 
 // Java imports
 import java.util.HashMap;

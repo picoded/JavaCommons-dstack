@@ -8,6 +8,7 @@ import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.struct.simple.StructSimpleStack;
+import picoded.dstack.struct.cache.StructCacheStack;
 import picoded.dstack.core.CoreStack;
 import picoded.dstack.jsql.JSqlStack;
 
@@ -156,6 +157,9 @@ public class ProviderConfig {
 	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
 		if (type.equalsIgnoreCase("StructSimple")) {
 			return new StructSimpleStack(config);
+		}
+		if (type.equalsIgnoreCase("StructCache")) {
+			return new StructCacheStack(config);
 		}
 		if (type.equalsIgnoreCase("JSql")) {
 			return new JSqlStack(config);
