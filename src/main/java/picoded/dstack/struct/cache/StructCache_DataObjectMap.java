@@ -23,7 +23,7 @@ import org.cache2k.Cache;
  *
  * Built ontop of the Core_DataObjectMap implementation.
  **/
-public class StructSimple_DataObjectMap extends Core_DataObjectMap {
+public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -35,7 +35,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected static Map<String, okhttp3.Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Map<String, Map<String, Object>>>();
+	protected static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -60,7 +60,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 		// Attempt to load cachename from config
 		_cacheName = configMap().getString("name");
 		if (_cacheName == null || _cacheName.equals("")) {
-			throw new IllegalAccessException("Missing cache name configuration");
+			throw new IllegalArgumentException("Missing cache name configuration");
 		}
 		
 		// Return config cachename
@@ -85,7 +85,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 		// and returns it.
 		_valueMap = globalCacheMap.get(cacheName());
 		if (_valueMap == null) {
-			throw new IllegalAccessException("Missing StaticCache, please call systemSetup first : "
+			throw new RuntimeException("Missing StaticCache, please call systemSetup first : "
 				+ cacheName());
 		}
 		
@@ -120,9 +120,12 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 		// be a good sane default in server environment.
 		//
 		// to consider : auto detect RAM size in KB - and use that?
-		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
-		}.name(cacheName).eternal(true).entryCapacity(configMap().getInt("capacity", 100 * 1000))
-			.build();
+		int capicity = configMap().getInt("capacity", 100000);
+		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {} //
+		.name(cacheName())//
+		.eternal(true)//
+		.entryCapacity(capicity)//
+		.build();
 	}
 	
 	/**
@@ -194,7 +197,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 		// Makes a new map if needed
 		Map<String, Object> storedValue = _valueMap.get(oid);
 		if (storedValue == null) {
-			storedValue = new ConcurrentHashMap<String, Object>();
+			storedValue = new HashMap<String, Object>();
 		}
 		
 		// Get and store the required values
