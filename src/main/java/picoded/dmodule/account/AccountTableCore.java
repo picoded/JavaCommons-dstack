@@ -138,6 +138,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return null;
 	}
+	
 	/**
 	 * Gets the account using the object ID array,
 	 * and returns an account object array
@@ -153,14 +154,13 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return mList;
 	}
-
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Account object "newEntry"
 	//
 	///////////////////////////////////////////////////////////////////////////
 	
-
 	/**
 	 * Generates a new account object.
 	 *
@@ -185,7 +185,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		if (hasLoginName(name)) {
 			return null;
 		}
-	
+		
 		// Creating account object, setting the name if valid
 		AccountObject ret = newEntry();
 		if (ret.setLoginName(name)) {
@@ -196,7 +196,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 			// in new account race conditions
 			remove(ret._oid());
 		}
-	
+		
 		// Return null on failure
 		return null;
 	}
@@ -210,16 +210,16 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	 **/
 	public AccountObject remove(Object inOid) {
 		if (inOid != null) {
-	
+			
 			// Alternatively, instead of string use DataObject
 			if (inOid instanceof DataObject) {
 				inOid = ((DataObject) inOid)._oid();
 			}
-	
+			
 			// Get oid as a string, and fetch the account object
 			String oid = inOid.toString();
 			// AccountObject ao = this.get(oid);
-	
+			
 			// Remove login ID's AKA nice names
 			Set<String> loginIdMapNames = accountLoginNameMap.keySet(oid);
 			if (loginIdMapNames != null) {
@@ -230,18 +230,18 @@ public abstract class AccountTableCore extends AccountTableConfig {
 			
 			// Remove login authentication details
 			accountAuthMap.remove(oid);
-
+			
 			// Remove account meta information
 			accountDataObjectMap.remove(oid);
-	
+			
 			// Remove thorttling information
 			loginThrottlingAttemptMap.remove(oid);
 			loginThrottlingExpiryMap.remove(oid);
-
+			
 			// System.out.println("Account Object: " + oid + " has been successfully removed.");
 			// @TODO : proper info logger
 		}
-	
+		
 		return null;
 	}
 	

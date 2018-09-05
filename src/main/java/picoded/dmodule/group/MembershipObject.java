@@ -10,17 +10,17 @@ import picoded.core.struct.*;
 /**
  * Represents a single group / member relationship.
  **/
-public class MembershipObject 
+public class MembershipObject
 // extends Core_DataObject 
 {
-
+	
 	// ///////////////////////////////////////////////////////////////////////////
 	// //
 	// // Constructor and setup
 	// //
 	// ///////////////////////////////////////////////////////////////////////////
 	// //#region constructor and setup
-
+	
 	// /**
 	//  * The original account table
 	//  **/
@@ -66,6 +66,5 @@ public class MembershipObject
 	// 	// "Super" call
 	// 	return super.put(key, value);
 	// }
-
-}
 	
+}

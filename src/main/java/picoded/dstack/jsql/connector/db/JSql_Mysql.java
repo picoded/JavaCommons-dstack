@@ -320,15 +320,14 @@ public class JSql_Mysql extends JSql_Base {
 		// Possible "INDEX IF NOT EXISTS" call for mysql, suppress duplicate index error if needed
 		if (originalQuery.indexOf("INDEX IF NOT EXISTS") >= 0) {
 			// This is the new implementation CAA 07082018.
-			if (stackTrace
-					.indexOf("java.sql.SQLSyntaxErrorException: Duplicate key name '") > 0) {
+			if (stackTrace.indexOf("java.sql.SQLSyntaxErrorException: Duplicate key name '") > 0) {
 				return true;
 			}
 			// This is the old implementation. It uses the old verison of mysql library
-//			if (stackTrace
-//				.indexOf("com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Duplicate key name '") > 0) {
-//				return true;
-//			}
+			//			if (stackTrace
+			//				.indexOf("com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Duplicate key name '") > 0) {
+			//				return true;
+			//			}
 		}
 		
 		return false;

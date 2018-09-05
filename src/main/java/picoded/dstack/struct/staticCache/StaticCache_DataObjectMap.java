@@ -35,8 +35,8 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected static Map<String,okhttp3.Cache<String,Map<String,Object>>> globalCacheMap = new ConcurrentHashMap<String,Map<String,Map<String,Object>>>();
-
+	protected static Map<String, okhttp3.Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Map<String, Map<String, Object>>>();
+	
 	//--------------------------------------------------------------------------
 	//
 	// Local cache
@@ -47,26 +47,26 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Cachename memoizer
 	 */
 	private String _cacheName = null;
-
+	
 	/**
 	 * Get the internal cachename, required to be in configMap
 	 */
 	private String cacheName() {
 		// Return memorized name
-		if( _cacheName != null ) {
+		if (_cacheName != null) {
 			return _cacheName;
 		}
-
+		
 		// Attempt to load cachename from config
 		_cacheName = configMap().getString("name");
-		if(_cacheName == null || _cacheName.equals("")) {
+		if (_cacheName == null || _cacheName.equals("")) {
 			throw new IllegalAccessException("Missing cache name configuration");
 		}
-
+		
 		// Return config cachename
 		return _cacheName;
 	}
-
+	
 	/**
 	 * Stores the key to value map
 	 **/
@@ -77,21 +77,22 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 */
 	private Cache<String, Map<String, Object>> valueMap() {
 		// Return the value map if already initialized
-		if( _valueMap != null ) {
+		if (_valueMap != null) {
 			return _valueMap;
 		}
-
+		
 		// Lets load from global cache map with cache name
 		// and returns it.
-		_valueMap = globalCacheMap.get( cacheName() );
-		if(_valueMap == null ) {
-			throw new IllegalAccessException("Missing StaticCache, please call systemSetup first : "+cacheName());
+		_valueMap = globalCacheMap.get(cacheName());
+		if (_valueMap == null) {
+			throw new IllegalAccessException("Missing StaticCache, please call systemSetup first : "
+				+ cacheName());
 		}
-
+		
 		// Return the value map to use
 		return _valueMap;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Backend system setup / teardown / maintenance (DStackCommon)
@@ -104,26 +105,24 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void systemSetup() {
 		// Value map already loaded, ignore this step
-		if(_valueMap != null) {
+		if (_valueMap != null) {
 			return;
 		}
-
+		
 		// Lets load from global cache map with cache name if possible
-		_valueMap = globalCacheMap.get( cacheName() );
-		if(_valueMap != null) {
+		_valueMap = globalCacheMap.get(cacheName());
+		if (_valueMap != null) {
 			return;
 		}
-
+		
 		// Alright, time to build a new cache
 		// We are in the era of GB ram computing, 100k cache would
 		// be a good sane default in server environment.
 		//
 		// to consider : auto detect RAM size in KB - and use that?
-		_valueMap = new Cache2kBuilder<String, Map<String,Object>>() {}
-		.name(cacheName)
-		.eternal(true)
-		.entryCapacity( configMap().getInt("capacity", 100 * 1000) )
-		.build();
+		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
+		}.name(cacheName).eternal(true).entryCapacity(configMap().getInt("capacity", 100 * 1000))
+			.build();
 	}
 	
 	/**
@@ -140,8 +139,8 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public void clear() {
-		if( _valueMap != null ) {
-			_valueMap.	removeAll();
+		if (_valueMap != null) {
+			_valueMap.removeAll();
 		}
 	}
 	
