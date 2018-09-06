@@ -761,29 +761,14 @@ public class JSql_Mssql extends JSql_Base {
 		// this is important as some SQL implementation will fallback to default table values, if not properly handled
 		String[] miscColumns //
 	) {
-		
-		// System.out.println("Received uniqueColumns: " + picoded.core.conv.GenericConvert.toString(uniqueColumns));
-		// for(int i = 0; i < uniqueValuesList.size(); ++i){
-		// 	System.out.println("Received uniqueVals: " + picoded.core.conv.GenericConvert.toString(uniqueValuesList.get(i)));
-		// }
-		// System.out.println("Received insertColumns: " + picoded.core.conv.GenericConvert.toString(insertColumns));
-		// for(int i = 0; i < insertValuesList.size(); ++i){
-		// 	System.out.println("Received insertVals: " + picoded.core.conv.GenericConvert.toString(insertValuesList.get(i)));
-		// }
-		// System.out.println("Received defaultColumns: " + picoded.core.conv.GenericConvert.toString(defaultColumns));
-		// for(int i = 0; i < defaultValuesList.size(); ++i){
-		// 	System.out.println("Received defaultVals: " + picoded.core.conv.GenericConvert.toString(defaultValuesList.get(i)));
-		// }
-		
 		/// Checks that unique column and values length are not null
 		if (uniqueColumns == null || uniqueValuesList == null) {
 			throw new JSqlException("Upsert query requires unique columns and values");
 		}
 		
-		if (uniqueValuesList.size() != insertValuesList.size()
-			&& uniqueValuesList.size() != defaultValuesList.size()) {
-			throw new JSqlException("Upsert query requires unique all values list to be of same size");
-		}
+		// if(uniqueValuesList.size() != insertValuesList.size() && uniqueValuesList.size() != defaultValuesList.size()){
+		// 	throw new JSqlException("Upsert query requires unique all values list to be of same size");
+		// }
 		
 		String equalSign = "=";
 		String targetTableAlias = "target";
@@ -805,27 +790,27 @@ public class JSql_Mssql extends JSql_Base {
 		queryBuilder.append("USING ( VALUES ");
 		
 		// dynamically append the rows in the VALUES section
-		int rows = uniqueValuesList.size();
-		for (int i = 0; i < rows; ++i) {
-			queryBuilder.append("(");
-			
-			for (int x = 0; x < uniqueColumns.length; ++x) {
-				queryBuilder.append("?,");
-			}
-			
-			for (int x = 0; x < insertColumns.length; ++x) {
-				queryBuilder.append("?,");
-			}
-			
-			for (int x = 0; x < defaultColumns.length; ++x) {
-				queryBuilder.append("?");
-				if (x < (defaultColumns.length - 1)) {
-					queryBuilder.append(",");
-				}
-			}
-			
-			queryBuilder.append(")");
-			if (i < (rows - 1)) {
+		// first create one (?, ?, ?, ?) to reuse
+		StringBuilder valuesParameter = new StringBuilder();
+		valuesParameter.append("(");
+		for(int x = 0; x < uniqueColumns.length; ++x){
+			valuesParameter.append("?,");
+		}
+		
+		for(int x = 0; x < insertColumns.length; ++x){
+			valuesParameter.append("?,");
+		}
+		
+		for(int x = 0; x < defaultColumns.length; ++x){
+			valuesParameter.append("?,");
+		}
+		valuesParameter.delete(valuesParameter.length() - 1, valuesParameter.length());
+		valuesParameter.append(")");
+		
+		int rows = insertValuesList.size();
+		for(int i = 0; i < rows; ++i){
+			queryBuilder.append(valuesParameter);
+			if(i < (rows-1)){
 				queryBuilder.append(",");
 			}
 		}
@@ -835,27 +820,30 @@ public class JSql_Mssql extends JSql_Base {
 		queryBuilder.append(" AS ");
 		queryBuilder.append(sourceTableAlias);
 		queryBuilder.append("(");
-		for (int x = 0; x < uniqueColumns.length; ++x) {
-			queryBuilder.append(uniqueColumns[x]);
-			queryBuilder.append(",");
+		
+		StringBuilder sourceCols = new StringBuilder();
+		for(int x = 0; x < uniqueColumns.length; ++x){
+			sourceCols.append(uniqueColumns[x]);
+			sourceCols.append(",");
 		}
 		
-		for (int x = 0; x < insertColumns.length; ++x) {
-			queryBuilder.append(insertColumns[x]);
-			queryBuilder.append(",");
+		for(int x = 0; x < insertColumns.length; ++x){
+			sourceCols.append(insertColumns[x]);
+			sourceCols.append(",");
 		}
 		
-		for (int x = 0; x < defaultColumns.length; ++x) {
-			queryBuilder.append(defaultColumns[x]);
-			if (x < (defaultColumns.length - 1)) {
-				queryBuilder.append(",");
-			}
+		for(int x = 0; x < defaultColumns.length; ++x){
+			sourceCols.append(defaultColumns[x]);
+			sourceCols.append(",");
 		}
+		sourceCols.delete(sourceCols.length() - 1, sourceCols.length());
+		
+		queryBuilder.append(sourceCols);
 		queryBuilder.append(")");
 		
 		//ON
 		queryBuilder.append(" ON (");
-		for (int x = 0; x < uniqueColumns.length; ++x) {
+		for(int x = 0; x < uniqueColumns.length; ++x){
 			queryBuilder.append(sourceTableAlias);
 			queryBuilder.append(".");
 			queryBuilder.append(uniqueColumns[x]);
@@ -866,7 +854,7 @@ public class JSql_Mssql extends JSql_Base {
 			queryBuilder.append(".");
 			queryBuilder.append(uniqueColumns[x]);
 			
-			if (x < (uniqueColumns.length - 1)) {
+			if(x < (uniqueColumns.length-1)){
 				queryBuilder.append(" AND ");
 			}
 		}
@@ -874,95 +862,116 @@ public class JSql_Mssql extends JSql_Base {
 		
 		// WHEN MATCHED THEN
 		queryBuilder.append(" WHEN MATCHED THEN UPDATE SET ");
-		for (int x = 0; x < insertColumns.length; ++x) {
-			queryBuilder.append(targetTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(insertColumns[x]);
+		
+		StringBuilder updateCols = new StringBuilder();
+		for(int x = 0; x < insertColumns.length; ++x){
+			updateCols.append(targetTableAlias);
+			updateCols.append(".");
+			updateCols.append(insertColumns[x]);
 			
-			queryBuilder.append("=");
+			updateCols.append("=");
 			
-			queryBuilder.append(sourceTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(insertColumns[x]);
+			updateCols.append(sourceTableAlias);
+			updateCols.append(".");
+			updateCols.append(insertColumns[x]);
 			
-			queryBuilder.append(",");
+			updateCols.append(",");
 		}
-		for (int x = 0; x < defaultColumns.length; ++x) {
-			queryBuilder.append(targetTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(defaultColumns[x]);
+		for(int x = 0; x < defaultColumns.length; ++x){
+			updateCols.append(targetTableAlias);
+			updateCols.append(".");
+			updateCols.append(defaultColumns[x]);
 			
-			queryBuilder.append("=");
+			updateCols.append("=");
 			
-			queryBuilder.append(sourceTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(defaultColumns[x]);
+			updateCols.append(sourceTableAlias);
+			updateCols.append(".");
+			updateCols.append(defaultColumns[x]);
 			
-			if (x < (defaultColumns.length - 1)) {
-				queryBuilder.append(",");
-			}
+			updateCols.append(",");
 		}
+		updateCols.delete(updateCols.length() - 1, updateCols.length());
+		
+		queryBuilder.append(updateCols);
 		
 		// WHEN NOT MATCHED THEN INSERT
 		queryBuilder.append(" WHEN NOT MATCHED THEN INSERT ");
 		queryBuilder.append("(");
-		for (int x = 0; x < uniqueColumns.length; ++x) {
-			queryBuilder.append(uniqueColumns[x]);
-			queryBuilder.append(",");
+		
+		StringBuilder insertCols = new StringBuilder();
+		for(int x = 0; x < uniqueColumns.length; ++x){
+			insertCols.append(uniqueColumns[x]);
+			insertCols.append(",");
 		}
 		
-		for (int x = 0; x < insertColumns.length; ++x) {
-			queryBuilder.append(insertColumns[x]);
-			queryBuilder.append(",");
+		for(int x = 0; x < insertColumns.length; ++x){
+			insertCols.append(insertColumns[x]);
+			insertCols.append(",");
 		}
 		
-		for (int x = 0; x < defaultColumns.length; ++x) {
-			queryBuilder.append(defaultColumns[x]);
-			if (x < (defaultColumns.length - 1)) {
-				queryBuilder.append(",");
-			}
+		for(int x = 0; x < defaultColumns.length; ++x){
+			insertCols.append(defaultColumns[x]);
+			insertCols.append(",");
 		}
+		insertCols.delete(insertCols.length() - 1, insertCols.length());
+		
+		queryBuilder.append(insertCols);
 		queryBuilder.append(")");
 		
 		// VALUES
 		queryBuilder.append(" VALUES ");
 		queryBuilder.append("(");
-		for (int x = 0; x < uniqueColumns.length; ++x) {
-			queryBuilder.append(sourceTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(uniqueColumns[x]);
-			queryBuilder.append(",");
+		
+		StringBuilder valueCols = new StringBuilder();
+		for(int x = 0; x < uniqueColumns.length; ++x){
+			valueCols.append(sourceTableAlias);
+			valueCols.append(".");
+			valueCols.append(uniqueColumns[x]);
+			valueCols.append(",");
 		}
 		
-		for (int x = 0; x < insertColumns.length; ++x) {
-			queryBuilder.append(sourceTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(insertColumns[x]);
-			queryBuilder.append(",");
+		for(int x = 0; x < insertColumns.length; ++x){
+			valueCols.append(sourceTableAlias);
+			valueCols.append(".");
+			valueCols.append(insertColumns[x]);
+			valueCols.append(",");
 		}
 		
-		for (int x = 0; x < defaultColumns.length; ++x) {
-			queryBuilder.append(sourceTableAlias);
-			queryBuilder.append(".");
-			queryBuilder.append(defaultColumns[x]);
-			if (x < (defaultColumns.length - 1)) {
-				queryBuilder.append(",");
-			}
+		for(int x = 0; x < defaultColumns.length; ++x){
+			valueCols.append(sourceTableAlias);
+			valueCols.append(".");
+			valueCols.append(defaultColumns[x]);
+			valueCols.append(",");
 		}
+		valueCols.delete(valueCols.length() - 1, valueCols.length());
+		
+		queryBuilder.append(valueCols);
 		queryBuilder.append(")");
 		
 		// ;
 		queryBuilder.append(statementTerminator);
 		
 		// Append the args
-		for (int i = 0; i < rows; ++i) {
-			queryArgs.addAll(java.util.Arrays.asList(uniqueValuesList.get(i)));
-			queryArgs.addAll(java.util.Arrays.asList(insertValuesList.get(i)));
-			queryArgs.addAll(java.util.Arrays.asList(defaultValuesList.get(i)));
+		for(int i = 0; i < rows; ++i){
+			if(uniqueValuesList != null){
+				queryArgs.addAll(java.util.Arrays.asList(uniqueValuesList.get(i)));
+			}
+			
+			if(insertValuesList != null){
+				queryArgs.addAll(java.util.Arrays.asList(insertValuesList.get(i)));
+			}
+			
+			if(defaultValuesList != null){
+				queryArgs.addAll(java.util.Arrays.asList(defaultValuesList.get(i)));
+			}
 		}
 		
-		JSqlPreparedStatement statement = new JSqlPreparedStatement(queryBuilder.toString(),
-			queryArgs.toArray(), this);
-		return statement.update() >= 1;
+		try{
+			JSqlPreparedStatement statement = new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), this);
+			return statement.update() >= 1;
+		}catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+	}
 	}
 }
