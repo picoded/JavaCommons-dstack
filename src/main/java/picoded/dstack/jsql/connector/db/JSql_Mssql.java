@@ -973,5 +973,4 @@ public class JSql_Mssql extends JSql_Base {
 			throw new RuntimeException(ex);
 		}
 	}
-	}
 }
