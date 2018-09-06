@@ -439,7 +439,6 @@ public class JSql_Base_test {
 		assertEquals("Upsert value check failed", null, r.readRow(0).get("col4"));
 	}
 	
-	// !!!!!!!!FAILED
 	@Test
 	public void upsertStatementWithDefault() {
 		row1to7setup();
