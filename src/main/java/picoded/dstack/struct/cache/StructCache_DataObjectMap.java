@@ -27,6 +27,27 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Constructor
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Constructor, without name constructor (this is required)
+	 */
+	public StructCache_DataObjectMap() {
+		super();
+	}
+
+	/**
+	 * Constructor, with name constructor
+	 */
+	public StructCache_DataObjectMap(String name) {
+		super();
+		configMap().put("name", name);
+	}
+
+	//--------------------------------------------------------------------------
+	//
 	// GLOBAL Static cache
 	//
 	//--------------------------------------------------------------------------
@@ -35,7 +56,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
+	protected volatile static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -126,6 +147,9 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		.eternal(true)//
 		.entryCapacity(capicity)//
 		.build();
+
+		// Add it back to the global cache
+		globalCacheMap.put( cacheName(), _valueMap );
 	}
 	
 	/**
@@ -164,7 +188,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	 * @return  nothing
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
-		_valueMap.remove(oid);
+		valueMap().remove(oid);
 	}
 	
 	/**
@@ -172,7 +196,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	 * Returns null if not exists
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
-		Map<String, Object> storedValue = _valueMap.get(oid);
+		Map<String, Object> storedValue = valueMap().get(oid);
 		if (storedValue == null) {
 			return null;
 		}
@@ -195,7 +219,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		}
 		
 		// Makes a new map if needed
-		Map<String, Object> storedValue = _valueMap.get(oid);
+		Map<String, Object> storedValue = valueMap().get(oid);
 		if (storedValue == null) {
 			storedValue = new HashMap<String, Object>();
 		}
@@ -211,7 +235,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		}
 		
 		// Ensure the value map is stored
-		_valueMap.put(oid, storedValue);
+		valueMap().put(oid, storedValue);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -229,7 +253,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public Set<String> keySet() {
-		return _valueMap.asMap().keySet();
+		return valueMap().asMap().keySet();
 	}
 	
 }
