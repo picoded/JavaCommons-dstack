@@ -90,6 +90,9 @@ dependencies {
 	api "org.cache2k:cache2k-api:${cache2kVersion}"
 	api "org.cache2k:cache2k-core:${cache2kVersion}"
 
+	// Hazelcast 
+	api "com.hazelcast.jet:hazelcast-jet:0.6.1"
+
 	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 	// implementation 'com.google.guava:guava:23.0'
