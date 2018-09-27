@@ -251,10 +251,18 @@ test {
 //
 //----------------------------------------------------------------
 
+// Code beautifier
 task srcBeautify(type:Exec) {
 	workingDir '.'
 	commandLine 'java','-cp','./build-util/java-formatter/java-formatter-with-dependencies.jar','Formatter','./build-util/java-formatter/code-format.opts','./src'
 }
+
+// Forcing srcBeautify on compile step
+compileJava.dependsOn srcBeautify
+
+// Doing compile alias for java
+task src(dependsOn: compileJava) 
+task compile(dependsOn: compileJava) 
 
 //----------------------------------------------------------------
 //
