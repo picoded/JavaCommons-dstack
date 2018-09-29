@@ -37,7 +37,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	public StructCache_DataObjectMap() {
 		super();
 	}
-
+	
 	/**
 	 * Constructor, with name constructor
 	 */
@@ -45,7 +45,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		super();
 		configMap().put("name", name);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// GLOBAL Static cache
@@ -142,14 +142,15 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		//
 		// to consider : auto detect RAM size in KB - and use that?
 		int capicity = configMap().getInt("capacity", 100000);
-		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {} //
+		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
+		} //
 		.name(cacheName())//
-		.eternal(true)//
-		.entryCapacity(capicity)//
-		.build();
-
+			.eternal(true)//
+			.entryCapacity(capicity)//
+			.build();
+		
 		// Add it back to the global cache
-		globalCacheMap.put( cacheName(), _valueMap );
+		globalCacheMap.put(cacheName(), _valueMap);
 	}
 	
 	/**
