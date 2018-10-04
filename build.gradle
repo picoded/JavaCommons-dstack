@@ -91,7 +91,8 @@ dependencies {
 	api "org.cache2k:cache2k-core:${cache2kVersion}"
 
 	// Hazelcast 
-	api "com.hazelcast.jet:hazelcast-jet:0.6.1"
+	api "com.hazelcast:hazelcast:3.10.5"
+	api "com.hazelcast:hazelcast-client:3.10.5"
 
 	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
@@ -214,6 +215,83 @@ artifacts {
 //----------------------------------------------------------------
 
 test {
+	// Exclude performance related test
+	exclude "**/perf/*.java"
+	exclude "**/*_perf*"
+
+	// Include mssql, mysql, and oracle test
+	// only if they are configured respectively
+	if(!project.hasProperty("test_mssql")) {
+		exclude "**/*Mssql*"
+	}
+	if(!project.hasProperty("test_oracle")) {
+		exclude "**/*Oracle*"
+	}
+	if(!project.hasProperty("test_mysql")) {
+		exclude "**/*Mysql*"
+	}
+
+	// Setup test to run on parllel threads = to number of processors by default
+	if (project.hasProperty('maxParallelForks')) {
+		maxParallelForks = project.maxParallelForks as int
+	} else {
+		// As our test tends to be io-blocked rather then cpu
+		// we will run more tests in parallels
+		maxParallelForks = (Runtime.runtime.availableProcessors() * 2) as int
+	}
+	
+	// Set up the number of tests per fork
+	if (project.hasProperty('forkEvery')) {
+		forkEvery = project.forkEvery as int
+	}
+}
+
+// Custom incremental test running
+// (Only run tests directly related to a changed class)
+class TestWatcher extends Test {
+	@TaskAction
+	void executeTests(IncrementalTaskInputs inputs) {
+		// Process list of changed .classes file
+		if (inputs.incremental) {
+			// Include pattern to indicate which test classes should run
+			this.filter.includePatterns = []
+
+			// Get the test folder directories
+			// def outputDir = this.project.sourceSets['test'].output.classesDir.absolutePath;
+
+			// Iterate list of input files
+			inputs.outOfDate { InputFileDetails change ->
+				// Get the candidate file
+				def candidate = change.file.absolutePath
+
+				// Consider only if it ends with .class file
+				if (candidate.endsWith('.class')) {
+					// Get the filename (after processing)
+					def pathSplit = candidate.replace('.class', '').split("/")
+
+					// Strip off the folder path
+					def filename = pathSplit[ pathSplit.size() - 1 ]
+					
+					// Add the filename into the include pattern
+					this.filter.includePatterns += "*"+filename+"*"
+
+					// candidate = candidate
+					// 			.replace('.class', '')
+					// 			.replace(outputDir, '')
+					// 			.substring(1)
+					// 			.replace(File.separator, '.')
+					// this.filter.includePatterns += candidate
+				}
+			}
+		}
+
+		// Execute the respective test
+		super.executeTests()
+	}
+}
+
+// Incremental testing
+task incrementalTest(type: TestWatcher) {
 	// Exclude performance related test
 	exclude "**/perf/*.java"
 	exclude "**/*_perf*"
