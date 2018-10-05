@@ -23,7 +23,7 @@ import org.cache2k.Cache;
  *
  * Built ontop of the Core_DataObjectMap implementation.
  **/
-public class StructCache_DataObjectMap extends Core_DataObjectMap {
+public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -112,6 +112,13 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		
 		// Return the value map to use
 		return _valueMap;
+	}
+	
+	/**
+	 * @return Storage map used for the backend operations of one "DataObjectMap"
+	 */
+	protected Map<String, Map<String, Object>> backendMap() {
+		return valueMap().asMap();
 	}
 	
 	//--------------------------------------------------------------------------
