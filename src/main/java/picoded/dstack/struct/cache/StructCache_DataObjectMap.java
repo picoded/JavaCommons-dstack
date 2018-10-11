@@ -18,10 +18,10 @@ import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 /**
- * Reference implementation of DataObjectMap data structure.
+ * Internal cache implementation of DataObjectMap
  * This is done via a minimal implementation via internal data structures.
  *
- * Built ontop of the Core_DataObjectMap implementation.
+ * Built ontop of the Core_DataObjectMap_struct implementation.
  **/
 public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	
