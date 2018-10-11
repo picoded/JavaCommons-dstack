@@ -16,6 +16,7 @@ import picoded.dstack.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
+import com.hazelcast.map.eviction.LRUEvictionPolicy;
 
 /**
  * Hazelcast implementation of DataObjectMap data structure.
@@ -115,6 +116,9 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
 		); //
 		mConfig.setMaxSizeConfig(maxSize);
+		
+		// Set LRU eviction policy
+		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
 		
 		// Enable query index for specific fields
 		String[] indexArray = configMap().getStringArray("index", "[]");
