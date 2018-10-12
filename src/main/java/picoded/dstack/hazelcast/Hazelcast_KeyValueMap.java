@@ -5,11 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Picoded imports
 import picoded.core.conv.ConvertJSON;
 import picoded.core.common.ObjectToken;
+import picoded.core.struct.MutablePair;
 import picoded.dstack.*;
 import picoded.dstack.core.*;
 
@@ -19,11 +21,11 @@ import com.hazelcast.config.*;
 import com.hazelcast.map.eviction.LRUEvictionPolicy;
 
 /**
- * Hazelcast implementation of DataObjectMap data structure.
+ * Hazelcast implementation of KeyValueMap data structure.
  *
- * Built ontop of the Core_DataObjectMap_struct implementation.
+ * Built ontop of the Core_KeyValueMap implementation.
  **/
-public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
+public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -40,7 +42,7 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @param  hazelcast instance to perform operations on
 	 * @param  name      of data object map to use
 	 */
-	public Hazelcast_DataObjectMap(HazelcastInstance inHazelcast, String name) {
+	public Hazelcast_KeyValueMap(HazelcastInstance inHazelcast, String name) {
 		super();
 		hazelcast = inHazelcast;
 		configMap().put("name", name);
@@ -79,13 +81,13 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	/**
 	 * @return backendmap memoizer
 	 */
-	private Map<String, Map<String, Object>> _backendMap = null;
+	private IMap<String, String> _backendMap = null;
 	
 	/**
 	 * @return Storage map used for the backend operations of one "DataObjectMap"
 	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
 	 */
-	protected Map<String, Map<String, Object>> backendMap() {
+	protected IMap<String, String> backendMap() {
 		if (_backendMap != null) {
 			return _backendMap;
 		}
@@ -121,19 +123,13 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		// Configure max size policy percentage to JVM heap
 		MaxSizeConfig maxSize = new MaxSizeConfig( //
-			configMap.getInt("freeHeapPercentage", 10), //
+			configMap.getInt("freeHeapPercentage", 15), //
 			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
 		); //
 		mConfig.setMaxSizeConfig(maxSize);
 		
 		// Set LRU eviction policy
 		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
-		
-		// Enable query index for specific fields
-		String[] indexArray = configMap().getStringArray("index", "[]");
-		for (String indexName : indexArray) {
-			mConfig.addMapIndexConfig(new MapIndexConfig(indexName, true));
-		}
 		
 		// and apply it to the instance
 		// see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
@@ -148,6 +144,119 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		// Since we do not have a proper map remove command,
 		// the closest equivalent is to "clear"
 		backendMap().clear();
+	}
+	
+	/**
+	 * Removes all data, without tearing down setup
+	 *
+	 * Handles re-entrant lock where applicable
+	 **/
+	@Override
+	public void clear() {
+		backendMap().clear();
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support implementation
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Search using the value, all the relevent key mappings
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key, note that null matches ALL
+	 *
+	 * @return array of keys
+	 **/
+	@Override
+	public Set<String> keySet(String value) {
+		return backendMap().keySet();
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Fundemental set/get value (core)
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * Sets the expire time stamp value, raw without validation
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param expire TIMESTAMP in milliseconds, 0 means NO expire
+	 *
+	 * @return 
+	 **/
+	public void setExpiryRaw(String key, long time) {
+		String val = backendMap().get(key);
+		if (time > 0) {
+			set(key, val, Math.max(time - System.currentTimeMillis(), 1), TimeUnit.MILLISECONDS);
+		} else {
+			set(key, val);
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * Sets the value, with validation
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key
+	 * @param value, null means removal
+	 * @param expire TIMESTAMP, 0 means not timestamp
+	 *
+	 * @return null
+	 **/
+	public String setValueRaw(String key, String value, long expire) {
+		String val = backendMap().get(key);
+		if (time > 0) {
+			set(key, val, Math.max(time - System.currentTimeMillis(), 1), TimeUnit.MILLISECONDS);
+		} else {
+			set(key, val);
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * Handles re-entrant lock where applicable
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return String value, and expiry pair
+	 **/
+	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
+		// Get the entry view
+		EntryView<String, Long> entry = backendMap().getEntryView(key);
+		if (entry == null) {
+			return null;
+		}
+		
+		// Get the value and expire object : milliseconds?
+		Object value = entry.getValue();
+		Long expireObj = entry.getExpirationTime(key);
+		if (expireObj == null) {
+			expireObj = 0L;
+		}
+		
+		// Note: 0 = no timestamp, hence valid value
+		long expiry = expireObj.longValue();
+		if (expiry != 0 && expiry < now) {
+			return null;
+		}
+		
+		// Return the expirary pair
+		return new MutablePair<String, Long>(value, expiry);
 	}
 	
 }
