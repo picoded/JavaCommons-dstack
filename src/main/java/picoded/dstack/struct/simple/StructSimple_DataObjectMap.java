@@ -17,9 +17,9 @@ import picoded.dstack.core.*;
  * Reference implementation of DataObjectMap data structure.
  * This is done via a minimal implementation via internal data structures.
  *
- * Built ontop of the Core_DataObjectMap implementation.
+ * Built ontop of the Core_DataObjectMap_struct implementation.
  **/
-public class StructSimple_DataObjectMap extends Core_DataObjectMap {
+public class StructSimple_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -31,6 +31,13 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Stores the key to value map
 	 **/
 	protected Map<String, Map<String, Object>> valueMap = new ConcurrentHashMap<String, Map<String, Object>>();
+	
+	/**
+	 * @return Storage map used centrally for all operations
+	 */
+	protected Map<String, Map<String, Object>> backendMap() {
+		return valueMap;
+	}
 	
 	/**
 	 * Read write lock
@@ -66,7 +73,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	public void clear() {
 		try {
 			accessLock.writeLock().lock();
-			valueMap.clear();
+			super.clear();
 		} finally {
 			accessLock.writeLock().unlock();
 		}
@@ -84,36 +91,30 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	 * Removes the complete remote data map, for DataObject.
 	 * This is used to nuke an entire object
 	 *
-	 * @param  Object ID to remove
+	 * @param  ObjectID to remove
 	 *
 	 * @return  nothing
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
 		try {
 			accessLock.writeLock().lock();
-			valueMap.remove(oid);
+			super.DataObjectRemoteDataMap_remove(oid);
 		} finally {
 			accessLock.writeLock().unlock();
 		}
-		
 	}
 	
 	/**
 	 * Gets the complete remote data map, for DataObject.
-	 * Returns null if not exists
+	 * 
+	 * @param  ObjectID to get
+	 * 
+	 * @return null if not exists
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
 		try {
 			accessLock.readLock().lock();
-			Map<String, Object> storedValue = valueMap.get(oid);
-			if (storedValue == null) {
-				return null;
-			}
-			Map<String, Object> ret = new HashMap<String, Object>();
-			for (Entry<String, Object> entry : storedValue.entrySet()) {
-				ret.put(entry.getKey(), deepCopy(storedValue.get(entry.getKey())));
-			}
-			return ret;
+			return super.DataObjectRemoteDataMap_get(oid);
 		} finally {
 			accessLock.readLock().unlock();
 		}
@@ -127,30 +128,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 		Set<String> keys) {
 		try {
 			accessLock.writeLock().lock();
-			
-			// Get keys to store, null = all
-			if (keys == null) {
-				keys = fullMap.keySet();
-			}
-			
-			// Makes a new map if needed
-			Map<String, Object> storedValue = valueMap.get(oid);
-			if (storedValue == null) {
-				storedValue = new ConcurrentHashMap<String, Object>();
-			}
-			
-			// Get and store the required values
-			for (String key : keys) {
-				Object val = fullMap.get(key);
-				if (val == null) {
-					storedValue.remove(key);
-				} else {
-					storedValue.put(key, val);
-				}
-			}
-			
-			// Ensure the value map is stored
-			valueMap.put(oid, storedValue);
+			super.DataObjectRemoteDataMap_update(oid, fullMap, keys);
 		} finally {
 			accessLock.writeLock().unlock();
 		}
@@ -173,7 +151,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap {
 	public Set<String> keySet() {
 		try {
 			accessLock.readLock().lock();
-			return valueMap.keySet();
+			return super.keySet();
 		} finally {
 			accessLock.readLock().unlock();
 		}
