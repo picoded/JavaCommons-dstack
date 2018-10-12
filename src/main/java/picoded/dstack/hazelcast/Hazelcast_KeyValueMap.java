@@ -19,6 +19,7 @@ import picoded.dstack.core.*;
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
 import com.hazelcast.map.eviction.LRUEvictionPolicy;
+import com.hazelcast.query.Predicates;
 
 /**
  * Hazelcast implementation of KeyValueMap data structure.
@@ -156,6 +157,14 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 		backendMap().clear();
 	}
 	
+	/**
+	 * Perform maintenance, mainly removing of expired data if applicable
+	 **/
+	@Override
+	public void maintenance() {
+		// does nothing
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// KeySet support implementation
@@ -173,6 +182,9 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	@Override
 	public Set<String> keySet(String value) {
+		if (value != null) {
+			return backendMap().keySet(Predicates.equal("this", value));
+		}
 		return backendMap().keySet();
 	}
 	
@@ -195,10 +207,14 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	public void setExpiryRaw(String key, long time) {
 		String val = backendMap().get(key);
+		if (val == null) {
+			return;
+		}
 		if (time > 0) {
-			set(key, val, Math.max(time - System.currentTimeMillis(), 1), TimeUnit.MILLISECONDS);
+			backendMap().set(key, val, Math.max(time - System.currentTimeMillis(), 1),
+				TimeUnit.MILLISECONDS);
 		} else {
-			set(key, val);
+			backendMap().set(key, val);
 		}
 	}
 	
@@ -215,12 +231,20 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 * @return null
 	 **/
 	public String setValueRaw(String key, String value, long expire) {
-		String val = backendMap().get(key);
-		if (time > 0) {
-			set(key, val, Math.max(time - System.currentTimeMillis(), 1), TimeUnit.MILLISECONDS);
-		} else {
-			set(key, val);
+		// removal
+		if (value == null) {
+			backendMap().remove(key);
+			return null;
 		}
+		
+		// Setup key, value - with expirary?
+		if (expire > 0) {
+			backendMap().set(key, value, Math.max(expire - System.currentTimeMillis(), 1),
+				TimeUnit.MILLISECONDS);
+		} else {
+			backendMap().set(key, value);
+		}
+		return null;
 	}
 	
 	/**
@@ -237,14 +261,14 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
 		// Get the entry view
-		EntryView<String, Long> entry = backendMap().getEntryView(key);
+		EntryView<String, String> entry = backendMap().getEntryView(key);
 		if (entry == null) {
 			return null;
 		}
 		
 		// Get the value and expire object : milliseconds?
-		Object value = entry.getValue();
-		Long expireObj = entry.getExpirationTime(key);
+		String value = entry.getValue();
+		Long expireObj = entry.getExpirationTime();
 		if (expireObj == null) {
 			expireObj = 0L;
 		}
