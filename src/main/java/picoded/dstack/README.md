@@ -53,7 +53,7 @@ Initializing it, starts with a map/json configuration such as the following ...
 	//
 	// sys.DStack.namespace
 	//
-	// Declearation of namespace relation to the providers
+	// Declaration of namespace relation to the providers
 	//
 	"namespace" : [
 		{
