@@ -198,8 +198,8 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	/**
 	 * DataObject parameter name to sync login names into
 	 */
-	public String syncLoginNameList = "LoginNameList";
-	
+	public String syncLoginNameList = "loginNameList";
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Login session settings
