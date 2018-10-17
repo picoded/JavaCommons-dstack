@@ -511,7 +511,7 @@ public class AccountObject extends Core_DataObject {
 	 * @return TRUE if login ID belongs to this account
 	 **/
 	public boolean hasToken(String sessionID, String tokenID) {
-		return hasSession(sessionID) && sessionID.equals(mainTable.sessionTokenMap.get(tokenID));
+		return hasSession(sessionID) && sessionID.equals(mainTable.sessionTokenMap.getValue(tokenID));
 	}
 	
 	/**
