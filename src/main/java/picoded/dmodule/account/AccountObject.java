@@ -386,7 +386,7 @@ public class AccountObject extends Core_DataObject {
 	 * @return TRUE if login ID belongs to this account
 	 **/
 	public boolean hasSession(String sessionID) {
-		return sessionID != null && _oid.equals(mainTable.sessionLinkMap.get(sessionID));
+		return sessionID != null && _oid.equals(mainTable.sessionLinkMap.getValue(sessionID));
 	}
 	
 	/**
