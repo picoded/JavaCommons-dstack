@@ -18,12 +18,33 @@ import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 /**
- * Reference implementation of DataObjectMap data structure.
+ * Internal cache implementation of DataObjectMap
  * This is done via a minimal implementation via internal data structures.
  *
- * Built ontop of the Core_DataObjectMap implementation.
+ * Built ontop of the Core_DataObjectMap_struct implementation.
  **/
-public class StructCache_DataObjectMap extends Core_DataObjectMap {
+public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
+	
+	//--------------------------------------------------------------------------
+	//
+	// Constructor
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Constructor, without name constructor (this is required)
+	 */
+	public StructCache_DataObjectMap() {
+		super();
+	}
+	
+	/**
+	 * Constructor, with name constructor
+	 */
+	public StructCache_DataObjectMap(String name) {
+		super();
+		configMap().put("name", name);
+	}
 	
 	//--------------------------------------------------------------------------
 	//
@@ -35,7 +56,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
+	protected volatile static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -44,12 +65,12 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Cachename memoizer
+	 * @return Cachename memoizer
 	 */
 	private String _cacheName = null;
 	
 	/**
-	 * Get the internal cachename, required to be in configMap
+	 * @return Get the internal cachename, required to be in configMap
 	 */
 	private String cacheName() {
 		// Return memorized name
@@ -68,12 +89,12 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	}
 	
 	/**
-	 * Stores the key to value map
+	 * @return The current cache namespace object
 	 **/
 	protected Cache<String, Map<String, Object>> _valueMap = null;
 	
 	/**
-	 * Get the cachemap from global namespace by name
+	 * @return Get the cachemap from global namespace by name
 	 */
 	private Cache<String, Map<String, Object>> valueMap() {
 		// Return the value map if already initialized
@@ -91,6 +112,14 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		
 		// Return the value map to use
 		return _valueMap;
+	}
+	
+	/**
+	 * @return Storage map used for the backend operations of one "DataObjectMap"
+	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
+	 */
+	protected Map<String, Map<String, Object>> backendMap() {
+		return valueMap().asMap();
 	}
 	
 	//--------------------------------------------------------------------------
@@ -121,11 +150,15 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 		//
 		// to consider : auto detect RAM size in KB - and use that?
 		int capicity = configMap().getInt("capacity", 100000);
-		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {} //
+		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
+		} //
 		.name(cacheName())//
-		.eternal(true)//
-		.entryCapacity(capicity)//
-		.build();
+			.eternal(true)//
+			.entryCapacity(capicity)//
+			.build();
+		
+		// Add it back to the global cache
+		globalCacheMap.put(cacheName(), _valueMap);
 	}
 	
 	/**
@@ -135,101 +168,6 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap {
 	public void systemDestroy() {
 		globalCacheMap.remove(cacheName());
 		_valueMap = null;
-	}
-	
-	/**
-	 * Removes all data, without tearing down setup
-	 **/
-	@Override
-	public void clear() {
-		if (_valueMap != null) {
-			_valueMap.removeAll();
-		}
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// Internal functions, used by DataObject
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the complete remote data map, for DataObject.
-	 * This is used to nuke an entire object
-	 *
-	 * @param  Object ID to remove
-	 *
-	 * @return  nothing
-	 **/
-	public void DataObjectRemoteDataMap_remove(String oid) {
-		_valueMap.remove(oid);
-	}
-	
-	/**
-	 * Gets the complete remote data map, for DataObject.
-	 * Returns null if not exists
-	 **/
-	public Map<String, Object> DataObjectRemoteDataMap_get(String oid) {
-		Map<String, Object> storedValue = _valueMap.get(oid);
-		if (storedValue == null) {
-			return null;
-		}
-		Map<String, Object> ret = new HashMap<String, Object>();
-		for (Entry<String, Object> entry : storedValue.entrySet()) {
-			ret.put(entry.getKey(), deepCopy(storedValue.get(entry.getKey())));
-		}
-		return ret;
-	}
-	
-	/**
-	 * Updates the actual backend storage of DataObject
-	 * either partially (if supported / used), or completely
-	 **/
-	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
-		Set<String> keys) {
-		// Get keys to store, null = all
-		if (keys == null) {
-			keys = fullMap.keySet();
-		}
-		
-		// Makes a new map if needed
-		Map<String, Object> storedValue = _valueMap.get(oid);
-		if (storedValue == null) {
-			storedValue = new HashMap<String, Object>();
-		}
-		
-		// Get and store the required values
-		for (String key : keys) {
-			Object val = fullMap.get(key);
-			if (val == null) {
-				storedValue.remove(key);
-			} else {
-				storedValue.put(key, val);
-			}
-		}
-		
-		// Ensure the value map is stored
-		_valueMap.put(oid, storedValue);
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// KeySet support
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Get and returns all the GUID's, note that due to its
-	 * potential of returning a large data set, production use
-	 * should be avoided.
-	 *
-	 * @return set of keys
-	 **/
-	@Override
-	public Set<String> keySet() {
-		return _valueMap.asMap().keySet();
 	}
 	
 }

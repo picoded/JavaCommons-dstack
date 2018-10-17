@@ -63,18 +63,34 @@ public class StructSimple_FileWorkspaceMap_test {
 	
 	@Test
 	public void createFileWorkspace() {
-		assertNull(testObj.get("nonExistence"));
+		// Get a non existant filepath
+		assertNull(testObj.get("nonExistence.txt"));
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertNotNull(fileWorkspace);
 	}
 	
 	@Test
 	public void workspaceExistence() {
+		// Setup new entry with a record
 		FileWorkspace fileWorkspace = testObj.newEntry();
-		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
-		assertNotNull(testObj.get(fileWorkspace._oid()));
-		assertNull(testObj.get("unknown value"));
+		fileWorkspace.writeByteArray("filepath.txt", "anything".getBytes());
+		
+		// Validate read
+		byte[] readArr = fileWorkspace.readByteArray("filepath.txt");
+		assertNotNull(readArr);
+		assertEquals("anything", new String(readArr));
+		
+		// Get the new entry oid
+		String oid = fileWorkspace._oid();
+		assertNotNull(oid);
+		
+		// Assert it exists
+		assertNotNull(testObj.get(oid));
 	}
+	
+	//
+	// @TODO : Refactor the test cases below to make more sense for file systems
+	//
 	
 	@Test
 	public void checkFileExist() {
@@ -135,5 +151,4 @@ public class StructSimple_FileWorkspaceMap_test {
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));
 	}
-	
 }

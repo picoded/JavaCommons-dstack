@@ -164,6 +164,9 @@ public class ProviderConfig {
 		if (type.equalsIgnoreCase("JSql")) {
 			return new JSqlStack(config);
 		}
+		if (type.equalsIgnoreCase("Hazelcast")) {
+			return new picoded.dstack.hazelcast.HazelcastStack(config);
+		}
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
 	

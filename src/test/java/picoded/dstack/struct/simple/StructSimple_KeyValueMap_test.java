@@ -1,11 +1,7 @@
 package picoded.dstack.struct.simple;
 
 // Target test class
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -76,29 +72,34 @@ public class StructSimple_KeyValueMap_test {
 	
 	@Test
 	public void getExpireTime() throws Exception {
-		long expireTime = System.currentTimeMillis() * 2;
+		long expireTime = System.currentTimeMillis() + 1001000L;
 		testObj.putWithExpiry("yes", "no", expireTime);
-		
 		assertNotNull(testObj.getExpiry("yes"));
-		assertEquals(expireTime, testObj.getExpiry("yes"));
+		
+		// Our testing requirements is for an acuracy range of 2 seconds
+		assertTrue((expireTime - 2000L) <= testObj.getExpiry("yes"));
+		assertTrue((expireTime + 2000L) >= testObj.getExpiry("yes"));
 	}
 	
 	@Test
 	public void setExpireTime() throws Exception {
-		long expireTime = System.currentTimeMillis() * 2;
+		long expireTime = System.currentTimeMillis() + 1001000L;
 		testObj.putWithExpiry("yes", "no", expireTime);
 		
-		long newExpireTime = testObj.getExpiry("yes") * 2;
+		long newExpireTime = testObj.getExpiry("yes") + 5001000L;
 		testObj.setExpiry("yes", newExpireTime);
 		
 		long fetchedExpireTime = testObj.getExpiry("yes");
 		assertNotNull(fetchedExpireTime);
-		assertEquals(fetchedExpireTime, newExpireTime);
+		
+		// Our testing requirements is for an acuracy range of 2 seconds
+		assertTrue(newExpireTime - 2000L <= fetchedExpireTime);
+		assertTrue(newExpireTime + 2000L >= fetchedExpireTime);
 	}
 	
 	@Test
 	public void setLifeSpan() throws Exception {
-		long lifespanTime = 4 * 24 * 60 * 60 * 60 * 1000;
+		long lifespanTime = 4 * 24 * 60 * 60 * 60 * 1000L;
 		testObj.putWithLifespan("yes", "no", lifespanTime);
 		
 		long newLifespanTime = testObj.getExpiry("yes");

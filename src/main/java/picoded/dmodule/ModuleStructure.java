@@ -13,35 +13,35 @@ import picoded.core.struct.template.AbstractSystemSetupInterfaceCollection;
  * This helps provide consistent setup across implementations.
  **/
 public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCollection {
-	
+
 	//----------------------------------------------------------------
 	//
 	//  Constructor setup
 	//
 	//----------------------------------------------------------------
-	
+
 	/**
 	 * Common stack being used
 	 **/
 	protected CommonStack stack = null;
-	
+
 	/**
 	 * The name prefix to use for the module
 	 **/
 	protected String name = null;
-	
+
 	/**
 	 * The internal structure list, sued by setup/destroy/maintenance
 	 **/
 	protected List<CommonStructure> internalStructureList = null;
-	
+
 	/**
 	 * Blank constructor, used for more custom extensions
 	 **/
 	public ModuleStructure() {
 		// Intentionally left blank
 	}
-	
+
 	/**
 	 * Setup a module structure given a stack, and its name
 	 *
@@ -53,31 +53,43 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 		name = inName;
 		internalStructureList = internalStructureList();
 	}
-	
+
 	//----------------------------------------------------------------
 	//
 	//  Internal CommonStructure management
 	//
 	//----------------------------------------------------------------
-	
+
 	/**
-	 * [TO OVERWRITE] : Internal DataStrucutre list, 
+	 * [TO OVERWRITE] : Internal DataStrucutre list,
 	 * to cache and pass forward to "SystemSetupInterface"
 	 **/
-	protected abstract List<CommonStructure> internalStructureList();
-	
+	protected abstract List<CommonStructure> setupInternalStructureList();
+
+	/**
+	 * Memoizer for setupInternalStructureList
+	 * @return
+	 */
+	protected List<CommonStructure> internalStructureList() {
+		if( internalStructureList != null ) {
+			return internalStructureList;
+		}
+		internalStructureList = setupInternalStructureList();
+		return internalStructureList;
+	}
+
 	//----------------------------------------------------------------
 	//
 	//  SystemSetupInterface implementation
 	//
 	//----------------------------------------------------------------
-	
+
 	/**
-	 * SystemSetupInterface collection used by subsequent  
+	 * SystemSetupInterface collection used by subsequent
 	 * subcalls via AbstractSystemSetupInterfaceCollection
 	 **/
 	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {
-		return (Collection<SystemSetupInterface>) (Object) (internalStructureList);
+		return (Collection<SystemSetupInterface>) (Object) (internalStructureList());
 	}
-	
+
 }
