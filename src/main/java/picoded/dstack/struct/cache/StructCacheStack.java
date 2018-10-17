@@ -37,6 +37,7 @@ public class StructCacheStack extends CoreStack {
 		// If datastrucutre initialized, setup name
 		if (ret != null) {
 			ret.configMap().put("name", name);
+			return ret;
 		}
 		
 		// No valid type, return null
