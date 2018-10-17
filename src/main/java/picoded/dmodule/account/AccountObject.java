@@ -443,7 +443,7 @@ public class AccountObject extends Core_DataObject {
 		}
 		
 		// Set the session expirary time : 30 seconds (before tokens)
-		long expireTime = (System.currentTimeMillis()) / 1000L + mainTable.initSessionSetupLifespan;
+		long expireTime = ((System.currentTimeMillis()) / 1000L + mainTable.initSessionSetupLifespan) * 1000L;
 		
 		// Generate a base58 guid for session key
 		String sessionID = GUID.base58();
