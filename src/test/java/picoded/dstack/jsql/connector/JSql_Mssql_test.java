@@ -36,7 +36,7 @@ public class JSql_Mssql_test extends JSql_Base_test {
 		// r.fetchAllRows();
 		// assertEquals("via readRow", 404, ((Number) r.readRow(0).getInt("col[1].pk")).intValue());
 	}
-
+	
 	// Currently fails Q_Q
 	@Test
 	public void upsertStatementWithDefault() {
