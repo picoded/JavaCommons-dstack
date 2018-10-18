@@ -16,26 +16,26 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  * before the servlet request abstraction layer
  **/
 public abstract class AccountTableCore extends AccountTableConfig {
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Constructor setup : Setup the actual tables, with the various names
 	//
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Setup with the given stack and name prefix for data structures
 	 **/
 	public AccountTableCore(CommonStack inStack, String inName) {
 		super(inStack, inName);
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Basic account interaction (without AccountObject)
 	//
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Returns if the name exists
 	 *
@@ -46,7 +46,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	public boolean hasLoginName(String inLoginName) {
 		return accountLoginNameMap.containsKey(inLoginName);
 	}
-	
+
 	/**
 	 * Returns if the account object id exists
 	 *
@@ -57,7 +57,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	public boolean containsKey(Object oid) {
 		return accountDataObjectMap.containsKey(oid);
 	}
-	
+
 	/**
 	 * Gets the account UUID, using the configured name
 	 *
@@ -68,13 +68,13 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	public String loginNameToAccountID(String accountName) {
 		return accountLoginNameMap.getValue(accountName);
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Map compliance (without account object)
 	//
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Returns all the account _oid in the system
 	 *
@@ -83,13 +83,13 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	public Set<String> keySet() {
 		return accountDataObjectMap.keySet();
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Account object getters
 	//
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Gets and return the accounts object using the account ID
 	 *
@@ -108,7 +108,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		// Account object invalid here
 		return null;
 	}
-	
+
 	/**
 	 * Gets the account using the nice name
 	 *
@@ -123,7 +123,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Gets the account using the Session ID
 	 *
@@ -138,7 +138,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Gets the account using the object ID array,
 	 * and returns an account object array
@@ -154,13 +154,13 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		}
 		return mList;
 	}
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Account object "newEntry"
 	//
 	///////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Generates a new account object.
 	 *
@@ -172,7 +172,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		// ret.saveAll(); //ensures the blank object is now in DB
 		return ret;
 	}
-	
+
 	/**
 	 * Generates a new account object with the given nice name
 	 *
@@ -185,7 +185,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		if (hasLoginName(name)) {
 			return null;
 		}
-		
+
 		// Creating account object, setting the name if valid
 		AccountObject ret = newEntry();
 		if (ret.setLoginName(name)) {
@@ -196,11 +196,11 @@ public abstract class AccountTableCore extends AccountTableConfig {
 			// in new account race conditions
 			remove(ret._oid());
 		}
-		
+
 		// Return null on failure
 		return null;
 	}
-	
+
 	/**
 	 * Removes the accountObject using the ID
 	 *
@@ -210,16 +210,16 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	 **/
 	public AccountObject remove(Object inOid) {
 		if (inOid != null) {
-			
+
 			// Alternatively, instead of string use DataObject
 			if (inOid instanceof DataObject) {
 				inOid = ((DataObject) inOid)._oid();
 			}
-			
+
 			// Get oid as a string, and fetch the account object
 			String oid = inOid.toString();
 			// AccountObject ao = this.get(oid);
-			
+
 			// Remove login ID's AKA nice names
 			Set<String> loginIdMapNames = accountLoginNameMap.keySet(oid);
 			if (loginIdMapNames != null) {
@@ -227,52 +227,51 @@ public abstract class AccountTableCore extends AccountTableConfig {
 					accountLoginNameMap.remove(name, oid);
 				}
 			}
-			
+
 			// Remove login authentication details
 			accountAuthMap.remove(oid);
-			
+
 			// Remove account meta information
 			accountDataObjectMap.remove(oid);
-			
+
 			// Remove thorttling information
 			loginThrottlingAttemptMap.remove(oid);
 			loginThrottlingExpiryMap.remove(oid);
-			
+
 			// System.out.println("Account Object: " + oid + " has been successfully removed.");
 			// @TODO : proper info logger
 		}
-		
+
 		return null;
 	}
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Additional functionality add on
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /** Returns the accountDataObjectMap
-	//  *
-	//  * @return accountDataObjectMap
-	//  **/
-	// public DataObjectMap accountDataObjectMap() {
-	// 	return accountDataObjectMap;
-	// }
-	
-	// /** Returns the accountVerificationMap
-	//  *
-	//  * @return list of accountVerification data
-	//  **/
-	// public KeyValueMap accountVerificationMap() {
-	// 	return accountVerificationMap;
-	// }
-	
-	// /** Returns the accountPasswordTokenMap
-	//  *
-	//  * @return list of accountPasswordToken data
-	//  **/
-	// public KeyValueMap accountPasswordTokenMap() {
-	// 	return accountPasswordTokenMap;
-	// }
-	
+
+	 ///////////////////////////////////////////////////////////////////////////
+	 //
+	 // Additional functionality add on
+	 //
+	 ///////////////////////////////////////////////////////////////////////////
+
+	/** Returns the accountDataObjectMap
+	*
+	* @return accountDataObjectMap
+	**/
+	public DataObjectMap accountDataObjectMap() {
+		return accountDataObjectMap;
+	}
+
+	/** Returns the accountVerificationMap
+	*
+	* @return list of accountVerification data
+	**/
+	public KeyValueMap accountVerificationMap() {
+		return accountVerificationMap;
+	}
+
+	/** Returns the accountPasswordTokenMap
+	*
+	* @return list of accountPasswordToken data
+	**/
+	public KeyValueMap accountPasswordTokenMap() {
+		return accountPasswordTokenMap;
+	}
 }
