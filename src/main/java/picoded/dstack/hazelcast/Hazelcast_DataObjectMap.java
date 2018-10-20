@@ -213,23 +213,23 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	//  * Converts a conv.Query into a full SQL string
 	//  **/
 	// protected String queryStringify(Query queryClause) {
-		
+	
 	// 	// Converts into SQL string with ? value clause, and its arguments value
 	// 	String sqlString = queryClause.toSqlString();
 	// 	Object[] sqlArgs = queryClause.queryArgumentsArray();
-		
+	
 	// 	// Fix up sql string, to be hazelcast compatible instead
 	// 	sqlString = sqlString.replaceAll("\"(.*)\" (.*) \\?", "this[\'$1\'] $2 ?");
-		
+	
 	// 	// if (sqlString != null) {
 	// 	// 	throw new RuntimeException(sqlString);
 	// 	// }
-		
+	
 	// 	// Iterate each sql argument
 	// 	for (int i = 0; i < sqlArgs.length; ++i) {
 	// 		// sql argument
 	// 		Object arg = sqlArgs[i];
-			
+	
 	// 		// Support ONLY either null, string, or number types as of now
 	// 		if (arg == null) {
 	// 			sqlString = sqlString.replaceFirst("\\?", "null");
@@ -243,7 +243,7 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	// 				+ arg.getClass().getName());
 	// 		}
 	// 	}
-		
+	
 	// 	// The processed SQL string
 	// 	return sqlString;
 	// }
@@ -263,7 +263,7 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	// public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 	// 	// The return list of DataObjects
 	// 	List<DataObject> retList = null;
-		
+	
 	// 	// Setup the query, if needed
 	// 	if (queryClause == null) {
 	// 		// Null gets all
@@ -271,28 +271,28 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	// 	} else {
 	// 		// Converts query to sqlPredicate query
 	// 		SqlPredicate sqlQuery = new SqlPredicate(queryStringify(queryClause));
-			
+	
 	// 		// Get the list of _oid that passes the query
 	// 		Set<String> idSet = backendIMap().keySet(sqlQuery);
 	// 		String[] idArr = idSet.toArray(new String[0]);
-			
+	
 	// 		// DataObject[] from idArr
 	// 		DataObject[] doArr = getArrayFromID(idArr, true);
-			
+	
 	// 		// Converts to a list
 	// 		retList = new ArrayList(Arrays.asList(doArr));
 	// 	}
-		
+	
 	// 	// Sort, offset, convert to array, and return
 	// 	retList = sortAndOffsetList(retList, orderByStr, offset, limit);
-		
+	
 	// 	// Prepare the actual return string array
 	// 	int retLength = retList.size();
 	// 	String[] ret = new String[retLength];
 	// 	for (int a = 0; a < retLength; ++a) {
 	// 		ret[a] = retList.get(a)._oid();
 	// 	}
-		
+	
 	// 	// Returns sorted array of strings
 	// 	return ret;
 	// }
