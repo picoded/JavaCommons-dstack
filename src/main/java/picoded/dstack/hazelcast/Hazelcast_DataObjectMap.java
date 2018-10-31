@@ -154,20 +154,33 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 				) //
 			); //
 		
-		// Configure max size policy percentage to JVM heap
-		MaxSizeConfig maxSize = new MaxSizeConfig( //
-			configMap.getInt("freeHeapPercentage", 10), //
-			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
-		); //
-		mConfig.setMaxSizeConfig(maxSize);
+		//---------------------------------------------------------------
+		// @TODO : Add in LRU support with a config flag
+		//
+		// // Configure max size policy percentage to JVM heap
+		// MaxSizeConfig maxSize = new MaxSizeConfig( //
+		// 	configMap.getInt("freeHeapPercentage", 10), //
+		// 	MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
+		// ); //
+		// mConfig.setMaxSizeConfig(maxSize);
+		//
+		// // Set LRU eviction policy
+		// mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
+		//---------------------------------------------------------------
 		
-		// Set LRU eviction policy
-		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
+		// Add in the default _oid
+		mConfig.addMapIndexConfig(new MapIndexConfig("self[_oid]", true));
 		
 		// Enable query index for specific fields
 		String[] indexArray = configMap().getStringArray("index", "[]");
 		for (String indexName : indexArray) {
-			mConfig.addMapIndexConfig(new MapIndexConfig(indexName, true));
+			// Skip _oid index, as its always defined
+			if (indexName.equals("_oid")) {
+				continue;
+			}
+			// Various collumn specific indexes
+			mConfig.addMapIndexConfig(new MapIndexConfig("self[" + StringEscape.encodeURI(indexName)
+				+ "]", true));
 		}
 		
 		// Setup value extractor for `self` attribute
