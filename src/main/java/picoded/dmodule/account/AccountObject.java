@@ -386,7 +386,7 @@ public class AccountObject extends Core_DataObject {
 	 * @return TRUE if login ID belongs to this account
 	 **/
 	public boolean hasSession(String sessionID) {
-		return sessionID != null && _oid.equals(mainTable.sessionLinkMap.get(sessionID));
+		return sessionID != null && _oid.equals(mainTable.sessionLinkMap.getValue(sessionID));
 	}
 	
 	/**
@@ -443,7 +443,7 @@ public class AccountObject extends Core_DataObject {
 		}
 		
 		// Set the session expirary time : 30 seconds (before tokens)
-		long expireTime = (System.currentTimeMillis()) / 1000L + mainTable.initSessionSetupLifespan;
+		long expireTime = ((System.currentTimeMillis()) / 1000L + mainTable.initSessionSetupLifespan) * 1000L;
 		
 		// Generate a base58 guid for session key
 		String sessionID = GUID.base58();
@@ -511,7 +511,7 @@ public class AccountObject extends Core_DataObject {
 	 * @return TRUE if login ID belongs to this account
 	 **/
 	public boolean hasToken(String sessionID, String tokenID) {
-		return hasSession(sessionID) && sessionID.equals(mainTable.sessionTokenMap.get(tokenID));
+		return hasSession(sessionID) && sessionID.equals(mainTable.sessionTokenMap.getValue(tokenID));
 	}
 	
 	/**

@@ -608,7 +608,8 @@ public class JSql_Base_test {
 	@Test
 	public void genericSqlParserTest() {
 		String s = jsqlObj.genericSqlParser("SELECT * FROM " + testTableName + " WHERE COL1 = ?");
-		assertEquals("SELECT * FROM " + testTableName + " WHERE COL1 = ?", s);
+		assertEquals("SELECT * FROM " + testTableName + " WHERE COL1=?",
+			s.replaceAll("COL1 = \\?", "COL1=?"));
 	}
 	
 	@SuppressWarnings("deprecation")

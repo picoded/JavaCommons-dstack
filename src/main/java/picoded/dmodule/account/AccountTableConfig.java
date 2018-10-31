@@ -5,8 +5,6 @@ import java.util.function.BiFunction;
 
 import picoded.dstack.*;
 import picoded.dmodule.*;
-import picoded.core.conv.*;
-import picoded.core.struct.*;
 import picoded.core.struct.template.UnsupportedDefaultMap;
 
 /**
@@ -36,14 +34,14 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 * login ID are unique, and are usually usernames or emails
 	 * AccountID's are not unique, as a single AccountID can have multiple "names"
 	 **/
-	protected KeyValueMap accountLoginNameMap = null; //to delete from
+	protected KeyValueMap accountLoginNameMap; //to delete from
 	
 	/**
 	 * Stores the account authentication hash, used for password based authentication
 	 *
 	 * KeyValueMap<AccountID,passwordHash>
 	 **/
-	protected KeyValueMap accountAuthMap = null; //to delete from
+	protected KeyValueMap accountAuthMap; //to delete from
 	
 	//
 	// Login session
@@ -55,14 +53,14 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 *
 	 * KeyValueMap<sessionID, accountID>
 	 **/
-	protected KeyValueMap sessionLinkMap = null;
+	protected KeyValueMap sessionLinkMap;
 	
 	/**
 	 * Stores the account token key, to session key
 	 *
 	 * KeyValueMap<tokenID, sessionID>
 	 **/
-	protected KeyValueMap sessionTokenMap = null;
+	protected KeyValueMap sessionTokenMap;
 	
 	/**
 	 * Stores the next token ID to reissue
@@ -70,14 +68,14 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 *
 	 * KeyValueMap<tokenID, next-tokenID>
 	 **/
-	protected KeyValueMap sessionNextTokenMap = null;
+	protected KeyValueMap sessionNextTokenMap;
 	
 	/**
 	 * Stores the account meta information
 	 *
 	 * KeyValueMap<sessionID, info-about-access>
 	 **/
-	protected KeyValueMap sessionInfoMap = null;
+	protected KeyValueMap sessionInfoMap;
 	
 	//
 	// Account meta information
@@ -93,7 +91,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 *
 	 * DataObjectMap<AccountOID, DataObject>
 	 **/
-	protected DataObjectMap accountDataObjectMap = null;
+	protected DataObjectMap accountDataObjectMap;
 	
 	//
 	// Login throttling information
@@ -105,29 +103,29 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 *
 	 * KeyLongMap<UserOID, attempts>
 	 **/
-	protected KeyLongMap loginThrottlingAttemptMap = null;
+	protected KeyLongMap loginThrottlingAttemptMap;
 	
 	/**
 	 * Handles the Login Throttling Attempt Key (AccountID) Value (Timeout) field mapping
 	 *
 	 * KeyLongMap<UserOID, expireTimestamp>
 	 **/
-	protected KeyLongMap loginThrottlingExpiryMap = null;
+	protected KeyLongMap loginThrottlingExpiryMap;
 	
 	// //
 	// // Account Related Token Maps
 	// //
 	// //-----------------------------------------
 	
-	// /**
-	//  * Stores the verification token against the account ID together with the expiry time
-	//  **/
-	// protected KeyValueMap accountVerificationMap = null;
+	/**
+	 * Stores the verification token against the account ID together with the expiry time
+	 **/
+	protected KeyValueMap accountVerificationMap;
 	
-	// /**
-	//  * Stores the verification token for account password resets with expiry time
-	//  **/
-	// protected KeyValueMap accountPasswordTokenMap = null;
+	/**
+	 * Stores the verification token for account password resets with expiry time
+	 **/
+	protected KeyValueMap accountPasswordTokenMap;
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -140,13 +138,12 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 **/
 	public AccountTableConfig(CommonStack inStack, String inName) {
 		super(inStack, inName);
-		internalStructureList = internalStructureList();
 	}
 	
 	/**
 	 * Setup data structure from stack using default naming
 	 */
-	protected void setupStructureList() {
+	protected void setupDStackMaps() {
 		// Login auth information
 		accountLoginNameMap = stack.keyValueMap(name + "_ID");
 		accountAuthMap = stack.keyValueMap(name + "_IH");
@@ -165,27 +162,29 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		loginThrottlingExpiryMap = stack.keyLongMap(name + "_TE");
 		
 		// // Account Verification information
-		// accountVerificationMap = stack.keyValueMap(name + "_AV");
+		accountVerificationMap = stack.keyValueMap(name + "_AV");
 		// // Account Password Token information
-		// accountPasswordTokenMap = stack.keyValueMap(name + "_AR");
+		accountPasswordTokenMap = stack.keyValueMap(name + "_AR");
 		
 		// Side note: For new table, edit here and add into the return List
 		// @TODO - Consider adding support for temporary tables typehints
 	}
 	
 	/**
-	 * Initialize the various internal data structures, 
+	 * Initialize the various internal data structures,
 	 * used by account from the stack.
 	 **/
-	protected List<CommonStructure> internalStructureList() {
+	protected List<CommonStructure> setupInternalStructureList() {
+		
+		setupDStackMaps();
+		
 		// Return it as a list
 		return Arrays.asList( //
 			accountLoginNameMap, accountAuthMap, //
 			sessionLinkMap, sessionTokenMap, sessionNextTokenMap, sessionInfoMap, //
 			accountDataObjectMap, //
-			loginThrottlingAttemptMap, loginThrottlingExpiryMap//, //
-			// accountVerificationMap, //
-			// accountPasswordTokenMap //
+			loginThrottlingAttemptMap, loginThrottlingExpiryMap, //
+			accountVerificationMap, accountPasswordTokenMap //
 			);
 	}
 	
@@ -198,7 +197,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	/**
 	 * DataObject parameter name to sync login names into
 	 */
-	public String syncLoginNameList = "LoginNameList";
+	public String syncLoginNameList = "loginNameList";
 	
 	///////////////////////////////////////////////////////////////////////////
 	//

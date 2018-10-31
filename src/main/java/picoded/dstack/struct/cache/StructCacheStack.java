@@ -31,10 +31,16 @@ public class StructCacheStack extends CoreStack {
 		// Initialize for the respective type
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			ret = new StructCache_DataObjectMap(name);
+			ret = new StructCache_DataObjectMap();
+		}
+		
+		// If datastrucutre initialized, setup name
+		if (ret != null) {
+			ret.configMap().put("name", name);
+			return ret;
 		}
 		
 		// No valid type, return null
-		return ret;
+		return null;
 	}
 }
