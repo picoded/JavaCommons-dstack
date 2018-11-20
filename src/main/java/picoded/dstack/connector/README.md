@@ -20,11 +20,11 @@ XConnector classes, are requried to have the following public static methods. Wh
 If null argument was provided, the following MUST be performed `throw new IllegalArgumentException(ExceptionMessage.unexpectedNullArgument);`
 
 If the object V class/interface is not an external library implmentation, but a JavaCommons implmentation / wrapper (such as JSQL).
-Its returning class/interface V, must be in the `dstack.connector` namespace. Textual representation of V should (but not required to) be identical to X.
+Its returning class/interface V, must be in its own namespace `dstack.connector.x.V` namespace. Textual representation of V should (but not required to) be identical to X.
 
-XConnector classes may implement internal classes utility files, under its own namespace. For example JSql, would implement utility classes under `dstack.connector.jsql.*`
+XConnector classes may implement additional internal classes utility files, under its own namespace. For example JSql, would implement utility classes under `dstack.connector.jsql.*`
 
-Connection object users, are required to ensure closeConnection is called at the end of its usage lifecycle
+Connection object users, are required to ensure `closeConnection` is called at the end of its usage lifecycle
 
 ## HazelcastConnector - config
 

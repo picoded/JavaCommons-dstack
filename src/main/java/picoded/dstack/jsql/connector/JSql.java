@@ -1,16 +1,9 @@
 package picoded.dstack.jsql.connector;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.List;
 import java.util.Properties;
@@ -29,14 +22,6 @@ import picoded.dstack.jsql.connector.JSqlType;
  * Not that most programmers actually know how to properly do so.
  *
  * SECURITY NOTE: care should ALWAYS be taken to prevent SQL injection when dealing with query strings.
- *
- * Currently Supported SQL Databases
- * + MySQL
- * + Oracle
- * + MS-SQL
- * + Sqlite
- *
- * Database intreface base class.
  **/
 public abstract class JSql {
 	

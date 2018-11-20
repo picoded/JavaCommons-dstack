@@ -80,6 +80,9 @@ dependencies {
 	// This dependencies is exported to consumers, that is to say found on their compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 
+	// Connection pooling
+	api "com.zaxxer:HikariCP:3.1.0" // connection pooling
+
 	// OJDBC driver connection
 	api files("./lib/jsql/ojdbc6.jar")    // for oracle
 	api "org.xerial:sqlite-jdbc:3.21.0.1" // for sqlite
