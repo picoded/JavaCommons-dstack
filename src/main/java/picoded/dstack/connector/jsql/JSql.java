@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import picoded.core.struct.GenericConvertMap;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.dstack.connector.jsql.statement.*;
 
 /**
  * JSql provides a wrapper around several common SQL implementations. Via an (almost) single set of syntax.
@@ -23,7 +23,7 @@ import picoded.dstack.jsql.connector.JSqlType;
  *
  * SECURITY NOTE: care should ALWAYS be taken to prevent SQL injection when dealing with query strings.
  **/
-public abstract class JSql {
+public abstract class JSql implements StatementBuilderBaseInterface {
 	
 	//-------------------------------------------------------------------------
 	//
@@ -147,16 +147,6 @@ public abstract class JSql {
 	}
 	
 	// //-------------------------------------------------------------------------
-	// //
-	// // Database connection handling
-	// //
-	// //-------------------------------------------------------------------------
-	
-	// public Connection getConn() {
-	// 	return sqlConn;
-	// }
-	
-	// //-------------------------------------------------------------------------
 	
 	// // Database connection settings variables
 	// //-------------------------------------------------------------------------
@@ -232,6 +222,20 @@ public abstract class JSql {
 	// // public void recreate(boolean force) {
 	// // 	throw new UnsupportedOperationException(JSqlException.invalidDatabaseImplementationException);
 	// // }
+	
+	//-------------------------------------------------------------------------
+	//
+	// Database connection pool handling
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Gets and return the connection from the data source (connection pool)
+	 * Connection MUST be "closed" after processing of results
+	 * 
+	 * @return connection from the pool
+	 */
+	abstract protected Connection getConn();
 	
 	// //-------------------------------------------------------------------------
 	// //

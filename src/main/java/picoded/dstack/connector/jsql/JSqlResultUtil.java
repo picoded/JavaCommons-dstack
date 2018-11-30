@@ -149,4 +149,16 @@ class JSqlResultUtil {
 		return dataObj;
 	}
 	
+	/**
+	 * Merge the 2 arrays together
+	 * Used to join arguments together
+	 *
+	 * @param  Array of arguments 1
+	 * @param  Array of arguments 2
+	 *
+	 * @return  Resulting array of arguments 1 & 2
+	 **/
+	static protected Object[] joinArguments(Object[] arr1, Object[] arr2) {
+		return org.apache.commons.lang3.ArrayUtils.addAll(arr1, arr2);
+	}
 }
