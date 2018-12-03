@@ -15,12 +15,12 @@ import picoded.dstack.connector.jsql.*;
 /**
  * CREATE TABLE statement builder
  **/
-public interface StatementBuilderTableNadIndex extends StatementBuilderBaseInterface {
+public interface StatementBuilderTableAndIndex extends StatementBuilderBaseInterface {
 	
 	/**
 	 * Internal self used logger
 	 **/
-	protected static final Logger LOGGER = Logger.getLogger(JSql.class.getName());
+	public static final Logger LOGGER = Logger.getLogger(JSql.class.getName());
 	
 	//-------------------------------------------------------------------------
 	//
@@ -256,7 +256,7 @@ public interface StatementBuilderTableNadIndex extends StatementBuilderBaseInter
 		queryBuilder.append(")");
 		
 		// Create the query set
-		return new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), this);
+		return new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), (JSql) this);
 	}
 	
 }
