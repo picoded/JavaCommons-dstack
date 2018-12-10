@@ -83,6 +83,19 @@ public class Core_FileWorkspace implements FileWorkspace {
 		return _oid;
 	}
 	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void setupWorkspace() {
+		main.setupWorkspace(_oid());
+	}
+	
 	// File exists checks
 	//--------------------------------------------------------------------------
 	

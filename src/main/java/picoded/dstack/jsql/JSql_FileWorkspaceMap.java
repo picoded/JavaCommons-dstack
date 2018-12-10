@@ -4,6 +4,8 @@ import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.jsql.connector.JSql;
 import picoded.dstack.jsql.connector.JSqlResult;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	//--------------------------------------------------------------------------
@@ -159,6 +161,19 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
 		sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid, filepath });
+	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		// do nothing for jsql
 	}
 	
 	//--------------------------------------------------------------------------

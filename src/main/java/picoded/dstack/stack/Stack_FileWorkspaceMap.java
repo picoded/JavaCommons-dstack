@@ -35,7 +35,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	
 	/**
 	 * Setup the data object with the respective data, and query layers
-	 * 
+	 *
 	 * @param  inDataLayers data layers to get / set data from, 0 index first
 	 * @param  inQueryLayer query layer for queries. Defaults to last data layer
 	 */
@@ -55,8 +55,8 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	
 	/**
 	 * Setup the data object with the respective data, and query layers
-	 * 
-	 * @param  inDataLayers data layers to get / set data from, 0 index first; 
+	 *
+	 * @param  inDataLayers data layers to get / set data from, 0 index first;
 	 *         query layer for queries. Defaults to last data layer
 	 */
 	public Stack_FileWorkspaceMap(Core_FileWorkspaceMap[] inDataLayers) {
@@ -182,6 +182,21 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		}
 	}
 	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_setupWorkspace(oid);
+		}
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Copy pasta code, I wished could have worked in an interface
@@ -190,7 +205,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	
 	/**
 	 * Removes all data, without tearing down setup
-	 * 
+	 *
 	 * Sadly, due to a how Map interface prevents "default" implementation
 	 * of clear from being valid, this seems to be a needed copy-pasta code
 	 **/

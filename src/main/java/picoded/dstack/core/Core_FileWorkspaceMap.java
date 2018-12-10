@@ -1,6 +1,7 @@
 package picoded.dstack.core;
 
 // Java imports
+import java.io.File;
 import java.util.Collections;
 
 // Picoded imports
@@ -14,6 +15,10 @@ import picoded.dstack.*;
  **/
 abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace>
 	implements FileWorkspaceMap {
+	
+	public String getFilePath(String oid) {
+		return "";
+	}
 	
 	//--------------------------------------------------------------------------
 	//
@@ -37,6 +42,19 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			backend_workspaceRemove(key.toString());
 		}
 		return null;
+	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void setupWorkspace(String oid) {
+		backend_setupWorkspace(oid);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -76,9 +94,9 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Get and return if the file exists, due to the potentially 
-	 * large size nature of files stored in FileWorkspace. 
-	 * 
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
 	 * Its highly recommended to optimize this function,
 	 * instead of leaving it as default
 	 *
@@ -123,6 +141,16 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param filepath the file to be removed
 	 */
 	abstract public void backend_removeFile(final String oid, final String filepath);
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	abstract public void backend_setupWorkspace(String oid);
 	
 	//--------------------------------------------------------------------------
 	//
