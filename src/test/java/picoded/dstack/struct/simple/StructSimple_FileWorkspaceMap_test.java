@@ -123,7 +123,6 @@ public class StructSimple_FileWorkspaceMap_test {
 	public void readNonExistenceFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertNull(fileWorkspace.readByteArray("unknown path"));
-		assertNull(fileWorkspace.readByteArray(null));
 	}
 	
 	@Test
