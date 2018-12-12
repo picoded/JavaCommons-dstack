@@ -206,7 +206,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 
 	/**
-	 * Write into a file, if does not exist create one
+	 * Write into a file, if does not exist createUser one
 	 * @param oid
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with

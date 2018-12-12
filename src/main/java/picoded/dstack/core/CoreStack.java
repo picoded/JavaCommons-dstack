@@ -12,9 +12,9 @@ import picoded.dstack.*;
 
 /**
  * [Internal use only]
- * 
+ *
  * Common configuration based stack provider
- * 
+ *
  * @return initialized data structure if type is supported
  **/
 public abstract class CoreStack implements CommonStack {
@@ -80,11 +80,11 @@ public abstract class CoreStack implements CommonStack {
 	
 	/**
 	 * Load and validate from the cache a requested data structure, or initialize it and cache it
-	 * 
+	 *
 	 * @param  name  name of the datastructure to initialize
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
 	 * @param  cObj  class type to validate for (optional)
-	 * 
+	 *
 	 * @return  the cached data structure
 	 */
 	public Core_DataStructure cacheDataStructure(String name, String type, Class cObj) {
@@ -121,7 +121,7 @@ public abstract class CoreStack implements CommonStack {
 	
 	/**
 	 * Initilize and return the requested data structure with the given name or type if its supported
-	 * 
+	 *
 	 * @param  name  name of the datastructure to initialize
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
 	 */
@@ -134,7 +134,7 @@ public abstract class CoreStack implements CommonStack {
 	//-------------------------------------------------------------
 	
 	/**
-	 * SystemSetupInterface collection used by subsequent  
+	 * SystemSetupInterface collection used by subsequent
 	 * subcalls via AbstractSystemSetupInterfaceCollection
 	 **/
 	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {

@@ -10,28 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DStack extends CoreStack {
-
+	
 	// List of provider backends - to fetch / initialize from
 	protected ProviderConfig providerConfig;
-
+	
 	// Namespace listing
-	protected GenericConvertList<Object> namestspace;
-
+	protected GenericConvertList<Object> namespace;
+	
 	/**
 	 * Constructor with configuration map
 	 */
 	public DStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
-
+		
 		GenericConvertList<Object> providerConfigList = inConfig.fetchGenericConvertList("provider");
 		if (providerConfigList == null) {
 			throw new IllegalArgumentException("Missing `provider` config list");
 		}
-
+		
 		providerConfig = new ProviderConfig(providerConfigList);
 		namespace = inConfig.fetchGenericConvertList("namespace");
 	}
-
+	
 	/**
 	 * Initilize and return the requested data structure with the given name or type if its supported
 	 *
@@ -58,11 +58,11 @@ public class DStack extends CoreStack {
 			return new Stack_FileWorkspaceMap(fetchCommonStructureImplementation(name,
 				"FileWorkspaceMap", new Core_FileWorkspaceMap[] {}));
 		}
-
+		
 		// No valid type supported
 		return null;
 	}
-
+	
 	/**
 	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
 	 *
@@ -79,16 +79,16 @@ public class DStack extends CoreStack {
 		if (namespaceConfig == null) {
 			throw new RuntimeException("No `namespace` configuration found for " + name);
 		}
-
+		
 		// Get the provider list
 		List<Object> providerList = namespaceConfig.getObjectList("providers");
 		if (providerList == null) {
 			throw new RuntimeException("No `providers` found in namespaceConfig for " + name);
 		}
-
+		
 		// return list to use, time to fill it up with objects from the providers
 		List<V> retList = new ArrayList<>();
-
+		
 		// Iterate the provider
 		for (Object provider : providerList) {
 			// Get the relevent provider CoreStack
@@ -97,7 +97,7 @@ public class DStack extends CoreStack {
 			if (providerStack == null) {
 				continue;
 			}
-
+			
 			// Get the relevent data structure
 			// Skip if null
 			Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(name, type,
@@ -105,24 +105,24 @@ public class DStack extends CoreStack {
 			if (providerDataStructure == null) {
 				continue;
 			}
-
+			
 			// Add to response
 			retList.add((V) providerDataStructure);
 		}
-
+		
 		// Throw an exception if empty
 		if (retList.isEmpty()) {
 			throw new RuntimeException("No `providers` returned a valid DataStructure");
 		}
-
+		
 		// returning as array
 		return retList.toArray(refrenceType);
 	}
-
+	
 	//
 	// Helper Functions
 	//
-
+	
 	/**
 	 * This function will find the first namespaceConfig that matches the requested name
 	 *
@@ -141,7 +141,7 @@ public class DStack extends CoreStack {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Attempts to match the name with the regex pattern given in the param
 	 *
@@ -153,5 +153,5 @@ public class DStack extends CoreStack {
 	protected boolean regexNameMatcher(String nameToMatch, String pattern) {
 		return nameToMatch.matches(pattern);
 	}
-
+	
 }
