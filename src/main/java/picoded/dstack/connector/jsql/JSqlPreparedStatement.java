@@ -56,21 +56,6 @@ public class JSqlPreparedStatement {
 	}
 	
 	/**
-	 * Executes the argumented SQL query, and returns the result object *without*
-	 * fetching the result data from the database.
-	 *
-	 * Custom SQL specific parsing occurs here
-	 *
-	 * @Warning, this function is not to be used. Unless optimizataion is heavily needed. As careless usage may
-	 * result into a memory leak.
-	 *
-	 * **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
-	 **/
-	public JSqlResult noFetchQuery() {
-		return jsqlObj.noFetchQuery(sqlQuery, sqlArgs);
-	}
-	
-	/**
 	 * Executes the argumented SQL query, and immediately fetches the result from
 	 * the database into the result set.
 	 *
