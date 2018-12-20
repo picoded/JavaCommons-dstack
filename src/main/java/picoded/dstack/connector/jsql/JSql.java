@@ -106,7 +106,7 @@ public abstract class JSql {
 		if (type == null || type.isEmpty()) {
 			throw new IllegalArgumentException("Missing DB type parameter in DB config object");
 		}
-		
+		/*
 		// SQLite handling, only requires path (if given)
 		if (type.equalsIgnoreCase("sqlite")) {
 			if (path == null || path.isEmpty()) {
@@ -139,7 +139,7 @@ public abstract class JSql {
 		if (type.equalsIgnoreCase("mssql")) {
 			return JSql.mssql(path, name, user, pass);
 		}
-		
+		 */
 		// Invalid / Unsupported db type
 		throw new IllegalArgumentException("Unsupported DB type in DB config object : " + type);
 	}
@@ -186,37 +186,37 @@ public abstract class JSql {
 		return this.sqlType;
 	}
 	
-	/**
-	 * Store the database connection parameters for recreating the connection
-	 *
-	 * setup the connection properties, this is normally set by the constructor
-	 * and is reused via the recreate command.
-	 *
-	 * @param  Database location
-	 * @param  Database name
-	 * @param  Database username
-	 * @param  Database password
-	 * @param  Additional connection properties
-	 **/
-	protected void setConnectionProperties(String dbUrl, String dbName, String dbUser,
-		String dbPass, Properties connProps) {
-		connectionProps = new HashMap<String, Object>();
-		if (dbUrl != null) {
-			connectionProps.put("dbUrl", dbUrl);
-		}
-		if (dbName != null) {
-			connectionProps.put("dbName", dbName);
-		}
-		if (dbUser != null) {
-			connectionProps.put("dbUser", dbUser);
-		}
-		if (dbPass != null) {
-			connectionProps.put("dbPass", dbPass);
-		}
-		if (connProps != null) {
-			connectionProps.put("connectionProps", connProps);
-		}
-	}
+	// /**
+	//  * Store the database connection parameters for recreating the connection
+	//  *
+	//  * setup the connection properties, this is normally set by the constructor
+	//  * and is reused via the recreate command.
+	//  *
+	//  * @param  Database location
+	//  * @param  Database name
+	//  * @param  Database username
+	//  * @param  Database password
+	//  * @param  Additional connection properties
+	//  **/
+	// protected void setConnectionProperties(String dbUrl, String dbName, String dbUser,
+	// 	String dbPass, Properties connProps) {
+	// 	connectionProps = new HashMap<String, Object>();
+	// 	if (dbUrl != null) {
+	// 		connectionProps.put("dbUrl", dbUrl);
+	// 	}
+	// 	if (dbName != null) {
+	// 		connectionProps.put("dbName", dbName);
+	// 	}
+	// 	if (dbUser != null) {
+	// 		connectionProps.put("dbUser", dbUser);
+	// 	}
+	// 	if (dbPass != null) {
+	// 		connectionProps.put("dbPass", dbPass);
+	// 	}
+	// 	if (connProps != null) {
+	// 		connectionProps.put("connectionProps", connProps);
+	// 	}
+	// }
 	
 	/**
 	 * Recreate the current SQL connection.
