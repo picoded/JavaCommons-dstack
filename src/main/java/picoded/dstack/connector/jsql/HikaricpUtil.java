@@ -1,5 +1,7 @@
 package picoded.dstack.connector.jsql;
 
+import java.io.File;
+
 import com.zaxxer.hikari.*;
 import picoded.core.struct.*;
 
@@ -8,9 +10,11 @@ import picoded.core.struct.*;
  **/
 class HikaricpUtil {
 	
+	//----------------------------------------------------------------------------------
 	//
 	// Configuration loading from map
 	//
+	//----------------------------------------------------------------------------------
 	
 	/**
 	 * Loading the common HikariConfig settings - given a config map.
@@ -61,6 +65,12 @@ class HikaricpUtil {
 		return ret;
 	}
 	
+	//----------------------------------------------------------------------------------
+	//
+	// Utility functionality
+	//
+	//----------------------------------------------------------------------------------
+	
 	//
 	// Default configuration handling
 	//
@@ -77,7 +87,8 @@ class HikaricpUtil {
 	 * This is close to the optimal guideline for max coonection pool sizing
 	 * See : https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing
 	 * 
-	 * If hyperthreading is disabled, this estimate is ineffective. But is considered out of scope.
+	 * If hyperthreading is disabled, this estimate is ineffective. 
+	 * But is considered out of scope.
 	 * 
 	 * @return default max pool size to use
 	 */
@@ -87,6 +98,59 @@ class HikaricpUtil {
 			_defaultMaxPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
 		}
 		return _defaultMaxPoolSize;
+	}
+	
+	//----------------------------------------------------------------------------------
+	//
+	// SQL specific setup
+	//
+	//----------------------------------------------------------------------------------
+	
+	/**
+	 * Loads a HikariDataSource for SQLite given the config 
+	 * 
+	 * @param  config map used
+	 * 
+	 * @return HikariDataSource with the appropriate config loaded and initialized
+	 */
+	public static HikariDataSource sqlite(GenericConvertMap config) {
+		// Lets get the sqlite path
+		String path = config.getString("path", null);
+		if (path == null || path.length() == 0) {
+			throw new RuntimeException("Missing path configuration for SQLite connection");
+		}
+		
+		// Get the absolute file path
+		File sqliteFileObj = new File(path);
+		String absolutePath = sqliteFileObj.getAbsolutePath();
+		
+		// And check if the path is a directory
+		// if so it throws an error as the file is not the following:
+		// - a non existing file (which sqlite will initialize)
+		// - a file (which sqlite will read from)
+		if (sqliteFileObj.isDirectory()) {
+			throw new RuntimeException(
+				"Invalid file path found for sqlite - found a directory instead : " + absolutePath);
+		}
+		
+		// Load the common config
+		HikariConfig hconfig = commonConfigLoading(config);
+		
+		// Load the DB library
+		// This is only imported on demand, avoid preloading until needed
+		try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"Failed to load SQLite JDBC driver - please ensure 'org.sqlite.JDBC' jar is included");
+		}
+		
+		// Setup the configured 
+		hconfig.setDriverClassName("org.sqlite.JDBC");
+		hconfig.setJdbcUrl("jdbc:sqlite:" + absolutePath);
+		
+		// Initialize the data source
+		return new HikariDataSource(hconfig);
 	}
 	
 }

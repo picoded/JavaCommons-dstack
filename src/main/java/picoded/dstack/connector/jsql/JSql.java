@@ -511,46 +511,53 @@ public abstract class JSql {
 	 *
 	 * @return  Resulting array of arguments 1 & 2
 	 **/
-	public Object[] joinArguments(Object[] arr1, Object[] arr2) {
+	public static Object[] joinArguments(Object[] arr1, Object[] arr2) {
 		return org.apache.commons.lang3.ArrayUtils.addAll(arr1, arr2);
 	}
 	
-	/**
-	 * Sets the auto commit level
-	 *
-	 * @param  The auto commit level flag to set
-	 **/
-	public void setAutoCommit(boolean autoCommit) {
-		try {
-			sqlConn.setAutoCommit(autoCommit);
-		} catch (Exception e) {
-			throw new JSqlException(e);
-		}
-	}
+	//-------------------------------------------------------------------------
+	//
+	// Autocommit support - dropped in favour of restructured 
+	// HikariCP connection pooling support, which will not support this
+	//
+	//-------------------------------------------------------------------------
 	
-	/**
-	 * Gets the current auto commit setting
-	 *
-	 * @return true if auto commit is enabled
-	 **/
-	public boolean getAutoCommit() {
-		try {
-			return sqlConn.getAutoCommit();
-		} catch (Exception e) {
-			throw new JSqlException(e);
-		}
-	}
+	// /**
+	//  * Sets the auto commit level
+	//  *
+	//  * @param  The auto commit level flag to set
+	//  **/
+	// public void setAutoCommit(boolean autoCommit) {
+	// 	try {
+	// 		sqlConn.setAutoCommit(autoCommit);
+	// 	} catch (Exception e) {
+	// 		throw new JSqlException(e);
+	// 	}
+	// }
 	
-	/**
-	 * Runs the commit (use only if setAutoCommit is false)
-	 **/
-	public void commit() {
-		try {
-			sqlConn.commit();
-		} catch (Exception e) {
-			throw new JSqlException(e);
-		}
-	}
+	// /**
+	//  * Gets the current auto commit setting
+	//  *
+	//  * @return true if auto commit is enabled
+	//  **/
+	// public boolean getAutoCommit() {
+	// 	try {
+	// 		return sqlConn.getAutoCommit();
+	// 	} catch (Exception e) {
+	// 		throw new JSqlException(e);
+	// 	}
+	// }
+	
+	// /**
+	//  * Runs the commit (use only if setAutoCommit is false)
+	//  **/
+	// public void commit() {
+	// 	try {
+	// 		sqlConn.commit();
+	// 	} catch (Exception e) {
+	// 		throw new JSqlException(e);
+	// 	}
+	// }
 	
 	//-------------------------------------------------------------------------
 	//
