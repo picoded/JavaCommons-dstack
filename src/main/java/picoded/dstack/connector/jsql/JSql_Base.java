@@ -41,12 +41,90 @@ public class JSql_Base extends JSql {
 	
 	//-------------------------------------------------------------------------
 	//
+	// Database type support
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Internal refrence of the current sqlType the system is running as
+	 **/
+	protected JSqlType sqlType = JSqlType.INVALID;
+	
+	/**
+	 * Returns the current sql type, this is read only
+	 *
+	 * @return JSqlType  current implmentation mode
+	 **/
+	public JSqlType sqlType() {
+		return this.sqlType;
+	}
+	
+	// //-------------------------------------------------------------------------
+	// //
+	// // Database connection pool handling
+	// //
+	// //-------------------------------------------------------------------------
+	
+	// /**
+	//  * Gets and return the connection from the data source (connection pool)
+	//  * Connection MUST be "closed" after processing of results
+	//  * 
+	//  * @return connection from the pool
+	//  */
+	// abstract protected Connection getConn();
+	
+	// //-------------------------------------------------------------------------
+	// //
+	// // Connection closure / disposal
+	// //
+	// //-------------------------------------------------------------------------
+	
+	// /**
+	//  * Returns true, if close() function was called prior
+	//  **/
+	// public boolean isClosed() {
+	// 	return sqlConn == null;
+	// }
+	
+	// /**
+	//  * Dispose of the respective SQL driver / connection
+	//  **/
+	// public void close() {
+	// 	// Disposes the instancce connection
+	// 	if (sqlConn != null) {
+	// 		try {
+	// 			//sqlConn.join();
+	// 			sqlConn.close();
+	// 		} catch (SQLException e) {
+	// 			throw new RuntimeException(e);
+	// 		}
+	// 		sqlConn = null;
+	// 	}
+	// }
+	
+	// /**
+	//  * Just incase a user forgets to dispose "as per normal"
+	//  **/
+	// protected void finalize() throws Throwable {
+	// 	try {
+	// 		close(); // close open files
+	// 	} finally {
+	// 		super.finalize();
+	// 	}
+	// }
+	
+	//-------------------------------------------------------------------------
+	//
 	// Helper utility functions
 	//
 	//-------------------------------------------------------------------------
 	
 	/**
 	 * Helper function, used to prepare the sql statment in multiple situations
+	 * to a PreparedStatement object. 
+	 * 
+	 * IMPORTANT NOTE : This should not be confused with JSqlPreparedStatement,
+	 * as this is a place holder to facilitate this known usage pattern.
 	 *
 	 * @param  Query strings including substituable variable "?"
 	 * @param  Array of arguments to do the variable subtitution
@@ -97,15 +175,72 @@ public class JSql_Base extends JSql {
 	
 	//-------------------------------------------------------------------------
 	//
-	// Standard raw query command sets
+	// Generic SQL conversion and query
 	//
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * Executes the argumented query, and returns the result object *without*
-	 * fetching the result data from the database. This is a raw execution.
+	 * Used for refrence checks / debugging only. This represents the core
+	 * generic SQL statement refactoring engine. That is currenlty used internally
+	 * by query / update. Doing common regex substitutions if needed.
 	 *
-	 * As such no special parsing occurs to the request
+	 * Long term plan is to convert this to a much more proprely structed AST engine.
+	 *
+	 * @param  SQL query to "normalize"
+	 *
+	 * @return  SQL query that was converted
+	 **/
+	public String genericSqlParser(String qString) {
+		return qString;
+	}
+	
+	/**
+	 * Internal exception catching, used for cases which its not possible to
+	 * easily handle with pure SQL query. Or cases where the performance cost in the
+	 * the query does not justify its usage (edge cases)
+	 *
+	 * This acts as a filter for query, noFetchQuery, and update respectively
+	 *
+	 * @param  SQL query to "normalize"
+	 * @param  The "normalized" sql query
+	 * @param  The exception caught
+	 *
+	 * @return  TRUE, if the exception can be safely ignored
+	 **/
+	protected boolean sanatizeErrors(String originalQuery, String normalizedQuery, JSqlException e) {
+		String stackTrace = picoded.core.exception.ExceptionUtils.getStackTrace(e);
+		return sanatizeErrors(originalQuery.toUpperCase(), normalizedQuery.toUpperCase(), stackTrace);
+	}
+	
+	/**
+	 * Internal exception catching, used for cases which its not possible to
+	 * easily handle with pure SQL query. Or cases where the performance cost in the
+	 * the query does not justify its usage (edge cases)
+	 *
+	 * This is the actual implmentation to overwrite
+	 *
+	 * This acts as a filter for query, noFetchQuery, and update respectively
+	 *
+	 * @param  SQL query to "normalize"
+	 * @param  The "normalized" sql query
+	 * @param  The exception caught, as a stack trace string
+	 *
+	 * @return  TRUE, if the exception can be safely ignored
+	 **/
+	protected boolean sanatizeErrors(String originalQuery, String normalizedQuery, String stackTrace) {
+		if (originalQuery.indexOf("DROP TABLE IF EXISTS ") >= 0) {
+			if (stackTrace.indexOf("missing database") > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Executes the argumented SQL query, and immediately fetches the result from
+	 * the database into the result set.
+	 *
+	 * Custom SQL specific parsing occurs here
 	 *
 	 * **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
 	 *
@@ -114,42 +249,45 @@ public class JSql_Base extends JSql {
 	 *
 	 * @return  JSQL result set
 	 **/
-	public JSqlResult noFetchQuery_raw(String qString, Object... values) {
-		JSqlResult res = null;
+	public JSqlResult query(String qString, Object... values) {
+		String parsedQuery = genericSqlParser(qString);
 		try {
-			PreparedStatement ps = prepareSqlStatment(qString, values);
-			ResultSet rs = null;
-			//Try and finally : prevent memory leaks
-			try {
-				//is a select statment
-				if ("SELECT".equals(qString.trim().toUpperCase(Locale.ENGLISH).substring(0, 6))) {
-					rs = ps.executeQuery();
-					res = new JSqlResult(ps, rs);
-					
-					//let JSqlResult "close" it
-					ps = null;
-					rs = null;
-				} else {
-					int r = ps.executeUpdate();
-					if (r >= 0) {
-						res = new JSqlResult(ps, rs, r);
-					}
-				}
-				return res;
-			} finally {
-				//
-				// In event an exception occur in JSqlResult
-				// This cleans up any existing connections if needed
-				//
-				if (rs != null) {
-					rs.close();
-				}
-				if (ps != null) {
-					ps.close();
-				}
+			return query_raw(parsedQuery, values);
+		} catch (JSqlException e) {
+			if (sanatizeErrors(qString, parsedQuery, e)) {
+				// Sanatization passed, return a token JSqlResult
+				return new JSqlResult(null, null, 0);
+			} else {
+				// If sanatization fails, rethrows error
+				throw e;
 			}
-		} catch (Exception e) {
-			throw new JSqlException("query_raw exception: " + qString, e);
+		}
+	}
+	
+	/**
+	 * Executes the argumented SQL update.
+	 *
+	 * Returns false if no result object is given by the execution call.
+	 *
+	 * Custom SQL specific parsing occurs here
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  -1 if failed, 0 and above for affected rows
+	 **/
+	public int update(String qString, Object... values) {
+		String parsedQuery = genericSqlParser(qString);
+		try {
+			return update_raw(parsedQuery, values);
+		} catch (JSqlException e) {
+			if (sanatizeErrors(qString, parsedQuery, e)) {
+				// Sanatization passed, return a token JSqlResult
+				return 0;
+			} else {
+				// If sanatization fails, rethrows error
+				throw e;
+			}
 		}
 	}
 	
