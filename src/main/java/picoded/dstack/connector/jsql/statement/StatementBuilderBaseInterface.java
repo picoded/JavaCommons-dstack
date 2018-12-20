@@ -52,14 +52,7 @@ public interface StatementBuilderBaseInterface {
 	 *
 	 * @return  -1 if failed, 0 and above for affected rows
 	 **/
-	default int update_raw(String qString, Object... values) {
-		JSqlResult r = query_raw(qString, values);
-		if (r == null) {
-			return -1;
-		} else {
-			return r.affectedRows();
-		}
-	}
+	int update_raw(String qString, Object... values);
 	
 	//-------------------------------------------------------------------------------------
 	//
@@ -96,14 +89,7 @@ public interface StatementBuilderBaseInterface {
 	 *
 	 * @return  -1 if failed, 0 and above for affected rows
 	 **/
-	default int update(String qString, Object... values) {
-		JSqlResult r = query(qString, values);
-		if (r == null) {
-			return -1;
-		} else {
-			return r.affectedRows();
-		}
-	}
+	int update(String qString, Object... values);
 	
 	//-------------------------------------------------------------------------------------
 	//

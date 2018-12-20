@@ -117,7 +117,7 @@ public class JSqlResult extends CaseInsensitiveHashMap<String, GenericConvertLis
 	/**
 	 * Fetches all the row data from the result set, 
 	 * store it into the local data structure,
-	 * and close the ResultSet connection
+	 * and close the ResultSet connection (within a try, catch, finally)
 	 *
 	 * @return rowCount on success, -1 indicate there was no SQLResult to process
 	 **/

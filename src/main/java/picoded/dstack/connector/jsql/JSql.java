@@ -146,6 +146,26 @@ public abstract class JSql implements StatementBuilderBaseInterface {
 		throw new IllegalArgumentException("Unsupported DB type in DB config object : " + type);
 	}
 	
+	//-------------------------------------------------------------------------------------
+	//
+	// PreparedStatement builder
+	//
+	//-------------------------------------------------------------------------------------
+	
+	/**
+	 * Prepare an SQL statement, for execution subsequently later
+	 *
+	 * Custom SQL specific parsing occurs here
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  Prepared statement
+	 **/
+	public JSqlPreparedStatement prepareStatement(String qString, Object... values) {
+		return new JSqlPreparedStatement(qString, values, this);
+	}
+	
 	//-------------------------------------------------------------------------
 	//
 	// Database type support

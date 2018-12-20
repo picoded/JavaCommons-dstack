@@ -1,4 +1,4 @@
-package picoded.dstack.jsql.connector.jsql;
+package picoded.dstack.connector.jsql;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -13,10 +13,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import picoded.dstack.jsql.connector.JSqlType;
-import picoded.dstack.jsql.connector.*;
+import com.zaxxer.hikari.*;
 
 /**
  * Default generic JSQL implmentation,
@@ -24,20 +24,6 @@ import picoded.dstack.jsql.connector.*;
  * while not being usable for any of them on its own.
  **/
 public class JSql_Base extends JSql {
-	
-	//-------------------------------------------------------------------------
-	//
-	// Database keywords, reuse vars
-	//
-	//-------------------------------------------------------------------------
-	
-	protected static final String COALESCE = "COALESCE(";
-	protected static final String WHERE = " WHERE ";
-	
-	/**
-	 * Blank JSQL result set, initialized once and reused
-	 **/
-	// protected static final JSqlResult BLANK_JSQLRESULT = new JSqlResult();
 	
 	//-------------------------------------------------------------------------
 	//
@@ -59,63 +45,59 @@ public class JSql_Base extends JSql {
 		return this.sqlType;
 	}
 	
-	// //-------------------------------------------------------------------------
-	// //
-	// // Database connection pool handling
-	// //
-	// //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	//
+	// HikariCP data connection
+	//
+	//-------------------------------------------------------------------------
 	
-	// /**
-	//  * Gets and return the connection from the data source (connection pool)
-	//  * Connection MUST be "closed" after processing of results
-	//  * 
-	//  * @return connection from the pool
-	//  */
-	// abstract protected Connection getConn();
-	
-	// //-------------------------------------------------------------------------
-	// //
-	// // Connection closure / disposal
-	// //
-	// //-------------------------------------------------------------------------
-	
-	// /**
-	//  * Returns true, if close() function was called prior
-	//  **/
-	// public boolean isClosed() {
-	// 	return sqlConn == null;
-	// }
-	
-	// /**
-	//  * Dispose of the respective SQL driver / connection
-	//  **/
-	// public void close() {
-	// 	// Disposes the instancce connection
-	// 	if (sqlConn != null) {
-	// 		try {
-	// 			//sqlConn.join();
-	// 			sqlConn.close();
-	// 		} catch (SQLException e) {
-	// 			throw new RuntimeException(e);
-	// 		}
-	// 		sqlConn = null;
-	// 	}
-	// }
-	
-	// /**
-	//  * Just incase a user forgets to dispose "as per normal"
-	//  **/
-	// protected void finalize() throws Throwable {
-	// 	try {
-	// 		close(); // close open files
-	// 	} finally {
-	// 		super.finalize();
-	// 	}
-	// }
+	/**
+	 * Internal HirkariDataSource, used for connection pooling and requests
+	 */
+	protected HikariDataSource datasource = null;
 	
 	//-------------------------------------------------------------------------
 	//
-	// Helper utility functions
+	// Connection closure / disposal
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Returns true, if close() function was called prior
+	 **/
+	public boolean isClosed() {
+		return datasource == null;
+	}
+	
+	/**
+	 * Dispose of the respective SQL driver / connection
+	 **/
+	public void close() {
+		// Disposes the instancce connection
+		if (datasource != null) {
+			try {
+				datasource.close();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			datasource = null;
+		}
+	}
+	
+	/**
+	 * Just incase a user forgets to dispose "as per normal"
+	 **/
+	protected void finalize() throws Throwable {
+		try {
+			close(); // close open files?
+		} catch (Exception ex) {
+			JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Internal utility functions
 	//
 	//-------------------------------------------------------------------------
 	
@@ -124,19 +106,20 @@ public class JSql_Base extends JSql {
 	 * to a PreparedStatement object. 
 	 * 
 	 * IMPORTANT NOTE : This should not be confused with JSqlPreparedStatement,
-	 * as this is a place holder to facilitate this known usage pattern.
+	 * which is a proxy place holder to facilitate this known usage pattern.
 	 *
 	 * @param  Query strings including substituable variable "?"
 	 * @param  Array of arguments to do the variable subtitution
 	 *
 	 * @return  The SQL prepared statement
 	 **/
-	protected PreparedStatement prepareSqlStatment(String qString, Object... values) {
+	protected PreparedStatement prepareSqlStatment(Connection sqlConn, String qString,
+		Object... values) {
 		int pt = 0;
 		final Object[] parts = (values != null) ? values : (new Object[] {});
 		
-		Object argObj;
-		PreparedStatement ps;
+		Object argObj = null;
+		PreparedStatement ps = null;
 		
 		try {
 			ps = sqlConn.prepareStatement(qString);
@@ -168,9 +151,125 @@ public class JSql_Base extends JSql {
 				}
 			}
 		} catch (Exception e) {
+			// An exception occured, try to close the half initialized prepared statement
+			try {
+				if (ps != null) {
+					ps.close();
+				}
+			} catch (Exception ex) {
+				JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+			}
+			
+			// Throw the JSqlException
 			throw new JSqlException("Invalid statement argument/parameter (" + pt + ")", e);
 		}
 		return ps;
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Raw SQL query support
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes the argumented SQL query, and immediately fetches the result from
+	 * the database into the result set.
+	 *
+	 * This is a raw execution. As such no special parsing occurs to the request
+	 *
+	 * **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  JSQL result set
+	 **/
+	public JSqlResult query_raw(String qString, Object... values) {
+		// Connection variable (to setup inside try,catch,finally)
+		Connection conn = null;
+		PreparedStatement sqlpstmt = null;
+		
+		// Get the connection, and perform the query request
+		// within a try-catch block
+		try {
+			// Getting the connection
+			conn = datasource.getConnection();
+			
+			// Prepare the statement
+			sqlpstmt = prepareSqlStatment(conn, qString, values);
+			
+			// Performing the query, get the result set, and immediately pass it to JSqlResult
+			//
+			// Note: internally JSqlResult, already does a try,catch,finally to close the result set
+			// as such there isnt a need for an additional close check within this try,catch
+			return new JSqlResult(sqlpstmt.executeQuery());
+		} catch (Exception e) {
+			throw new JSqlException(e);
+		} finally {
+			// Try to close the SQL Prepared statment, and connection (if not previously closed)
+			// and log any error occured while trying to close the connection
+			try {
+				if (sqlpstmt != null) {
+					sqlpstmt.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (Exception ex) {
+				JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+			}
+		}
+	}
+	
+	/**
+	 * Executes the argumented SQL update.
+	 *
+	 * Returns -1 if no result object is given by the execution call.
+	 * Else returns the number of rows affected
+	 *
+	 * This is a raw execution. As such no special parsing occurs to the request
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  -1 if failed, 0 and above for affected rows
+	 **/
+	public int update_raw(String qString, Object... values) {
+		// Connection variable (to setup inside try,catch,finally)
+		Connection conn = null;
+		PreparedStatement sqlpstmt = null;
+		
+		// Get the connection, and perform the query request
+		// within a try-catch block
+		try {
+			// Getting the connection
+			conn = datasource.getConnection();
+			
+			// Prepare the statement
+			sqlpstmt = prepareSqlStatment(conn, qString, values);
+			
+			// Performing the query, get the result set, and immediately pass it to JSqlResult
+			//
+			// Note: internally JSqlResult, already does a try,catch,finally to close the result set
+			// as such there isnt a need for an additional close check within this try,catch
+			return sqlpstmt.executeUpdate();
+		} catch (Exception e) {
+			throw new JSqlException(e);
+		} finally {
+			// Try to close the SQL Prepared statment, and connection (if not previously closed)
+			// and log any error occured while trying to close the connection
+			try {
+				if (sqlpstmt != null) {
+					sqlpstmt.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (Exception ex) {
+				JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+			}
+		}
 	}
 	
 	//-------------------------------------------------------------------------
@@ -256,7 +355,7 @@ public class JSql_Base extends JSql {
 		} catch (JSqlException e) {
 			if (sanatizeErrors(qString, parsedQuery, e)) {
 				// Sanatization passed, return a token JSqlResult
-				return new JSqlResult(null, null, 0);
+				return new JSqlResult(null, 0);
 			} else {
 				// If sanatization fails, rethrows error
 				throw e;
@@ -355,7 +454,7 @@ public class JSql_Base extends JSql {
 		// Where clauses
 		if (whereStatement != null && (whereStatement = whereStatement.trim()).length() >= 3) {
 			
-			queryBuilder.append(WHERE);
+			queryBuilder.append(" WHERE ");
 			queryBuilder.append(whereStatement);
 			
 			if (whereValues != null) {
@@ -497,7 +596,7 @@ public class JSql_Base extends JSql {
 		// Where clauses
 		if (whereStatement != null && (whereStatement = whereStatement.trim()).length() >= 3) {
 			
-			queryBuilder.append(WHERE);
+			queryBuilder.append(" WHERE ");
 			queryBuilder.append(whereStatement);
 			
 			if (whereValues != null) {
