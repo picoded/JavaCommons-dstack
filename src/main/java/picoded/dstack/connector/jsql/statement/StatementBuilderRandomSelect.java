@@ -173,7 +173,42 @@ public interface StatementBuilderRandomSelect extends StatementBuilderBaseInterf
 		//
 		long rowLimit // Number of rows
 	) {
-		throw new UnsupportedOperationException(JSqlException.invalidDatabaseImplementationException);
+		ArrayList<Object> queryArgs = new ArrayList<Object>();
+		StringBuilder queryBuilder = new StringBuilder("SELECT ");
+		
+		// Select collumns
+		if (selectStatement == null || (selectStatement = selectStatement.trim()).length() <= 0) {
+			queryBuilder.append("*");
+		} else {
+			queryBuilder.append(selectStatement);
+		}
+		
+		// From table names
+		queryBuilder.append(" FROM `" + tableName + "`");
+		
+		// Where clauses
+		if (whereStatement != null && (whereStatement = whereStatement.trim()).length() >= 3) {
+			
+			queryBuilder.append(" WHERE ");
+			queryBuilder.append(whereStatement);
+			
+			if (whereValues != null) {
+				for (int b = 0; b < whereValues.length; ++b) {
+					queryArgs.add(whereValues[b]);
+				}
+			}
+		}
+		
+		// Order By clause
+		queryBuilder.append(" ORDER BY RANDOM()");
+		
+		// Limit and offset clause
+		if (rowLimit > 0) {
+			queryBuilder.append(" LIMIT " + rowLimit);
+		}
+		
+		// Create the query set
+		return prepareStatement(queryBuilder.toString(), queryArgs.toArray());
 	}
 	
 }

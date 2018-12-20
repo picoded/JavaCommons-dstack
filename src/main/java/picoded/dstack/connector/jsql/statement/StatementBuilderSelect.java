@@ -154,7 +154,49 @@ public interface StatementBuilderSelect extends StatementBuilderBaseInterface {
 		long limit, // Limit row count to, use 0 to ignore / disable
 		long offset // Offset limit by?
 	) {
-		throw new UnsupportedOperationException(JSqlException.invalidDatabaseImplementationException);
+		ArrayList<Object> queryArgs = new ArrayList<Object>();
+		StringBuilder queryBuilder = new StringBuilder("SELECT ");
+		
+		// Select collumns
+		if (selectStatement == null || (selectStatement = selectStatement.trim()).length() <= 0) {
+			queryBuilder.append("*");
+		} else {
+			queryBuilder.append(selectStatement);
+		}
+		
+		// From table names
+		queryBuilder.append(" FROM `" + tableName + "`");
+		
+		// Where clauses
+		if (whereStatement != null && (whereStatement = whereStatement.trim()).length() >= 3) {
+			
+			queryBuilder.append(" WHERE ");
+			queryBuilder.append(whereStatement);
+			
+			if (whereValues != null) {
+				for (int b = 0; b < whereValues.length; ++b) {
+					queryArgs.add(whereValues[b]);
+				}
+			}
+		}
+		
+		// Order By clause
+		if (orderStatement != null && (orderStatement = orderStatement.trim()).length() > 3) {
+			queryBuilder.append(" ORDER BY ");
+			queryBuilder.append(orderStatement);
+		}
+		
+		// Limit and offset clause
+		if (limit > 0) {
+			queryBuilder.append(" LIMIT " + limit);
+			
+			if (offset > 0) {
+				queryBuilder.append(" OFFSET " + offset);
+			}
+		}
+		
+		// Create the query set
+		return prepareStatement(queryBuilder.toString(), queryArgs.toArray());
 	}
 	
 }

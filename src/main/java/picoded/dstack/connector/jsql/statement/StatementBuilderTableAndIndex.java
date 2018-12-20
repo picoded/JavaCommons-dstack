@@ -73,7 +73,33 @@ public interface StatementBuilderTableAndIndex extends StatementBuilderBaseInter
 		String[] columnName, // The column names
 		String[] columnTypes // The column types
 	) {
-		throw new UnsupportedOperationException(JSqlException.invalidDatabaseImplementationException);
+		// Tablename length warning
+		if (tableName.length() > 30) {
+			LOGGER.warning(JSqlException.oracleNameSpaceWarning + tableName);
+		}
+		
+		// Column names checks
+		if (columnName == null || columnTypes == null || columnTypes.length != columnName.length) {
+			throw new IllegalArgumentException("Invalid columnName/Type provided: " + columnName
+				+ " : " + columnTypes);
+		}
+		
+		StringBuilder queryBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS `");
+		queryBuilder.append(tableName);
+		queryBuilder.append("` ( ");
+		
+		for (int a = 0; a < columnName.length; ++a) {
+			if (a > 0) {
+				queryBuilder.append(", ");
+			}
+			queryBuilder.append(columnName[a]);
+			queryBuilder.append(" ");
+			queryBuilder.append(columnTypes[a]);
+		}
+		queryBuilder.append(" )");
+		
+		// Create the query set
+		return prepareStatement(queryBuilder.toString());
 	}
 	
 	//-------------------------------------------------------------------------
