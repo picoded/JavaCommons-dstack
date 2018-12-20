@@ -27,12 +27,12 @@ import picoded.core.struct.GenericConvertArrayList;
 
 /**
  * JSql result set, where data is fetched from an SQL result set, into a map<list> data structure.
+ * Constructor with ResultSet immediately fetches the result data via `fetchAllRows`
  *
  * *******************************************************************************
  *
  * [LOW PRIROTY TODO LIST]
- * * Exception varient for readRow / readRowCol on out-of-bound row number
- * * isClosed: boolean function for the fetch checking.
+ * - Exception varient for readRow / readRowCol on out-of-bound row number
  *
  * IGNORED feature list (not fully supported, and dropped to ensure consistancy in sqlite/sql mode)
  * - SingleRow fetch and related features was seen to be buggy in sqlite.
@@ -87,8 +87,8 @@ public class JSqlResult extends CaseInsensitiveHashMap<String, GenericConvertLis
 	 * @param rs result set to extract data from
 	 * @
 	 **/
-	public JSqlResult(ResultSet rs, int inRowAffected) {
-		rowAffected = inRowAffected;
+	public JSqlResult(ResultSet rs, int inaffectedRows) {
+		affectedRows = inaffectedRows;
 		fetchAllRows(rs);
 	}
 	
@@ -101,7 +101,7 @@ public class JSqlResult extends CaseInsensitiveHashMap<String, GenericConvertLis
 	/**
 	 * Total rows affected, this applies for update statements
 	 **/
-	private int rowAffected = 0;
+	private int affectedRows = 0;
 	
 	/**
 	 * Total row count for query
@@ -186,8 +186,8 @@ public class JSqlResult extends CaseInsensitiveHashMap<String, GenericConvertLis
 	/**
 	 * Returns the amount of affected rows, applies only for non-select statements
 	 **/
-	public int rowAffected() {
-		return rowAffected;
+	public int affectedRows() {
+		return affectedRows;
 	}
 	
 	/**
