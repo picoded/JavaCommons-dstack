@@ -37,7 +37,6 @@ public class JSqlConnector {
 	 * @param  groupName used for the cluster
 	 */
 	public static void closeConnection(JSql connection) {
-		
 		// Mandatory null argument check
 		if (connection == null) {
 			throw new IllegalArgumentException(ExceptionMessage.unexpectedNullArgument);
