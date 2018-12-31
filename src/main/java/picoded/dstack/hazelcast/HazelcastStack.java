@@ -3,6 +3,7 @@ package picoded.dstack.hazelcast;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.core.*;
 import picoded.dstack.*;
+import picoded.dstack.connector.hazelcast.*;
 
 import com.hazelcast.core.*;
 
@@ -41,8 +42,13 @@ public class HazelcastStack extends CoreStack {
 				"Missing 'name' config object for Hazelcast stack provider");
 		}
 		
+		// If groupName is not set, configure using the stack name
+		if (inConfig.getString("groupName") == null) {
+			inConfig.put("groupName", name);
+		}
+		
 		// Get the Hazelcast connection
-		conn = HazelcastLoader.getConnection(name, hazelcastConfig);
+		conn = HazelcastConnector.getConnection(inConfig);
 	}
 	
 	/**
