@@ -161,4 +161,90 @@ class HikaricpUtil {
 		return new HikariDataSource(hconfig);
 	}
 	
+	/**
+	 * Loads a HikariDataSource for Mysql given the config 
+	 * 
+	 * @param  config map used
+	 * 
+	 * @return HikariDataSource with the appropriate config loaded and initialized
+	 */
+	public static HikariDataSource mysql(GenericConvertMap config) {
+		// Lets get the mysql required parameters
+		String path = config.getString("path", null);
+		String name = config.getString("name", null);
+		String user = config.getString("user", null);
+		String pass = config.getString("pass", null);
+		
+		// Perform simple validation of mysql params
+		if (path == null || path.length() == 0) {
+			throw new RuntimeException("Missing path configuration for MYSql connection");
+		}
+		if (name == null || name.length() == 0) {
+			throw new RuntimeException("Missing name configuration for MYSql connection");
+		}
+		if (user == null || user.length() == 0) {
+			throw new RuntimeException("Missing user configuration for MYSql connection");
+		}
+		if (pass == null || pass.length() == 0) {
+			throw new RuntimeException("Missing pass configuration for MYSql connection");
+		}
+		
+		// Load the common config
+		HikariConfig hconfig = commonConfigLoading(config);
+		
+		// // Load the DB library
+		// // This is only imported on demand, avoid preloading until needed
+		// try {
+		// 	Class.forName("com.mysql.cj.jdbc.MysqlDataSource");
+		// } catch (ClassNotFoundException e) {
+		// 	throw new RuntimeException(
+		// 		"Failed to load SQLite JDBC driver - please ensure 'org.sqlite.JDBC' jar is included");
+		// }
+		
+		// Setup the configured connection URL + DB
+		//hconfig.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
+		hconfig.setJdbcUrl("jdbc:mysql://" + path + "/" + name);
+		
+		// Setup the username and password
+		hconfig.setUsername(user);
+		hconfig.setPassword(pass);
+		
+		//
+		// Setup the datasource config
+		// See: https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
+		//
+		hconfig.addDataSourceProperty("cachePrepStmts", //
+			config.getBoolean("cachePrepStmts", true) //
+			);
+		hconfig.addDataSourceProperty("prepStmtCacheSize", //
+			config.getInt("prepStmtCacheSize", 250) //
+			);
+		hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", //
+			config.getInt("prepStmtCacheSqlLimit", 2048) //
+			);
+		hconfig.addDataSourceProperty("useServerPrepStmts", //
+			config.getBoolean("useServerPrepStmts", true) //
+			);
+		hconfig.addDataSourceProperty("useLocalSessionState", //
+			config.getBoolean("useLocalSessionState", true) //
+			);
+		hconfig.addDataSourceProperty("rewriteBatchedStatements", //
+			config.getBoolean("rewriteBatchedStatements", true) //
+			);
+		hconfig.addDataSourceProperty("cacheResultSetMetadata", //
+			config.getBoolean("cacheResultSetMetadata", true) //
+			);
+		hconfig.addDataSourceProperty("cacheServerConfiguration", //
+			config.getBoolean("cacheServerConfiguration", true) //
+			);
+		hconfig.addDataSourceProperty("elideSetAutoCommits", //
+			config.getBoolean("elideSetAutoCommits", true) //
+			);
+		hconfig.addDataSourceProperty("maintainTimeStats", //
+			config.getBoolean("maintainTimeStats", false) //
+			);
+		
+		// Initialize the data source
+		return new HikariDataSource(hconfig);
+	}
 }
