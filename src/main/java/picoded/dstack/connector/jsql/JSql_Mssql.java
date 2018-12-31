@@ -65,7 +65,7 @@ public class JSql_Mssql extends JSql_Base {
 	 *
 	 * @param config  config map
 	 **/
-	public JSql_Mssql(GenericConvertMap config) {
+	public JSql_Mssql(GenericConvertMap<String, Object> config) {
 		constructor_setup(config);
 	}
 	
@@ -76,7 +76,7 @@ public class JSql_Mssql extends JSql_Base {
 	 * 
 	 * @param config  config map
 	 */
-	public void constructor_setup(GenericConvertMap config) {
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		datasource = HikaricpUtil.mssql(config);
 	}
 	

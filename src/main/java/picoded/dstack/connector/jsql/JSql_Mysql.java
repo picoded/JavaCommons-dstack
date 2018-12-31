@@ -63,7 +63,7 @@ public class JSql_Mysql extends JSql_Base {
 	 *
 	 * @param config  config map
 	 **/
-	public JSql_Mysql(GenericConvertMap config) {
+	public JSql_Mysql(GenericConvertMap<String, Object> config) {
 		constructor_setup(config);
 	}
 	
@@ -74,7 +74,7 @@ public class JSql_Mysql extends JSql_Base {
 	 * 
 	 * @param config  config map
 	 */
-	public void constructor_setup(GenericConvertMap config) {
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		datasource = HikaricpUtil.mysql(config);
 	}
 	

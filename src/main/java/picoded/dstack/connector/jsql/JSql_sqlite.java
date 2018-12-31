@@ -56,7 +56,7 @@ public class JSql_Sqlite extends JSql_Base {
 	 *
 	 * @param  config map
 	 **/
-	public JSql_Sqlite(GenericConvertMap config) {
+	public JSql_Sqlite(GenericConvertMap<String, Object> config) {
 		constructor_setup(config);
 	}
 	
@@ -67,7 +67,7 @@ public class JSql_Sqlite extends JSql_Base {
 	 * 
 	 * @param config  config map
 	 */
-	public void constructor_setup(GenericConvertMap config) {
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		datasource = HikaricpUtil.sqlite(config);
 	}
 	

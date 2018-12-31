@@ -68,7 +68,7 @@ public class HazelcastConnector {
 			throw new IllegalArgumentException(ExceptionMessage.unexpectedNullArgument);
 		}
 		
-		// Connection exists, lets try to close the connection
+		// Close the connection
 		connection.shutdown();
 	}
 	

@@ -44,40 +44,32 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 	//
 	//-------------------------------------------------------------------------
 	
-	// /**
-	//  * SQLite static constructor, returns picoded.dstack.jsql.connector.db.JSql_Sqlite
-	//  **/
-	// public static JSql sqlite() {
-	// 	return new picoded.dstack.jsql.connector.db.JSql_Sqlite();
-	// }
+	/**
+	 * SQLite static constructor, returns picoded.dstack.jsql.connector.db.JSql_Sqlite
+	 **/
+	public static JSql sqlite(GenericConvertMap<String, Object> config) {
+		return new JSql_Sqlite(config);
+	}
+	
+	/**
+	 * Mysql static constructor, returns picoded.dstack.jsql.connector.db.JSql_Mysql
+	 **/
+	public static JSql mysql(GenericConvertMap<String, Object> config) {
+		return new JSql_Mysql(config);
+	}
+	
+	/**
+	 * Mssql static constructor, returns picoded.dstack.jsql.connector.db.JSql_Mssql
+	 **/
+	public static JSql mssql(GenericConvertMap<String, Object> config) {
+		return new JSql_Mssql(config);
+	}
 	
 	// /**
-	//  * SQLite static constructor, returns picoded.dstack.jsql.connector.db.JSql_Sqlite
+	//  * Oracle static constructor, returns picoded.dstack.jsql.connector.db.JSql_Oracle
 	//  **/
-	// public static JSql sqlite(String sqliteLoc) {
-	// 	return new picoded.dstack.jsql.connector.db.JSql_Sqlite(sqliteLoc);
-	// }
-	
-	// /**
-	//  * MySql static constructor, returns picoded.JSql.JSql_Mysql
-	//  **/
-	// public static JSql mysql(String dbServerAddress, String dbName, String dbUser, String dbPass) {
-	// 	return new picoded.dstack.jsql.connector.db.JSql_Mysql(dbServerAddress, dbName, dbUser,
-	// 		dbPass);
-	// }
-	
-	// /**
-	//  * MySql static constructor, returns picoded.JSql.JSql_Mysql
-	//  **/
-	// public static JSql mysql(String connectionUrl, Properties connectionProps) {
-	// 	return new picoded.dstack.jsql.connector.db.JSql_Mysql(connectionUrl, connectionProps);
-	// }
-	
-	// /**
-	//  * Mssql static constructor, returns picoded.JSql.JSql_Mssql
-	//  **/
-	// public static JSql mssql(String dbUrl, String dbName, String dbUser, String dbPass) {
-	// 	return new picoded.dstack.jsql.connector.db.JSql_Mssql(dbUrl, dbName, dbUser, dbPass);
+	// public static JSql oracle(GenericConvertMap<String,Object> config) {
+	// 	return JSql_Oracle(config);
 	// }
 	
 	// /*
@@ -102,47 +94,24 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 		
 		// Get the minimum string values
 		String type = config.getString("type");
-		String path = config.getString("path");
 		
 		// Does validation
 		if (type == null || type.isEmpty()) {
 			throw new IllegalArgumentException("Missing DB type parameter in DB config object");
 		}
 		
-		/*
-		// SQLite handling, only requires path (if given)
+		//
+		// SQL type specific support
+		//
 		if (type.equalsIgnoreCase("sqlite")) {
-			if (path == null || path.isEmpty()) {
-				return JSql.sqlite();
-			} else {
-				return JSql.sqlite(path);
-			}
+			return sqlite(config);
 		}
-		
-		// Remote SQL handling string values
-		String name = config.getString("name");
-		String user = config.getString("user");
-		String pass = config.getString("pass");
-		
-		// Does validation of remote params
-		if (name == null || name.isEmpty()) {
-			throw new IllegalArgumentException("Missing database name in DB config object");
-		}
-		if (user == null || user.isEmpty()) {
-			throw new IllegalArgumentException("Missing login username in DB config object");
-		}
-		if (pass == null || pass.isEmpty()) {
-			throw new IllegalArgumentException("Missing login password in DB config object");
-		}
-		
-		// Does the remote DB connection
 		if (type.equalsIgnoreCase("mysql")) {
-			return JSql.mysql(path, name, user, pass);
+			return mysql(config);
 		}
 		if (type.equalsIgnoreCase("mssql")) {
-			return JSql.mssql(path, name, user, pass);
+			return mssql(config);
 		}
-		 */
 		
 		// Invalid / Unsupported db type
 		throw new IllegalArgumentException("Unsupported DB type in DB config object : " + type);
