@@ -120,17 +120,25 @@ class HikaricpUtil {
 			throw new RuntimeException("Missing path configuration for SQLite connection");
 		}
 		
-		// Get the absolute file path
-		File sqliteFileObj = new File(path);
-		String absolutePath = sqliteFileObj.getAbsolutePath();
+		// Get the absolute file path to use for sqlite
+		String absolutePath = null;
 		
-		// And check if the path is a directory
-		// if so it throws an error as the file is not the following:
-		// - a non existing file (which sqlite will initialize)
-		// - a file (which sqlite will read from)
-		if (sqliteFileObj.isDirectory()) {
-			throw new RuntimeException(
-				"Invalid file path found for sqlite - found a directory instead : " + absolutePath);
+		// In memory mode uses :memory: respectively
+		if (path.equalsIgnoreCase(":memory:")) {
+			absolutePath = ":memory:";
+		} else {
+			// Get the sqlite file 
+			File sqliteFileObj = new File(path);
+			absolutePath = sqliteFileObj.getAbsolutePath();
+			
+			// And check if the path is a directory
+			// if so it throws an error as the file is not the following:
+			// - a non existing file (which sqlite will initialize)
+			// - a file (which sqlite will read from)
+			if (sqliteFileObj.isDirectory()) {
+				throw new RuntimeException(
+					"Invalid file path found for sqlite - found a directory instead : " + absolutePath);
+			}
 		}
 		
 		// Load the common config
