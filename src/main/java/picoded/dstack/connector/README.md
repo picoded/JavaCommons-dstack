@@ -1,12 +1,14 @@
 # dstack.connector
 
 Contains multiple XConnector classes, within their own package namespace. 
-This provides a connection to the respective backend, given the required config map.
+Which provides a connection to the respective backend, given the required config map.
 
 Examples include, but not limited to
 
-+ HazelcastConnector
-+ JSqlConnector
++ hazelcast.HazelcastConnector
++ jsql.JSqlConnector
+
+XConnector must be in their own X package namespace.
 
 Every connection object returned by the XConnector class is **required** to be thread safe, and handles any connection pooling internally if needed. 
 Returned connector object is expected to be use concurrently by multiple threads.

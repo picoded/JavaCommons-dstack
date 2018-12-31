@@ -1,4 +1,4 @@
-package picoded.dstack.connector;
+package picoded.dstack.connector.hazelcast;
 
 import java.util.*;
 

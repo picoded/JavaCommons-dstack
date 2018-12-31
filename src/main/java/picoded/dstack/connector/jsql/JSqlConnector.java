@@ -1,4 +1,4 @@
-package picoded.dstack.connector;
+package picoded.dstack.connector.jsql;
 
 import picoded.core.exception.ExceptionMessage;
 import picoded.core.struct.*;

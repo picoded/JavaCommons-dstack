@@ -1,4 +1,4 @@
-package picoded.dstack.connector;
+package picoded.dstack.connector.hazelcast;
 
 import com.hazelcast.core.*;
 import com.hazelcast.client.HazelcastClient;
