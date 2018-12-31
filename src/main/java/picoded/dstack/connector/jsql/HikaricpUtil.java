@@ -170,14 +170,15 @@ class HikaricpUtil {
 	 */
 	public static HikariDataSource mysql(GenericConvertMap config) {
 		// Lets get the mysql required parameters
-		String path = config.getString("path", null);
+		String host = config.getString("host", "localhost");
+		int port = config.getInt("port", 3306);
 		String name = config.getString("name", null);
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		
 		// Perform simple validation of mysql params
-		if (path == null || path.length() == 0) {
-			throw new RuntimeException("Missing path configuration for MYSql connection");
+		if (host == null || host.length() == 0) {
+			throw new RuntimeException("Missing host configuration for MYSql connection");
 		}
 		if (name == null || name.length() == 0) {
 			throw new RuntimeException("Missing name configuration for MYSql connection");
@@ -203,7 +204,7 @@ class HikaricpUtil {
 		
 		// Setup the configured connection URL + DB
 		//hconfig.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
-		hconfig.setJdbcUrl("jdbc:mysql://" + path + "/" + name);
+		hconfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name);
 		
 		// Setup the username and password
 		hconfig.setUsername(user);
@@ -244,7 +245,74 @@ class HikaricpUtil {
 			config.getBoolean("maintainTimeStats", false) //
 			);
 		
-		// Initialize the data source
+		// Initialize the data source and return
+		return new HikariDataSource(hconfig);
+	}
+	
+	/**
+	 * Loads a HikariDataSource for MS-SQL given the config 
+	 * 
+	 * @param  config map used
+	 * 
+	 * @return HikariDataSource with the appropriate config loaded and initialized
+	 */
+	public static HikariDataSource mssql(GenericConvertMap config) {
+		// Lets get the MSSql required parameters
+		String host = config.getString("host", "localhost");
+		int port = config.getInt("port", 1433);
+		String name = config.getString("name", null);
+		String user = config.getString("user", null);
+		String pass = config.getString("pass", null);
+		
+		// Perform simple validation of MSSql params
+		if (host == null || host.length() == 0) {
+			throw new RuntimeException("Missing host configuration for MSSql connection");
+		}
+		if (name == null || name.length() == 0) {
+			throw new RuntimeException("Missing name configuration for MSSql connection");
+		}
+		if (user == null || user.length() == 0) {
+			throw new RuntimeException("Missing user configuration for MSSql connection");
+		}
+		if (pass == null || pass.length() == 0) {
+			throw new RuntimeException("Missing pass configuration for MSSql connection");
+		}
+		
+		// Load the common config
+		HikariConfig hconfig = commonConfigLoading(config);
+		
+		// Load the DB library
+		// This is only imported on demand, avoid preloading until needed
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDataSource");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"Failed to load MSSql JDBC driver - please ensure 'com.microsoft.sqlserver.jdbc.SQLServerDataSource' jar is included");
+		}
+		
+		// Setup the configured 
+		hconfig.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDataSource");
+		
+		// // Setup the JDBC URL & username and password
+		hconfig.setJdbcUrl("jdbc:sqlserver://" + host + ":" + port);
+		hconfig.setUsername(user);
+		hconfig.setPassword(pass);
+		
+		// Setup via datasource config
+		// hconfig.addDataSourceProperty("serverName", host);
+		// hconfig.addDataSourceProperty("port", port);
+		// hconfig.addDataSourceProperty("url", "jdbc:sqlserver://" + host + ":" + port
+		// 	+ ";databaseName=" + name + ";user=" + user + ";password=" + pass);
+		// hconfig.addDataSourceProperty("user", user);
+		// hconfig.addDataSourceProperty("password", pass);
+		
+		// Database name support
+		hconfig.addDataSourceProperty("databaseName", name);
+		
+		// Disable error prone CLOBs 
+		hconfig.addDataSourceProperty("uselobs", false);
+		
+		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
 	}
 }

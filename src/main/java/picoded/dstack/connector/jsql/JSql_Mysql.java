@@ -37,17 +37,19 @@ public class JSql_Mysql extends JSql_Base {
 	/**
 	 * Runs JSql with the JDBC "MY"SQL engine
 	 *
-	 * @param   dbServerAddress, is just IP:PORT. For example, "127.0.0.1:3306"
-	 * @param   database name to connect to
-	 * @param   database user to connect to
-	 * @param   database password to use
+	 * @param   dbHost, is just IP or HOSTNAME. For example, "127.0.0.1"
+	 * @param   dbPort to connect to
+	 * @param   dbName name to connect to (database name)
+	 * @param   dbUser user to connect to
+	 * @param   dbPass password to use
 	 **/
-	public JSql_Mysql(String dbServerAddress, String dbName, String dbUser, String dbPass) {
+	public JSql_Mysql(String dbHost, int dbPort, String dbName, String dbUser, String dbPass) {
 		// set connection properties
 		GenericConvertMap<String, Object> config = new GenericConvertHashMap<>();
 		
 		// Basic path, dbname, user, pass configuration
-		config.put("path", dbServerAddress);
+		config.put("host", dbHost);
+		config.put("port", dbPort);
 		config.put("name", dbName);
 		config.put("user", dbUser);
 		config.put("pass", dbPass);
@@ -94,8 +96,6 @@ public class JSql_Mysql extends JSql_Base {
 	 * This immediately executes a query, and process the information directly 
 	 * (to normalize the results across SQL implementations).
 	 * 
-	 * Note : returned map should be a `CaseInsensitiveHashMap`
-	 *
 	 * @param  tablename to get information on
 	 *
 	 * @return  Pair containing < collumn_name, collumn_type >

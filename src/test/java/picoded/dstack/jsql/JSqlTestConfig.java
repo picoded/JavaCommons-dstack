@@ -61,13 +61,22 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// Default Credentials for MYSQL //
 	//-------------------------------//
-	static private String MYSQL_CONN = "demodb-mysql.picoded-dev.com:3306";
+	static private String MYSQL_HOST = "demodb-mysql.picoded-dev.com";
 	static private String MYSQL_DATA = "JAVACOMMONS";
 	static private String MYSQL_USER = "JAVACOMMONS";
 	static private String MYSQL_PASS = "JAVACOMMONS";
+	static private int MYSQL_PORT = 3306;
+	
+	static public String MYSQL_HOST() {
+		return MYSQL_HOST;
+	}
+	
+	static public int MYSQL_PORT() {
+		return MYSQL_PORT;
+	}
 	
 	static public String MYSQL_CONN() {
-		return MYSQL_CONN;
+		return MYSQL_HOST + ":" + MYSQL_PORT;
 	}
 	
 	static public String MYSQL_DATA() {
@@ -83,7 +92,7 @@ public class JSqlTestConfig {
 	}
 	
 	static public String MYSQL_CONN_JDBC() {
-		return "jdbc:mysql://" + MYSQL_CONN + "/" + MYSQL_DATA;
+		return "jdbc:mysql://" + MYSQL_CONN() + "/" + MYSQL_DATA;
 	}
 	
 	static public Properties MYSQL_CONN_PROPS() {
@@ -99,13 +108,22 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// Default Credentials for MSSQL //
 	//-------------------------------//
-	static private String MSSQL_CONN = "demodb-mssql.picoded-dev.com";
+	static private String MSSQL_HOST = "demodb-mssql.picoded-dev.com";
 	static private String MSSQL_NAME = "JAVACOMMONS";
 	static private String MSSQL_USER = "JAVACOMMONS";
 	static private String MSSQL_PASS = "JAVACOMMONS";
+	static private int MSSQL_PORT = 1433;
+	
+	static public String MSSQL_HOST() {
+		return MSSQL_HOST;
+	}
+	
+	static public int MSSQL_PORT() {
+		return MSSQL_PORT;
+	}
 	
 	static public String MSSQL_CONN() {
-		return MSSQL_CONN;
+		return MSSQL_HOST; // +":"+MSSQL_PORT;
 	}
 	
 	static public String MSSQL_NAME() {

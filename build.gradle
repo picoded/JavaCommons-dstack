@@ -87,6 +87,11 @@ dependencies {
 	api files("./lib/jsql/ojdbc6.jar")    // for oracle
 	api "org.xerial:sqlite-jdbc:3.25.2" // for sqlite
 	api "mysql:mysql-connector-java:6.0.6" // for mysql
+
+	// Newer MSSQL connection
+	api "com.microsoft.sqlserver:mssql-jdbc:7.0.0.jre8" // for mssql
+
+	// Older MSSQL connection
 	api "net.sourceforge.jtds:jtds:1.3.1" // for mssql
 
 	// Cache2k implementation

@@ -243,10 +243,7 @@ public abstract class JSql_Base extends JSql {
 			// Prepare the statement
 			sqlpstmt = prepareSqlStatment(conn, qString, values);
 			
-			// Performing the query, get the result set, and immediately pass it to JSqlResult
-			//
-			// Note: internally JSqlResult, already does a try,catch,finally to close the result set
-			// as such there isnt a need for an additional close check within this try,catch
+			// Performing the query, get the affected row count
 			return sqlpstmt.executeUpdate();
 		} catch (Exception e) {
 			throw new JSqlException(e);

@@ -45,6 +45,7 @@ public abstract class JSql_Base_test {
 	public void tearDown() {
 		if (jsqlObj != null) {
 			jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
+			jsqlObj.close();
 			jsqlObj = null;
 		}
 	}
@@ -199,7 +200,7 @@ public abstract class JSql_Base_test {
 	@Test
 	public void createTableStatementBuilder() {
 		// cleanup (just incase)
-		assertEquals(0, jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`"));
+		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
 		
 		// valid table creation : no exception
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "col1", "col2" }, new String[] {
@@ -234,7 +235,7 @@ public abstract class JSql_Base_test {
 	@Test
 	public void updateStatements() {
 		// cleanup (just incase)
-		assertEquals(0, jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`"));
+		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
 		
 		assertEquals(
 			0,
