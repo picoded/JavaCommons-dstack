@@ -1,6 +1,7 @@
 # dstack.connector
 
-Contains multiple XConnector classes, which provides a connection to the respective backend, given the required config map.
+Contains multiple XConnector classes, within their own package namespace. 
+This provides a connection to the respective backend, given the required config map.
 
 Examples include, but not limited to
 
