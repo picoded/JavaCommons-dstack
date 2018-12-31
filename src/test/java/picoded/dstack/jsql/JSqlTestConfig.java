@@ -61,7 +61,6 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// Default Credentials for MYSQL //
 	//-------------------------------//
-	static private String MYSQL_CONN_JDBC = "jdbc:mysql://demodb-mysql.picoded-dev.com:3306/JAVACOMMONS";
 	static private String MYSQL_CONN = "demodb-mysql.picoded-dev.com:3306";
 	static private String MYSQL_DATA = "JAVACOMMONS";
 	static private String MYSQL_USER = "JAVACOMMONS";
@@ -84,7 +83,7 @@ public class JSqlTestConfig {
 	}
 	
 	static public String MYSQL_CONN_JDBC() {
-		return MYSQL_CONN_JDBC;
+		return "jdbc:mysql://" + MYSQL_CONN + "/" + MYSQL_DATA;
 	}
 	
 	static public Properties MYSQL_CONN_PROPS() {

@@ -682,7 +682,7 @@ public abstract class JSql_Base_test {
 		
 		// Validate the info
 		assertEquals(2, res.size());
-		assertEquals("INT", res.getString("pKy"));
-		assertEquals("INT", res.getString("iVl"));
+		assertTrue(res.getString("pKy").contains("INT"));
+		assertTrue(res.getString("iVl").contains("INT"));
 	}
 }
