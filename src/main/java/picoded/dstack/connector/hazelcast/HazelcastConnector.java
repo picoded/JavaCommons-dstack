@@ -62,7 +62,6 @@ public class HazelcastConnector {
 	 * @param  groupName used for the cluster
 	 */
 	public static void closeConnection(HazelcastInstance connection) {
-		
 		// Mandatory null argument check
 		if (connection == null) {
 			throw new IllegalArgumentException(ExceptionMessage.unexpectedNullArgument);
