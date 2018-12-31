@@ -10,8 +10,11 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import picoded.core.struct.MutablePair;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertHashMap;
+import picoded.core.struct.CaseInsensitiveHashMap;
 import picoded.dstack.jsql.connector.JSqlType;
 
 /**
@@ -70,7 +73,40 @@ public class JSql_Sqlite extends JSql_Base {
 	
 	//-------------------------------------------------------------------------
 	//
-	// UPSERT Query Builder
+	// Table type info fetching
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the 
+	 * HIGHLY different standards involved across SQL backends for this command, 
+	 * it has been normalized to only return a map containing collumn name and types
+	 * 
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 * 
+	 * This immediately executes a query, and process the information directly 
+	 * (to normalize the results across SQL implementations).
+	 * 
+	 * Note : returned map should be a `CaseInsensitiveHashMap`
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
+	 **/
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
+		// Get the column information
+		JSqlResult tableInfo = query_raw("PRAGMA table_info(" + tablename + ")");
+		
+		// And return it as a list pair
+		return new MutablePair<>(tableInfo.get("name"), tableInfo.get("type"));
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL conversion, and error sanatization
 	//
 	//-------------------------------------------------------------------------
 	

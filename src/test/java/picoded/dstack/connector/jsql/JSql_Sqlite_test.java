@@ -16,12 +16,4 @@ public class JSql_Sqlite_test extends JSql_Base_test {
 		return new JSql_Sqlite();
 	}
 	
-	@Test
-	public void genericSqlParserTest() {
-		String s = ((JSql_Sqlite) jsqlObj).genericSqlParser("SELECT * FROM " + testTableName
-			+ " WHERE COL1 = ?");
-		assertEquals("SELECT * FROM " + testTableName + " WHERE COL1=?",
-			s.replaceAll("COL1 = \\?", "COL1=?"));
-	}
-	
 }

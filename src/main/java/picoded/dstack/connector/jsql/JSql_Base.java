@@ -18,12 +18,17 @@ import java.util.logging.Logger;
 
 import com.zaxxer.hikari.*;
 
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertList;
+import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.core.struct.MutablePair;
+
 /**
  * Default generic JSQL implmentation,
  * with shared usage across multiple DB's
  * while not being usable for any of them on its own.
  **/
-public class JSql_Base extends JSql {
+public abstract class JSql_Base extends JSql {
 	
 	//-------------------------------------------------------------------------
 	//
@@ -263,7 +268,86 @@ public class JSql_Base extends JSql {
 	
 	//-------------------------------------------------------------------------
 	//
-	// Generic SQL conversion and query
+	// Table Column type info map
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the 
+	 * HIGHLY different standards involved across SQL backends for this command, 
+	 * it has been normalized to only return a map containing collumn name and types
+	 * 
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 * 
+	 * This immediately executes a query, and process the information directly 
+	 * (to normalize the results across SQL implementations).
+	 * 
+	 * Note : returned map should be a `CaseInsensitiveHashMap`
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Collumn name to type mapping
+	 **/
+	public GenericConvertMap<String, String> getTableColumnTypeMap(String tablename) {
+		// Prepare return information map
+		GenericConvertMap<String, String> ret = new CaseInsensitiveHashMap<String, String>();
+		
+		// Remove quotations in table name, and trim out excess whitespace
+		tablename = tablename.replaceAll("`", "").replaceAll("'", "").replaceAll("\"", "").trim();
+		
+		// Get the column information
+		MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> columnTypePair = getTableColumnTypeMap_core(tablename);
+		
+		// Parse it into a map format
+		GenericConvertList<Object> column_name = columnTypePair.getLeft();
+		GenericConvertList<Object> column_type = columnTypePair.getRight();
+		
+		// Iterate name/type, and get the info
+		for (int i = 0; i < column_name.size(); ++i) {
+			ret.put(column_name.getString(i), column_type.getString(i).toUpperCase());
+		}
+		
+		// Return the meta map
+		return ret;
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Table Column type info map internal implementation
+	// [TO OVERWRITE AND EXTEND]
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the 
+	 * HIGHLY different standards involved across SQL backends for this command, 
+	 * it has been normalized to only return a map containing collumn name and types
+	 * 
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 * 
+	 * This immediately executes a query, and process the information directly 
+	 * (to normalize the results across SQL implementations).
+	 * 
+	 * Note : returned map should be a `CaseInsensitiveHashMap`
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
+	 **/
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
+		throw new UnsupportedOperationException(
+			"getTableColumnTypeMap for given SQL type is not supported yet");
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL conversion, and error sanatization
+	// [TO OVERWRITE AND EXTEND]
 	//
 	//-------------------------------------------------------------------------
 	
@@ -280,24 +364,6 @@ public class JSql_Base extends JSql {
 	 **/
 	public String genericSqlParser(String qString) {
 		return qString;
-	}
-	
-	/**
-	 * Internal exception catching, used for cases which its not possible to
-	 * easily handle with pure SQL query. Or cases where the performance cost in the
-	 * the query does not justify its usage (edge cases)
-	 *
-	 * This acts as a filter for query, noFetchQuery, and update respectively
-	 *
-	 * @param  SQL query to "normalize"
-	 * @param  The "normalized" sql query
-	 * @param  The exception caught
-	 *
-	 * @return  TRUE, if the exception can be safely ignored
-	 **/
-	protected boolean sanatizeErrors(String originalQuery, String normalizedQuery, JSqlException e) {
-		String stackTrace = picoded.core.exception.ExceptionUtils.getStackTrace(e);
-		return sanatizeErrors(originalQuery.toUpperCase(), normalizedQuery.toUpperCase(), stackTrace);
 	}
 	
 	/**
@@ -322,6 +388,30 @@ public class JSql_Base extends JSql {
 			}
 		}
 		return false;
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL query and update calls (with sanitization of errors)
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Internal exception catching, used for cases which its not possible to
+	 * easily handle with pure SQL query. Or cases where the performance cost in the
+	 * the query does not justify its usage (edge cases)
+	 *
+	 * This acts as a filter for query, noFetchQuery, and update respectively
+	 *
+	 * @param  SQL query to "normalize"
+	 * @param  The "normalized" sql query
+	 * @param  The exception caught
+	 *
+	 * @return  TRUE, if the exception can be safely ignored
+	 **/
+	protected boolean sanatizeErrors(String originalQuery, String normalizedQuery, JSqlException e) {
+		String stackTrace = picoded.core.exception.ExceptionUtils.getStackTrace(e);
+		return sanatizeErrors(originalQuery.toUpperCase(), normalizedQuery.toUpperCase(), stackTrace);
 	}
 	
 	/**

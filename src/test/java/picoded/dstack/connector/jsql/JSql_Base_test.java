@@ -8,6 +8,8 @@ import java.util.Map;
 import picoded.core.conv.ConvertJSON;
 import picoded.dstack.jsql.*;
 
+import picoded.core.struct.GenericConvertMap;
+
 ///
 /// Common base JSql Test case which is applied to various implmentation
 ///
@@ -213,6 +215,17 @@ public abstract class JSql_Base_test {
 		// Data insertion
 		assertEquals(1, jsqlObj.update("INSERT INTO " + testTableName
 			+ " ( col1, col2 ) VALUES (?,?)", 404, "has nothing"));
+	}
+	
+	/**
+	 * Some basic test for genericSqlParser conversions
+	 */
+	@Test
+	public void genericSqlParserTest() {
+		String s = ((JSql_Base) jsqlObj).genericSqlParser("SELECT * FROM " + testTableName
+			+ " WHERE COL1 = ?");
+		assertEquals("SELECT * FROM " + testTableName + " WHERE COL1=?",
+			s.replaceAll("COL1 = \\?", "COL1=?"));
 	}
 	
 	/**
@@ -636,7 +649,7 @@ public abstract class JSql_Base_test {
 	}
 	
 	@Test
-	public void byteArrayStorage() {
+	public void byteArrayStorageTest() {
 		// Table with BLOB type
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "pKy", "rVl" }, new String[] {
 			"VARCHAR(64) PRIMARY KEY", "BLOB" }));
@@ -655,5 +668,21 @@ public abstract class JSql_Base_test {
 		// Validate data 
 		assertEquals("small-data", res.get("pKy").get(0));
 		assertArrayEquals(dataArr, (byte[]) res.get("rVl").get(0));
+	}
+	
+	@Test
+	public void getTableColumnTypeMapTest() {
+		// Table with int type
+		assertTrue(jsqlObj.createTable(testTableName, new String[] { "pKy", "iVl" }, new String[] {
+			"int PRIMARY KEY", "int" }));
+		
+		// Get the table column type map
+		GenericConvertMap<String, String> res = jsqlObj.getTableColumnTypeMap(testTableName);
+		assertNotNull(res);
+		
+		// Validate the info
+		assertEquals(2, res.size());
+		assertEquals("INT", res.getString("pKy"));
+		assertEquals("INT", res.getString("iVl"));
 	}
 }
