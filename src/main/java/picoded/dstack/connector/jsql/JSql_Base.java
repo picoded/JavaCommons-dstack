@@ -84,17 +84,6 @@ public class JSql_Base extends JSql {
 		}
 	}
 	
-	/**
-	 * Just incase a user forgets to dispose "as per normal"
-	 **/
-	protected void finalize() throws Throwable {
-		try {
-			close(); // close open files?
-		} catch (Exception ex) {
-			JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
-		}
-	}
-	
 	//-------------------------------------------------------------------------
 	//
 	// Internal utility functions

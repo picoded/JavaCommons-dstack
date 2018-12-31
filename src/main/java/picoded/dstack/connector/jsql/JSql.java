@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import picoded.core.struct.GenericConvertMap;
@@ -23,7 +24,8 @@ import picoded.dstack.connector.jsql.statement.*;
  *
  * SECURITY NOTE: care should ALWAYS be taken to prevent SQL injection when dealing with query strings.
  **/
-public abstract class JSql implements StatementBuilderBaseInterface {
+public abstract class JSql implements StatementBuilderTableAndIndex, StatementBuilderUpsert,
+	StatementBuilderSelect, StatementBuilderRandomSelect, StatementBuilderDelete {
 	
 	//-------------------------------------------------------------------------
 	//
@@ -198,7 +200,13 @@ public abstract class JSql implements StatementBuilderBaseInterface {
 	/**
 	 * Just incase a user forgets to dispose "as per normal"
 	 **/
-	protected abstract void finalize() throws Throwable;
+	protected void finalize() throws Throwable {
+		try {
+			close(); // close open files?
+		} catch (Exception ex) {
+			JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
 	
 	//-------------------------------------------------------------------------
 	//
