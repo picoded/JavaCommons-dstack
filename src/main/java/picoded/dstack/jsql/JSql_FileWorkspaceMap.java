@@ -132,22 +132,17 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-		
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
-		try {
-			sqlObj.upsert( //
-				fileWorkspaceTableName, //
-				new String[] { "oID", "path" }, //
-				new Object[] { oid, filepath }, //
-				new String[] { "uTm" }, //
-				new Object[] { now }, //
-				new String[] { "cTm", "eTm", "data" }, //
-				new Object[] { now, 0, data }, //
-				null // The only misc col, is pKy, which is being handled by DB
-				);
-		} catch (Exception e) {
-			// silence the exception
-		}
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, filepath }, //
+			new String[] { "uTm" }, //
+			new Object[] { now }, //
+			new String[] { "cTm", "eTm", "data" }, //
+			new Object[] { now, 0, data }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
 	}
 	
 	/**
@@ -173,7 +168,18 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	@Override
 	public void backend_setupWorkspace(String oid) {
-		// do nothing for jsql
+		// Setup a blank folder path
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, "" }, //
+			new String[] { "uTm" }, //
+			new Object[] { now }, //
+			new String[] { "cTm", "eTm", "data" }, //
+			new Object[] { now, 0, null }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
 	}
 	
 	//--------------------------------------------------------------------------
