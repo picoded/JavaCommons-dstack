@@ -35,8 +35,6 @@ public class HazelcastStorageExtractor extends ValueExtractor<HazelcastStorageMa
 			res = NestedObjectFetch.fetchObject(target, arg, null);
 		}
 		
-		// System.out.println("Attribute - " + arg + " - " + res);
-		
 		// Add result into the collector
 		collector.addObject(res);
 	}

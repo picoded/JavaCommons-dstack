@@ -115,7 +115,7 @@ class HikaricpUtil {
 	 */
 	public static HikariDataSource sqlite(GenericConvertMap config) {
 		// Lets get the sqlite path
-		String path = config.getString("path", null);
+		String path = config.getString("path", ":memory:");
 		if (path == null || path.length() == 0) {
 			throw new RuntimeException("Missing path configuration for SQLite connection");
 		}
