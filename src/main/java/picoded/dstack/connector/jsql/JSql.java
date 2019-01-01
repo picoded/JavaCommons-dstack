@@ -45,35 +45,35 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * SQLite static constructor, returns picoded.dstack.jsql.connector.db.JSql_Sqlite
+	 * SQLite static constructor, returns picoded.dstack.jsql.connector.JSql_Sqlite
 	 **/
 	public static JSql sqlite(GenericConvertMap<String, Object> config) {
 		return new JSql_Sqlite(config);
 	}
 	
 	/**
-	 * Mysql static constructor, returns picoded.dstack.jsql.connector.db.JSql_Mysql
+	 * Mysql static constructor, returns picoded.dstack.jsql.connector.JSql_Mysql
 	 **/
 	public static JSql mysql(GenericConvertMap<String, Object> config) {
 		return new JSql_Mysql(config);
 	}
 	
 	/**
-	 * Mssql static constructor, returns picoded.dstack.jsql.connector.db.JSql_Mssql
+	 * Mssql static constructor, returns picoded.dstack.jsql.connector.JSql_Mssql
 	 **/
 	public static JSql mssql(GenericConvertMap<String, Object> config) {
 		return new JSql_Mssql(config);
 	}
 	
 	// /**
-	//  * Oracle static constructor, returns picoded.dstack.jsql.connector.db.JSql_Oracle
+	//  * Oracle static constructor, returns picoded.dstack.jsql.connector.JSql_Oracle
 	//  **/
 	// public static JSql oracle(GenericConvertMap<String,Object> config) {
 	// 	return JSql_Oracle(config);
 	// }
 	
 	// /*
-	//  * Oracle static constructor, returns picoded.dstack.jsql.connector.db.JSql_Oracle
+	//  * Oracle static constructor, returns picoded.dstack.jsql.connector.JSql_Oracle
 	//  */
 	// public static JSql oracle(String oraclePath, String dbUser, String dbPass) {
 	// 	return new picoded.dstack.jsql.connector.db.JSql_Oracle(oraclePath, dbUser, dbPass);

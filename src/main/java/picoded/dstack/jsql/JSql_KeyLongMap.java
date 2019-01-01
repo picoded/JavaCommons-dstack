@@ -208,9 +208,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		}
 		
 		// Does the update from 0
-		JSqlResult r = sqlObj.query("UPDATE " + keyLongMapName
-			+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
-		return (r.affectedRows() > 0);
+		return sqlObj.update("UPDATE " + keyLongMapName + " SET kVl= ? WHERE kID = ? AND kVl = ?",
+			update, key, expect) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
