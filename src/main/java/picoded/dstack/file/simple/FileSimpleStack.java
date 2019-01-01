@@ -9,7 +9,7 @@ import picoded.dstack.jsql.JSql_DataObjectMap;
 import picoded.dstack.jsql.JSql_FileWorkspaceMap;
 import picoded.dstack.jsql.JSql_KeyLongMap;
 import picoded.dstack.jsql.JSql_KeyValueMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 
 public class FileSimpleStack extends CoreStack {
 	

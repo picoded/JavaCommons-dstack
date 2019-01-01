@@ -10,7 +10,7 @@
 // import java.util.logging.Logger;
 
 // import picoded.core.struct.GenericConvertMap;
-// import picoded.dstack.jsql.connector.JSqlType;
+// import picoded.dstack.connector.jsql.JSqlType;
 
 // /**
 //  * Various JSQL query interfaces built ontop of raw queries

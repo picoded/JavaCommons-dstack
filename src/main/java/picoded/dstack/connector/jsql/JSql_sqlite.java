@@ -15,7 +15,7 @@ import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.CaseInsensitiveHashMap;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.dstack.connector.jsql.JSqlType;
 
 /**
  * SQLite implementation of JSql

@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import picoded.dstack.jsql.connector.*;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.dstack.connector.jsql.*;
+import picoded.dstack.connector.jsql.JSqlType;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertHashMap;
