@@ -3,7 +3,7 @@ package picoded.dstack.jsql;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.core.*;
 import picoded.dstack.*;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 
 /**
  * [Internal use only]

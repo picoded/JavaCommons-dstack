@@ -1,8 +1,8 @@
 package picoded.dstack.jsql;
 
 import picoded.dstack.core.Core_FileWorkspaceMap;
-import picoded.dstack.jsql.connector.JSql;
-import picoded.dstack.jsql.connector.JSqlResult;
+import picoded.dstack.connector.jsql.JSql;
+import picoded.dstack.connector.jsql.JSqlResult;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
@@ -116,7 +116,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		if (jSqlResult == null || jSqlResult.get("data") == null || jSqlResult.rowCount() <= 0) {
 			return null;
 		}
-		return (byte[]) jSqlResult.get("data")[0];
+		return (byte[]) jSqlResult.get("data").get(0);
 	}
 	
 	/**

@@ -8,7 +8,7 @@ import picoded.core.conv.StringEscape;
 
 /**
  * Hazelcast custom map attribute extractor, this is one major work around the lack of 
- * map query support then is pending merge here : https://github.com/hazelcast/hazelcast/pull/12708
+ * map query support which is pending merge here : https://github.com/hazelcast/hazelcast/pull/12708
  * 
  * The current work around, would be to initialize an ValueExtractor, with the following attribute config
  * (Adapted from https://docs.hazelcast.org/docs/latest-development/manual/html/Distributed_Query/Custom_Attributes/Configuring_a_Custom_Attribute_Programmatically.html)
@@ -34,8 +34,6 @@ public class HazelcastStorageExtractor extends ValueExtractor<HazelcastStorageMa
 		if (res == null) {
 			res = NestedObjectFetch.fetchObject(target, arg, null);
 		}
-		
-		// System.out.println("Attribute - " + arg + " - " + res);
 		
 		// Add result into the collector
 		collector.addObject(res);

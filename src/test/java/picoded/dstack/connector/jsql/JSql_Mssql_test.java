@@ -1,41 +1,40 @@
-package picoded.dstack.jsql.connector;
+package picoded.dstack.connector.jsql;
 
 import static org.junit.Assert.*;
 import org.junit.*;
-
-import java.util.Map;
-
-import picoded.dstack.jsql.*;
+import picoded.dstack.jsql.JSqlTestConfig;
 
 ///
-/// JSql Test case which is specific for Mssql
+/// JSql Test case which is specific for MSSQL
 ///
 public class JSql_Mssql_test extends JSql_Base_test {
 	
-	///
-	/// SQL implmentation to actually overwrite
-	///
+	/**
+	 * SQL implmentation to actually overwrite
+	 * @return the JSql connection to test, this is called on every test
+	 */
 	public JSql sqlImplementation() {
-		return JSqlTestConnection.mssql();
+		return new JSql_Mssql(JSqlTestConfig.MSSQL_HOST(), JSqlTestConfig.MSSQL_PORT(),
+			JSqlTestConfig.MSSQL_NAME(), JSqlTestConfig.MSSQL_USER(), JSqlTestConfig.MSSQL_PASS());
 	}
 	
-	@Test
-	public void commitTest() {
-		throw new RuntimeException("Currently hangs and does not work Q.Q");
-		// jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + ""); //cleanup (just incase)
-		
-		// jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
-		// 	+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )");
-		// jsqlObj.setAutoCommit(false);
-		// assertFalse(jsqlObj.getAutoCommit());
-		// jsqlObj.update("INSERT INTO " + testTableName + " ( `col[1].pk`, col2 ) VALUES (?,?)", 404,
-		// 	"has nothing");
-		// jsqlObj.commit();
-		// JSqlResult r = jsqlObj.query("SELECT * FROM " + testTableName + "");
-		// assertNotNull("SQL result returns as expected", r);
-		// r.fetchAllRows();
-		// assertEquals("via readRow", 404, ((Number) r.readRow(0).getInt("col[1].pk")).intValue());
-	}
+	// // THIS HAS BEEN DEPRECATED - commit toggling support was dropped in hikariCP migration
+	// @Test
+	// public void commitTest() {
+	// 	throw new RuntimeException("Currently hangs and does not work Q.Q");
+	// 	// jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + ""); //cleanup (just incase)
+	// 	// jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
+	// 	// 	+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )");
+	// 	// jsqlObj.setAutoCommit(false);
+	// 	// assertFalse(jsqlObj.getAutoCommit());
+	// 	// jsqlObj.update("INSERT INTO " + testTableName + " ( `col[1].pk`, col2 ) VALUES (?,?)", 404,
+	// 	// 	"has nothing");
+	// 	// jsqlObj.commit();
+	// 	// JSqlResult r = jsqlObj.query("SELECT * FROM " + testTableName + "");
+	// 	// assertNotNull("SQL result returns as expected", r);
+	// 	// r.fetchAllRows();
+	// 	// assertEquals("via readRow", 404, ((Number) r.readRow(0).getInt("col[1].pk")).intValue());
+	// }
 	
 	// Currently fails Q_Q
 	@Test
@@ -74,5 +73,4 @@ public class JSql_Mssql_test extends JSql_Base_test {
 		assertEquals("Upsert value check failed", "not found", r.readRow(0).getString("col2"));
 		assertEquals("Upsert value check failed", "ABC", r.readRow(0).getString("col4"));
 	}
-	
 }

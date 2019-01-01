@@ -15,7 +15,7 @@ import picoded.dstack.core.Core_DataObjectMap;
 import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.query.Query;
 import picoded.core.struct.GenericConvertHashMap;
-import picoded.dstack.jsql.connector.*;
+import picoded.dstack.connector.jsql.*;
 import picoded.core.conv.ListValueConv;
 
 /**

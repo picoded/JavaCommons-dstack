@@ -2,7 +2,7 @@ package picoded.dstack.jsql;
 
 import picoded.dstack.DataObjectMap;
 import picoded.dstack.FileWorkspaceMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.struct.simple.StructSimple_FileWorkspaceMap_test;
 
 public class JSql_FileWorkspaceMap_test extends StructSimple_FileWorkspaceMap_test {
