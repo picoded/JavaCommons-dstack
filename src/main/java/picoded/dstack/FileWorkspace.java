@@ -19,7 +19,7 @@ public interface FileWorkspace {
 	/**
 	 * The created timestamp of the map in ms,
 	 * note that -1 means the current backend does not support this feature
-	 * 
+	 *
 	 * @return  DataObject created timestamp in ms
 	 */
 	default long createdTimestamp() {
@@ -27,13 +27,24 @@ public interface FileWorkspace {
 	}
 	
 	/**
-	 * The updated timestamp of the map in ms, 
+	 * The updated timestamp of the map in ms,
 	 * note that -1 means the current backend does not support this feature
-	 * 
+	 *
 	 * @return  DataObject created timestamp in ms
 	 */
 	default long updatedTimestamp() {
 		return -1;
+	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	default void setupWorkspace() {
 	}
 	
 	// File exists checks
@@ -41,10 +52,10 @@ public interface FileWorkspace {
 	
 	/**
 	 * Checks if the filepath exists with a file.
-	 * 
+	 *
 	 * @param  filepath in the workspace to check
-	 * 
-	 * @return true, if file exists (and writable), false if it does not. Possible a folder 
+	 *
+	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	boolean fileExist(final String filepath);
 	
@@ -54,8 +65,8 @@ public interface FileWorkspace {
 	/**
 	 * Reads the contents of a file into a byte array.
 	 *
-	 * @param  filepath in the workspace to extract 
-	 * 
+	 * @param  filepath in the workspace to extract
+	 *
 	 * @return the file contents, null if file does not exists
 	 */
 	byte[] readByteArray(final String filepath);
@@ -65,7 +76,7 @@ public interface FileWorkspace {
 	 *
 	 * the parent directories of the file will be created if they do not exist.
 	 *
-	 * @param filepath in the workspace to extract 
+	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
 	void writeByteArray(final String filepath, final byte[] data);
@@ -79,7 +90,7 @@ public interface FileWorkspace {
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
-	 * 
+	 *
 	 * NOTE that by default this DOES NOT perform any file locks. As such,
 	 * if used in a concurrent access situation. Segmentys may get out of sync.
 	 *

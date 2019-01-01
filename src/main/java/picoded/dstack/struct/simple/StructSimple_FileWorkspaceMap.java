@@ -138,6 +138,19 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		// do nothing for struct simple
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance

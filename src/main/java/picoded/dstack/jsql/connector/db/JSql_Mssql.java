@@ -41,7 +41,7 @@ public class JSql_Mssql extends JSql_Base {
 		// store database connection properties
 		setConnectionProperties(dbUrl, dbName, dbUser, dbPass, null);
 		
-		// call internal method to create the connection
+		// call internal method to createUser the connection
 		setupConnection();
 	}
 	
@@ -70,7 +70,7 @@ public class JSql_Mssql extends JSql_Base {
 		if (force) {
 			close();
 		}
-		// call internal method to create the connection
+		// call internal method to createUser the connection
 		setupConnection();
 	}
 	
@@ -273,7 +273,7 @@ public class JSql_Mssql extends JSql_Base {
 				qString = prefixQuery + offsetQuery + limitQuery;
 			}
 			
-			// Replace ORDER BY RANDOM() 
+			// Replace ORDER BY RANDOM()
 			// with ORDER BY NEWID()
 			// https://stackoverflow.com/questions/19412/how-to-request-a-random-row-in-sql
 			qString = qString.replaceAll("ORDER BY RANDOM\\(\\)", "ORDER BY NEWID()").replaceAll(
@@ -363,8 +363,8 @@ public class JSql_Mssql extends JSql_Base {
 		qString = qString.replaceAll("(?i)BLOB", "VARBINARY(MAX)");
 		
 		// Work around default table value quotes
-		// sadly variable arguments are NOT allowed in create table statements
-		// 
+		// sadly variable arguments are NOT allowed in createUser table statements
+		//
 		// LIKE WHY?????
 		// java.sql.SQLException: Variables are not allowed in the CREATE TABLE statement.
 		
@@ -374,7 +374,7 @@ public class JSql_Mssql extends JSql_Base {
 		// while( (defaultTxtIdx = qString.indexOf("DEFAULT", lastCheckedIdx)) > 0 ) {
 		// 	int defaultTxtIdxEnd = defaultTxtIdx + "DEFAULT".length();
 		
-		// 	// Replace double quote with literal string 
+		// 	// Replace double quote with literal string
 		// 	String beforeDefaultStatement = qString.substring(0, defaultTxtIdx);
 		// 	String afterDefaultStatement = qString.substring(defaultTxtIdxEnd);
 		// 	afterDefaultStatement = afterDefaultStatement.replaceFirst("\\s+\"", "('").replaceFirst("\"", "')");
@@ -790,7 +790,7 @@ public class JSql_Mssql extends JSql_Base {
 		queryBuilder.append("USING ( VALUES ");
 		
 		// dynamically append the rows in the VALUES section
-		// first create one (?, ?, ?, ?) to reuse
+		// first createUser one (?, ?, ?, ?) to reuse
 		StringBuilder valuesParameter = new StringBuilder();
 		valuesParameter.append("(");
 		for (int x = 0; x < uniqueColumns.length; ++x) {
