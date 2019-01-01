@@ -15,8 +15,7 @@ import picoded.core.conv.*;
 import picoded.core.common.*;
 import picoded.dstack.*;
 import picoded.dstack.core.*;
-import picoded.dstack.jsql.*;
-import picoded.dstack.jsql.connector.*;
+import picoded.dstack.connector.jsql.*;
 import picoded.core.struct.*;
 import picoded.core.struct.query.*;
 import picoded.core.struct.query.condition.*;
@@ -57,22 +56,22 @@ public class JSql_DataObjectMapUtil {
 	 * @return   row of the JSqlResult, -1 if failed to find
 	 **/
 	protected static int fetchResultPosition(JSqlResult r, String _oid, String key, int idx) {
-		Object[] oID_array = r.get("oID");
-		Object[] kID_array = r.get("kID");
-		Object[] idx_array = r.get("idx");
+		GenericConvertList<Object> oID_array = r.get("oID");
+		GenericConvertList<Object> kID_array = r.get("kID");
+		GenericConvertList<Object> idx_array = r.get("idx");
 		
-		int lim = kID_array.length;
+		int lim = kID_array.size();
 		for (int i = 0; i < lim; ++i) {
 			
-			if (_oid != null && !_oid.equals(oID_array[i])) {
+			if (_oid != null && !_oid.equals(oID_array.get(i))) {
 				continue;
 			}
 			
-			if (key != null && !key.equals(((String) (kID_array[i])))) {
+			if (key != null && !key.equals(kID_array.getString(i))) {
 				continue;
 			}
 			
-			if (idx > -9 && idx != ((Number) (idx_array[i])).intValue()) {
+			if (idx > -9 && idx != (idx_array.getInt(i))) {
 				continue;
 			}
 			
@@ -223,7 +222,7 @@ public class JSql_DataObjectMapUtil {
 		//
 		// Get the storage type setting
 		//
-		int baseType = ((Number) (r.get("typ")[pos])).intValue();
+		int baseType = ((Number) (r.get("typ").get(pos))).intValue();
 		
 		//
 		// Null type support
@@ -236,22 +235,22 @@ public class JSql_DataObjectMapUtil {
 		// Int, Long, Double, Float
 		//
 		if (baseType == Core_DataType.INTEGER.getValue()) {
-			return new Integer(((Number) (r.get("nVl")[pos])).intValue());
+			return new Integer(r.get("nVl").getInt(pos));
 		} else if (baseType == Core_DataType.LONG.getValue()) {
-			return new Long(((Number) (r.get("nVl")[pos])).longValue());
+			return new Long(r.get("nVl").getLong(pos));
 		} else if (baseType == Core_DataType.FLOAT.getValue()) {
-			return new Float(((Number) (r.get("nVl")[pos])).floatValue());
+			return new Float(r.get("nVl").getFloat(pos));
 		} else if (baseType == Core_DataType.DOUBLE.getValue()) {
-			return new Double(((Number) (r.get("nVl")[pos])).doubleValue());
+			return new Double(r.get("nVl").getDouble(pos));
 		}
 		
 		//
 		// String / Text value support
 		//
 		if (baseType == Core_DataType.STRING.getValue()) { // String
-			return (String) (r.get("tVl")[pos]);
+			return r.get("tVl").getString(pos);
 		} else if (baseType == Core_DataType.TEXT.getValue()) { // Text
-			return (String) (r.get("tVl")[pos]);
+			return r.get("tVl").getString(pos);
 		}
 		
 		//
@@ -259,9 +258,9 @@ public class JSql_DataObjectMapUtil {
 		//
 		if (baseType == Core_DataType.BINARY.getValue()) {
 			// Older base64 stroage format
-			// return (Base64.getDecoder().decode((String) (r.get("tVl")[pos])));
+			// return (Base64.getDecoder().decode((String) (r.get("tVl").get(pos))));
 			
-			Object rawValue = r.get("rVl")[pos];
+			Object rawValue = r.get("rVl").get(pos);
 			if (rawValue instanceof java.sql.Blob) {
 				java.sql.Blob blobData = (java.sql.Blob) rawValue;
 				try {
@@ -285,11 +284,11 @@ public class JSql_DataObjectMapUtil {
 		// JSON value support
 		//
 		if (baseType == Core_DataType.JSON.getValue()) { // JSON
-			return ConvertJSON.toObject((String) (r.get("tVl")[pos]));
+			return ConvertJSON.toObject(r.get("tVl").getString(pos));
 		}
 		
-		throw new RuntimeException("Object type not yet supported: oID = " + r.get("oID")[pos]
-			+ ", kID = " + r.get("kID")[pos] + ", BaseType = " + baseType);
+		throw new RuntimeException("Object type not yet supported: oID = " + r.get("oID").get(pos)
+			+ ", kID = " + r.get("kID").get(pos) + ", BaseType = " + baseType);
 		
 		//throw new RuntimeException("Object type not yet supported: Pos = "+pos+", BaseType = "+ baseType);
 	}
@@ -304,8 +303,8 @@ public class JSql_DataObjectMapUtil {
 	 **/
 	protected static Object[] extractKeyValueFromPos_nonArray(JSqlResult r, int pos) {
 		Object value = extractNonArrayValueFromPos(r, pos);
-		Object[] idArr = r.get("kID");
-		return new Object[] { idArr[pos], value };
+		List<Object> idArr = r.get("kID");
+		return new Object[] { idArr.get(pos), value };
 	}
 	
 	/**
@@ -479,26 +478,26 @@ public class JSql_DataObjectMapUtil {
 		}
 		
 		// Get thee value lists
-		Object[] oID_list = r.get("oID");
-		Object[] kID_list = r.get("kID");
-		Object[] idx_list = r.get("idx");
+		GenericConvertList<Object> oID_list = r.get("oID");
+		GenericConvertList<Object> kID_list = r.get("kID");
+		GenericConvertList<Object> idx_list = r.get("idx");
 		
 		// This is a query call, hence no data to extract
-		if (kID_list == null || kID_list.length <= 0) {
+		if (kID_list == null || kID_list.size() <= 0) {
 			return ret;
 		}
 		
 		// Iterate the keys
-		int lim = kID_list.length;
+		int lim = kID_list.size();
 		for (int i = 0; i < lim; ++i) {
 			
 			// oid provided, and does not match, terminated
-			if (_oid != null && !_oid.equals(oID_list[i])) {
+			if (_oid != null && !_oid.equals(oID_list.get(i))) {
 				continue;
 			}
 			
 			// Ignore non 0-indexed value (array support not added yet)
-			if (((Number) (idx_list[i])).intValue() != 0) {
+			if (idx_list.getInt(i) != 0) {
 				continue; //Now only accepts first value (not an array)
 			}
 			
@@ -1093,10 +1092,10 @@ public class JSql_DataObjectMapUtil {
 		JSqlResult r = runComplexQuery(dataObjectMapObj, sql, tablename,
 			"COUNT(DISTINCT \"oID\") AS rcount", whereClause, whereValues, orderByStr, offset, limit);
 		
-		Object[] rcountArr = r.get("rcount");
+		GenericConvertList<Object> rcountArr = r.get("rcount");
 		// Generate the object list
-		if (rcountArr != null && rcountArr.length > 0) {
-			return ((Number) rcountArr[0]).longValue();
+		if (rcountArr != null && rcountArr.size() > 0) {
+			return rcountArr.getLong(0);
 		}
 		// Blank as fallback
 		return 0;

@@ -15,6 +15,7 @@ Server mode will use the following additional config settings
 |-------------------|-----------|------------|--------------------------------------------------|
 | multicast         | boolean   | true       | Cluster scanning using multicast support         |
 | port              | int       | 5900       | Server instance default port                     |
+| portAutoIncrement | boolean   | true       | Auto increment port, if configured port is used  |
 | memberTcpList     | array     | []         | Array of servers to scan for cluster detection   |
 
 Client mode will use the following additional config settings

@@ -5,9 +5,9 @@ import picoded.core.conv.ListValueConv;
 import picoded.core.struct.MutablePair;
 import picoded.dstack.KeyLong;
 import picoded.dstack.core.Core_KeyLongMap;
-import picoded.dstack.jsql.connector.JSql;
-import picoded.dstack.jsql.connector.JSqlException;
-import picoded.dstack.jsql.connector.JSqlResult;
+import picoded.dstack.connector.jsql.JSql;
+import picoded.dstack.connector.jsql.JSqlException;
+import picoded.dstack.connector.jsql.JSqlResult;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -150,7 +150,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		}
 		
 		// Check for null objects
-		Object longObj = r.get("kVl")[0];
+		Object longObj = r.get("kVl").get(0);
 		if (longObj == null) {
 			return null;
 		}
@@ -368,7 +368,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		
 		// Has value
 		if (r != null && r.rowCount() > 0) {
-			rawTime = r.get("eTm")[0];
+			rawTime = r.get("eTm").get(0);
 		} else {
 			return -1; //No value (-1)
 		}
