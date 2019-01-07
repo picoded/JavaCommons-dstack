@@ -21,20 +21,20 @@ import picoded.dstack.connector.jsql.JSqlType;
  * SQLite implementation of JSql
  **/
 public class JSql_Sqlite extends JSql_Base {
-
+	
 	//-------------------------------------------------------------------------
 	//
 	// Connection constructor
 	//
 	//-------------------------------------------------------------------------
-
+	
 	/**
 	 * SQLite in memory mode
 	 **/
 	public JSql_Sqlite() {
 		this(":memory:");
 	}
-
+	
 	/**
 	 * Sqlite at specified file path
 	 *
@@ -43,14 +43,14 @@ public class JSql_Sqlite extends JSql_Base {
 	public JSql_Sqlite(String sqliteLoc) {
 		// Initialize new config object
 		GenericConvertMap<String, Object> config = new GenericConvertHashMap<String, Object>();
-
+		
 		// Pass in the sqlite path
 		config.put("path", sqliteLoc);
-
+		
 		// Actual setup
 		constructor_setup(config);
 	}
-
+	
 	/**
 	 * Sqlite at specified file path
 	 *
@@ -59,7 +59,7 @@ public class JSql_Sqlite extends JSql_Base {
 	public JSql_Sqlite(GenericConvertMap<String, Object> config) {
 		constructor_setup(config);
 	}
-
+	
 	/**
 	 * Actual internal constructor setup function
 	 * (called internally by all other constructor types
@@ -71,13 +71,13 @@ public class JSql_Sqlite extends JSql_Base {
 		sqlType = JSqlType.SQLITE;
 		datasource = HikaricpUtil.sqlite(config);
 	}
-
+	
 	//-------------------------------------------------------------------------
 	//
 	// Table type info fetching
 	//
 	//-------------------------------------------------------------------------
-
+	
 	/**
 	 * Executes and fetch a table column information as a map, note that due to the
 	 * HIGHLY different standards involved across SQL backends for this command,
@@ -100,17 +100,17 @@ public class JSql_Sqlite extends JSql_Base {
 		String tablename) {
 		// Get the column information
 		JSqlResult tableInfo = query_raw("PRAGMA table_info(" + tablename + ")");
-
+		
 		// And return it as a list pair
 		return new MutablePair<>(tableInfo.get("name"), tableInfo.get("type"));
 	}
-
+	
 	//-------------------------------------------------------------------------
 	//
 	// Generic SQL conversion, and error sanatization
 	//
 	//-------------------------------------------------------------------------
-
+	
 	/**
 	 * Internal parser that converts some of the common sql statements to sqlite
 	 * This converts one SQL convention to another as needed
@@ -122,23 +122,23 @@ public class JSql_Sqlite extends JSql_Base {
 	public String genericSqlParser(String inString) {
 		final String truncateTable = "TRUNCATE TABLE";
 		final String deleteFrom = "DELETE FROM";
-
+		
 		inString = inString.toUpperCase(Locale.ENGLISH);
 		inString = inString.trim().replaceAll("(\\s){1}", " ").replaceAll("\\s+", " ")
 			.replaceAll("(?i)VARCHAR\\(MAX\\)", "VARCHAR").replaceAll("(?i)BIGINT", "INTEGER");
-
+		
 		if (inString.startsWith(truncateTable)) {
 			inString = inString.replaceAll(truncateTable, deleteFrom);
 		}
 		return inString;
 	}
-
+	
 	//-------------------------------------------------------------------------
 	//
 	// UPSERT Query Builder
 	//
 	//-------------------------------------------------------------------------
-
+	
 	/**
 	 * SQLite specific UPSERT support
 	 *
@@ -185,7 +185,7 @@ public class JSql_Sqlite extends JSql_Base {
 		// this is important as some SQL implementation will fallback to default table values, if not properly handled
 		String[] miscColumns //
 	) {
-
+		
 		/**
 		 * Checks that unique collumn and values length to be aligned
 		 **/
@@ -194,7 +194,7 @@ public class JSql_Sqlite extends JSql_Base {
 			throw new JSqlException(
 				"Upsert query requires unique column and values to be equal length");
 		}
-
+		
 		/**
 		 * Preparing inner default select, this will be used repeatingly for COALESCE, DEFAULT and MISC values
 		 **/
@@ -210,16 +210,16 @@ public class JSql_Sqlite extends JSql_Base {
 			innerSelectArgs.add(uniqueValues[a]);
 		}
 		innerSelectSB.append(")");
-
+		
 		String innerSelectPrefix = "(SELECT ";
 		String innerSelectSuffix = innerSelectSB.toString();
-
+		
 		/**
 		 * Building the query for INSERT OR REPLACE
 		 **/
 		StringBuilder queryBuilder = new StringBuilder("INSERT OR REPLACE INTO `" + tableName + "` (");
 		ArrayList<Object> queryArgs = new ArrayList<Object>();
-
+		
 		/**
 		 * Building the query for both sides of '(...columns...) VALUE (...vars...)' clauses in upsert
 		 * Note that the final trailing ", " seperator will be removed prior to final query conversion
@@ -227,7 +227,7 @@ public class JSql_Sqlite extends JSql_Base {
 		StringBuilder columnNames = new StringBuilder();
 		StringBuilder columnValues = new StringBuilder();
 		String columnSeperator = ", ";
-
+		
 		/**
 		 * Setting up unique values
 		 **/
@@ -240,7 +240,7 @@ public class JSql_Sqlite extends JSql_Base {
 			//
 			queryArgs.add(uniqueValues[a]);
 		}
-
+		
 		/**
 		 * Inserting updated values
 		 **/
@@ -256,7 +256,7 @@ public class JSql_Sqlite extends JSql_Base {
 					: null);
 			}
 		}
-
+		
 		/**
 		 * Handling default values
 		 **/
@@ -275,7 +275,7 @@ public class JSql_Sqlite extends JSql_Base {
 					: null);
 			}
 		}
-
+		
 		/**
 		 * Handling Misc values
 		 **/
@@ -290,7 +290,7 @@ public class JSql_Sqlite extends JSql_Base {
 				columnValues.append(columnSeperator);
 			}
 		}
-
+		
 		/**
 		 * Building the final query
 		 **/
@@ -302,5 +302,5 @@ public class JSql_Sqlite extends JSql_Base {
 		queryBuilder.append(")");
 		return new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), this);
 	}
-
+	
 }
