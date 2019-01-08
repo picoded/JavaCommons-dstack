@@ -44,7 +44,7 @@ public interface FileWorkspace {
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	default void setupWorkspace() {
+	default void setupWorkspace(String folderPath) {
 	}
 	
 	// File exists checks

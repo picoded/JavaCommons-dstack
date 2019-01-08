@@ -141,8 +141,14 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
-		File file = new File(baseDir + "/" + oid);
+	public void backend_setupWorkspace(String oid, String folderPath) {
+		File file = null;
+		if (folderPath.isEmpty()) {
+			file = new File(baseDir + "/" + oid);
+		} else {
+			file = new File(baseDir + "/" + oid + "/" + folderPath);
+		}
+		
 		boolean mkdir = file.mkdirs();
 	}
 	

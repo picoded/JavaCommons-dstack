@@ -191,9 +191,9 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid);
+			dataLayers[i].backend_setupWorkspace(oid, folderPath);
 		}
 	}
 	

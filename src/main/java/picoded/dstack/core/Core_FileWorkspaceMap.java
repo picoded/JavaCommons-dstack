@@ -53,8 +53,9 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String oid) {
-		backend_setupWorkspace(oid);
+	public void setupWorkspace(String oid, String folderPath) {
+		backend_setupWorkspace(oid, folderPath);
+	}
 	}
 	
 	//--------------------------------------------------------------------------
@@ -150,7 +151,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	abstract public void backend_setupWorkspace(String oid);
+	abstract public void backend_setupWorkspace(String oid, String folderPath);
 	
 	//--------------------------------------------------------------------------
 	//

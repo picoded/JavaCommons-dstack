@@ -167,13 +167,13 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		// Setup a blank folder path
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		sqlObj.upsert( //
 			fileWorkspaceTableName, //
 			new String[] { "oID", "path" }, //
-			new Object[] { oid, "" }, //
+			new Object[] { oid, folderPath }, //
 			new String[] { "uTm" }, //
 			new Object[] { now }, //
 			new String[] { "cTm", "eTm", "data" }, //
