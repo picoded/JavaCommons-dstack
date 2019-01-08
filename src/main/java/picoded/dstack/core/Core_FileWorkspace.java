@@ -95,7 +95,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public void setupWorkspace() {
 		main.setupWorkspace(_oid());
 	}
-	
+
+	// Utility functions
+	//--------------------------------------------------------------------------
+
+
+
 	// File exists checks
 	//--------------------------------------------------------------------------
 	
@@ -109,7 +114,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public boolean fileExist(final String filepath) {
 		return main.backend_fileExist(_oid, filepath);
 	}
-	
+
+	@Override
+	public boolean dirExist(String dirPath) {
+		return false;
+	}
+
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
 	
@@ -159,7 +169,31 @@ public class Core_FileWorkspace implements FileWorkspace {
 		// Write the new joint data
 		writeByteArray(filepath, jointData);
 	}
-	
+
+	/**
+	 * File listing api
+	 *
+	 * @param  directoryPath to search from within the workspace, if null or blank it searches the workspace root directory
+	 *
+	 * @return list of file names found in the directory, returns null if directory path does not exists
+	 */
+	@Override
+	public List<String> listFileNames(String directoryPath) {
+		return main.backend_listFileNames(_oid, directoryPath);
+	}
+
+	/**
+	 * Directory listing api
+	 *
+	 * @param  directoryPath to search from within the workspace, if null or blank it searches the workspace root directory
+	 *
+	 * @return list of directory names found in the directory, returns null if directory path does not exists
+	 */
+	@Override
+	public List<String> listDirNames(String directoryPath) {
+		return main.backend_listDirNames(_oid, directoryPath);
+	}
+
 	public void removeFile(final String filepath) {
 		main.backend_removeFile(_oid, filepath);
 	}

@@ -1,6 +1,7 @@
 package picoded.dstack.stack;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -181,7 +182,17 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_removeFile(oid, filepath);
 		}
 	}
-	
+
+	@Override
+	public List<String> backend_listFileNames(String oid, String dirPath) {
+		return null;
+	}
+
+	@Override
+	public List<String> backend_listDirNames(String oid, String dirPath) {
+		return null;
+	}
+
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *

@@ -3,6 +3,7 @@ package picoded.dstack.core;
 // Java imports
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 
 // Picoded imports
 import picoded.dstack.*;
@@ -15,10 +16,8 @@ import picoded.dstack.*;
  **/
 abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace>
 	implements FileWorkspaceMap {
-	
-	public String getFilePath(String oid) {
-		return "";
-	}
+
+
 	
 	//--------------------------------------------------------------------------
 	//
@@ -141,7 +140,31 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param filepath the file to be removed
 	 */
 	abstract public void backend_removeFile(final String oid, final String filepath);
-	
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * List the files under the specified workspace directory
+	 *
+	 * @param oid identifier to the workspace
+	 * @param dirPath the sub directory to list from, can be null or blank
+	 *
+	 * @return list of file names found in the directory, returns null if directory path does not exists
+	 */
+	abstract public List<String> backend_listFileNames(final String oid, final String dirPath);
+
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * List the directories under the specified workspace directory
+	 *
+	 * @param oid identifier to the workspace
+	 * @param dirPath the sub directory to list from, can be null or blank
+	 *
+	 * @return list of directory names found in the directory, returns null if directory path does not exists
+	 */
+	abstract public List<String> backend_listDirNames(final String oid, final String dirPath);
+
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *

@@ -1,9 +1,16 @@
 package picoded.dstack.file.simple;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.core.file.FileUtil;
+
+import static org.apache.commons.io.FileUtils.listFiles;
+import static org.apache.commons.io.FileUtils.listFilesAndDirs;
 
 /**
  * Reference class for Core_FileWorkspaceMap
@@ -85,7 +92,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 *
 	 * @return file object
 	 */
-	protected File workspaceDirObj(String oid) {
+	public File workspaceDirObj(String oid) {
 		// oid failed validation
 		if (!validateOid(oid)) {
 			return null;
@@ -115,7 +122,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Validate that the workspace directory is initialized
 		return workspaceDir.isDirectory();
 	}
-	
+
 	/**
 	 * Removes the FileWorkspace, used to nuke an entire workspace
 	 *
@@ -252,7 +259,25 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			FileUtil.forceDelete(fileObj);
 		}
 	}
-	
+
+	@Override
+	public List<String> backend_listFileNames(String oid, String dirPath) {
+		File file = workspaceDirObj(oid);
+		return listFiles(file, null, true)
+				.stream()
+				.map(eachFile -> eachFile.getName())
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<String> backend_listDirNames(String oid, String dirPath) {
+		File workspacePath = workspaceDirObj(oid);
+		return listFilesAndDirs(workspacePath, null, TrueFileFilter.INSTANCE)
+				.stream()
+				.map(file -> file.getName())
+				.collect(Collectors.toList());
+	}
+
 	@Override
 	public void systemSetup() {
 		if (!baseDir.exists()) {
