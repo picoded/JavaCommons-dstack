@@ -1,4 +1,4 @@
-package picoded.dstack.jsql.connector;
+package picoded.dstack.connector.jsql;
 
 /**
  * JSql type options enum, see JSql.sqlType for its usage
@@ -37,6 +37,7 @@ public enum JSqlType {
 	 * DB2 connection mode
 	 **/
 	DB2;
+	
 	/**
 	 * Get name and toString alias to name() varient
 	 **/

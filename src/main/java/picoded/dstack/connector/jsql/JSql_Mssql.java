@@ -1,8 +1,4 @@
-package picoded.dstack.jsql.connector.db;
-
-// import java.util.ArrayList;
-// import java.util.logging.Logger;
-import java.util.regex.Pattern;
+package picoded.dstack.connector.jsql;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -16,63 +12,151 @@ import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-// import picoded.JSql.JSql;
-// import picoded.JSql.JSqlException;
-// import picoded.JSql.JSqlQuerySet;
-// import picoded.JSql.JSqlResult;
-// import picoded.enums.JSqlType;
-
-import picoded.dstack.jsql.connector.*;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.dstack.connector.jsql.*;
+import picoded.dstack.connector.jsql.JSqlType;
 import picoded.core.conv.ConvertJSON;
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertHashMap;
+import picoded.core.struct.GenericConvertList;
+import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.core.struct.MutablePair;
 
-/// Pure SQL Server 2012 implentation of JSql
-/// Support only for SQL Server 2012 and above version for the pagination query, the OFFSET / FETCH keywords
-/// are used which are faster and better in performance in comparison of old ROW_NUMBER()
+/**
+ * Pure "MY"SQL implentation of JSql
+ **/
 public class JSql_Mssql extends JSql_Base {
 	
-	/// Internal self used logger
-	// private static Logger logger = Logger.getLogger(JSql_Mssql.class.getName());
+	//-------------------------------------------------------------------------
+	//
+	// Connection constructor
+	//
+	//-------------------------------------------------------------------------
 	
-	/// Runs JSql with the JDBC sqlite engine
-	public JSql_Mssql(String dbUrl, String dbName, String dbUser, String dbPass) {
-		// store database connection properties
-		setConnectionProperties(dbUrl, dbName, dbUser, dbPass, null);
+	/**
+	 * Runs JSql with the JDBC "MY"SQL engine
+	 *
+	 * @param   dbHost, is just IP or HOSTNAME. For example, "127.0.0.1"
+	 * @param   dbPort to connect to
+	 * @param   dbName name to connect to (database name)
+	 * @param   dbUser user to connect to
+	 * @param   dbPass password to use
+	 **/
+	public JSql_Mssql(String dbHost, int dbPort, String dbName, String dbUser, String dbPass) {
+		// set connection properties
+		GenericConvertMap<String, Object> config = new GenericConvertHashMap<>();
 		
-		// call internal method to createUser the connection
-		setupConnection();
+		// Basic path, dbname, user, pass configuration
+		config.put("host", dbHost);
+		config.put("port", dbPort);
+		config.put("name", dbName);
+		config.put("user", dbUser);
+		config.put("pass", dbPass);
+		
+		// Setup with config
+		constructor_setup(config);
 	}
 	
-	/// Internal common reuse constructor
-	private void setupConnection() {
+	/**
+	 * Runs JSql with the JDBC "MY"SQL engine
+	 *
+	 * @param config  config map
+	 **/
+	public JSql_Mssql(GenericConvertMap<String, Object> config) {
+		constructor_setup(config);
+	}
+	
+	/**
+	 * Actual internal constructor setup function
+	 * (called internally by all other constructor types used to
+	 * work around call to constructor 'must be first statement')
+	 *
+	 * @param config  config map
+	 */
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.MSSQL;
-		
-		String connectionUrl = "jdbc:jtds:sqlserver://" + (String) connectionProps.get("dbUrl");
-		
-		if (connectionProps.get("dbName") != null
-			&& connectionProps.get("dbName").toString().trim().length() > 0) {
-			connectionUrl += ";DatabaseName=" + (String) connectionProps.get("dbName")
-				+ ";uselobs=false;"; //disable clobs
-		}
-		try {
-			Class.forName("net.sourceforge.jtds.jdbcx.JtdsDataSource"); //connection pooling
-			sqlConn = java.sql.DriverManager.getConnection(connectionUrl,
-				(String) connectionProps.get("dbUser"), (String) connectionProps.get("dbPass"));
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to load mssql connection: ", e);
-		}
+		datasource = HikaricpUtil.mssql(config);
 	}
 	
-	/// As this is the base class varient, this funciton isnt suported
-	public void recreate(boolean force) {
-		if (force) {
-			close();
-		}
-		// call internal method to createUser the connection
-		setupConnection();
+	//-------------------------------------------------------------------------
+	//
+	// Table type info fetching
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
+	 * it has been normalized to only return a map containing collumn name and types
+	 *
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 *
+	 * This immediately executes a query, and process the information directly
+	 * (to normalize the results across SQL implementations).
+	 *
+	 * Note : returned map should be a `CaseInsensitiveHashMap`
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
+	 **/
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
+		// Get the column information
+		JSqlResult tableInfo = query_raw(
+			"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS  WHERE TABLE_NAME=?",
+			new Object[] { tablename });
+		
+		// And return it as a list pair
+		return new MutablePair<>(tableInfo.get("COLUMN_NAME"), tableInfo.get("DATA_TYPE"));
 	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL update - return count overwrite
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes the argumented SQL update.
+	 *
+	 * Returns false if no result object is given by the execution call.
+	 *
+	 * Custom SQL specific parsing occurs here
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  -1 if failed, 0 and above for affected rows
+	 **/
+	public int update(String qString, Object... values) {
+		// Perform the original update call
+		int res = super.update(qString, values);
+		
+		// Normalize certain known age cases
+		if (res < 0) {
+			if (qString.contains("DROP") || qString.contains("IF EXISTS")) {
+				return 0;
+			}
+			if (qString.contains("TRUNCATE TABLE")) {
+				return 0;
+			}
+		}
+		
+		// Return original result
+		return res;
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL conversion, and error sanatization
+	//
+	//-------------------------------------------------------------------------
 	
 	// Internal parser that converts some of the common sql statements to mssql
 	public String genericSqlParser(String inString) {
@@ -155,7 +239,7 @@ public class JSql_Mssql extends JSql_Base {
 				if (upperCaseStr.startsWith(ifNotExists, prefixOffset)) { //IF NOT EXISTS
 					prefixOffset += ifNotExists.length() + 1;
 					//get the table name from incoming query
-					String tableName = getTableName(fixedQuotes.substring(prefixOffset));
+					String tableName = _getTableName(fixedQuotes.substring(prefixOffset));
 					qStringPrefix = "BEGIN TRY IF NOT EXISTS (SELECT * FROM sysobjects WHERE id = object_id(N'"
 						+ tableName
 						+ "')"
@@ -337,8 +421,14 @@ public class JSql_Mssql extends JSql_Base {
 		return qString;
 	}
 	
-	//Method to return table name from incoming query string
-	private static String getTableName(String qString) {
+	//-------------------------------------------------------------------------
+	//
+	// Utiility function used by genericCOnvert
+	//
+	//-------------------------------------------------------------------------
+	
+	// Method to return table name from incoming query string
+	private static String _getTableName(String qString) {
 		qString = qString.trim();
 		int indxPt = ((indxPt = qString.indexOf(' ')) <= -1) ? qString.length() : indxPt;
 		String tableStr = qString.substring(0, indxPt).toUpperCase();
@@ -363,7 +453,7 @@ public class JSql_Mssql extends JSql_Base {
 		qString = qString.replaceAll("(?i)BLOB", "VARBINARY(MAX)");
 		
 		// Work around default table value quotes
-		// sadly variable arguments are NOT allowed in createUser table statements
+		// sadly variable arguments are NOT allowed in create table statements
 		//
 		// LIKE WHY?????
 		// java.sql.SQLException: Variables are not allowed in the CREATE TABLE statement.
@@ -390,28 +480,11 @@ public class JSql_Mssql extends JSql_Base {
 		return qString;
 	}
 	
-	/// Executes the argumented query, and returns the result object *without*
-	/// fetching the result data from the database. (not fetching may not apply to all implementations)
-	///
-	/// **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
-	// public JSqlResult executeQuery(String qString, Object... values) throws JSqlException {
-	// 	return executeQuery_raw(genericSqlParser(qString), values);
-	// }
-	
-	/// Executes the argumented query, and immediately fetches the result from
-	/// the database into the result set.
-	///
-	/// **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
-	public JSqlResult query(String qString, Object... values) throws JSqlException {
-		return query_raw(genericSqlParser(qString), values);
-	}
-	
-	/// Executes and dispose the sqliteResult object.
-	///
-	/// Returns false if no result is given by the execution call, else true on success
-	// public boolean execute(String qString, Object... values) throws JSqlException {
-	// 	return execute_raw(genericSqlParser(qString), values);
-	// }
+	//-------------------------------------------------------------------------
+	//
+	// UPSERT statement support
+	//
+	//-------------------------------------------------------------------------
 	
 	///
 	/// Helps generate an SQL UPSERT request. This function was created to acommedate the various
@@ -745,7 +818,7 @@ public class JSql_Mssql extends JSql_Base {
 	 *
 	 * @return  true, if UPSERT statement executed succesfuly
 	 **/
-	public boolean multiUpsert( //
+	protected JSqlPreparedStatement multiUpsert_statement( //
 		String tableName, // Table name to upsert on
 		//
 		String[] uniqueColumns, // The unique column names
@@ -790,7 +863,7 @@ public class JSql_Mssql extends JSql_Base {
 		queryBuilder.append("USING ( VALUES ");
 		
 		// dynamically append the rows in the VALUES section
-		// first createUser one (?, ?, ?, ?) to reuse
+		// first create one (?, ?, ?, ?) to reuse
 		StringBuilder valuesParameter = new StringBuilder();
 		valuesParameter.append("(");
 		for (int x = 0; x < uniqueColumns.length; ++x) {
@@ -966,12 +1039,58 @@ public class JSql_Mssql extends JSql_Base {
 			}
 		}
 		
+		return new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), this);
+	}
+	
+	/**
+	 * Does multiple UPSERT continously. Use this command when doing,
+	 * a large number of UPSERT's to the same table with the same format.
+	 *
+	 * In certain SQL deployments, this larger multi-UPSERT would be optimized as a
+	 * single transaction call. However this behaviour is not guranteed across all platforms.
+	 *
+	 * This is incredibily useful for large meta-table object updates.
+	 *
+	 * @param  Table name to query
+	 * @param  Unique column names
+	 * @param  Unique column values, as a list. Each item in a list represents the respecitve row record
+	 * @param  Upsert column names
+	 * @param  Upsert column values, as a list. Each item in a list represents the respecitve row record
+	 * @param  Default column to use existing values if exists
+	 * @param  Default column values to use if not exists, as a list. Each item in a list represents the respecitve row record
+	 * @param  All other column names to maintain existing value
+	 *
+	 * @return  true, if UPSERT statement executed succesfuly
+	 **/
+	public boolean multiUpsert( //
+		String tableName, // Table name to upsert on
+		//
+		String[] uniqueColumns, // The unique column names
+		List<Object[]> uniqueValuesList, // The row unique identifier values
+		//
+		String[] insertColumns, // Columns names to update
+		List<Object[]> insertValuesList, // Values to update
+		// Columns names to apply default value, if not exists
+		// Values to insert, that is not updated. Note that this is ignored if pre-existing values exists
+		String[] defaultColumns, //
+		List<Object[]> defaultValuesList, //
+		// Various column names where its existing value needs to be maintained (if any),
+		// this is important as some SQL implementation will fallback to default table values, if not properly handled
+		String[] miscColumns //
+	) {
+		/// Checks that unique column and values length are not null
+		if (uniqueColumns == null || uniqueValuesList == null) {
+			throw new JSqlException("Upsert query requires unique columns and values");
+		}
+		
+		// Build the statement, and execute it
 		try {
-			JSqlPreparedStatement statement = new JSqlPreparedStatement(queryBuilder.toString(),
-				queryArgs.toArray(), this);
+			JSqlPreparedStatement statement = multiUpsert_statement(tableName, uniqueColumns,
+				uniqueValuesList, insertColumns, insertValuesList, defaultColumns, defaultValuesList,
+				miscColumns);
 			return statement.update() >= 1;
 		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			throw new JSqlException(ex);
 		}
 	}
 }

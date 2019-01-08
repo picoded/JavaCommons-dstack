@@ -1,9 +1,11 @@
 package picoded.dstack.jsql;
 
 import picoded.dstack.core.Core_FileWorkspaceMap;
-import picoded.dstack.jsql.connector.JSql;
-import picoded.dstack.jsql.connector.JSqlResult;
+import picoded.dstack.connector.jsql.JSql;
+import picoded.dstack.connector.jsql.JSqlResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
@@ -118,7 +120,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		if (jSqlResult == null || jSqlResult.get("data") == null || jSqlResult.rowCount() <= 0) {
 			return null;
 		}
-		return (byte[]) jSqlResult.get("data")[0];
+		return (byte[]) jSqlResult.get("data").get(0);
 	}
 	
 	/**
@@ -132,22 +134,17 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-		
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
-		try {
-			sqlObj.upsert( //
-				fileWorkspaceTableName, //
-				new String[] { "oID", "path" }, //
-				new Object[] { oid, filepath }, //
-				new String[] { "uTm" }, //
-				new Object[] { now }, //
-				new String[] { "cTm", "eTm", "data" }, //
-				new Object[] { now, 0, data }, //
-				null // The only misc col, is pKy, which is being handled by DB
-				);
-		} catch (Exception e) {
-			// silence the exception
-		}
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, filepath }, //
+			new String[] { "uTm" }, //
+			new Object[] { now }, //
+			new String[] { "cTm", "eTm", "data" }, //
+			new Object[] { now, 0, data }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
 	}
 	
 	/**
@@ -172,8 +169,26 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
-		// do nothing for jsql
+	public void backend_setupWorkspace(String oid, String folderPath) {
+		// Setup a blank folder path
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, folderPath }, //
+			new String[] { "uTm" }, //
+			new Object[] { now }, //
+			new String[] { "cTm", "eTm", "data" }, //
+			new Object[] { now, 0, null }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
+	}
+	
+	@Override
+	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+		// @TODO: To be implemented for Jsql
+		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
+		return new ArrayList<>();
 	}
 	
 	//--------------------------------------------------------------------------

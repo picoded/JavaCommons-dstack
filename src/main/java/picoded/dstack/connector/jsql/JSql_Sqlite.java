@@ -1,64 +1,115 @@
-package picoded.dstack.jsql.connector.db;
+package picoded.dstack.connector.jsql;
 
-import java.util.Locale;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.logging.Logger;
 
-import picoded.dstack.jsql.connector.*;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.core.struct.MutablePair;
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertList;
+import picoded.core.struct.GenericConvertHashMap;
+import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.dstack.connector.jsql.JSqlType;
 
 /**
- * Pure SQLite implentation of JSql
+ * SQLite implementation of JSql
  **/
 public class JSql_Sqlite extends JSql_Base {
 	
+	//-------------------------------------------------------------------------
+	//
+	// Connection constructor
+	//
+	//-------------------------------------------------------------------------
+	
 	/**
-	 * Setup database as pure SQLite mode
+	 * SQLite in memory mode
 	 **/
 	public JSql_Sqlite() {
 		this(":memory:");
 	}
 	
 	/**
-	 * Runs JSql with the JDBC sqlite engine
+	 * Sqlite at specified file path
 	 *
-	 * @param  File path for the sqlite file
+	 * @param  sqliteLoc file path for the sqlite file
 	 **/
 	public JSql_Sqlite(String sqliteLoc) {
-		// store database connection properties
-		setConnectionProperties(sqliteLoc, null, null, null, null);
-		// call internal method to create the connection
-		setupConnection();
-	}
-	
-	/**
-	 * Internal common reuse constructor
-	 * Setsup the internal connection settings and driver
-	 **/
-	private void setupConnection() {
-		sqlType = JSqlType.SQLITE;
+		// Initialize new config object
+		GenericConvertMap<String, Object> config = new GenericConvertHashMap<String, Object>();
 		
-		try {
-			// This is only imported on demand, avoid preloading until needed
-			Class.forName("org.sqlite.JDBC");
-			
-			// Getting the required SQLite connection
-			sqlConn = java.sql.DriverManager.getConnection("jdbc:sqlite:"
-				+ (String) connectionProps.get("dbUrl"));
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to load sqlite connection: ", e);
-		}
+		// Pass in the sqlite path
+		config.put("path", sqliteLoc);
+		
+		// Actual setup
+		constructor_setup(config);
 	}
 	
 	/**
-	 * As this is the base class varient, this funciton isnt suported
+	 * Sqlite at specified file path
+	 *
+	 * @param  config map
 	 **/
-	public void recreate(boolean force) {
-		if (force) {
-			close();
-		}
-		// call internal method to create the connection
-		setupConnection();
+	public JSql_Sqlite(GenericConvertMap<String, Object> config) {
+		constructor_setup(config);
 	}
+	
+	/**
+	 * Actual internal constructor setup function
+	 * (called internally by all other constructor types
+	 * used to work around call to constructor 'must be first statement')
+	 *
+	 * @param config  config map
+	 */
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
+		sqlType = JSqlType.SQLITE;
+		datasource = HikaricpUtil.sqlite(config);
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Table type info fetching
+	//
+	//-------------------------------------------------------------------------
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
+	 * it has been normalized to only return a map containing collumn name and types
+	 *
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 *
+	 * This immediately executes a query, and process the information directly
+	 * (to normalize the results across SQL implementations).
+	 *
+	 * Note : returned map should be a `CaseInsensitiveHashMap`
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
+	 **/
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
+		// Get the column information
+		JSqlResult tableInfo = query_raw("PRAGMA table_info(" + tablename + ")");
+		
+		// And return it as a list pair
+		return new MutablePair<>(tableInfo.get("name"), tableInfo.get("type"));
+	}
+	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL conversion, and error sanatization
+	//
+	//-------------------------------------------------------------------------
 	
 	/**
 	 * Internal parser that converts some of the common sql statements to sqlite
@@ -150,7 +201,7 @@ public class JSql_Sqlite extends JSql_Base {
 		ArrayList<Object> innerSelectArgs = new ArrayList<Object>();
 		StringBuilder innerSelectSB = new StringBuilder(" FROM ");
 		innerSelectSB.append("`" + tableName + "`");
-		innerSelectSB.append(WHERE);
+		innerSelectSB.append(" WHERE ");
 		for (int a = 0; a < uniqueColumns.length; ++a) {
 			if (a > 0) {
 				innerSelectSB.append(" AND ");
@@ -213,7 +264,7 @@ public class JSql_Sqlite extends JSql_Base {
 			for (int a = 0; a < defaultColumns.length; ++a) {
 				columnNames.append(defaultColumns[a]);
 				columnNames.append(columnSeperator);
-				columnValues.append(COALESCE);
+				columnValues.append("COALESCE(");
 				columnValues.append(innerSelectPrefix);
 				columnValues.append(defaultColumns[a]);
 				columnValues.append(innerSelectSuffix);

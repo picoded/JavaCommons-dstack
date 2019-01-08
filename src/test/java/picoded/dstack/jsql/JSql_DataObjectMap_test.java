@@ -18,7 +18,7 @@ import org.junit.Test;
 // Test depends
 import picoded.dstack.*;
 import picoded.dstack.jsql.*;
-import picoded.dstack.jsql.connector.*;
+import picoded.dstack.connector.jsql.*;
 import picoded.dstack.struct.simple.*;
 
 public class JSql_DataObjectMap_test extends StructSimple_DataObjectMap_test {

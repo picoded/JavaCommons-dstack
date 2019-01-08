@@ -2,6 +2,7 @@ package picoded.dstack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -81,7 +82,16 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	void setupWorkspace(String oid);
+	void setupWorkspace(String oid, String folderPath);
+	
+	/**
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
+	 */
+	List<Object> listWorkspace(String oid, String folderPath);
 	
 	// FileWorkspaceMap utility operations
 	//--------------------------------------------------------------------------

@@ -92,8 +92,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace() {
-		main.setupWorkspace(_oid());
+	public void setupWorkspace(String folderPath) {
+		main.setupWorkspace(_oid(), folderPath);
 	}
 
 	// Utility functions

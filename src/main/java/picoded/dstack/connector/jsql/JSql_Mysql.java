@@ -1,4 +1,4 @@
-package picoded.dstack.jsql.connector.db;
+package picoded.dstack.connector.jsql;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -14,9 +14,14 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.ArrayList;
 
-import picoded.dstack.jsql.connector.*;
-import picoded.dstack.jsql.connector.JSqlType;
+import picoded.dstack.connector.jsql.*;
+import picoded.dstack.connector.jsql.JSqlType;
 import picoded.core.conv.ConvertJSON;
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertHashMap;
+import picoded.core.struct.GenericConvertList;
+import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.core.struct.MutablePair;
 
 /**
  * Pure "MY"SQL implentation of JSql
@@ -25,154 +30,125 @@ public class JSql_Mysql extends JSql_Base {
 	
 	//-------------------------------------------------------------------------
 	//
-	// Database connection handling
+	// Connection constructor
 	//
 	//-------------------------------------------------------------------------
 	
 	/**
 	 * Runs JSql with the JDBC "MY"SQL engine
 	 *
-	 * @param   dbServerAddress, is just IP:PORT. For example, "127.0.0.1:3306"
-	 * @param   database name to connect to
-	 * @param   database user to connect to
-	 * @param   database password to use
+	 * @param   dbHost, is just IP or HOSTNAME. For example, "127.0.0.1"
+	 * @param   dbPort to connect to
+	 * @param   dbName name to connect to (database name)
+	 * @param   dbUser user to connect to
+	 * @param   dbPass password to use
 	 **/
-	public JSql_Mysql(String dbServerAddress, String dbName, String dbUser, String dbPass) {
+	public JSql_Mysql(String dbHost, int dbPort, String dbName, String dbUser, String dbPass) {
 		// set connection properties
-		Properties connectionProps = new Properties();
-		connectionProps.put("user", dbUser);
-		connectionProps.put("password", dbPass);
-		connectionProps.put("autoReconnect", "true");
-		connectionProps.put("failOverReadOnly", "false");
-		connectionProps.put("maxReconnects", "5");
+		GenericConvertMap<String, Object> config = new GenericConvertHashMap<>();
 		
-		String connectionUrl = "jdbc:mysql://" + dbServerAddress + "/" + dbName;
+		// Basic path, dbname, user, pass configuration
+		config.put("host", dbHost);
+		config.put("port", dbPort);
+		config.put("name", dbName);
+		config.put("user", dbUser);
+		config.put("pass", dbPass);
 		
-		// store database connection properties
-		setConnectionProperties(connectionUrl, null, null, null, connectionProps);
-		
-		// call internal method to create the connection
-		setupConnection();
+		// Setup with config
+		constructor_setup(config);
 	}
 	
 	/**
 	 * Runs JSql with the JDBC "MY"SQL engine
-	 * Avoid direct usage, use `JSql_Mysql(dbServerAdress, dbName, dbUser, dbPass)` instead
 	 *
-	 * @param   JDBC connectionUrl, for example, "jdbc:mysql://127.0.0.1:3306/JAVACOMMONS"
-	 * @param   Connection properties
+	 * @param config  config map
 	 **/
-	public JSql_Mysql(String connectionUrl, Properties connectionProps) {
-		// store database connection properties
-		setConnectionProperties(connectionUrl, null, null, null, connectionProps);
-		
-		// call internal method to create the connection
-		setupConnection();
+	public JSql_Mysql(GenericConvertMap<String, Object> config) {
+		constructor_setup(config);
 	}
 	
 	/**
-	 * Internal common reuse constructor
-	 * Setsup the internal connection settings and driver
-	 **/
-	private void setupConnection() {
+	 * Actual internal constructor setup function
+	 * (called internally by all other constructor types used to
+	 * work around call to constructor 'must be first statement')
+	 *
+	 * @param config  config map
+	 */
+	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.MYSQL;
-		
-		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance(); //ensure jdbc driver is loaded
-			sqlConn = java.sql.DriverManager.getConnection((String) connectionProps.get("dbUrl"),
-				(Properties) connectionProps.get("connectionProps"));
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to load sql connection: ", e);
-		}
-	}
-	
-	/**
-	 * As this is the base class varient, this funciton isnt suported
-	 **/
-	public void recreate(boolean force) {
-		if (force) {
-			close();
-		}
-		// call internal method to create the connection
-		setupConnection();
+		datasource = HikaricpUtil.mysql(config);
 	}
 	
 	//-------------------------------------------------------------------------
 	//
-	// Table MetaData handling, limited use cases,
-	// avoid use : may or may not be standardised
+	// Table type info fetching
 	//
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * Executes and fetch a table column information as a map
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
+	 * it has been normalized to only return a map containing collumn name and types
 	 *
-	 * @param  Table name
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
 	 *
-	 * @return  Collumn meta information
+	 * This immediately executes a query, and process the information directly
+	 * (to normalize the results across SQL implementations).
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
 	 **/
-	public Map<String, String> getTableColumnsInformation(String tablename) {
-		// Prepare return information
-		Map<String, String> ret = new HashMap<String, String>();
-		
-		// Remove quotations in table name, and trim out excess whitespace
-		tablename = tablename.replaceAll("`", "").replaceAll("'", "").replaceAll("\"", "").trim();
-		//System.out.println(tablename);
-		
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
 		// Get the column information
 		JSqlResult tableInfo = query_raw(
 			"SELECT column_name, column_type FROM information_schema.columns WHERE table_name=?",
 			new Object[] { tablename });
-		//System.out.println( ConvertJSON.fromMap(tableInfo) );
 		
-		// Parse it into a map format
-		Object[] column_name = tableInfo.get("column_name");
-		Object[] column_type = tableInfo.get("column_type");
-		
-		// Iterate name/type, and get the info
-		for (int i = 0; i < column_name.length; ++i) {
-			ret.put(column_name[i].toString(), column_type[i].toString().toUpperCase());
-		}
-		
-		// Return the meta map
-		return ret;
+		// And return it as a list pair
+		return new MutablePair<>(tableInfo.get("column_name"), tableInfo.get("column_type"));
 	}
 	
+	//-------------------------------------------------------------------------
+	//
+	// Generic SQL conversion, and error sanatization
+	//
+	//-------------------------------------------------------------------------
+	
 	/**
-	 * Enforces column index limits for BLOB and TEXT type
+	 * Enforces column index limits for BLOB and TEXT type (used in genericSqlParser, on index creation)
 	 *
-	 * @param  Collumn infromation from `getTableColumnsInformation`
+	 * @param  tablename to extract information from (to normalize collumn limits)
 	 * @param  Query string to sanatize
 	 * @param  Columns to scan and replace
 	 *
 	 * @return  Sanatized query
 	 **/
-	public String enforceColumnIndexLimit(Map<String, String> metadata, String qStringUpper,
-		String columns) {
-		if (metadata != null) {
+	protected String enforceColumnIndexLimit(String tablename, String qStringUpper, String columns) {
+		if (tablename != null) {
+			// fetch the table meta data info
+			Map<String, String> colType = getTableColumnTypeMap(tablename);
+			
 			// Get the relevent column names
 			String[] columnsArr = columns.split(",");
 			
-			// For each, does a search and replace if its a BLOB or TEXT type
-			// Note that if the column ALREADY has the (size) format, it will fail the search
+			// Does a search and replace if a BLOB / TEXT column without a index size limit,
+			// and apply a default limit of 255
 			for (String column : columnsArr) {
 				column = column.trim();
 				// check if column type is BLOB or TEXT
-				if ("BLOB".equalsIgnoreCase(metadata.get(column))
-					|| "TEXT".equalsIgnoreCase(metadata.get(column))) {
-					// repalce the column name in the origin sql statement with column name and suffic "(333)
-					qStringUpper = qStringUpper.replace(column, column + "(333)");
+				if ("BLOB".equalsIgnoreCase(colType.get(column))
+					|| "TEXT".equalsIgnoreCase(colType.get(column))) {
+					// repalce the column name in the origin sql statement with column name and a suffix of (255)
+					qStringUpper = qStringUpper.replace(column, column + "(255)");
 				}
 			}
 		}
 		return qStringUpper;
 	}
-	
-	//-------------------------------------------------------------------------
-	//
-	// Generic SQL conversion and query
-	//
-	//-------------------------------------------------------------------------
 	
 	/**
 	 * Internal parser that converts some of the common sql statements to sqlite
@@ -192,10 +168,12 @@ public class JSql_Mysql extends JSql_Base {
 			.replaceAll("AUTOINCREMENT", "AUTO_INCREMENT").replace("VARCHAR(MAX)", "TEXT")
 			.replaceAll("RANDOM\\(\\)", "RAND()");
 		
+		//
 		// MySQL does not support the inner query in create view
 		//
 		// Check if create view query has an inner query.
 		// If yes, create a view from the inner query and replace the inner query with created view.
+		//
 		if (qString.contains("CREATE VIEW")) {
 			// get view name
 			int indexAs = qString.indexOf("AS");
@@ -249,6 +227,7 @@ public class JSql_Mysql extends JSql_Base {
 			}
 		}
 		
+		//
 		// Possible "INDEX IF NOT EXISTS" call for mysql, suppress duplicate index error if needed
 		//
 		// This is a work around for MYSQL not supporting the "CREATE X INDEX IF NOT EXISTS" syntax
@@ -280,12 +259,11 @@ public class JSql_Mysql extends JSql_Base {
 					// extract the columns between the opening and closing brackets
 					String columns = tableAndColumnsName.substring(openBracketIndex + 1,
 						closeBracketIndex);
-					// fetch the table meta data info
-					Map<String, String> metadata = getTableColumnsInformation(tablename);
+					
 					// Enforce the column index limits
 					// It is must to define the The length of the BLOB and TEXT column type
-					// Append the maximum length "333" to BLOB and TEXT columns
-					qString = enforceColumnIndexLimit(metadata, qString, columns);
+					// Append the maximum length "255" to BLOB and TEXT columns
+					qString = enforceColumnIndexLimit(tablename, qString, columns);
 					
 					//System.out.println(">>>  "+ConvertJSON.fromMap(metadata));
 					//System.out.println(">>>  "+qString);

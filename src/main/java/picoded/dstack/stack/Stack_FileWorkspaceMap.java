@@ -1,5 +1,6 @@
 package picoded.dstack.stack;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -202,10 +203,22 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid);
+			dataLayers[i].backend_setupWorkspace(oid, folderPath);
 		}
+	}
+	
+	@Override
+	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			List<Object> names = dataLayers[i].backend_listWorkspace(oid, folderPath);
+			if (names.size() != 0) {
+				return names;
+			}
+		}
+		
+		return new ArrayList<>();
 	}
 	
 	//--------------------------------------------------------------------------

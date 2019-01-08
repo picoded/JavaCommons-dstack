@@ -52,8 +52,20 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String oid) {
-		backend_setupWorkspace(oid);
+	public void setupWorkspace(String oid, String folderPath) {
+		backend_setupWorkspace(oid, folderPath);
+	}
+	
+	/**
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
+	 */
+	@Override
+	public List<Object> listWorkspace(String oid, String folderPath) {
+		return backend_listWorkspace(oid, folderPath);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -82,6 +94,16 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return  boolean to check if workspace exists
 	 **/
 	abstract public boolean backend_workspaceExist(String oid);
+	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
+	 */
+	abstract public List<Object> backend_listWorkspace(String oid, String folderPath);
 	
 	//--------------------------------------------------------------------------
 	//
@@ -173,7 +195,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	abstract public void backend_setupWorkspace(String oid);
+	abstract public void backend_setupWorkspace(String oid, String folderPath);
 	
 	//--------------------------------------------------------------------------
 	//

@@ -4,7 +4,7 @@ import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GenericConvert;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.dstack.KeyValueMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.struct.simple.StructSimpleStack_test;
 import picoded.dstack.core.CoreStack;
 
