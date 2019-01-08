@@ -1,6 +1,15 @@
 package picoded.dstack.file.simple;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.core.file.FileUtil;
@@ -257,6 +266,44 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		if (fileObj.isFile()) {
 			FileUtil.forceDelete(fileObj);
 		}
+	}
+	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 * The Object in this implementation is a Map<String, Object>.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @return back a list of Objects
+	 */
+	@Override
+	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+		File folder = workspaceFileObj(oid, folderPath);
+		if (!folder.isDirectory()) {
+			return new ArrayList<>();
+		}
+		
+		try {
+			List<Path> paths = Files.walk(folder.toPath()).collect(Collectors.toList());
+			List<Object> treeList = paths.stream().map(path -> {
+				Map<String, Object> obj = new HashMap<>();
+				// Display only the subpath
+				String name = path.toFile().getAbsolutePath().replace(folder.getAbsolutePath(), "");
+				obj.put("path", name);
+				obj.put("type", path.toFile().isDirectory() ? "directory" : "file");
+				return name.isEmpty() ? null : obj;
+			}).collect(Collectors.toList());
+			
+			// Remove all null paths
+			treeList.removeIf(item -> item == null);
+			
+			return treeList;
+		} catch (IOException e) {
+			
+		}
+		return new ArrayList<>();
+		
 	}
 	
 	@Override

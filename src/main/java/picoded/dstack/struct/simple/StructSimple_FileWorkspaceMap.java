@@ -3,6 +3,8 @@ package picoded.dstack.struct.simple;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -149,6 +151,12 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public void backend_setupWorkspace(String oid, String folderPath) {
 		// do nothing for struct simple
+	}
+	
+	@Override
+	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+		// do nothing for struct simple
+		return new ArrayList<>();
 	}
 	
 	//--------------------------------------------------------------------------

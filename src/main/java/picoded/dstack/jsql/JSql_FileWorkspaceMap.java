@@ -4,6 +4,8 @@ import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
@@ -180,6 +182,13 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			new Object[] { now, 0, null }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
+	}
+	
+	@Override
+	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+		// @TODO: To be implemented for Jsql
+		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
+		return new ArrayList<>();
 	}
 	
 	//--------------------------------------------------------------------------
