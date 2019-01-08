@@ -183,7 +183,17 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_removeFile(oid, filepath);
 		}
 	}
-	
+
+	@Override
+	public List<String> backend_listFileNames(String oid, String dirPath) {
+		return null;
+	}
+
+	@Override
+	public List<String> backend_listDirNames(String oid, String dirPath) {
+		return null;
+	}
+
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *

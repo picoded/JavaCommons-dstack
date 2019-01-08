@@ -3,6 +3,9 @@ package picoded.dstack;
 import picoded.core.conv.ArrayConv;
 import picoded.core.conv.StringConv;
 
+import java.io.File;
+import java.util.List;
+
 /**
  * Represent a file storage backend for a workspace
  */
@@ -49,16 +52,25 @@ public interface FileWorkspace {
 	
 	// File exists checks
 	//--------------------------------------------------------------------------
-	
+
 	/**
 	 * Checks if the filepath exists with a file.
 	 *
 	 * @param  filepath in the workspace to check
 	 *
-	 * @return true, if file exists (and writable), false if it does not. Possible a folder
+	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
 	 */
 	boolean fileExist(final String filepath);
-	
+
+	/**
+	 * Checks if the directory exists.
+	 *
+	 * @param  dirPath in the workspace to check
+	 *
+	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
+	 */
+	boolean dirExist(final String dirPath);
+
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
 	
@@ -133,10 +145,28 @@ public interface FileWorkspace {
 	default void writeString(final String filepath, String content, String encoding) {
 		writeByteArray(filepath, StringConv.toByteArray(content, encoding));
 	}
-	
+
+	/**
+	 * File listing api
+	 *
+	 * @param  directoryPath to search from within the workspace, if null or blank it searches the workspace root directory
+	 *
+	 * @return list of file names found in the directory, returns null if directory path does not exists
+	 */
+	List<String> listFileNames(String directoryPath);
+
+	/**
+	 * Directory listing api
+	 *
+	 * @param  directoryPath to search from within the workspace, if null or blank it searches the workspace root directory
+	 *
+	 * @return list of directory names found in the directory, returns null if directory path does not exists
+	 */
+	List<String> listDirNames(String directoryPath);
+
+
 	// @TODO - once this API is more stable
 	//
-	// + String handling
 	// + File copies within workspace
 	// + File moving within workspace
 	// + Folder deletion
