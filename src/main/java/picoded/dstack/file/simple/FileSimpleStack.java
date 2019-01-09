@@ -13,7 +13,7 @@ import picoded.dstack.connector.jsql.JSql;
 
 public class FileSimpleStack extends CoreStack {
 	
-	String baseDir = "";
+	protected String baseDir = "";
 	
 	/**
 	 * Constructor with configuration map

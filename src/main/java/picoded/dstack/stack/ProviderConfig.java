@@ -7,6 +7,7 @@ import java.util.Map;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
+import picoded.dstack.file.layered.FileLayeredStack;
 import picoded.dstack.file.simple.FileSimpleStack;
 import picoded.dstack.struct.simple.StructSimpleStack;
 import picoded.dstack.struct.cache.StructCacheStack;
@@ -170,6 +171,9 @@ public class ProviderConfig {
 		}
 		if (type.equalsIgnoreCase("FileSimple")) {
 			return new FileSimpleStack(config);
+		}
+		if (type.equalsIgnoreCase("FileLayered")) {
+			return new FileLayeredStack(config);
 		}
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
