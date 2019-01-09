@@ -94,6 +94,35 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		try {
+			accessLock.readLock().lock();
+			
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			
+			if (workspace != null && filepath != null) {
+				return workspace.get(filepath) != null;
+			}
+		} finally {
+			accessLock.readLock().unlock();
+		}
+		return false;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Writes the full byte array of a file in the backend
 	 *
 	 * @param   ObjectID of workspace

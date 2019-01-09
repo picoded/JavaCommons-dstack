@@ -208,13 +208,44 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
 		
-		// Check if its a file, return null if failed
-		if (fileObj == null || !fileObj.isFile()) {
-			return null;
+		// return null if failed
+		if (fileObj == null || !fileObj.exists()) {
+			throw new RuntimeException("File does not exist.");
+		}
+		
+		if (fileObj.isDirectory()) {
+			throw new RuntimeException(String.format("`%s` is a directory", filepath));
 		}
 		
 		// Read the file
 		return FileUtil.readFileToByteArray(fileObj);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		
+		// Get the file object
+		File fileObj = workspaceFileObj(oid, filepath);
+		
+		// Check if it is file or directory
+		if (fileObj.exists()) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -334,6 +365,10 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		File node = workspaceFileObj(oid, folderPath);
 		File rootFolder = workspaceDirObj(oid);
 		
+		if (!node.exists()) {
+			throw new RuntimeException("folderPath does not exist");
+		}
+		
 		try {
 			
 			Stream<Path> pathStream;
@@ -349,7 +384,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			List<FileNode> fileNodes = pathStream.map(path -> {
 				
 				File pathFile = path.toFile();
-				String name = pathFile.getAbsolutePath().replace(rootFolder.getAbsolutePath(), "");
+				String name = pathFile.getAbsolutePath().replace(node.getAbsolutePath(), "");
 				FileNode fileNode = new FileSimple_FileNode(name, pathFile.isDirectory());
 				fileNode.removeChildrenNodes();
 				

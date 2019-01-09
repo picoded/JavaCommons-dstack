@@ -125,9 +125,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * @return  boolean true, if file eixst
 	 **/
-	public boolean backend_fileExist(final String oid, final String filepath) {
-		return backend_fileRead(oid, filepath) != null;
-	}
+	abstract public boolean backend_fileExist(final String oid, final String filepath);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
