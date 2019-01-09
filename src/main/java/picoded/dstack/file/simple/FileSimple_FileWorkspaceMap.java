@@ -270,7 +270,6 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
 	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 * The Object in this implementation is a Map<String, Object>.
 	 *
 	 * @param oid        of the workspace to search
 	 * @param folderPath start of the folderPath to retrieve from
@@ -321,6 +320,15 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 	}
 	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects in list view
+	 */
 	@Override
 	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
 		File node = workspaceFileObj(oid, folderPath);
@@ -330,20 +338,26 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			Stream<Path> pathStream;
 			
+			// Walking through the path with a depth or all the way
 			if (depth == -1) {
 				pathStream = Files.walk(node.toPath());
 			} else {
 				pathStream = Files.walk(node.toPath(), depth, FileVisitOption.FOLLOW_LINKS);
 			}
 			
+			// Convert the Stream<Path> into List<FileNode>
 			List<FileNode> fileNodes = pathStream.map(path -> {
+				
 				File pathFile = path.toFile();
 				String name = pathFile.getAbsolutePath().replace(rootFolder.getAbsolutePath(), "");
 				FileNode fileNode = new FileSimple_FileNode(name, pathFile.isDirectory());
 				fileNode.removeChildrenNodes();
+				
 				return name == null ? null : fileNode;
+				
 			}).collect(Collectors.toList());
 			
+			// Remove all items that are null (specifically it will be the root folder)
 			fileNodes.removeIf(item -> item == null);
 			
 			return fileNodes;
