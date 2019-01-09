@@ -142,58 +142,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * List the files under the specified workspace directory
-	 *
-	 * @param oid identifier to the workspace
-	 * @param dirPath the sub directory to list from, can be null or blank
-	 *
-	 * @return list of files names found in the directory, returns null if directory path does not exists
-	 */
-	@Override
-	public List<String> backend_listFileNames(String oid, String dirPath) {
-		try {
-			accessLock.writeLock().lock();
-
-			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-
-			// workspace does not exist, return null
-			if (workspace == null) {
-				return null;
-			}
-
-			List<String> ret = new ArrayList<>();
-
-			for (Map.Entry<String, byte[]> fileObject : workspace.entrySet()) {
-				if( fileObject.getKey().startsWith(dirPath) ) {
-
-				}
-			}
-			workspace.forEach((s, bytes) -> s.startsWith(dirPath));
-
-
-		} finally {
-			accessLock.writeLock().unlock();
-		}
-	}
-
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * List the directories under the specified workspace directory
-	 *
-	 * @param oid identifier to the workspace
-	 * @param dirPath the sub directory to list from, can be null or blank
-	 *
-	 * @return list of directory names found in the directory, returns null if directory path does not exists
-	 */
-	@Override
-	public List<String> backend_listDirNames(String oid, String dirPath) {
-		return null;
-	}
-
-	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,

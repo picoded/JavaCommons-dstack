@@ -261,36 +261,18 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_removeFile(String oid, String filepath) {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
-		
+
 		// Invalid file path?
 		if (fileObj == null) {
 			return;
 		}
-		
+
 		// Check if its a file exist, and delete it
 		if (fileObj.isFile()) {
 			FileUtil.forceDelete(fileObj);
 		}
 	}
 
-	@Override
-	public List<String> backend_listFileNames(String oid, String dirPath) {
-		File file = workspaceDirObj(oid);
-		return listFiles(file, null, true)
-				.stream()
-				.map(eachFile -> eachFile.getName())
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public List<String> backend_listDirNames(String oid, String dirPath) {
-		File workspacePath = workspaceDirObj(oid);
-		return listFilesAndDirs(workspacePath, null, TrueFileFilter.INSTANCE)
-				.stream()
-				.map(file -> file.getName())
-				.collect(Collectors.toList());
-	}
-	
 	/**
 	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
 	 * List the files and folder recursively depending on the folderPath that was passed in.
