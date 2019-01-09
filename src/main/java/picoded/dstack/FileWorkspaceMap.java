@@ -84,28 +84,6 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 */
 	void setupWorkspace(String oid, String folderPath);
 	
-	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 * Listing in tree hierarchy format.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
-	 */
-	FileNode listWorkspaceTreeView(String oid, String folderPath, int depth);
-	
-	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 * Listing in list format.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
-	 */
-	List<FileNode> listWorkspaceListView(String oid, String folderPath, int depth);
-	
 	// FileWorkspaceMap utility operations
 	//--------------------------------------------------------------------------
 	
