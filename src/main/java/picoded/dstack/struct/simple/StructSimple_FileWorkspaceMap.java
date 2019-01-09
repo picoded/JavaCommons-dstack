@@ -167,6 +167,12 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return null;
 	}
 	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		// do nothing for struct simple
+		return true;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance

@@ -214,6 +214,14 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		return null;
 	}
 	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_moveFileInWorkspace(oid, source, destination);
+		}
+		return true;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Copy pasta code, I wished could have worked in an interface

@@ -182,4 +182,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public List<FileNode> listWorkspaceInListView(String folderPath, int depth) {
 		return main.backend_listWorkspaceListView(_oid(), folderPath, depth);
 	}
+	
+	@Override
+	public boolean moveFile(String source, String destination) {
+		return main.backend_moveFileInWorkspace(_oid(), source, destination);
+	}
 }

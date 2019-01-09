@@ -369,6 +369,31 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		
+		File srcToMove = workspaceFileObj(oid, source);
+		File moveToDest = workspaceFileObj(oid, destination);
+		
+		if (!srcToMove.exists()) {
+			throw new RuntimeException("`src` file not found");
+		}
+		
+		if (moveToDest.exists()) {
+			throw new RuntimeException(String.format("File already exists at `%s`", destination));
+		}
+		
+		if (srcToMove.isDirectory()) {
+			// By default, create destination if not exist (latest)
+			srcToMove.renameTo(moveToDest);
+		} else {
+			// By default, create destination if not exist (latest)
+			FileUtil.moveFile(srcToMove, moveToDest);
+		}
+		
+		return moveToDest.exists();
+	}
+	
+	@Override
 	public void systemSetup() {
 		if (!baseDir.exists()) {
 			// Ensure the base directory is initialized

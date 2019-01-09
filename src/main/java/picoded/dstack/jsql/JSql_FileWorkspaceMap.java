@@ -199,6 +199,12 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return null;
 	}
 	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		// @TODO: To be implemented for Jsql
+		return true;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance

@@ -102,6 +102,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	abstract public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath,
 		int depth);
 	
+	abstract public boolean backend_moveFileInWorkspace(String oid, String source, String destination);
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace

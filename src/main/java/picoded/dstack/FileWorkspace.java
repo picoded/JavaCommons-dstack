@@ -150,6 +150,8 @@ public interface FileWorkspace {
 	
 	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
 	
+	boolean moveFile(String source, String destination);
+	
 	// @TODO - once this API is more stable
 	//
 	// + File copies within workspace
