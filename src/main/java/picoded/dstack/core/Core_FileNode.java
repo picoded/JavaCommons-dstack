@@ -14,7 +14,7 @@ public class Core_FileNode extends HashMap<String, Object> implements FileNode {
 	public Core_FileNode(String name, boolean isFolder) {
 		this.put("name", name);
 		this.put("folder", isFolder);
-		this.put("type", isFolder ? "folder" : "file");
+		this.put("type", isFolder ? "directory" : "file");
 		nodes = new ArrayList<>();
 		this.put("children", nodes);
 	}
