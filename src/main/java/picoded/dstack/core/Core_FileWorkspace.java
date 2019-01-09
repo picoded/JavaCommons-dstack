@@ -20,24 +20,24 @@ import picoded.core.common.ObjectToken;
  * NOTE: This class should not be initialized directly, but through FileWorkspaceMap class
  **/
 public class Core_FileWorkspace implements FileWorkspace {
-
+	
 	// Core variables
 	//----------------------------------------------
-
+	
 	/**
 	 * Core_FileWorkspaceMap used for the object
 	 * Used to provide the underlying backend implementation
 	 **/
 	protected Core_FileWorkspaceMap main = null;
-
+	
 	/**
 	 * GUID used for the object
 	 **/
 	protected String _oid = null;
-
+	
 	// Constructor
 	//----------------------------------------------
-
+	
 	/**
 	 * Setup a DataObject against a DataObjectMap backend.
 	 *
@@ -54,14 +54,14 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public Core_FileWorkspace(Core_FileWorkspaceMap inMain, String inOID) {
 		// Main table to use
 		main = (Core_FileWorkspaceMap) inMain;
-
+		
 		// Generates a GUID if not given
 		if (inOID == null) {
 			// Issue a GUID
 			if (_oid == null) {
 				_oid = GUID.base58();
 			}
-
+			
 			if (_oid.length() < 4) {
 				throw new RuntimeException("_oid should be atleast 4 character long");
 			}
@@ -69,12 +69,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 			// _oid setup
 			_oid = inOID;
 		}
-
+		
 	}
-
+	
 	// FileWorkspace implementation
 	//----------------------------------------------
-
+	
 	/**
 	 * The object ID
 	 **/
@@ -82,7 +82,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public String _oid() {
 		return _oid;
 	}
-
+	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
@@ -95,13 +95,13 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public void setupWorkspace(String folderPath) {
 		main.setupWorkspace(_oid(), folderPath);
 	}
-
+	
 	// Utility functions
 	//--------------------------------------------------------------------------
-
+	
 	// File exists checks
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Checks if the filepath exists with a file.
 	 *
@@ -112,15 +112,15 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public boolean fileExist(final String filepath) {
 		return main.backend_fileExist(_oid, filepath);
 	}
-
+	
 	@Override
 	public boolean dirExist(String dirPath) {
 		return false;
 	}
-
+	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Reads the contents of a file into a byte array.
 	 *
@@ -131,7 +131,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public byte[] readByteArray(final String filepath) {
 		return main.backend_fileRead(_oid, filepath);
 	}
-
+	
 	/**
 	 * Writes a byte array to a file creating the file if it does not exist.
 	 *
@@ -143,7 +143,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	public void writeByteArray(final String filepath, final byte[] data) {
 		main.backend_fileWrite(_oid, filepath, data);
 	}
-
+	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
 	 *
@@ -154,22 +154,22 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data   the content to write to the file
 	 **/
 	public void appendByteArray(final String filepath, final byte[] data) {
-
+		
 		// Get existing data
 		byte[] read = readByteArray(filepath);
 		if (read == null) {
 			writeByteArray(filepath, data);
 		}
-
+		
 		// Append new data to existing data
 		byte[] jointData = ArrayConv.addAll(read, data);
-
+		
 		// Write the new joint data
 		writeByteArray(filepath, jointData);
 	}
-
+	
 	public void removeFile(final String filepath) {
 		main.backend_removeFile(_oid, filepath);
 	}
-
+	
 }

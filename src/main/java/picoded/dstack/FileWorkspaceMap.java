@@ -18,10 +18,10 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  **/
 public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWorkspace>,
 	CommonStructure {
-
+	
 	// FileWorkspaceMap optimizations
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Does a simple, get and check for null (taking advantage of the null is delete feature)
 	 *
@@ -32,10 +32,10 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	default boolean containsKey(Object key) {
 		return get(key) != null;
 	}
-
+	
 	// FileWorkspaceMap operations
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Generates a new blank workspace, with a GUID.
 	 * Note that save does not trigger, until the first write event occurs.
@@ -43,7 +43,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * @return the DataObject
 	 **/
 	FileWorkspace newEntry();
-
+	
 	/**
 	 * Get a FileWorkspace, and returns it.
 	 *
@@ -54,7 +54,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * @return the DataObject, null if not exists
 	 **/
 	FileWorkspace get(Object oid);
-
+	
 	/**
 	 * Get a FileWorkspace, and returns it. Skips existance checks if required
 	 *
@@ -64,7 +64,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * @return the DataObject
 	 **/
 	FileWorkspace get(String oid, boolean isUnchecked);
-
+	
 	/**
 	 * Removes a DataObject if it exists, from the DB
 	 *
@@ -73,7 +73,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * @return NULL
 	 **/
 	FileWorkspace remove(Object key);
-
+	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
@@ -83,20 +83,32 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * Does not throw any error if workspace was previously setup
 	 */
 	void setupWorkspace(String oid, String folderPath);
-
+	
 	/**
 	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 * Listing in tree hierarchy format.
 	 *
 	 * @param oid        of the workspace to search
 	 * @param folderPath start of the folderPath to retrieve from
 	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
 	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
 	 */
-	FileNode listWorkspace(String oid, String folderPath, int depth);
-
+	FileNode listWorkspaceTreeView(String oid, String folderPath, int depth);
+	
+	/**
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 * Listing in list format.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
+	 */
+	List<FileNode> listWorkspaceListView(String oid, String folderPath, int depth);
+	
 	// FileWorkspaceMap utility operations
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Get array of DataObjects
 	 **/
@@ -107,20 +119,20 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 		}
 		return retArr;
 	}
-
+	
 	// Resolving class inheritence conflict
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes all data, without tearing down setup
 	 *
 	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"
 	 **/
 	void clear();
-
+	
 	// Special iteration support
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Gets and return a random object ID
 	 *
@@ -129,7 +141,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	default String randomObjectID() {
 		// Gets list of possible ID's
 		Set<String> idSet = keySet();
-
+		
 		// Randomly pick and ID, and fetch the object
 		int size = idSet.size();
 		if (size > 0) {
@@ -142,11 +154,11 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 				idx++;
 			}
 		}
-
+		
 		// Possibly a blank set here, return null
 		return null;
 	}
-
+	
 	/**
 	 * Gets and returns a random object,
 	 * Useful for random validation / checks
@@ -160,7 +172,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Gets and return the next object ID key for iteration given the current ID,
 	 * null gets the first object in iteration.
@@ -199,18 +211,18 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 		ArrayList<String> idList = new ArrayList<String>(keySet());
 		Collections.sort(idList);
 		int size = idList.size();
-
+		
 		// Blank set, nothing to iterate
 		if (size == 0) {
 			return null;
 		}
-
+		
 		// But it works
 		if (currentID == null) {
 			// return first object
 			return idList.get(0);
 		}
-
+		
 		// Time to iterate it all
 		for (int idx = 0; idx < size; ++idx) {
 			if (currentID.equals(idList.get(idx))) {
@@ -224,14 +236,14 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 			}
 			// If position not found, continue iterating
 		}
-
+		
 		// If this position is reached,
 		// possibly object was deleted mid iteration
 		//
 		// Fallsback to a random object to iterate
 		return randomObjectID();
 	}
-
+	
 	/**
 	 * DataObject varient of randomlyIterateObjectID
 	 *

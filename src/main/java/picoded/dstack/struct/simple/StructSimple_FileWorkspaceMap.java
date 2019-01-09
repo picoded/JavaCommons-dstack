@@ -12,18 +12,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
-
+	
 	protected ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
-
+	
 	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -37,15 +37,15 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public boolean backend_workspaceExist(String oid) {
 		try {
 			accessLock.readLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 			return workspace != null;
-
+			
 		} finally {
 			accessLock.readLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -62,7 +62,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.writeLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -77,20 +77,20 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public byte[] backend_fileRead(String oid, String filepath) {
 		try {
 			accessLock.readLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-
+			
 			if (workspace != null && filepath != null) {
 				return workspace.get(filepath);
 			}
-
+			
 			return null;
 		} finally {
 			accessLock.readLock().unlock();
 		}
-
+		
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -104,19 +104,19 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
 		try {
 			accessLock.writeLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = (fileContentMap.get(oid) == null) ? new ConcurrentHashMap<>()
 				: fileContentMap.get(oid);
-
+			
 			workspace.put(filepath, data);
-
+			
 			fileContentMap.put(oid, workspace);
-
+			
 		} finally {
 			accessLock.writeLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -129,19 +129,19 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_removeFile(String oid, String filepath) {
 		try {
 			accessLock.writeLock().lock();
-
+			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-
+			
 			// workspace exist, remove the file in the workspace
 			if (workspace != null) {
 				workspace.remove(filepath);
 			}
-
+			
 		} finally {
 			accessLock.writeLock().unlock();
 		}
 	}
-
+	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
@@ -154,29 +154,35 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_setupWorkspace(String oid, String folderPath) {
 		// do nothing for struct simple
 	}
-
+	
 	@Override
-	public FileNode backend_listWorkspace(String oid, String folderPath, int depth) {
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
 		// do nothing for struct simple
 		return null;
 	}
-
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		// do nothing for struct simple
+		return null;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------
-
+	
 	@Override
 	public void systemSetup() {
-
+		
 	}
-
+	
 	@Override
 	public void systemDestroy() {
 		clear();
 	}
-
+	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
 	 * having any form of time "expiry", this call does nothing in most implementation.
@@ -187,7 +193,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void maintenance() {
 		// Do nothing
 	}
-
+	
 	@Override
 	public void clear() {
 		try {

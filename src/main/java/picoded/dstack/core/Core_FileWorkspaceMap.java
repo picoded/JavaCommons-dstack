@@ -1,12 +1,11 @@
 package picoded.dstack.core;
 
 // Java imports
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 // Picoded imports
 import picoded.dstack.*;
+
+import java.util.List;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -16,13 +15,13 @@ import picoded.dstack.*;
  **/
 abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, FileWorkspace>
 	implements FileWorkspaceMap {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// FileWorkspace removal
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Removes a FileWorkspace if it exists, from the DB
 	 *
@@ -40,7 +39,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
@@ -53,7 +52,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	public void setupWorkspace(String oid, String folderPath) {
 		backend_setupWorkspace(oid, folderPath);
 	}
-
+	
 	/**
 	 * List the files and folder recursively depending on the folderPath that was passed in.
 	 *
@@ -62,17 +61,22 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
 	 */
 	@Override
-	public FileNode listWorkspace(String oid, String folderPath, int depth) {
-		return backend_listWorkspace(oid, folderPath, depth);
+	public FileNode listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		return backend_listWorkspaceTreeView(oid, folderPath, depth);
 	}
-
+	
+	@Override
+	public List<FileNode> listWorkspaceListView(String oid, String folderPath, int depth) {
+		return backend_listWorkspaceListView(oid, folderPath, depth);
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -81,7 +85,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param ObjectID of workspace to remove
 	 **/
 	abstract public void backend_workspaceRemove(String oid);
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -92,7 +96,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return  boolean to check if workspace exists
 	 **/
 	abstract public boolean backend_workspaceExist(String oid);
-
+	
 	/**
 	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
 	 * List the files and folder recursively depending on the folderPath that was passed in.
@@ -101,15 +105,18 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param folderPath start of the folderPath to retrieve from
 	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
 	 */
-	abstract public FileNode backend_listWorkspace(String oid, String folderPath, int depth);
-
+	abstract public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth);
+	
+	abstract public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath,
+		int depth);
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -127,7 +134,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	public boolean backend_fileExist(final String oid, final String filepath) {
 		return backend_fileRead(oid, filepath) != null;
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -139,7 +146,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return  the stored byte array of the file
 	 **/
 	abstract public byte[] backend_fileRead(final String oid, final String filepath);
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -150,7 +157,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   data to write the file with
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -160,7 +167,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param filepath the file to be removed
 	 */
 	abstract public void backend_removeFile(final String oid, final String filepath);
-
+	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
@@ -170,13 +177,13 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	abstract public void backend_setupWorkspace(String oid, String folderPath);
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// FileWorkspace operations
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Generates a new blank object, with a GUID
 	 *
@@ -186,7 +193,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// Actual return
 		return new Core_FileWorkspace(this, null);
 	}
-
+	
 	/**
 	 * Get a FileWorkspace, and returns it. Skips existance checks if required
 	 *
@@ -202,7 +209,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			return get(oid);
 		}
 	}
-
+	
 	/**
 	 * Get a FileWorkspace, and returns it.
 	 *
@@ -215,27 +222,27 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	public FileWorkspace get(Object oid) {
 		// String oid
 		String soid = (oid != null) ? oid.toString() : null;
-
+		
 		// Return null, if OID is null
 		if (soid == null || soid.isEmpty()) {
 			return null;
 		}
-
+		
 		// Get if workspace exists
 		if (backend_workspaceExist(soid)) {
 			return new Core_FileWorkspace(this, soid);
 		}
-
+		
 		// Return null if not exist
 		return null;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------
-
+	
 	/**
 	 * Maintenance step call, however due to the nature of most implementation not
 	 * having any form of time "expiry", this call does nothing in most implementation.

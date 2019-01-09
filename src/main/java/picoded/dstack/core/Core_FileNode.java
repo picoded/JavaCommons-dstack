@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class Core_FileNode extends HashMap<String, Object> implements FileNode {
 	
-	List<FileNode> nodes;
+	private List<FileNode> nodes;
 	
 	public Core_FileNode(String name, boolean isFolder) {
 		this.put("name", name);
@@ -42,5 +42,10 @@ public class Core_FileNode extends HashMap<String, Object> implements FileNode {
 	@Override
 	public void add(FileNode fileNode) {
 		nodes.add(fileNode);
+	}
+	
+	@Override
+	public void removeChildrenNodes() {
+		this.remove("children");
 	}
 }

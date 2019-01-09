@@ -186,7 +186,14 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	@Override
-	public FileNode backend_listWorkspace(String oid, String folderPath, int depth) {
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		// @TODO: To be implemented for Jsql
+		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
+		return null;
+	}
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
 		// @TODO: To be implemented for Jsql
 		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
 		return null;

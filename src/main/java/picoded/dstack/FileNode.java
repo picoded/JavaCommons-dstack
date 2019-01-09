@@ -17,4 +17,6 @@ public interface FileNode {
 	public List<FileNode> nodes();
 	
 	public void add(FileNode fileNode);
+	
+	public void removeChildrenNodes();
 }
