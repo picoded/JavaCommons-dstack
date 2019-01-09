@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import picoded.dstack.CommonStructure;
+import picoded.dstack.FileNode;
 import picoded.dstack.KeyLongMap;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.core.Core_KeyLongMap;
@@ -22,19 +23,19 @@ import picoded.core.struct.GenericConvertHashMap;
  * Built ontop of the Core_KeyLongMap implementation.
  **/
 public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Stack_CommonStructure {
-	
+
 	//--------------------------------------------------------------------------
 	//
 	// Constructor vars
 	//
 	//--------------------------------------------------------------------------
-	
+
 	// Data layers to apply basic read/write against
 	protected Core_FileWorkspaceMap[] dataLayers = null;
-	
+
 	// Data layer to apply query against
 	protected Core_FileWorkspaceMap queryLayer = null;
-	
+
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 *
@@ -54,7 +55,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		dataLayers = inDataLayers;
 		queryLayer = inQueryLayer;
 	}
-	
+
 	/**
 	 * Setup the data object with the respective data, and query layers
 	 *
@@ -64,20 +65,20 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	public Stack_FileWorkspaceMap(Core_FileWorkspaceMap[] inDataLayers) {
 		this(inDataLayers, null);
 	}
-	
+
 	//--------------------------------------------------------------------------
 	//
 	// Interface to ovewrite for `Stack_CommonStructure` implmentation
 	//
 	//--------------------------------------------------------------------------
-	
+
 	/**
 	 * @return  array of the internal common structure stack used by the Stack_ implementation
 	 */
 	public CommonStructure[] commonStructureStack() {
 		return (CommonStructure[]) dataLayers;
 	}
-	
+
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
@@ -98,7 +99,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_workspaceRemove(oid);
 		}
 	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -119,7 +120,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		// If all layers did not find the workspace
 		return false;
 	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -136,7 +137,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		for (int i = 0; i < dataLayers.length; ++i) {
 			// Retrieve the data of the file
 			byte[] data = dataLayers[i].backend_fileRead(oid, filepath);
-			
+
 			// Write back to the upper levels if data is found
 			// return the data
 			if (data != null) {
@@ -148,9 +149,9 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		}
 		// No data exist
 		return null;
-		
+
 	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -167,7 +168,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_fileWrite(oid, filepath, data);
 		}
 	}
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -198,25 +199,25 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_setupWorkspace(oid, folderPath);
 		}
 	}
-	
+
 	@Override
-	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+	public FileNode backend_listWorkspace(String oid, String folderPath, int depth) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			List<Object> names = dataLayers[i].backend_listWorkspace(oid, folderPath);
-			if (names.size() != 0) {
-				return names;
+			FileNode fileNode = dataLayers[i].backend_listWorkspace(oid, folderPath, depth);
+			if (fileNode != null) {
+				return fileNode;
 			}
 		}
-		
-		return new ArrayList<>();
+
+		return null;
 	}
-	
+
 	//--------------------------------------------------------------------------
 	//
 	// Copy pasta code, I wished could have worked in an interface
 	//
 	//--------------------------------------------------------------------------
-	
+
 	/**
 	 * Removes all data, without tearing down setup
 	 *

@@ -1,5 +1,6 @@
 package picoded.dstack.jsql;
 
+import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
@@ -185,10 +186,10 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	@Override
-	public List<Object> backend_listWorkspace(String oid, String folderPath) {
+	public FileNode backend_listWorkspace(String oid, String folderPath, int depth) {
 		// @TODO: To be implemented for Jsql
 		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
-		return new ArrayList<>();
+		return null;
 	}
 	
 	//--------------------------------------------------------------------------

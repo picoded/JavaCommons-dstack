@@ -62,17 +62,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
 	 */
 	@Override
-	public List<Object> listWorkspace(String oid, String folderPath) {
-		return backend_listWorkspace(oid, folderPath);
+	public FileNode listWorkspace(String oid, String folderPath, int depth) {
+		return backend_listWorkspace(oid, folderPath, depth);
 	}
-	
+
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -101,15 +101,15 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param folderPath start of the folderPath to retrieve from
 	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
 	 */
-	abstract public List<Object> backend_listWorkspace(String oid, String folderPath);
-	
+	abstract public FileNode backend_listWorkspace(String oid, String folderPath, int depth);
+
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-	
+
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
