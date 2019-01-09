@@ -146,6 +146,10 @@ public interface FileWorkspace {
 		writeByteArray(filepath, StringConv.toByteArray(content, encoding));
 	}
 	
+	FileNode listWorkspaceInTreeView(String folderPath, int depth);
+	
+	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
+	
 	// @TODO - once this API is more stable
 	//
 	// + File copies within workspace
