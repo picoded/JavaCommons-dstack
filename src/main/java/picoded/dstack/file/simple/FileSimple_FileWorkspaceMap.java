@@ -210,7 +210,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		// return null if failed
 		if (fileObj == null || !fileObj.exists()) {
-			throw new RuntimeException("File does not exist.");
+			return null;
 		}
 		
 		if (fileObj.isDirectory()) {
