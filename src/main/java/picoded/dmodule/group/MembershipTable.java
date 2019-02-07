@@ -218,7 +218,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		if (id == null) {
 			DataObject obj = membershipTable.newEntry();
 			obj.put("groupid", groupID);
-			obj.put("memberid", groupID);
+			obj.put("memberid", memberID);
 			obj.saveAll();
 		}
 		// Get the newly saved membership object
