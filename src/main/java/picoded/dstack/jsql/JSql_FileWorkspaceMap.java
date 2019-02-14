@@ -1,9 +1,12 @@
 package picoded.dstack.jsql;
 
+import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
@@ -124,6 +127,28 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		
+		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, null, "oID = ? AND path = ?",
+			new Object[] { oid, filepath });
+		
+		return jSqlResult.rowCount() > 0;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Writes the full byte array of a file in the backend
 	 *
 	 * @param   ObjectID of workspace
@@ -167,19 +192,39 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		// Setup a blank folder path
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		sqlObj.upsert( //
 			fileWorkspaceTableName, //
 			new String[] { "oID", "path" }, //
-			new Object[] { oid, "" }, //
+			new Object[] { oid, folderPath }, //
 			new String[] { "uTm" }, //
 			new Object[] { now }, //
 			new String[] { "cTm", "eTm", "data" }, //
 			new Object[] { now, 0, null }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
+	}
+	
+	@Override
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		// @TODO: To be implemented for Jsql
+		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
+		return null;
+	}
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		// @TODO: To be implemented for Jsql
+		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
+		return null;
+	}
+	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		// @TODO: To be implemented for Jsql
+		return true;
 	}
 	
 	//--------------------------------------------------------------------------

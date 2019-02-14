@@ -1,9 +1,17 @@
 package picoded.dstack.file.simple;
 
-import java.io.File;
-
-import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.core.file.FileUtil;
+import picoded.dstack.FileNode;
+import picoded.dstack.core.Core_FileWorkspaceMap;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Reference class for Core_FileWorkspaceMap
@@ -25,7 +33,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Setup with file directory
 	 *
-	 * @param  inDir folder directory to operate from
+	 * @param inDir folder directory to operate from
 	 */
 	public FileSimple_FileWorkspaceMap(File inDir) {
 		baseDir = inDir;
@@ -35,7 +43,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Setup with file directory
 	 *
-	 * @param  inDir folder directory to operate from
+	 * @param inDir folder directory to operate from
 	 */
 	public FileSimple_FileWorkspaceMap(String inDir) {
 		baseDir = new File(inDir);
@@ -85,7 +93,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 *
 	 * @return file object
 	 */
-	protected File workspaceDirObj(String oid) {
+	public File workspaceDirObj(String oid) {
 		// oid failed validation
 		if (!validateOid(oid)) {
 			return null;
@@ -98,9 +106,8 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Checks and return of a workspace exists
 	 *
-	 * @param  Object ID of workspace to get
-	 *
-	 * @return  boolean to check if workspace exists
+	 * @param Object ID of workspace to get
+	 * @return boolean to check if workspace exists
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
@@ -134,15 +141,21 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
+	 * <p>
 	 * This ensures the workspace _oid is registered within the map,
 	 * even if there is 0 files.
-	 *
+	 * <p>
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
-		File file = new File(baseDir + "/" + oid);
+	public void backend_setupWorkspace(String oid, String folderPath) {
+		File file = null;
+		if (folderPath.isEmpty()) {
+			file = new File(baseDir + "/" + oid);
+		} else {
+			file = new File(baseDir + "/" + oid + "/" + folderPath);
+		}
+		
 		boolean mkdir = file.mkdirs();
 	}
 	
@@ -155,9 +168,8 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Get and return the file object, given the oid and path
 	 *
-	 * @param  ObjectID of workspace
-	 * @param  filepath to use for the workspace
-	 *
+	 * @param ObjectID of workspace
+	 * @param filepath to use for the workspace
 	 * @return file object
 	 */
 	protected File workspaceFileObj(String oid, String filepath) {
@@ -186,9 +198,9 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	/**
 	 * Read file content from its path
-	 * @param oid
-	 * @param  filepath to use for the workspace
 	 *
+	 * @param oid
+	 * @param filepath to use for the workspace
 	 * @return
 	 */
 	@Override
@@ -196,9 +208,13 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
 		
-		// Check if its a file, return null if failed
-		if (fileObj == null || !fileObj.isFile()) {
+		// return null if failed
+		if (fileObj == null || !fileObj.exists()) {
 			return null;
+		}
+		
+		if (fileObj.isDirectory()) {
+			throw new RuntimeException(String.format("`%s` is a directory", filepath));
 		}
 		
 		// Read the file
@@ -206,10 +222,38 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		
+		// Get the file object
+		File fileObj = workspaceFileObj(oid, filepath);
+		
+		// Check if it is file or directory
+		if (fileObj.exists()) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Write into a file, if does not exist createUser one
+	 *
 	 * @param oid
-	 * @param   filepath to use for the workspace
-	 * @param   data to write the file with
+	 * @param filepath to use for the workspace
+	 * @param data     to write the file with
 	 */
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
@@ -234,7 +278,8 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	/**
 	 * Remove a file from the workspace by its id
-	 * @param oid identifier to the workspace
+	 *
+	 * @param oid      identifier to the workspace
 	 * @param filepath the file to be removed
 	 */
 	@Override
@@ -251,6 +296,136 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		if (fileObj.isFile()) {
 			FileUtil.forceDelete(fileObj);
 		}
+	}
+	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects in tree view
+	 */
+	@Override
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		
+		File node = workspaceFileObj(oid, folderPath);
+		File rootFolder = workspaceDirObj(oid);
+		
+		FileNode fileNode = new FileSimple_FileNode(node.getName(), node.isDirectory());
+		
+		// File processing
+		//----------------------
+		if (node.isFile()) {
+			return fileNode;
+		}
+		
+		// Folder processing
+		//----------------------
+		if (node.isDirectory()) {
+			File[] subFiles = node.listFiles();
+			
+			// Go deeper if depth is not 0 yet or depth is -1 (list all the way)
+			if (subFiles != null && subFiles.length > 0 && (depth != 0 || depth == -1)) {
+				
+				// Calculating the next depth
+				depth = (depth == -1) ? -1 : depth - 1;
+				
+				for (File fileItem : subFiles) {
+					
+					// Get the inner level files and folder
+					FileNode fileItemNode = backend_listWorkspaceTreeView(oid, fileItem
+						.getAbsolutePath().replace(rootFolder.getAbsolutePath(), ""), depth);
+					
+					if (fileItemNode != null) {
+						fileNode.add(fileItemNode);
+					}
+				}
+			}
+			
+			return fileNode;
+		}
+		
+		throw new IllegalArgumentException("Unexpected file/folder type - " + node.getPath());
+		
+	}
+	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects in list view
+	 */
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		File node = workspaceFileObj(oid, folderPath);
+		File rootFolder = workspaceDirObj(oid);
+		
+		if (!node.exists()) {
+			throw new RuntimeException("folderPath does not exist");
+		}
+		
+		try {
+			
+			Stream<Path> pathStream;
+			
+			// Walking through the path with a depth or all the way
+			if (depth == -1) {
+				pathStream = Files.walk(node.toPath());
+			} else {
+				pathStream = Files.walk(node.toPath(), depth, FileVisitOption.FOLLOW_LINKS);
+			}
+			
+			// Convert the Stream<Path> into List<FileNode>
+			List<FileNode> fileNodes = pathStream.map(path -> {
+				
+				File pathFile = path.toFile();
+				String name = pathFile.getAbsolutePath().replace(node.getAbsolutePath(), "");
+				FileNode fileNode = new FileSimple_FileNode(name, pathFile.isDirectory());
+				fileNode.removeChildrenNodes();
+				
+				return name == null ? null : fileNode;
+				
+			}).collect(Collectors.toList());
+			
+			// Remove all items that are null (specifically it will be the root folder)
+			fileNodes.removeIf(item -> item == null);
+			
+			return fileNodes;
+			
+		} catch (IOException e) {
+			throw new RuntimeException(String.format(
+				"Unable to walk through folderPath: %s of workspace ID: %s", folderPath, oid));
+		}
+	}
+	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		
+		File srcToMove = workspaceFileObj(oid, source);
+		File moveToDest = workspaceFileObj(oid, destination);
+		
+		if (!srcToMove.exists()) {
+			throw new RuntimeException("`src` file not found");
+		}
+		
+		if (moveToDest.exists()) {
+			throw new RuntimeException(String.format("File already exists at `%s`", destination));
+		}
+		
+		if (srcToMove.isDirectory()) {
+			// By default, create destination if not exist (latest)
+			srcToMove.renameTo(moveToDest);
+		} else {
+			// By default, create destination if not exist (latest)
+			FileUtil.moveFile(srcToMove, moveToDest);
+		}
+		
+		return moveToDest.exists();
 	}
 	
 	@Override

@@ -9,6 +9,7 @@ import picoded.core.conv.ArrayConv;
 import picoded.core.file.FileUtil;
 import picoded.dstack.DataObject;
 import picoded.dstack.DataObjectMap;
+import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
@@ -92,9 +93,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace() {
-		main.setupWorkspace(_oid());
+	public void setupWorkspace(String folderPath) {
+		main.setupWorkspace(_oid(), folderPath);
 	}
+	
+	// Utility functions
+	//--------------------------------------------------------------------------
 	
 	// File exists checks
 	//--------------------------------------------------------------------------
@@ -108,6 +112,11 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public boolean fileExist(final String filepath) {
 		return main.backend_fileExist(_oid, filepath);
+	}
+	
+	@Override
+	public boolean dirExist(String dirPath) {
+		return false;
 	}
 	
 	// Read / write byteArray information
@@ -164,4 +173,18 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_removeFile(_oid, filepath);
 	}
 	
+	@Override
+	public FileNode listWorkspaceInTreeView(String folderPath, int depth) {
+		return main.backend_listWorkspaceTreeView(_oid(), folderPath, depth);
+	}
+	
+	@Override
+	public List<FileNode> listWorkspaceInListView(String folderPath, int depth) {
+		return main.backend_listWorkspaceListView(_oid(), folderPath, depth);
+	}
+	
+	@Override
+	public boolean moveFile(String source, String destination) {
+		return main.backend_moveFileInWorkspace(_oid(), source, destination);
+	}
 }

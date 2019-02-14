@@ -1,18 +1,10 @@
 package picoded.dstack.stack;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import picoded.dstack.CommonStructure;
-import picoded.dstack.KeyLongMap;
+import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
-import picoded.dstack.core.Core_KeyLongMap;
-import picoded.core.struct.GenericConvertMap;
-import picoded.core.struct.MutablePair;
-import picoded.core.struct.GenericConvertHashMap;
+
+import java.util.List;
 
 /**
  * Stacked implementation of KeyValueMap data structure.
@@ -152,6 +144,32 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		
+		// Write the data starting from the lowest layer
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			if (dataLayers[i].backend_fileExist(oid, filepath)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Writes the full byte array of a file in the backend
 	 *
 	 * @param   ObjectID of workspace
@@ -191,10 +209,43 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid);
+			dataLayers[i].backend_setupWorkspace(oid, folderPath);
 		}
+	}
+	
+	@Override
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			FileNode fileNode = dataLayers[i].backend_listWorkspaceTreeView(oid, folderPath, depth);
+			if (fileNode != null) {
+				return fileNode;
+			}
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			List<FileNode> fileNode = dataLayers[i].backend_listWorkspaceListView(oid, folderPath,
+				depth);
+			if (fileNode != null) {
+				return fileNode;
+			}
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_moveFileInWorkspace(oid, source, destination);
+		}
+		return true;
 	}
 	
 	//--------------------------------------------------------------------------

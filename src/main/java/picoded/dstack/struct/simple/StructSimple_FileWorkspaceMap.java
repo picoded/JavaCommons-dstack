@@ -1,8 +1,12 @@
 package picoded.dstack.struct.simple;
 
+import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -90,6 +94,35 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		try {
+			accessLock.readLock().lock();
+			
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			
+			if (workspace != null && filepath != null) {
+				return workspace.get(filepath) != null;
+			}
+		} finally {
+			accessLock.readLock().unlock();
+		}
+		return false;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Writes the full byte array of a file in the backend
 	 *
 	 * @param   ObjectID of workspace
@@ -147,8 +180,26 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid) {
+	public void backend_setupWorkspace(String oid, String folderPath) {
 		// do nothing for struct simple
+	}
+	
+	@Override
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		// do nothing for struct simple
+		return null;
+	}
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		// do nothing for struct simple
+		return null;
+	}
+	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		// do nothing for struct simple
+		return true;
 	}
 	
 	//--------------------------------------------------------------------------

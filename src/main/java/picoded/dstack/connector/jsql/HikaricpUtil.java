@@ -6,7 +6,7 @@ import com.zaxxer.hikari.*;
 import picoded.core.struct.*;
 
 /**
- * HikariCP utility class 
+ * HikariCP utility class
  **/
 class HikaricpUtil {
 	
@@ -18,9 +18,9 @@ class HikaricpUtil {
 	
 	/**
 	 * Loading the common HikariConfig settings - given a config map.
-	 * 
+	 *
 	 * This exclude database specific configuration loading
-	 * 
+	 *
 	 * @param  config map used
 	 */
 	public static HikariConfig commonConfigLoading(GenericConvertMap config) {
@@ -80,16 +80,16 @@ class HikaricpUtil {
 	
 	/**
 	 * Default max pool size is always atleast 4
-	 * 
+	 *
 	 * Default max pool size will be tagged to the total avaliableProcessors count.
 	 * Which would 2 * number of cores, for a hyper threading environment.
-	 * 
+	 *
 	 * This is close to the optimal guideline for max coonection pool sizing
 	 * See : https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing
-	 * 
-	 * If hyperthreading is disabled, this estimate is ineffective. 
+	 *
+	 * If hyperthreading is disabled, this estimate is ineffective.
 	 * But is considered out of scope.
-	 * 
+	 *
 	 * @return default max pool size to use
 	 */
 	public static int defaultMaxPoolSize() {
@@ -107,10 +107,10 @@ class HikaricpUtil {
 	//----------------------------------------------------------------------------------
 	
 	/**
-	 * Loads a HikariDataSource for SQLite given the config 
-	 * 
+	 * Loads a HikariDataSource for SQLite given the config
+	 *
 	 * @param  config map used
-	 * 
+	 *
 	 * @return HikariDataSource with the appropriate config loaded and initialized
 	 */
 	public static HikariDataSource sqlite(GenericConvertMap config) {
@@ -127,7 +127,7 @@ class HikaricpUtil {
 		if (path.equalsIgnoreCase(":memory:")) {
 			absolutePath = ":memory:";
 		} else {
-			// Get the sqlite file 
+			// Get the sqlite file
 			File sqliteFileObj = new File(path);
 			absolutePath = sqliteFileObj.getAbsolutePath();
 			
@@ -153,7 +153,7 @@ class HikaricpUtil {
 				"Failed to load SQLite JDBC driver - please ensure 'org.sqlite.JDBC' jar is included");
 		}
 		
-		// Setup the configured 
+		// Setup the configured
 		hconfig.setDriverClassName("org.sqlite.JDBC");
 		hconfig.setJdbcUrl("jdbc:sqlite:" + absolutePath);
 		
@@ -162,10 +162,10 @@ class HikaricpUtil {
 	}
 	
 	/**
-	 * Loads a HikariDataSource for Mysql given the config 
-	 * 
+	 * Loads a HikariDataSource for Mysql given the config
+	 *
 	 * @param  config map used
-	 * 
+	 *
 	 * @return HikariDataSource with the appropriate config loaded and initialized
 	 */
 	public static HikariDataSource mysql(GenericConvertMap config) {
@@ -193,17 +193,18 @@ class HikaricpUtil {
 		// Load the common config
 		HikariConfig hconfig = commonConfigLoading(config);
 		
-		// // Load the DB library
-		// // This is only imported on demand, avoid preloading until needed
-		// try {
-		// 	Class.forName("com.mysql.cj.jdbc.MysqlDataSource");
-		// } catch (ClassNotFoundException e) {
-		// 	throw new RuntimeException(
-		// 		"Failed to load SQLite JDBC driver - please ensure 'org.sqlite.JDBC' jar is included");
-		// }
+		// Load the DB library
+		// This is only imported on demand, avoid preloading until needed
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"Failed to load MySQL JDBC driver - please ensure 'com.mysql.JDBC' jar is included");
+		}
 		
 		// Setup the configured connection URL + DB
-		//hconfig.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
+		hconfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		
 		hconfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name);
 		
 		// Setup the username and password
@@ -250,10 +251,10 @@ class HikaricpUtil {
 	}
 	
 	/**
-	 * Loads a HikariDataSource for MS-SQL given the config 
-	 * 
+	 * Loads a HikariDataSource for MS-SQL given the config
+	 *
 	 * @param  config map used
-	 * 
+	 *
 	 * @return HikariDataSource with the appropriate config loaded and initialized
 	 */
 	public static HikariDataSource mssql(GenericConvertMap config) {
@@ -290,7 +291,7 @@ class HikaricpUtil {
 				"Failed to load MSSql JDBC driver - please ensure 'com.microsoft.sqlserver.jdbc.SQLServerDataSource' jar is included");
 		}
 		
-		// Setup the configured 
+		// Setup the configured
 		hconfig.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDataSource");
 		
 		// // Setup the JDBC URL & username and password
@@ -309,7 +310,7 @@ class HikaricpUtil {
 		// Database name support
 		hconfig.addDataSourceProperty("databaseName", name);
 		
-		// Disable error prone CLOBs 
+		// Disable error prone CLOBs
 		hconfig.addDataSourceProperty("uselobs", false);
 		
 		// Initialize the data source and return

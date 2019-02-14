@@ -64,10 +64,11 @@ public class JSql_Sqlite extends JSql_Base {
 	 * Actual internal constructor setup function
 	 * (called internally by all other constructor types
 	 * used to work around call to constructor 'must be first statement')
-	 * 
+	 *
 	 * @param config  config map
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
+		sqlType = JSqlType.SQLITE;
 		datasource = HikaricpUtil.sqlite(config);
 	}
 	
@@ -78,17 +79,17 @@ public class JSql_Sqlite extends JSql_Base {
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * Executes and fetch a table column information as a map, note that due to the 
-	 * HIGHLY different standards involved across SQL backends for this command, 
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
 	 * it has been normalized to only return a map containing collumn name and types
-	 * 
+	 *
 	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
 	 * type being applied on table create. The collumn type may not match the input collumn
 	 * type previously applied on table create. (Unless update_raw was used)
-	 * 
-	 * This immediately executes a query, and process the information directly 
+	 *
+	 * This immediately executes a query, and process the information directly
 	 * (to normalize the results across SQL implementations).
-	 * 
+	 *
 	 * Note : returned map should be a `CaseInsensitiveHashMap`
 	 *
 	 * @param  tablename to get information on

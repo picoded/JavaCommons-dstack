@@ -3,6 +3,9 @@ package picoded.dstack;
 import picoded.core.conv.ArrayConv;
 import picoded.core.conv.StringConv;
 
+import java.io.File;
+import java.util.List;
+
 /**
  * Represent a file storage backend for a workspace
  */
@@ -44,7 +47,7 @@ public interface FileWorkspace {
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	default void setupWorkspace() {
+	default void setupWorkspace(String folderPath) {
 	}
 	
 	// File exists checks
@@ -55,9 +58,18 @@ public interface FileWorkspace {
 	 *
 	 * @param  filepath in the workspace to check
 	 *
-	 * @return true, if file exists (and writable), false if it does not. Possible a folder
+	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
 	 */
 	boolean fileExist(final String filepath);
+	
+	/**
+	 * Checks if the directory exists.
+	 *
+	 * @param  dirPath in the workspace to check
+	 *
+	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
+	 */
+	boolean dirExist(final String dirPath);
 	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
@@ -134,9 +146,14 @@ public interface FileWorkspace {
 		writeByteArray(filepath, StringConv.toByteArray(content, encoding));
 	}
 	
+	FileNode listWorkspaceInTreeView(String folderPath, int depth);
+	
+	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
+	
+	boolean moveFile(String source, String destination);
+	
 	// @TODO - once this API is more stable
 	//
-	// + String handling
 	// + File copies within workspace
 	// + File moving within workspace
 	// + Folder deletion

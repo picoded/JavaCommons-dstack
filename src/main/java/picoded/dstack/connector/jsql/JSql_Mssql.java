@@ -57,7 +57,7 @@ public class JSql_Mssql extends JSql_Base {
 		config.put("pass", dbPass);
 		
 		// Setup with config
-		datasource = HikaricpUtil.mssql(config);
+		constructor_setup(config);
 	}
 	
 	/**
@@ -73,10 +73,11 @@ public class JSql_Mssql extends JSql_Base {
 	 * Actual internal constructor setup function
 	 * (called internally by all other constructor types used to
 	 * work around call to constructor 'must be first statement')
-	 * 
+	 *
 	 * @param config  config map
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
+		sqlType = JSqlType.MSSQL;
 		datasource = HikaricpUtil.mssql(config);
 	}
 	
@@ -87,17 +88,17 @@ public class JSql_Mssql extends JSql_Base {
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * Executes and fetch a table column information as a map, note that due to the 
-	 * HIGHLY different standards involved across SQL backends for this command, 
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
 	 * it has been normalized to only return a map containing collumn name and types
-	 * 
+	 *
 	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
 	 * type being applied on table create. The collumn type may not match the input collumn
 	 * type previously applied on table create. (Unless update_raw was used)
-	 * 
-	 * This immediately executes a query, and process the information directly 
+	 *
+	 * This immediately executes a query, and process the information directly
 	 * (to normalize the results across SQL implementations).
-	 * 
+	 *
 	 * Note : returned map should be a `CaseInsensitiveHashMap`
 	 *
 	 * @param  tablename to get information on
@@ -356,7 +357,7 @@ public class JSql_Mssql extends JSql_Base {
 				qString = prefixQuery + offsetQuery + limitQuery;
 			}
 			
-			// Replace ORDER BY RANDOM() 
+			// Replace ORDER BY RANDOM()
 			// with ORDER BY NEWID()
 			// https://stackoverflow.com/questions/19412/how-to-request-a-random-row-in-sql
 			qString = qString.replaceAll("ORDER BY RANDOM\\(\\)", "ORDER BY NEWID()").replaceAll(
@@ -453,7 +454,7 @@ public class JSql_Mssql extends JSql_Base {
 		
 		// Work around default table value quotes
 		// sadly variable arguments are NOT allowed in create table statements
-		// 
+		//
 		// LIKE WHY?????
 		// java.sql.SQLException: Variables are not allowed in the CREATE TABLE statement.
 		
@@ -463,7 +464,7 @@ public class JSql_Mssql extends JSql_Base {
 		// while( (defaultTxtIdx = qString.indexOf("DEFAULT", lastCheckedIdx)) > 0 ) {
 		// 	int defaultTxtIdxEnd = defaultTxtIdx + "DEFAULT".length();
 		
-		// 	// Replace double quote with literal string 
+		// 	// Replace double quote with literal string
 		// 	String beforeDefaultStatement = qString.substring(0, defaultTxtIdx);
 		// 	String afterDefaultStatement = qString.substring(defaultTxtIdxEnd);
 		// 	afterDefaultStatement = afterDefaultStatement.replaceFirst("\\s+\"", "('").replaceFirst("\"", "')");
