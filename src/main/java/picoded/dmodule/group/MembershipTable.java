@@ -13,13 +13,13 @@ import picoded.core.struct.*;
  * against existing data table compatible backend.
  **/
 public abstract class MembershipTable extends ModuleStructure {
-
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Underlying data structures
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Handles the storage of group data.
 	 *
@@ -28,7 +28,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * DataObjectMap<GroupOID, DataObject>
 	 **/
 	protected DataObjectMap groupTable = null;
-
+	
 	/**
 	 * Member DataObjectMap, to link. Note that this is designed,
 	 * intentionally to work with DataObjectMap compatible interface.
@@ -36,27 +36,27 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * DataObjectMap<AccountOID, DataObject>
 	 **/
 	protected DataObjectMap memberTable = null;
-
+	
 	/**
 	 * Handles the storage of group to partipant link.
 	 *
 	 * DataObjectMap<MembershipOID, DataObject>
 	 **/
 	protected DataObjectMap membershipTable = null;
-
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Constructor setup : Setup the actual tables, with the various names
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Blank constructor, used for more custom extensions
 	 **/
 	public MembershipTable() {
 		super();
 	}
-
+	
 	/**
 	 * MembershipTable constructor using DataObjectMap
 	 *
@@ -72,13 +72,13 @@ public abstract class MembershipTable extends ModuleStructure {
 		// Setup the internal structure list
 		internalStructureList = internalStructureList();
 	}
-
+	
 	//----------------------------------------------------------------
 	//
 	//  Internal CommonStructure management
 	//
 	//----------------------------------------------------------------
-
+	
 	/**
 	 * Setup the list of local CommonStructure's
 	 * this is used internally by setup/destroy/maintenance
@@ -91,13 +91,13 @@ public abstract class MembershipTable extends ModuleStructure {
 		// Return it as a list
 		return Arrays.asList(groupTable, memberTable, membershipTable);
 	}
-
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Membership based utility functions
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Validate group and member ID, throws runtime exception on failure
 	 *
@@ -115,7 +115,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		}
 		return true;
 	}
-
+	
 	/**
 	 * Clean up membership objects, if the parent objects orphaned them
 	 *
@@ -132,7 +132,7 @@ public abstract class MembershipTable extends ModuleStructure {
 			}
 		}
 	}
-
+	
 	/**
 	 * Gets and return the membership object, only if it exists.
 	 *
@@ -144,7 +144,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	protected String getMembershipID(String groupID, String memberID) {
 		// Basic id validation
 		validateMembership(groupID, memberID);
-
+		
 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to membership-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
 		String[] ids = membershipTable.query_id("groupid=? AND memberid=?", new Object[] { groupID,
@@ -160,7 +160,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		}
 		return null;
 	}
-
+	
 	// 	/**
 	// 	 * Utility function to cast membership DataObject to MembershipObject
 	// 	 *
@@ -172,20 +172,20 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 		if(objList == null) {
 	// 			return null;
 	// 		}
-
+	
 	// 		MembershipObject[] ret = new MembershipObject[ objList.length ];
 	// 		for( int i=0; i<objList.length; ++i ) {
 	// 			ret[i] = new MembershipObject(this, objList[i]._oid());
 	// 		}
 	// 		return ret;
 	// 	}
-
+	
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// Basic add / get / remove membership
 	// 	//
 	// 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Gets and return the membership object, only if it exists.
 	 *
@@ -201,7 +201,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Add membership object, only if doesnt previously exists
 	 * Else fetches the membership object.
@@ -224,7 +224,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		// Get the newly saved membership object
 		return getMembership(groupID, memberID);
 	}
-
+	
 	/**
 	 * Remove membership object, only if doesnt previously exists
 	 * Else fetches the membership object.
@@ -240,13 +240,13 @@ public abstract class MembershipTable extends ModuleStructure {
 			membershipTable.remove(id);
 		}
 	}
-
+	
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// basic Membership listing
 	// 	//
 	// 	///////////////////////////////////////////////////////////////////////////
-
+	
 	// 	/**
 	// 	 * Gets the list of membership given a group
 	// 	 *
@@ -257,7 +257,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	public MembershipObject[] listMembership_fromGroup(String groupID) {
 	// 		return castFromDataObject ( groupTable.query("groupid=?", new Object[] { groupID }) );
 	// 	}
-
+	
 	// 	/**
 	// 	 * Gets the list of membership given a member
 	// 	 *
@@ -268,7 +268,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	public MembershipObject[] listMembership_fromMember(String memberID) {
 	// 		return castFromDataObject ( groupTable.query("memberid=?", new Object[] { memberID }) );
 	// 	}
-
+	
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// DataObjectMap based query
@@ -276,13 +276,13 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	// @TODO : Refactor this out to a core.struct.query.AbstractMapMapQuery
 	// 	//
 	// 	///////////////////////////////////////////////////////////////////////////
-
+	
 	// 	// ///////////////////////////////////////////////////////////////////////////
 	// 	// //
 	// 	// // Universal object listing =/
 	// 	// //
 	// 	// ///////////////////////////////////////////////////////////////////////////
-
+	
 	// 	// /**
 	// 	//  * Does a rather complex multi-query, across group, member, and membership.
 	// 	//  * And return the chosen object type.
