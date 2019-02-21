@@ -5,15 +5,21 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import picoded.dstack.connector.jsql.*;
-import picoded.dstack.connector.jsql.JSqlType;
-import picoded.core.conv.ConvertJSON;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.ResultSetMetaData;
+import java.util.HashMap;
+import java.sql.Connection;
 
 import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
-import picoded.core.struct.CaseInsensitiveHashMap;
+
+import picoded.dstack.connector.jsql.JSql;
+import picoded.dstack.connector.jsql.JSqlException;
+// import picoded.JSql.JSqlQuerySet;
+import picoded.dstack.connector.jsql.JSqlResult;
+import picoded.dstack.connector.jsql.JSqlType;
 import picoded.core.struct.MutablePair;
 
 /// Pure ORACLE-SQL implentation of JSql
@@ -32,93 +38,46 @@ public class JSql_Oracle extends JSql_Base {
 		// store database connection properties
 		// setConnectionProperties(oraclePath, null, dbUser, dbPass, null);
 		
-		connectionProps = new HashMap<String, Object>();
-		if (dbUrl != null) {
-			connectionProps.put("dbUrl", oraclePath);
-		}
-		// if (dbName != null) {
-		// 	connectionProps.put("dbName", dbName);
-		// }
-		if (dbUser != null) {
-			connectionProps.put("dbUser", dbUser);
-		}
-		if (dbPass != null) {
-			connectionProps.put("dbPass", dbPass);
-		}
-		// if (connProps != null) {
-		// 	connectionProps.put("connectionProps", connProps);
-		// }
+		// // call internal method to create the connection
+		// setupConnection();
+		
+		GenericConvertMap<String, Object> config = new GenericConvertHashMap<>();
+		
+		// Basic path, dbname, user, pass configuration
+		config.put("host", oraclePath);
+		config.put("user", dbUser);
+		config.put("pass", dbPass);
 		
 		// Setup with config
 		constructor_setup(config);
-		
-		// call internal method to create the connection
-		setupConnection();
 	}
 	
-	public JSql_Oracle(java.sql.Connection inSqlConn) {
-		if (inSqlConn != null) {
-			sqlConn = inSqlConn;
-		}
-	}
-	
+	/**
+	 * Runs JSql with the JDBC "MY"SQL engine
+	 *
+	 * @param config  config map
+	 **/
 	public JSql_Oracle(GenericConvertMap<String, Object> config) {
 		constructor_setup(config);
 	}
 	
+	/**
+	 * Actual internal constructor setup function
+	 * (called internally by all other constructor types used to
+	 * work around call to constructor 'must be first statement')
+	 *
+	 * @param config  config map
+	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.ORACLE;
 		datasource = HikaricpUtil.oracle(config);
 	}
 	
-	/// Internal common reuse constructor
-	private void setupConnection() {
-		sqlType = JSqlType.ORACLE;
-		
-		// Get the assumed oracle table space
-		String oraclePath = (String) connectionProps.get("dbUrl");
-		int tPoint = oraclePath.indexOf("@");
-		if (tPoint > 0) {
-			oracleTablespace = oraclePath.substring(0, tPoint);
-		} else {
-			oracleTablespace = null;
-		}
-		
-		String connectionUrl = "jdbc:oracle:thin:" + oraclePath;
-		try {
-			Class.forName("oracle.jdbc.OracleDriver").newInstance(); //ensure oracle driver is loaded
-			sqlConn = java.sql.DriverManager.getConnection(connectionUrl,
-				(String) connectionProps.get("dbUser"), (String) connectionProps.get("dbPass"));
-			
-			// Try to alter & ensure the current session roles
-			try {
-				query_raw("SET ROLE ALL");
-			} catch (Exception e) {
-				logger.log(Level.SEVERE, "Failed to alter current session roles", e);
-			}
-			
-			// Try to alter & ensure the current session schema to the right tablespace
-			//try {
-			//	if( oracleTablespace != null && !dbUser.equals(oracleTablespace) ) {
-			//		execute("ALTER SESSION SET current_schema = ?", oracleTablespace);
-			//	}
-			//} catch (Exception e) {
-			//	logAndFormatError("Failed to alter sesion to target table space", e);
-			//}
-			
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to load SQL connection: ", e);
-		}
-	}
-	
-	/// As this is the base class varient, this funciton isnt suported
-	public void recreate(boolean force) {
-		if (force) {
-			close();
-		}
-		// call internal method to create the connection
-		setupConnection();
-	}
+	// public JSql_Oracle(java.sql.Connection inSqlConn) {
+	// 	if (inSqlConn != null) {
+	// 		sqlConn = inSqlConn;
+	// 	}
+	// }
 	
 	/// Collumn type correction from mysql to oracle sql
 	private static String _simpleMysqlToOracle_collumnSubstitude(String qString) {
@@ -140,7 +99,7 @@ public class JSql_Oracle extends JSql_Base {
 			.replaceAll("(?i)BLOB", "BLOB").replaceAll("(?i)LONGBLOB", "BLOB")
 			.replaceAll("(?i)MEDIUMBLOB", "BLOB").replaceAll("(?i)LONGTEXT", "CLOB")
 			.replaceAll("(?i)MEDIUMTEXT", "CLOB")
-			.replaceAll("(?i)TEXT", "CLOB")
+			.replaceAll("(?i)TEXT", "VARCHAR")
 			//.replaceAll("(?i)DATE","DATE")
 			.replaceAll("(?i)TIME", "DATE").replaceAll("(?i)TIMESTAMP", "DATE")
 			.replaceAll("(?i)DATETIME", "DATE")
@@ -321,6 +280,11 @@ public class JSql_Oracle extends JSql_Base {
 						} catch (JSqlException e) {
 							//throw e;
 						}
+						
+						for (Map.Entry<String, String> entry : metadata.entrySet()) {
+							System.out.println(entry.getKey() + "/" + entry.getValue());
+						}
+						
 						if (metadata != null && !metadata.isEmpty()) {
 							for (Map.Entry<String, String> entry : metadata.entrySet()) {
 								if (entry.getValue() != null
@@ -464,6 +428,67 @@ public class JSql_Oracle extends JSql_Base {
 		return qString; //no change of data
 	}
 	
+	/// Executes the table meta data query, and returns the result object
+	public Map<String, String> getMetaData(String sql) throws JSqlException {
+		Map<String, String> metaData = null;
+		ResultSet rs = null;
+		//Try and finally : prevent memory leaks
+		try {
+			
+			Connection sqlConn = datasource.getConnection();
+			Statement st = sqlConn.createStatement();
+			st = sqlConn.createStatement();
+			rs = st.executeQuery(sql);
+			ResultSetMetaData rsMetaData = rs.getMetaData();
+			int numberOfColumns = rsMetaData.getColumnCount();
+			for (int i = 1; i <= numberOfColumns; i++) {
+				if (metaData == null) {
+					metaData = new HashMap<String, String>();
+				}
+				metaData.put(rsMetaData.getColumnName(i), rsMetaData.getColumnTypeName(i));
+			}
+		} catch (Exception e) {
+			throw new JSqlException("executeQuery_metadata exception", e);
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (Exception e) {
+					//donothing
+				}
+				rs = null;
+			}
+		}
+		return metaData;
+	}
+	
+	/**
+	 * Executes and fetch a table column information as a map, note that due to the
+	 * HIGHLY different standards involved across SQL backends for this command,
+	 * it has been normalized to only return a map containing collumn name and types
+	 *
+	 * Furthermore due to the generic SQL conversion from known common types to SQL specific
+	 * type being applied on table create. The collumn type may not match the input collumn
+	 * type previously applied on table create. (Unless update_raw was used)
+	 *
+	 * This immediately executes a query, and process the information directly
+	 * (to normalize the results across SQL implementations).
+	 *
+	 * @param  tablename to get information on
+	 *
+	 * @return  Pair containing < collumn_name, collumn_type >
+	 **/
+	protected MutablePair<GenericConvertList<Object>, GenericConvertList<Object>> getTableColumnTypeMap_core(
+		String tablename) {
+		// Get the column information
+		JSqlResult tableInfo = query_raw(
+			"SELECT column_name, data_type FROM USER_TAB_COLUMNS WHERE table_name=?",
+			new Object[] { tablename });
+		
+		// And return it as a list pair
+		return new MutablePair<>(tableInfo.get("column_name"), tableInfo.get("data_type"));
+	}
+	
 	private static String removeAsAfterTablename(String qString) {
 		int prefixOffset = 0;
 		String tmpStr = null;
@@ -546,16 +571,16 @@ public class JSql_Oracle extends JSql_Base {
 	/// fetching the result data from the database. (not fetching may not apply to all implementations)
 	///
 	/// **Note:** Only queries starting with 'SELECT' will produce a JSqlResult object that has fetchable results
-	// public JSqlResult executeQuery(String qString, Object... values) throws JSqlException {
-	// 	//try {
-	// 	return executeQuery_raw(genericSqlParser(qString), values);
-	// 	//} catch(JSqlException e) {
-	// 	//	logger.log( Level.SEVERE, "ExecuteQuery Exception" ); //, e
-	// 	//	logger.log( Level.SEVERE, "-> Original query : " + qString );
-	// 	//	logger.log( Level.SEVERE, "-> Parsed query   : " + genericSqlParser(qString) );
-	// 	//	throw e;
-	// 	//}
-	// }
+	public JSqlResult executeQuery(String qString, Object... values) throws JSqlException {
+		//try {
+		return query_raw(genericSqlParser(qString), values);
+		//} catch(JSqlException e) {
+		//	logger.log( Level.SEVERE, "ExecuteQuery Exception" ); //, e
+		//	logger.log( Level.SEVERE, "-> Original query : " + qString );
+		//	logger.log( Level.SEVERE, "-> Parsed query   : " + genericSqlParser(qString) );
+		//	throw e;
+		//}
+	}
 	
 	/// Executes the argumented query, and immediately fetches the result from
 	/// the database into the result set.
@@ -575,14 +600,11 @@ public class JSql_Oracle extends JSql_Base {
 	/// Executes and dispose the sqliteResult object.
 	///
 	/// Returns false if no result is given by the execution call, else true on success
-	public JSqlResult query_raw(String qString, Object... values) throws JSqlException {
+	public JSqlResult execute(String qString, Object... values) throws JSqlException {
 		qString = genericSqlParser(qString);
 		
 		String sequenceQuery = null;
 		String triggerQuery = null;
-		
-		System.out.println("-----------qString-----------");
-		System.out.println(qString);
 		
 		// check if there is any AUTO INCREMENT field
 		if (qString.indexOf("AUTOINCREMENT") != -1 || qString.indexOf("AUTO_INCREMENT") != -1) {
@@ -647,24 +669,17 @@ public class JSql_Oracle extends JSql_Base {
 		qString = qString.replaceAll("AUTOINCREMENT", "");
 		qString = qString.replaceAll("AUTO_INCREMENT", "");
 		
-		// System.out.println("val.length : " + values.length);
-		// for (Object val : values) {
-		// 	System.out.println("val : " + val.toString());
-		// }
-		
 		//try {
-		JSqlResult retvalue = noFetchQuery_raw(qString, values);
+		JSqlResult retvalue = query_raw(qString, values);
 		
 		//Create Sequence
 		if (sequenceQuery != null) {
-			System.out.println("SEQUENCEQUERY: " + sequenceQuery);
-			// noFetchQuery_raw(genericSqlParser(sequenceQuery), values);
+			query_raw(genericSqlParser(sequenceQuery));
 		}
 		
 		//Create trigger
 		if (triggerQuery != null) {
-			System.out.println("TRIGGERQUERY: " + triggerQuery);
-			// noFetchQuery_raw(genericSqlParser(triggerQuery), values);
+			query_raw(genericSqlParser(triggerQuery));
 		}
 		
 		return retvalue;
@@ -674,6 +689,43 @@ public class JSql_Oracle extends JSql_Base {
 		//	logger.log( Level.SEVERE, "-> Parsed query   : " + genericSqlParser(qString) );
 		//	throw e;
 		//}
+	}
+	
+	/**
+	 * Executes the argumented SQL update.
+	 *
+	 * Returns false if no result object is given by the execution call.
+	 *
+	 * Custom SQL specific parsing occurs here
+	 *
+	 * @param  Query strings including substituable variable "?"
+	 * @param  Array of arguments to do the variable subtitution
+	 *
+	 * @return  -1 if failed, 0 and above for affected rows
+	 **/
+	public int update(String qString, Object... values) {
+		// Perform the original update call
+		System.out.println("-----------------------------------");
+		System.out.println(qString);
+		
+		for (Object val : values) {
+			System.out.println(" | " + val.toString() + " | ");
+		}
+		
+		int res = super.update(qString, values);
+		
+		// Normalize certain known age cases
+		if (res < 0) {
+			if (qString.contains("DROP") || qString.contains("IF EXISTS")) {
+				return 0;
+			}
+			if (qString.contains("TRUNCATE TABLE")) {
+				return 0;
+			}
+		}
+		
+		// Return original result
+		return res;
 	}
 	
 	///
@@ -730,8 +782,6 @@ public class JSql_Oracle extends JSql_Base {
 			logger.warning(JSqlException.oracleNameSpaceWarning + tableName);
 		}
 		
-		tableName = tableName.toUpperCase();
-		
 		/// Checks that unique collumn and values length to be aligned
 		if (uniqueColumns == null || uniqueValues == null
 			|| uniqueColumns.length != uniqueValues.length) {
@@ -759,6 +809,8 @@ public class JSql_Oracle extends JSql_Base {
 			queryBuilder.append("? ");
 			queryBuilder.append(uniqueColumns[a]);
 			queryArgs.add(uniqueValues[a]);
+			
+			System.out.println("1. UNIQUEVALUES[A] : " + uniqueValues[a].toString());
 		}
 		
 		/// From dual
@@ -798,6 +850,8 @@ public class JSql_Oracle extends JSql_Base {
 				queryBuilder.append(" = ? ");
 				
 				queryArgs.add(insertValues[a]);
+				
+				System.out.println("2. INSERTVALUES[A] : " + insertValues[a].toString());
 			}
 		}
 		
@@ -817,6 +871,7 @@ public class JSql_Oracle extends JSql_Base {
 			insertNameString.append(uniqueColumns[a]);
 			insertValuesString.append("?");
 			queryArgs.add(uniqueValues[a]);
+			System.out.println("3. UNIQUEVALUES[A] : " + uniqueValues[a].toString());
 		}
 		
 		// Insert INSERT collumns

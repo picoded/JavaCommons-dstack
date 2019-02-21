@@ -639,13 +639,6 @@ public abstract class JSql_Base_test {
 		jsqlObj.createIndex(testTableName, "col2", "UNIQUE", "IDX");
 	}
 	
-	@Test
-	public void genericSqlParserTest() {
-		String s = jsqlObj.genericSqlParser("SELECT * FROM " + testTableName + " WHERE COL1 = ?");
-		assertEquals("SELECT * FROM " + testTableName + " WHERE COL1=?",
-			s.replaceAll("COL1 = \\?", "COL1=?"));
-	}
-	
 	@SuppressWarnings("deprecation")
 	@Test
 	public void joinArgumentsTest() {

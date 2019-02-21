@@ -234,6 +234,10 @@ public abstract class JSql_Base extends JSql {
 		Connection conn = null;
 		PreparedStatement sqlpstmt = null;
 		
+		System.out.println("<------------");
+		System.out.println(qString);
+		System.out.println("------------>");
+		
 		// Get the connection, and perform the query request
 		// within a try-catch block
 		try {

@@ -232,9 +232,9 @@ test {
 	if(!project.hasProperty("test_mssql")) {
 		exclude "**/*Mssql*"
 	}
-	if(!project.hasProperty("test_oracle")) {
-		exclude "**/*Oracle*"
-	}
+	// if(!project.hasProperty("test_oracle")) {
+	// 	exclude "**/*Oracle*"
+	// }
 	if(!project.hasProperty("test_mysql")) {
 		exclude "**/*Mysql*"
 	}
