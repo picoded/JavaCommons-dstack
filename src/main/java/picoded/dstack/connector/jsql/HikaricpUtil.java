@@ -298,9 +298,42 @@ class HikaricpUtil {
 		// hconfig.setJdbcUrl("jdbc:oracle:thin:" + host + ":" + port + "/" + name);
 		hconfig.setJdbcUrl("jdbc:oracle:thin:" + host);
 		
+		System.out.println("HIKARI JDBC URL:: jdbc:oracle:thin:" + host);
+		
 		// Setup the username and password
 		hconfig.setUsername(user);
 		hconfig.setPassword(pass);
+		
+		hconfig.addDataSourceProperty("cachePrepStmts", //
+			config.getBoolean("cachePrepStmts", true) //
+			);
+		hconfig.addDataSourceProperty("prepStmtCacheSize", //
+			config.getInt("prepStmtCacheSize", 250) //
+			);
+		hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", //
+			config.getInt("prepStmtCacheSqlLimit", 2048) //
+			);
+		hconfig.addDataSourceProperty("useServerPrepStmts", //
+			config.getBoolean("useServerPrepStmts", true) //
+			);
+		hconfig.addDataSourceProperty("useLocalSessionState", //
+			config.getBoolean("useLocalSessionState", true) //
+			);
+		hconfig.addDataSourceProperty("rewriteBatchedStatements", //
+			config.getBoolean("rewriteBatchedStatements", true) //
+			);
+		hconfig.addDataSourceProperty("cacheResultSetMetadata", //
+			config.getBoolean("cacheResultSetMetadata", true) //
+			);
+		hconfig.addDataSourceProperty("cacheServerConfiguration", //
+			config.getBoolean("cacheServerConfiguration", true) //
+			);
+		hconfig.addDataSourceProperty("elideSetAutoCommits", //
+			config.getBoolean("elideSetAutoCommits", true) //
+			);
+		hconfig.addDataSourceProperty("maintainTimeStats", //
+			config.getBoolean("maintainTimeStats", false) //
+			);
 		
 		//
 		// Setup the datasource config

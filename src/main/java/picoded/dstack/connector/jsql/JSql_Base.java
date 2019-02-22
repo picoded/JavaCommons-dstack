@@ -192,7 +192,9 @@ public abstract class JSql_Base extends JSql {
 			
 			// Prepare the statement
 			sqlpstmt = prepareSqlStatment(conn, qString, values);
-			
+			System.out.println("JSql_Base query : " + qString);
+			for (Object value : values)
+				System.out.println("args : " + value.toString());
 			// Performing the query, get the result set, and immediately pass it to JSqlResult
 			//
 			// Note: internally JSqlResult, already does a try,catch,finally to close the result set
@@ -236,7 +238,7 @@ public abstract class JSql_Base extends JSql {
 		
 		System.out.println("<------------");
 		System.out.println(qString);
-		System.out.println("------------>");
+		qString = qString.replaceAll("AUTOINCREMENT", "");
 		
 		// Get the connection, and perform the query request
 		// within a try-catch block
@@ -246,6 +248,9 @@ public abstract class JSql_Base extends JSql {
 			
 			// Prepare the statement
 			sqlpstmt = prepareSqlStatment(conn, qString, values);
+			System.out.println("PREPARED SQL STATEMENT:");
+			System.out.println(sqlpstmt.toString());
+			System.out.println("------------>");
 			
 			// Performing the query, get the affected row count
 			return sqlpstmt.executeUpdate();

@@ -112,6 +112,9 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 		if (type.equalsIgnoreCase("mssql")) {
 			return mssql(config);
 		}
+		if (type.equalsIgnoreCase("oracle")) {
+			return oracle(config);
+		}
 		
 		// Invalid / Unsupported db type
 		throw new IllegalArgumentException("Unsupported DB type in DB config object : " + type);
