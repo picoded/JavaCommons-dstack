@@ -275,25 +275,25 @@ public class JSql_Oracle extends JSql_Base {
 								tableAndColumns.indexOf(")")) + " FROM "
 							+ tableAndColumns.substring(0, tableAndColumns.indexOf("("));
 						Map<String, String> metadata = null;
-						try {
-							metadata = getMetaData(metaDataQuery);
-						} catch (JSqlException e) {
-							//throw e;
-						}
+						// try {
+						// 	metadata = getMetaData(metaDataQuery);
+						// } catch (JSqlException e) {
+						// 	//throw e;
+						// }
 						
-						if (metadata != null && !metadata.isEmpty()) {
-							for (Map.Entry<String, String> entry : metadata.entrySet()) {
-								System.out.println(entry.getKey() + "/" + entry.getValue());
-							}
-							for (Map.Entry<String, String> entry : metadata.entrySet()) {
-								if (entry.getValue() != null
-									&& entry.getValue().trim().toUpperCase().contains("LOB")) {
-									throw new JSqlException(
-										"Cannot create index on expression with datatype LOB for field '"
-											+ entry.getKey() + "'.");
-								}
-							}
-						}
+						// if (metadata != null && !metadata.isEmpty()) {
+						// 	for (Map.Entry<String, String> entry : metadata.entrySet()) {
+						// 		System.out.println(entry.getKey() + "/" + entry.getValue());
+						// 	}
+						// 	for (Map.Entry<String, String> entry : metadata.entrySet()) {
+						// 		if (entry.getValue() != null
+						// 			&& entry.getValue().trim().toUpperCase().contains("LOB")) {
+						// 			throw new JSqlException(
+						// 				"Cannot create index on expression with datatype LOB for field '"
+						// 					+ entry.getKey() + "'.");
+						// 		}
+						// 	}
+						// }
 						
 						if (tmpIndx > 0) {
 							qString = "CREATE " + ((indexType != null) ? indexType + " " : "") + "INDEX "
@@ -709,7 +709,12 @@ public class JSql_Oracle extends JSql_Base {
 			System.out.println("Query args is empty");
 		
 		for (Object val : values) {
-			System.out.println(" | " + val.toString() + " | ");
+			if (val != null) {
+				System.out.println(" | " + val.toString() + " | ");
+			} else {
+				System.out.println(" | val is null | ");
+			}
+			
 		}
 		
 		int res = super.update(qString, values);
@@ -798,9 +803,10 @@ public class JSql_Oracle extends JSql_Base {
 		StringBuilder queryBuilder = new StringBuilder();
 		ArrayList<Object> queryArgs = new ArrayList<Object>();
 		
+		tableName = tableName.toUpperCase();
+		
 		/// The actual query building
-		queryBuilder
-			.append("MERGE INTO `" + tableName + "` " + targetTableAlias + " USING ( SELECT ");
+		queryBuilder.append("MERGE INTO " + tableName + " " + targetTableAlias + " USING ( SELECT ");
 		
 		/// The fields to select to search for unique
 		for (int a = 0; a < uniqueColumns.length; ++a) {
@@ -811,7 +817,12 @@ public class JSql_Oracle extends JSql_Base {
 			queryBuilder.append(uniqueColumns[a]);
 			queryArgs.add(uniqueValues[a]);
 			
-			System.out.println("1. UNIQUEVALUES[A] : " + uniqueValues[a].toString());
+			if (uniqueValues[a] != null) {
+				System.out.println("1. UNIQUEVALUES[" + a + "] : " + uniqueValues[a].toString());
+			} else {
+				System.out.println("1. UNIQUEVALUES[" + a + "] is null");
+			}
+			
 		}
 		
 		/// From dual
@@ -852,7 +863,12 @@ public class JSql_Oracle extends JSql_Base {
 				
 				queryArgs.add(insertValues[a]);
 				
-				System.out.println("2. INSERTVALUES[A] : " + insertValues[a].toString());
+				if (insertValues[a] != null) {
+					System.out.println("2. INSERTVALUES[" + a + "] : " + insertValues[a].toString());
+				} else {
+					System.out.println("2. INSERTVALUES[" + a + "] is null ");
+				}
+				
 			}
 		}
 		
@@ -872,7 +888,13 @@ public class JSql_Oracle extends JSql_Base {
 			insertNameString.append(uniqueColumns[a]);
 			insertValuesString.append("?");
 			queryArgs.add(uniqueValues[a]);
-			System.out.println("3. UNIQUEVALUES[A] : " + uniqueValues[a].toString());
+			
+			if (uniqueValues[a] != null) {
+				System.out.println("3. UNIQUEVALUES[" + a + "] : " + uniqueValues[a].toString());
+			} else {
+				System.out.println("3. UNIQUEVALUES[" + a + "] : is null");
+			}
+			
 		}
 		
 		// Insert INSERT collumns

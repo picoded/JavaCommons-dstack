@@ -47,16 +47,23 @@ class HikaricpUtil {
 		ret.setConnectionTimeout(config.getLong("connectionTimeout", ret.getConnectionTimeout()));
 		
 		// idleTimeout
+		System.out.println("SETIDLETIMEOUT : " + config.getLong("idleTimeout", ret.getIdleTimeout()));
 		ret.setIdleTimeout(config.getLong("idleTimeout", ret.getIdleTimeout()));
 		
 		// maxLifetime
+		System.out.println("SETMAXLIFETIME : " + config.getLong("maxLifetime", ret.getMaxLifetime()));
 		ret.setMaxLifetime(config.getLong("maxLifetime", ret.getMaxLifetime()));
 		
 		// connectionTestQuery
 		// **not supported:** we enforce JDBC4 and above drivers (for now)
 		
 		// maximumPoolSize
+		System.out.println("CONFIG POOL SIZE : " + config.getInt("maximumPoolSize"));
+		System.out.println("DEFAULT POOL SIZE : " + defaultMaxPoolSize());
+		System.out.println("MAX POOL SIZE : "
+			+ config.getInt("maximumPoolSize", defaultMaxPoolSize()));
 		ret.setMaximumPoolSize(config.getInt("maximumPoolSize", defaultMaxPoolSize()));
+		// ret.setMaximumPoolSize(10);
 		
 		// minimumIdle
 		ret.setMinimumIdle(config.getInt("minimumIdle", 2));
@@ -271,13 +278,13 @@ class HikaricpUtil {
 		
 		// Perform simple validation of mysql params
 		if (host == null || host.length() == 0) {
-			throw new RuntimeException("Missing host configuration for MYSql connection");
+			throw new RuntimeException("Missing host configuration for Oracle connection");
 		}
 		if (user == null || user.length() == 0) {
-			throw new RuntimeException("Missing user configuration for MYSql connection");
+			throw new RuntimeException("Missing user configuration for Oracle connection");
 		}
 		if (pass == null || pass.length() == 0) {
-			throw new RuntimeException("Missing pass configuration for MYSql connection");
+			throw new RuntimeException("Missing pass configuration for Oracle connection");
 		}
 		
 		// Load the common config
@@ -304,36 +311,11 @@ class HikaricpUtil {
 		hconfig.setUsername(user);
 		hconfig.setPassword(pass);
 		
-		hconfig.addDataSourceProperty("cachePrepStmts", //
-			config.getBoolean("cachePrepStmts", true) //
-			);
-		hconfig.addDataSourceProperty("prepStmtCacheSize", //
-			config.getInt("prepStmtCacheSize", 250) //
-			);
-		hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", //
-			config.getInt("prepStmtCacheSqlLimit", 2048) //
-			);
-		hconfig.addDataSourceProperty("useServerPrepStmts", //
-			config.getBoolean("useServerPrepStmts", true) //
-			);
-		hconfig.addDataSourceProperty("useLocalSessionState", //
-			config.getBoolean("useLocalSessionState", true) //
-			);
-		hconfig.addDataSourceProperty("rewriteBatchedStatements", //
-			config.getBoolean("rewriteBatchedStatements", true) //
-			);
-		hconfig.addDataSourceProperty("cacheResultSetMetadata", //
-			config.getBoolean("cacheResultSetMetadata", true) //
-			);
-		hconfig.addDataSourceProperty("cacheServerConfiguration", //
-			config.getBoolean("cacheServerConfiguration", true) //
-			);
-		hconfig.addDataSourceProperty("elideSetAutoCommits", //
-			config.getBoolean("elideSetAutoCommits", true) //
-			);
-		hconfig.addDataSourceProperty("maintainTimeStats", //
-			config.getBoolean("maintainTimeStats", false) //
-			);
+		hconfig.setConnectionTimeout(10000);
+		hconfig.setIdleTimeout(60000);
+		hconfig.setMaxLifetime(60000);
+		
+		// hconfig.setLeakDetectionThreshold(30000);
 		
 		//
 		// Setup the datasource config

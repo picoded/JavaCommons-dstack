@@ -150,6 +150,9 @@ public abstract class JSql_Base extends JSql {
 				if (ps != null) {
 					ps.close();
 				}
+				if (sqlConn != null) {
+					sqlConn.close();
+				}
 			} catch (Exception ex) {
 				JSql.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
 			}
