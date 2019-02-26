@@ -24,10 +24,10 @@ public class Hazelcast_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	public KeyValueMap implementationConstructor() {
 		
 		// Initialize hazelcast server
-		synchronized (Hazelcast_DataObjectMap_test.class) {
+		synchronized (Hazelcast_KeyValueMap_test.class) {
 			if (instance == null) {
 				GenericConvertMap<String, Object> configMap = new GenericConvertHashMap<>();
-				configMap.put("groupName", "Hazelcast_DataObjectMap_test");
+				configMap.put("groupName", "Hazelcast_KeyValueMap_test");
 				instance = HazelcastConnector.getConnection(configMap);
 			}
 		}
