@@ -30,3 +30,13 @@ For all other server based SQL mode, tcp connection is supported with the follow
 | user              | string    |              | **Required** username to use                     |
 | pass              | string    |              | **Required** password to use                     |
 
+## @TODO - Read replica support
+
+Read replica support can be implemented by allowing an array of read_host to be provided.
+If provided, each query will be selected from the array at **random** - without any failover.
+
+This is extremely useful in cloud managed read_host replica.
+
+| keyname           | type      | default      | description                                      |
+|-------------------|-----------|--------------|--------------------------------------------------|
+| read_host         | string[]  | null         | array of read replicas hostname or ip address    |
