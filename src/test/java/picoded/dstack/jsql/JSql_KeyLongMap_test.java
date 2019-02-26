@@ -1,7 +1,7 @@
 package picoded.dstack.jsql;
 
 import picoded.dstack.KeyLongMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.struct.simple.StructSimple_KeyLongMap_test;
 
 public class JSql_KeyLongMap_test extends StructSimple_KeyLongMap_test {

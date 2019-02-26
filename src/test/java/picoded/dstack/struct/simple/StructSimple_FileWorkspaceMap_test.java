@@ -122,8 +122,12 @@ public class StructSimple_FileWorkspaceMap_test {
 	@Test
 	public void readNonExistenceFile() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
-		assertNull(fileWorkspace.readByteArray("unknown path"));
-		assertNull(fileWorkspace.readByteArray(null));
+		try {
+			fileWorkspace.readByteArray("unknown path");
+		} catch (Exception e) {
+			assertEquals("File does not exist.", e.getMessage());
+		}
+		
 	}
 	
 	@Test

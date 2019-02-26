@@ -224,7 +224,7 @@ public abstract class AccountTableCore extends AccountTableConfig {
 			Set<String> loginIdMapNames = accountLoginNameMap.keySet(oid);
 			if (loginIdMapNames != null) {
 				for (String name : loginIdMapNames) {
-					accountLoginNameMap.remove(name, oid);
+					accountLoginNameMap.remove(name);
 				}
 			}
 			
@@ -238,6 +238,8 @@ public abstract class AccountTableCore extends AccountTableConfig {
 			loginThrottlingAttemptMap.remove(oid);
 			loginThrottlingExpiryMap.remove(oid);
 			
+			// @TODO: Remove things from Verification and Password Token map?
+			
 			// System.out.println("Account Object: " + oid + " has been successfully removed.");
 			// @TODO : proper info logger
 		}
@@ -245,34 +247,33 @@ public abstract class AccountTableCore extends AccountTableConfig {
 		return null;
 	}
 	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Additional functionality add on
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Additional functionality add on
+	//
+	///////////////////////////////////////////////////////////////////////////
 	
-	// /** Returns the accountDataObjectMap
-	//  *
-	//  * @return accountDataObjectMap
-	//  **/
-	// public DataObjectMap accountDataObjectMap() {
-	// 	return accountDataObjectMap;
-	// }
+	/** Returns the accountDataObjectMap
+	 *
+	 * @return accountDataObjectMap
+	 **/
+	public DataObjectMap accountDataObjectMap() {
+		return accountDataObjectMap;
+	}
 	
-	// /** Returns the accountVerificationMap
-	//  *
-	//  * @return list of accountVerification data
-	//  **/
-	// public KeyValueMap accountVerificationMap() {
-	// 	return accountVerificationMap;
-	// }
+	/** Returns the accountVerificationMap
+	 *
+	 * @return list of accountVerification data
+	 **/
+	public KeyValueMap accountVerificationMap() {
+		return accountVerificationMap;
+	}
 	
-	// /** Returns the accountPasswordTokenMap
-	//  *
-	//  * @return list of accountPasswordToken data
-	//  **/
-	// public KeyValueMap accountPasswordTokenMap() {
-	// 	return accountPasswordTokenMap;
-	// }
-	
+	/** Returns the accountPasswordTokenMap
+	 *
+	 * @return list of accountPasswordToken data
+	 **/
+	public KeyValueMap accountPasswordTokenMap() {
+		return accountPasswordTokenMap;
+	}
 }

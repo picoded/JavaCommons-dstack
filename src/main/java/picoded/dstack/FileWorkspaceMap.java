@@ -2,17 +2,18 @@ package picoded.dstack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import picoded.core.struct.template.UnsupportedDefaultMap;
 
 /**
- * FileWorkspaceMap, serves as the File focused flexible backend storage 
- * implmentation for DStack. 
- * 
+ * FileWorkspaceMap, serves as the File focused flexible backend storage
+ * implmentation for DStack.
+ *
  * Its role can be view primarily as a flexible interface to object based storage system
- * 
+ *
  * @TODO : Future consideration - integration as a FileSystemProvider : https://docs.oracle.com/javase/7/docs/api/java/nio/file/spi/FileSystemProvider.html#getScheme()
  **/
 public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWorkspace>,
@@ -72,6 +73,16 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * @return NULL
 	 **/
 	FileWorkspace remove(Object key);
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	void setupWorkspace(String oid, String folderPath);
 	
 	// FileWorkspaceMap utility operations
 	//--------------------------------------------------------------------------
@@ -164,8 +175,8 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 * and its iterative nature as an eventuality. The phrase looselyIterate was chosen,
 	 * to properly reflect its nature.
 	 *
-	 * Another way to phrase it, in worse case scenerio, its completely random, 
-	 * eventually iterating all objects. In best case scenerio, it does proper 
+	 * Another way to phrase it, in worse case scenerio, its completely random,
+	 * eventually iterating all objects. In best case scenerio, it does proper
 	 * iteration as per normal.
 	 *
 	 * @param   Current object ID, can be NULL

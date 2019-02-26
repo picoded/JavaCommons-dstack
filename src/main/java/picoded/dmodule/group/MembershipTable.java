@@ -22,7 +22,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	/**
 	 * Handles the storage of group data.
-	 * 
+	 *
 	 * Note: Consider this the "PRIMARY TABLE"
 	 *
 	 * DataObjectMap<GroupOID, DataObject>
@@ -59,7 +59,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	/**
 	 * MembershipTable constructor using DataObjectMap
-	 * 
+	 *
 	 * @param  inGroup         group table to build / extend from
 	 * @param  inMember        partipant table to build / extend from
 	 * @param  membership      primary membership table to link the group / partipant table
@@ -100,7 +100,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	/**
 	 * Validate group and member ID, throws runtime exception on failure
-	 * 
+	 *
 	 * @param  groupID   group id to fetch from
 	 * @param  memberID  member id to fetch from
 	 */
@@ -118,7 +118,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	/**
 	 * Clean up membership objects, if the parent objects orphaned them
-	 * 
+	 *
 	 * @param  groupID   group id to remove, effectively ignored if null
 	 * @param  memberID  member id to remove, effectively ignored if null
 	 */
@@ -135,10 +135,10 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	/**
 	 * Gets and return the membership object, only if it exists.
-	 * 
+	 *
 	 * @param  groupID   group id to fetch from
 	 * @param  memberID  member id to fetch from
-	 * 
+	 *
 	 * @return  membership object ID
 	 */
 	protected String getMembershipID(String groupID, String memberID) {
@@ -163,9 +163,9 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	// 	/**
 	// 	 * Utility function to cast membership DataObject to MembershipObject
-	// 	 * 
+	// 	 *
 	// 	 * @param  objList  array of data objects to cast
-	// 	 * 
+	// 	 *
 	// 	 * @return MembershipObject array
 	// 	 */
 	// 	protected MembershipObject[] castFromDataObject(DataObject[] objList) {
@@ -186,60 +186,60 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	//
 	// 	///////////////////////////////////////////////////////////////////////////
 	
-	// 	/**
-	// 	 * Gets and return the membership object, only if it exists.
-	// 	 * 
-	// 	 * @param  groupID   group id to fetch from
-	// 	 * @param  memberID  member id to fetch from
-	// 	 * 
-	// 	 * @return  membership object (if found)
-	// 	 */
-	// 	public MembershipObject getMembership(String groupID, String memberID) {
-	// 		String id = getMembershipID(groupID, memberID);
-	// 		if( id != null ) {
-	// 			return new MembershipObject(this, id);
-	// 		}
-	// 		return null;
-	// 	}
+	/**
+	 * Gets and return the membership object, only if it exists.
+	 *
+	 * @param  groupID   group id to fetch from
+	 * @param  memberID  member id to fetch from
+	 *
+	 * @return  membership object (if found)
+	 */
+	public DataObject getMembership(String groupID, String memberID) {
+		String id = getMembershipID(groupID, memberID);
+		if (id != null) {
+			return membershipTable.get(id);
+		}
+		return null;
+	}
 	
-	// 	/**
-	// 	 * Add membership object, only if doesnt previously exists
-	// 	 * Else fetches the membership object.
-	// 	 * 
-	// 	 * @param  groupID   group id to fetch from
-	// 	 * @param  memberID  member id to fetch from
-	// 	 * 
-	// 	 * @return  membership object (if created / existed)
-	// 	 */
-	// 	public MembershipObject addMembership(String groupID, String memberID) {
-	// 		String id = getMembershipID(groupID, memberID);
-	// 		// Create and save a new membership object 
-	// 		// if it does not exists
-	// 		if( id == null ) {
-	// 			DataObject obj = membershipTable.newEntry();
-	// 			obj.put("groupid", groupID);
-	// 			obj.put("memberid", groupID);
-	// 			obj.saveAll();
-	// 		}
-	// 		// Get the newly saved membership object
-	// 		return getMembership(groupID, memberID);
-	// 	}
+	/**
+	 * Add membership object, only if doesnt previously exists
+	 * Else fetches the membership object.
+	 *
+	 * @param  groupID   group id to fetch from
+	 * @param  memberID  member id to fetch from
+	 *
+	 * @return  membership object (if created / existed)
+	 */
+	public DataObject addMembership(String groupID, String memberID) {
+		String id = getMembershipID(groupID, memberID);
+		// Create and save a new membership object
+		// if it does not exists
+		if (id == null) {
+			DataObject obj = membershipTable.newEntry();
+			obj.put("groupid", groupID);
+			obj.put("memberid", memberID);
+			obj.saveAll();
+		}
+		// Get the newly saved membership object
+		return getMembership(groupID, memberID);
+	}
 	
-	// 	/**
-	// 	 * Remove membership object, only if doesnt previously exists
-	// 	 * Else fetches the membership object.
-	// 	 * 
-	// 	 * @param  groupID   group id to fetch from
-	// 	 * @param  memberID  member id to fetch from
-	// 	 * 
-	// 	 * @return  membership object (if created / existed)
-	// 	 */
-	// 	public void removeMembership(String groupID, String memberID) {
-	// 		String id = getMembershipID(groupID, memberID);
-	// 		if( id != null ) {
-	// 			membershipTable.remove(id);
-	// 		}
-	// 	}
+	/**
+	 * Remove membership object, only if doesnt previously exists
+	 * Else fetches the membership object.
+	 *
+	 * @param  groupID   group id to fetch from
+	 * @param  memberID  member id to fetch from
+	 *
+	 * @return  membership object (if created / existed)
+	 */
+	public void removeMembership(String groupID, String memberID) {
+		String id = getMembershipID(groupID, memberID);
+		if (id != null) {
+			membershipTable.remove(id);
+		}
+	}
 	
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
@@ -249,9 +249,9 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	// 	/**
 	// 	 * Gets the list of membership given a group
-	// 	 * 
+	// 	 *
 	// 	 * @param  groupID   group id to fetch from
-	// 	 * 
+	// 	 *
 	// 	 * @return  list of relevent members
 	// 	 */
 	// 	public MembershipObject[] listMembership_fromGroup(String groupID) {
@@ -260,9 +260,9 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	// 	/**
 	// 	 * Gets the list of membership given a member
-	// 	 * 
+	// 	 *
 	// 	 * @param  memberID  member id to fetch from
-	// 	 * 
+	// 	 *
 	// 	 * @return  list of relevent members
 	// 	 */
 	// 	public MembershipObject[] listMembership_fromMember(String memberID) {
@@ -285,17 +285,17 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	// 	// /**
 	// 	//  * Does a rather complex multi-query, across group, member, and membership.
-	// 	//  * And return the chosen object type. 
-	// 	//  * 
+	// 	//  * And return the chosen object type.
+	// 	//  *
 	// 	//  * For query / args pairs that are null, they are effectively wildcards.
-	// 	//  * 
+	// 	//  *
 	// 	//  * @param  groupQuery        group based query
 	// 	//  * @param  groupArgs         group based query args
 	// 	//  * @param  memberQuery       member based query
 	// 	//  * @param  memberArgs        member based query args
 	// 	//  * @param  membershipQuery   membership based query
 	// 	//  * @param  membershipArgs    membership based query args
-	// 	//  * 
+	// 	//  *
 	// 	//  * @return list of memberships, after all the various queries
 	// 	//  */
 	// 	// public List<MembershipObject> multiQuery(
@@ -303,7 +303,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	// 	String memberQuery,     Object[] memberArgs,
 	// 	// 	String membershipQuery, Object[] membershipArgs
 	// 	// ) {
-	// 	// 	// Note that the query route changes 
+	// 	// 	// Note that the query route changes
 	// 	// 	// According to the parameters provided
 	// 	// 	// Under currently best guess assumptions
 	// 	// 	//
@@ -316,7 +316,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	// 		// 1. groupQuery
 	// 	// 		// 2. membershipQuery
 	// 	// 		// 3. memberQuery
-	// 	// 	} 
+	// 	// 	}
 	// 	// 	// DataObject[] groupList = null;
 	// 	// 	// DataObject[] memberList = null;
 	// 	// 	// // Build using group list first, if query is given

@@ -2,16 +2,14 @@ package picoded.dstack.core;
 
 // Java imports
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 // Picoded imports
 import picoded.core.conv.ArrayConv;
 import picoded.core.file.FileUtil;
 import picoded.dstack.DataObject;
 import picoded.dstack.DataObjectMap;
+import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
@@ -86,18 +84,39 @@ public class Core_FileWorkspace implements FileWorkspace {
 		return _oid;
 	}
 	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void setupWorkspace(String folderPath) {
+		main.setupWorkspace(_oid(), folderPath);
+	}
+	
+	// Utility functions
+	//--------------------------------------------------------------------------
+	
 	// File exists checks
 	//--------------------------------------------------------------------------
 	
 	/**
 	 * Checks if the filepath exists with a file.
-	 * 
+	 *
 	 * @param  filepath in the workspace to check
-	 * 
-	 * @return true, if file exists (and writable), false if it does not. Possible a folder 
+	 *
+	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	public boolean fileExist(final String filepath) {
 		return main.backend_fileExist(_oid, filepath);
+	}
+	
+	@Override
+	public boolean dirExist(String dirPath) {
+		return false;
 	}
 	
 	// Read / write byteArray information
@@ -106,8 +125,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	/**
 	 * Reads the contents of a file into a byte array.
 	 *
-	 * @param  filepath in the workspace to extract 
-	 * 
+	 * @param  filepath in the workspace to extract
+	 *
 	 * @return the file contents, null if file does not exists
 	 */
 	public byte[] readByteArray(final String filepath) {
@@ -119,7 +138,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 *
 	 * the parent directories of the file will be created if they do not exist.
 	 *
-	 * @param filepath in the workspace to extract 
+	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
 	public void writeByteArray(final String filepath, final byte[] data) {
@@ -128,7 +147,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
-	 * 
+	 *
 	 * NOTE that by default this DOES NOT perform any file locks. As such,
 	 * if used in a concurrent access situation. Segmentys may get out of sync.
 	 *
@@ -154,4 +173,18 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_removeFile(_oid, filepath);
 	}
 	
+	@Override
+	public FileNode listWorkspaceInTreeView(String folderPath, int depth) {
+		return main.backend_listWorkspaceTreeView(_oid(), folderPath, depth);
+	}
+	
+	@Override
+	public List<FileNode> listWorkspaceInListView(String folderPath, int depth) {
+		return main.backend_listWorkspaceListView(_oid(), folderPath, depth);
+	}
+	
+	@Override
+	public boolean moveFile(String source, String destination) {
+		return main.backend_moveFileInWorkspace(_oid(), source, destination);
+	}
 }

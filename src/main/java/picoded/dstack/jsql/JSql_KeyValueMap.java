@@ -5,7 +5,7 @@ import java.util.Set;
 
 import picoded.dstack.KeyValue;
 import picoded.dstack.core.Core_KeyValueMap;
-import picoded.dstack.jsql.connector.*;
+import picoded.dstack.connector.jsql.*;
 import picoded.core.conv.ListValueConv;
 import picoded.core.struct.MutablePair;
 
@@ -101,7 +101,7 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 		}
 		
 		// Check for null objects
-		Object strObj = r.get("kVl")[0];
+		Object strObj = r.get("kVl").get(0);
 		if (strObj == null) {
 			return null;
 		}
@@ -127,7 +127,7 @@ public class JSql_KeyValueMap extends Core_KeyValueMap {
 		
 		// Get the rawTime object only if valid value is found
 		if (r != null && r.rowCount() > 0) {
-			rawTime = r.get("eTm")[0];
+			rawTime = r.get("eTm").get(0);
 		} else {
 			return -2; //No value (-2)
 		}

@@ -13,7 +13,7 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
 
 /**
  * AccountTable, used to facilitate creation, authentication and login of websessions.
- * 
+ *
  * Any refences to the persona game, is completely coincidental !
  * (PS: old joke, the original name for this class was PersonaTable)
  **/
@@ -173,7 +173,7 @@ public class AccountTable extends AccountTableCore {
 		
 		// Detirmine the login lifetime
 		int lifeTime = getLifeTime(rememberMe);
-		long expireTime = (System.currentTimeMillis()) / 1000L + lifeTime;
+		long expireTime = ((System.currentTimeMillis()) / 1000L + lifeTime) * 1000L;
 		
 		// Session info handling
 		//-----------------------------------------------------
@@ -316,7 +316,7 @@ public class AccountTable extends AccountTableCore {
 			// Actual renewal process
 			if (needRenewal) {
 				// Detirmine the renewed login lifetime and expirary to set (if new issued token)
-				long expireTime = (System.currentTimeMillis()) / 1000L + getLifeTime(rememberMe);
+				long expireTime = ((System.currentTimeMillis()) / 1000L + getLifeTime(rememberMe)) * 1000L;
 				
 				// Issue the next token
 				String nextTokenID = ret.issueNextToken(sessionID, tokenID, expireTime);
@@ -331,7 +331,7 @@ public class AccountTable extends AccountTableCore {
 				}
 				
 				// Get lifespan
-				long lifespan = expireTime - (System.currentTimeMillis()) / 1000L;
+				long lifespan = expireTime - (System.currentTimeMillis());
 				
 				// Setup the next token
 				storeCookiesInsideTheCookieJar(request, response, sessionID, nextTokenID, rememberMe,

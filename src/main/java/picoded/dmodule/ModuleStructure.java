@@ -61,10 +61,22 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	//----------------------------------------------------------------
 	
 	/**
-	 * [TO OVERWRITE] : Internal DataStrucutre list, 
+	 * [TO OVERWRITE] : Internal DataStrucutre list,
 	 * to cache and pass forward to "SystemSetupInterface"
 	 **/
-	protected abstract List<CommonStructure> internalStructureList();
+	protected abstract List<CommonStructure> setupInternalStructureList();
+	
+	/**
+	 * Memoizer for setupInternalStructureList
+	 * @return
+	 */
+	protected List<CommonStructure> internalStructureList() {
+		if (internalStructureList != null) {
+			return internalStructureList;
+		}
+		internalStructureList = setupInternalStructureList();
+		return internalStructureList;
+	}
 	
 	//----------------------------------------------------------------
 	//
@@ -73,11 +85,11 @@ public abstract class ModuleStructure implements AbstractSystemSetupInterfaceCol
 	//----------------------------------------------------------------
 	
 	/**
-	 * SystemSetupInterface collection used by subsequent  
+	 * SystemSetupInterface collection used by subsequent
 	 * subcalls via AbstractSystemSetupInterfaceCollection
 	 **/
 	public Collection<SystemSetupInterface> systemSetupInterfaceCollection() {
-		return (Collection<SystemSetupInterface>) (Object) (internalStructureList);
+		return (Collection<SystemSetupInterface>) (Object) (internalStructureList());
 	}
 	
 }

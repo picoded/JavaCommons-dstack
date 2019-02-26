@@ -95,7 +95,7 @@ abstract public class Core_DataObjectMap_struct extends Core_DataObjectMap {
 		// Makes a new map if needed
 		Map<String, Object> storedValue = backendMap().get(oid);
 		if (storedValue == null) {
-			storedValue = new HashMap<String, Object>();
+			storedValue = _newBlankStorageMap();
 		}
 		
 		// Get and store the required values
@@ -110,6 +110,14 @@ abstract public class Core_DataObjectMap_struct extends Core_DataObjectMap {
 		
 		// Ensure the value map is stored
 		backendMap().put(oid, storedValue);
+	}
+	
+	/**
+	 * @return new Map<String,Object> used to initialize a storage map
+	 *         used by `DataObjectRemoteDataMap_update`
+	 */
+	public Map<String, Object> _newBlankStorageMap() {
+		return new HashMap<String, Object>();
 	}
 	
 	//--------------------------------------------------------------------------

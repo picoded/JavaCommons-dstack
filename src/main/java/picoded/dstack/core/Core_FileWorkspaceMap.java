@@ -1,10 +1,11 @@
 package picoded.dstack.core;
 
 // Java imports
-import java.util.Collections;
 
 // Picoded imports
 import picoded.dstack.*;
+
+import java.util.List;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -39,6 +40,19 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		return null;
 	}
 	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void setupWorkspace(String oid, String folderPath) {
+		backend_setupWorkspace(oid, folderPath);
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
@@ -66,6 +80,30 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 **/
 	abstract public boolean backend_workspaceExist(String oid);
 	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
+	 */
+	abstract public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth);
+	
+	/**
+	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param oid        of the workspace to search
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects in list view
+	 */
+	abstract public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath,
+		int depth);
+	
+	abstract public boolean backend_moveFileInWorkspace(String oid, String source, String destination);
+	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
@@ -76,9 +114,9 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Get and return if the file exists, due to the potentially 
-	 * large size nature of files stored in FileWorkspace. 
-	 * 
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
 	 * Its highly recommended to optimize this function,
 	 * instead of leaving it as default
 	 *
@@ -87,9 +125,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * @return  boolean true, if file eixst
 	 **/
-	public boolean backend_fileExist(final String oid, final String filepath) {
-		return backend_fileRead(oid, filepath) != null;
-	}
+	abstract public boolean backend_fileExist(final String oid, final String filepath);
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -123,6 +159,16 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param filepath the file to be removed
 	 */
 	abstract public void backend_removeFile(final String oid, final String filepath);
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	abstract public void backend_setupWorkspace(String oid, String folderPath);
 	
 	//--------------------------------------------------------------------------
 	//

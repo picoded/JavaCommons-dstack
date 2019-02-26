@@ -1,7 +1,7 @@
-package picoded.dstack.jsql.connector;
+package picoded.dstack.connector.jsql;
 
 /**
- * JSql base exception class
+ * JSql exception wrapper
  **/
 public class JSqlException extends RuntimeException {
 	protected static final long serialVersionUID = 1L;
@@ -11,7 +11,7 @@ public class JSqlException extends RuntimeException {
 		+ "and avoid initiating the JSql class directly";
 	
 	public static final String oracleNameSpaceWarning = "Table/Index/View/Column"
-		+ " name should not be more then 30 char (due to ORACLE support): ";
+		+ " name should not be more then 30 char (due to lack of ORACLE support): ";
 	
 	public JSqlException(String message) {
 		super(message);

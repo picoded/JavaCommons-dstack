@@ -42,7 +42,8 @@ Initializing it, starts with a map/json configuration such as the following ...
 			"db" : {
 				// [MY-SQL] name implmentation
 				"type" : "mysql",
-				"path" : "some_mysql_db:3306",
+				"host" : "some_mysql_db",
+				"port" : 3306,
 				"name" : "database_name",
 				"user" : "database_user",
 				"pass" : "database_pass",
