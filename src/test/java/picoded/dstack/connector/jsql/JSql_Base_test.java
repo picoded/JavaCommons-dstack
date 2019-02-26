@@ -74,7 +74,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1 ] }");
+		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1.0] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Table cleanup
@@ -97,7 +97,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1 ] }");
+		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1.0] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Table cleanup
@@ -119,7 +119,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1 ] }");
+		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1.0] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Table cleanup
@@ -145,7 +145,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1 ] }");
+		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1.0] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Table cleanup
@@ -169,7 +169,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1 ] }");
+		Map<String, Object> expected = ConvertJSON.toMap("{ \"col1\" : [ 1.0] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Delete from the table
@@ -187,7 +187,7 @@ public abstract class JSql_Base_test {
 		assertEquals(1, res.rowCount());
 		
 		// Validate the result
-		expected = ConvertJSON.toMap("{ \"col1\" : [ 2 ] }");
+		expected = ConvertJSON.toMap("{ \"col1\" : [ 2.0 ] }");
 		assertEquals(ConvertJSON.fromMap(expected), ConvertJSON.fromMap(res));
 		
 		// Table cleanup
@@ -237,12 +237,21 @@ public abstract class JSql_Base_test {
 		// cleanup (just incase)
 		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
 		
+		// assertEquals(
+		// 	0,
+		// 	jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
+		// 		+ " ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50) )")); //valid table creation : no exception
+		// assertEquals(
+		// 	0,
+		// 	jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
+		// 		+ " ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50) )")); //run twice to ensure "IF NOT EXISTS" works
+		
 		assertEquals(
-			0,
+			1,
 			jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 				+ " ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50) )")); //valid table creation : no exception
 		assertEquals(
-			0,
+			1,
 			jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 				+ " ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50) )")); //run twice to ensure "IF NOT EXISTS" works
 		
@@ -683,7 +692,17 @@ public abstract class JSql_Base_test {
 		
 		// Validate the info
 		assertEquals(2, res.size());
-		assertTrue(res.getString("pKy").contains("INT"));
-		assertTrue(res.getString("iVl").contains("INT"));
+		
+		System.out.println("getTableColumnTypeMapTest");
+		
+		for (String key : res.keySet()) {
+			System.out.println("key : " + key + " | value : " + res.get(key));
+		}
+		
+		// assertTrue(res.getString("pKy").contains("INT"));
+		// assertTrue(res.getString("iVl").contains("INT"));
+		
+		assertTrue(res.getString("pKy").contains("NUMBER"));
+		assertTrue(res.getString("iVl").contains("NUMBER"));
 	}
 }

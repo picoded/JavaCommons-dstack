@@ -141,9 +141,9 @@ public class JSqlTestConfig {
 	//--------------------------------//
 	// Default Credentials for ORACLE //
 	//--------------------------------//
-	static private String ORACLE_PATH = "JAVACOMMONS@//demodb-mysql.picoded-dev.com/xe";
-	static private String ORACLE_USER = "JAVACOMMONS";
-	static private String ORACLE_PASS = "JAVACOMMONS";
+	static private String ORACLE_PATH = "@//salesbox-db-oracle.cvbukxarewjf.ap-southeast-1.rds.amazonaws.com:1521/ORCL";
+	static private String ORACLE_USER = "root";
+	static private String ORACLE_PASS = "Rv-W54ytUmMyWy9k_gg7dL";
 	
 	static public String ORACLE_PATH() {
 		return ORACLE_PATH;

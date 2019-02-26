@@ -238,6 +238,9 @@ test {
 	if(!project.hasProperty("test_mysql")) {
 		exclude "**/*Mysql*"
 	}
+	if(!project.hasProperty("test_sqlite")) {
+		exclude "**/*Sqlite*"
+	}
 
 	// Setup test to run on parllel threads = to number of processors by default
 	if (project.hasProperty('maxParallelForks')) {
