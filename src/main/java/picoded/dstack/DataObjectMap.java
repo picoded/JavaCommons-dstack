@@ -18,6 +18,7 @@ import picoded.core.struct.query.Query;
 import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
 import picoded.dstack.core.Core_DataObject;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.ProxyGenericConvertMap;
 
 /**
  * DataObjectMap, serves as the core flexible backend storage implmentation for the whole
@@ -158,6 +159,48 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	default DataObject[] query(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
 		return getArrayFromID(query_id(whereClause, whereValues, orderByStr, offset, limit), true);
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective DataObjects, 
+	 * wrapped in an ProxyGenericConvertMap compatible class
+	 *
+	 * @param   classObj for passing over class type
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The ProxyGenericConvertMap[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T[] query(Class<T> classObj, String whereClause,
+		Object[] whereValues, String orderByStr, int offset, int limit) {
+		
+		// Does the original query
+		DataObject[] arr = query(whereClause, whereValues, orderByStr, offset, limit);
+		
+		// Quick null response handling
+		if (arr == null) {
+			return null;
+		}
+		
+		// Prepare the return result
+		Object[] ret = new Object[arr.length];
+		try {
+			for (int i = 0; i < arr.length; ++i) {
+				T part = classObj.newInstance();
+				part.internalMap(arr[i]);
+				ret[i] = part;
+			}
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		
+		// Return wrapped DataObjects
+		return (T[]) ret;
 	}
 	
 	/**
