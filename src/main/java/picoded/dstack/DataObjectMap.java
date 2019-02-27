@@ -119,6 +119,21 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	DataObject get(String oid, boolean isUnchecked);
 	
 	/**
+	 * Get a DataObject, and returns it. Skips existance checks if required
+	 * Wrapped in an ProxyGenericConvertMap compatible class
+	 *
+	 * @param  classObj for passing over class type
+	 * @param  object GUID to fetch
+	 * @param  boolean used to indicate if an existance check is done for the request
+	 *
+	 * @return  The ProxyGenericConvertMap[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T get(Class<T> classObj, String oid,
+		boolean isUnchecked) {
+		return ProxyGenericConvertMap.ensure(classObj, get(oid, isUnchecked));
+	}
+	
+	/**
 	 * Removes a DataObject if it exists, from the DB
 	 *
 	 * @param  object GUID to fetch
@@ -193,6 +208,57 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		
 		// Return wrapped DataObjects
 		return (T[]) ret;
+	}
+	
+	/**
+	 * Performs a search query, and returns one or any of the valid DataObjects
+	 * 
+	 * This _may_ be more performant (depending on use case)
+	 * 
+	 * If multiple object matches the where clause criteria, it does NOT gurantee
+	 * which object it will return.
+	 * 
+	 * This is designed can be used with an optimized cache if avaliable, with potentially stale results.
+	 * Before falling back into more "reliabel" standard query.
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject queryAny(String whereClause, Object[] whereValues) {
+		String[] resID = query_id(whereClause, whereValues, null, 0, 1);
+		if (resID.length > 0) {
+			return get(resID[0], true);
+		}
+		return null;
+	}
+	
+	/**
+	 * Performs a search query, and returns one or any of the valid DataObjects
+	 * wrapped in an ProxyGenericConvertMap compatible class
+	 * 
+	 * This _may_ be more performant (depending on use case)
+	 * 
+	 * If multiple object matches the where clause criteria, it does NOT gurantee
+	 * which object it will return.
+	 * 
+	 * This is designed can be used with an optimized cache if avaliable, with potentially stale results.
+	 * Before falling back into more "reliable" standard query.
+	 *
+	 * @param   classObj for passing over class type
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T queryAny(Class<T> classObj, String whereClause,
+		Object[] whereValues) {
+		String[] resID = query_id(whereClause, whereValues, null, 0, 1);
+		if (resID.length > 0) {
+			return get(classObj, resID[0], true);
+		}
+		return null;
 	}
 	
 	/**
