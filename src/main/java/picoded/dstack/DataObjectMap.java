@@ -187,16 +187,8 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		
 		// Prepare the return result
 		Object[] ret = new Object[arr.length];
-		try {
-			for (int i = 0; i < arr.length; ++i) {
-				T part = classObj.newInstance();
-				part.internalMap(arr[i]);
-				ret[i] = part;
-			}
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
+		for (int i = 0; i < arr.length; ++i) {
+			ret[i] = ProxyGenericConvertMap.ensure(classObj, arr[i]);
 		}
 		
 		// Return wrapped DataObjects
