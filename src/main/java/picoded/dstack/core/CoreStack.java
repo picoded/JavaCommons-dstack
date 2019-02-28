@@ -2,6 +2,7 @@ package picoded.dstack.core;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -88,6 +89,10 @@ public abstract class CoreStack implements CommonStack {
 	 * @return  the cached data structure
 	 */
 	public Core_DataStructure cacheDataStructure(String name, String type, Class cObj) {
+		
+		// Structure backend name is case insensitive
+		name = name.toUpperCase(Locale.ENGLISH);
+		
 		// Get and validate cache if found
 		Core_DataStructure cache = structureCache.get(name);
 		if (cache != null) {
