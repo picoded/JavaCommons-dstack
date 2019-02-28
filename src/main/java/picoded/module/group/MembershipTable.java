@@ -1,10 +1,10 @@
-package picoded.dmodule.group;
+package picoded.module.group;
 
 import java.util.*;
 import java.util.function.BiFunction;
 
 import picoded.dstack.*;
-import picoded.dmodule.*;
+import picoded.module.*;
 import picoded.core.conv.*;
 import picoded.core.struct.*;
 
