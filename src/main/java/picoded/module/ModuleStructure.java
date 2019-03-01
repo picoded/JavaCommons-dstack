@@ -1,4 +1,4 @@
-package picoded.dmodule;
+package picoded.module;
 
 import java.util.*;
 

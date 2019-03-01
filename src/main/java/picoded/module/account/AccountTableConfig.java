@@ -1,10 +1,10 @@
-package picoded.dmodule.account;
+package picoded.module.account;
 
 import java.util.*;
 import java.util.function.BiFunction;
 
 import picoded.dstack.*;
-import picoded.dmodule.*;
+import picoded.module.*;
 import picoded.core.struct.template.UnsupportedDefaultMap;
 
 /**
