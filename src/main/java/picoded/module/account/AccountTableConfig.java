@@ -6,6 +6,7 @@ import java.util.function.BiFunction;
 import picoded.dstack.*;
 import picoded.module.*;
 import picoded.core.struct.template.UnsupportedDefaultMap;
+import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
 
 /**
  * Some of the core underlying structures and variables config of account table,
@@ -13,7 +14,8 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  * setup, and config variables house keeping
  **/
 abstract class AccountTableConfig extends ModuleStructure implements
-	UnsupportedDefaultMap<String, AccountObject> {
+	UnsupportedDefaultMap<String, AccountObject>,
+	CollectionQueryForIDInterface<String, AccountObject> {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//

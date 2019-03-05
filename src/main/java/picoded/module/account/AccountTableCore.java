@@ -249,6 +249,48 @@ public abstract class AccountTableCore extends AccountTableConfig {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
+	// CollectionQueryForIDInterface based support
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Performs a search query, and returns the respective AccountObject keys.
+	 *
+	 * This is the GUID key varient of query.
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
+		int offset, int limit) {
+		return accountDataObjectMap.query_id(whereClause, whereValues, orderByStr, offset, limit);
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective AccountObject
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public AccountObject[] query(String whereClause, Object[] whereValues, String orderByStr,
+		int offset, int limit) {
+		// @TOCONSIDER - to have an unchecked implementation of getFromArray, and to use that instead? 
+		return getFromArray(accountDataObjectMap.query_id(whereClause, whereValues, orderByStr,
+			offset, limit));
+	}
+	
+	///////////////////////////////////////////////////////////////////////////
+	//
 	// Additional functionality add on
 	//
 	///////////////////////////////////////////////////////////////////////////
