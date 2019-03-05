@@ -128,7 +128,7 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 *
 	 * @return  The ProxyGenericConvertMap[] array
 	 **/
-	default <T extends ProxyGenericConvertMap> T get(Class<T> classObj, String oid,
+	default <T extends ProxyGenericConvertMap> T getWrap(Class<T> classObj, String oid,
 		boolean isUnchecked) {
 		return ProxyGenericConvertMap.ensure(classObj, get(oid, isUnchecked));
 	}
