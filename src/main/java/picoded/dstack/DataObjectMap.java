@@ -92,9 +92,26 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 **/
 	default DataObject newEntry(Map<String, Object> data) {
 		DataObject ret = newEntry();
-		ret.putAll(data);
-		ret.saveAll();
+		if (data != null) {
+			ret.putAll(data);
+			ret.saveAll();
+		}
 		return ret;
+	}
+	
+	/**
+	 * Generates a new blank object, with a GUID.
+	 * And append all the relevent data to it.
+	 *
+	 * Note that this does trigger a save all
+	 *
+	 * @param  data to save
+	 *
+	 * @return the DataObject
+	 **/
+	default <T extends ProxyGenericConvertMap> T newEntryWrap(Class<T> classObj,
+		Map<String, Object> data) {
+		return ProxyGenericConvertMap.ensure(classObj, newEntry(data));
 	}
 	
 	/**
