@@ -16,7 +16,7 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  * Any refences to the persona game, is completely coincidental !
  * (PS: old joke, the original name for this class was PersonaTable)
  **/
-public class AccountTable extends AccountTableCore {
+public class AccountTableBasic extends AccountTableCore {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -27,7 +27,7 @@ public class AccountTable extends AccountTableCore {
 	/**
 	 * Setup with the given stack and name prefix for data structures
 	 **/
-	public AccountTable(CommonStack inStack, String inName) {
+	public AccountTableBasic(CommonStack inStack, String inName) {
 		super(inStack, inName);
 	}
 	

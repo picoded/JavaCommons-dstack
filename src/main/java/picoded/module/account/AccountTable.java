@@ -7,6 +7,7 @@ import picoded.dstack.*;
 import picoded.module.*;
 import picoded.core.conv.*;
 import picoded.core.struct.*;
+import picoded.core.security.NxtCrypt;
 import picoded.core.struct.template.UnsupportedDefaultMap;
 
 /**
@@ -20,7 +21,20 @@ import picoded.core.struct.template.UnsupportedDefaultMap;
  *
  **/
 public class AccountTable extends AccountTableBasic {
-
+	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Constructor setup : Setup the actual tables, with the various names
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Setup with the given stack and name prefix for data structures
+	 **/
+	public AccountTable(CommonStack inStack, String inName) {
+		super(inStack, inName);
+	}
+	
 	///////////////////////////////////////////////////////////////////////////
 	//
 	// Reset token configuration
@@ -31,7 +45,7 @@ public class AccountTable extends AccountTableBasic {
 	 * New session lifespan without token
 	 **/
 	protected int resetTokenLifetime = 3600 * 24; // 24 hour in seconds
-
+	
 	/**
 	 * Timeframe for issuing a new token, in event that two tokens are issues back to back
 	 * 
@@ -66,34 +80,34 @@ public class AccountTable extends AccountTableBasic {
 		
 		// Get any existing token (if found)
 		KeyValue existingToken = accountPasswordResetTokenMap.get(accountID);
-
+		
 		// Check for existing token
 		//----------------------------------------------
-
-		if( existingToken != null ) {
+		
+		if (existingToken != null) {
 			// Check if reset token is within lifetime thrashold
 			// if so - it just reissues it.
 			long lifespan = existingToken.getLifespan();
-			if( lifespan >= (resetTokenReissueLifetime * 1000) ) {
+			if (lifespan >= (resetTokenReissueLifetime * 1000)) {
 				return existingToken.getValue();
 			}
 		}
-
+		
 		// At this point : a new token must be issued
 		//----------------------------------------------
-
+		
 		// Issue a new token
 		String resetToken = NxtCrypt.randomString(resetTokenStringLength);
-
+		
 		// Store it with accountID in both direction - allowing easy cross referencing
 		// side note : depends on pure GUID collision prevention
-		accountPasswordResetTokenMap.putWithLifespan(accountID, resetToken, resetTokenLifetime());
-		accountPasswordResetTokenMap.putWithLifespan(resetToken, accountID, resetTokenLifetime());
+		accountPasswordResetTokenMap.putWithLifespan(accountID, resetToken, resetTokenLifetime);
+		accountPasswordResetTokenMap.putWithLifespan(resetToken, accountID, resetTokenLifetime);
 		
 		// Return the token
 		return resetToken;
 	}
-
+	
 	/**
 	 * Given the password token, and the new password
 	 * Reset the account password. Returns true on success
@@ -107,20 +121,20 @@ public class AccountTable extends AccountTableBasic {
 		
 		// Quick fail fast validations, and getting the accountID
 		//--------------------------------------------------------
-
+		
 		// Fast failing on invalid param
-		if( token == null || token.isEmpty() || password == null || password.isEmpty() ) {
+		if (token == null || token.isEmpty() || password == null || password.isEmpty()) {
 			return false;
 		}
-
+		
 		// Get the supposed accountID from the token
-		String accountID = accountPasswordResetTokenMap.get(token);
-
+		String accountID = accountPasswordResetTokenMap.getValue(token);
+		
 		// Failed to get a valid accountID
-		if( accountID == null ) {
+		if (accountID == null) {
 			return false;
 		}
-
+		
 		// Cross validating with the additional key record
 		// for accountID to token mapping
 		//
@@ -130,25 +144,26 @@ public class AccountTable extends AccountTableBasic {
 		// (theorectically insanely unlikely possiblility on low entropy, 
 		// identical VM image on boot, or the sun exploding, or time traveling aliens)
 		//--------------------------------------------------------
-
+		
 		KeyValue accountToken = accountPasswordResetTokenMap.get(accountID);
-
+		
 		// Expirary race condition (null) handling
-		if( accountToken == null ) {
+		if (accountToken == null) {
 			return false;
 		}
-
-		if( !token.equals( accountToken.getValue() ) ) {
+		
+		if (!token.equals(accountToken.getValue())) {
 			// Invalid match, since this is an exceedingly rare event - throw exception
-			throw new RuntimeException("Account Token Mismatch - Something is really wrong here, contact help ASAP! (Seriously)");
+			throw new RuntimeException(
+				"Account Token Mismatch - Something is really wrong here, contact help ASAP! (Seriously)");
 		}
-
+		
 		// Since KeyValue ALREADY handles automated expirary
 		// having a valid token info here means a valid account
 		//--------------------------------------------------------
-
+		
 		// Get the account object linked to the token
-		AccountObject accountToUpdate = accountTable.get(accountID);
+		AccountObject accountToUpdate = this.get(accountID);
 		
 		// Invalid token / missing account object, return false
 		if (accountToUpdate == null) {
@@ -156,7 +171,8 @@ public class AccountTable extends AccountTableBasic {
 		}
 		
 		// Apply password reset accordingly
-		return accountToUpdate.setPassword(password);
+		accountToUpdate.setPassword(password);
+		return true;
 	}
-
+	
 }
