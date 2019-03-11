@@ -103,8 +103,11 @@ public class AccountTable extends AccountTableBasic {
 		
 		// Store it with accountID in both direction - allowing easy cross referencing
 		// side note : depends on pure GUID collision prevention
-		accountPasswordResetTokenMap.putWithLifespan(accountID, resetToken, resetTokenLifetime);
-		accountPasswordResetTokenMap.putWithLifespan(resetToken, accountID, resetTokenLifetime);
+		// Multiply by 1000 to convert 24 hours into milliseconds
+		accountPasswordResetTokenMap
+			.putWithLifespan(accountID, resetToken, resetTokenLifetime * 1000);
+		accountPasswordResetTokenMap
+			.putWithLifespan(resetToken, accountID, resetTokenLifetime * 1000);
 		
 		// Return the token
 		return resetToken;
