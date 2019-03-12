@@ -175,6 +175,10 @@ public class AccountTable extends AccountTableBasic {
 			return false;
 		}
 		
+		// Invalidate password tokens
+		accountPasswordResetTokenMap().remove(accountID);
+		accountPasswordResetTokenMap().remove(accountToken.getKey());
+		
 		// Apply password reset accordingly
 		accountToUpdate.setPassword(password);
 		return true;
