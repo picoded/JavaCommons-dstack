@@ -18,6 +18,7 @@ import picoded.core.struct.query.Query;
 import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
 import picoded.dstack.core.Core_DataObject;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.ProxyGenericConvertMap;
 
 /**
  * DataObjectMap, serves as the core flexible backend storage implmentation for the whole
@@ -91,9 +92,26 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 **/
 	default DataObject newEntry(Map<String, Object> data) {
 		DataObject ret = newEntry();
-		ret.putAll(data);
-		ret.saveAll();
+		if (data != null) {
+			ret.putAll(data);
+			ret.saveAll();
+		}
 		return ret;
+	}
+	
+	/**
+	 * Generates a new blank object, with a GUID.
+	 * And append all the relevent data to it.
+	 *
+	 * Note that this does trigger a save all
+	 *
+	 * @param  data to save
+	 *
+	 * @return the DataObject
+	 **/
+	default <T extends ProxyGenericConvertMap> T newEntryWrap(Class<T> classObj,
+		Map<String, Object> data) {
+		return ProxyGenericConvertMap.ensure(classObj, newEntry(data));
 	}
 	
 	/**
@@ -116,6 +134,21 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 * @return the DataObject
 	 **/
 	DataObject get(String oid, boolean isUnchecked);
+	
+	/**
+	 * Get a DataObject, and returns it. Skips existance checks if required
+	 * Wrapped in an ProxyGenericConvertMap compatible class
+	 *
+	 * @param  classObj for passing over class type
+	 * @param  object GUID to fetch
+	 * @param  boolean used to indicate if an existance check is done for the request
+	 *
+	 * @return  The ProxyGenericConvertMap[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T getWrap(Class<T> classObj, String oid,
+		boolean isUnchecked) {
+		return ProxyGenericConvertMap.ensure(classObj, get(oid, isUnchecked));
+	}
 	
 	/**
 	 * Removes a DataObject if it exists, from the DB

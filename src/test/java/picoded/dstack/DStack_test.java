@@ -7,7 +7,7 @@ import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GenericConvert;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.dstack.KeyValueMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.struct.simple.StructSimpleStack_test;
 import picoded.dstack.core.CoreStack;
 
@@ -24,8 +24,8 @@ public class DStack_test extends StructSimpleStack_test {
 		
 		HashMap<String, Object> provider = new HashMap<>();
 		provider.put("name", "db_main");
+		
 		provider.put("type", "StructSimple");
-		provider.put("db", ConvertJSON.toMap("{ \"type\" : \"sqlite\" }"));
 		
 		providers.add(provider);
 		

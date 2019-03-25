@@ -5,9 +5,9 @@ import picoded.core.conv.ListValueConv;
 import picoded.core.struct.MutablePair;
 import picoded.dstack.KeyLong;
 import picoded.dstack.core.Core_KeyLongMap;
-import picoded.dstack.jsql.connector.JSql;
-import picoded.dstack.jsql.connector.JSqlException;
-import picoded.dstack.jsql.connector.JSqlResult;
+import picoded.dstack.connector.jsql.JSql;
+import picoded.dstack.connector.jsql.JSqlException;
+import picoded.dstack.connector.jsql.JSqlResult;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -149,8 +149,19 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			return null;
 		}
 		
-		return new MutablePair<Long, Long>(new Long(GenericConvert.toLong(r.get("kVl")[0])),
-			new Long(expiry));
+		// Check for null objects
+		Object longObj = r.get("kVl").get(0);
+		if (longObj == null) {
+			return null;
+		}
+		
+		Long longVal = GenericConvert.toLong(longObj);
+		if (longVal == null) {
+			return null;
+		}
+		
+		// Return long value
+		return new MutablePair<Long, Long>(longVal, new Long(expiry));
 	}
 	
 	//--------------------------------------------------------------------------
@@ -197,9 +208,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		}
 		
 		// Does the update from 0
-		JSqlResult r = sqlObj.query("UPDATE " + keyLongMapName
-			+ " SET kVl= ? WHERE kID = ? AND kVl = ?", update, key, expect);
-		return (r.affectedRows() > 0);
+		return sqlObj.update("UPDATE " + keyLongMapName + " SET kVl= ? WHERE kID = ? AND kVl = ?",
+			update, key, expect) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
@@ -274,10 +284,11 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public void maintenance() {
+		long currentTime = System.currentTimeMillis();
 		sqlObj.delete( //
 			keyLongMapName, //
 			"eTm <= ? AND eTm > ?", //
-			new Object[] { System.currentTimeMillis(), 0 });
+			new Object[] { currentTime, 0 });
 	}
 	
 	@Override
@@ -316,7 +327,27 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 **/
 	@Override
 	public KeyLong remove(Object key) {
-		sqlObj.update("DELETE FROM `" + keyLongMapName + "` WHERE kID = ?", key.toString());
+		removeValue(key);
+		return null;
+	}
+	
+	/**
+	 * Remove the value, given the key
+	 *
+	 * Important note: It does not return the previously stored value
+	 * Its return String type is to maintain consistency with Map interfaces
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  null
+	 **/
+	@Override
+	public Long removeValue(Object key) {
+		if (key == null) {
+			throw new IllegalArgumentException("delete 'key' cannot be null");
+		}
+		String keyStr = key.toString();
+		sqlObj.delete(keyLongMapName, "kID = ?", new Object[] { keyStr });
 		return null;
 	}
 	
@@ -336,7 +367,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		
 		// Has value
 		if (r != null && r.rowCount() > 0) {
-			rawTime = r.get("eTm")[0];
+			rawTime = r.get("eTm").get(0);
 		} else {
 			return -1; //No value (-1)
 		}

@@ -1,7 +1,7 @@
 package picoded.dstack.jsql;
 
 import picoded.dstack.KeyValueMap;
-import picoded.dstack.jsql.connector.JSql;
+import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.struct.simple.StructSimple_KeyValueMap_test;
 
 public class JSql_KeyValueMap_test extends StructSimple_KeyValueMap_test {

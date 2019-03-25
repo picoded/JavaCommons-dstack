@@ -1,8 +1,12 @@
 package picoded.dstack.struct.simple;
 
+import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -19,22 +23,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the FileWorkspace, used to nuke an entire workspace
-	 *
-	 * @param ObjectID of workspace to remove
-	 **/
-	@Override
-	public void backend_workspaceRemove(String oid) {
-		try {
-			accessLock.writeLock().lock();
-			fileContentMap.remove(oid);
-		} finally {
-			accessLock.writeLock().unlock();
-		}
-	}
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -55,6 +43,23 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 		} finally {
 			accessLock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the FileWorkspace, used to nuke an entire workspace
+	 *
+	 * @param ObjectID of workspace to remove
+	 **/
+	@Override
+	public void backend_workspaceRemove(String oid) {
+		try {
+			accessLock.writeLock().lock();
+			fileContentMap.remove(oid);
+		} finally {
+			accessLock.writeLock().unlock();
 		}
 	}
 	
@@ -84,6 +89,35 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.readLock().unlock();
 		}
 		
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return if the file exists, due to the potentially
+	 * large size nature of files stored in FileWorkspace.
+	 *
+	 * Its highly recommended to optimize this function,
+	 * instead of leaving it as default
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  boolean true, if file eixst
+	 **/
+	public boolean backend_fileExist(final String oid, final String filepath) {
+		try {
+			accessLock.readLock().lock();
+			
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			
+			if (workspace != null && filepath != null) {
+				return workspace.get(filepath) != null;
+			}
+		} finally {
+			accessLock.readLock().unlock();
+		}
+		return false;
 	}
 	
 	/**
@@ -135,6 +169,37 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		} finally {
 			accessLock.writeLock().unlock();
 		}
+	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid, String folderPath) {
+		// do nothing for struct simple
+	}
+	
+	@Override
+	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+		// do nothing for struct simple
+		return null;
+	}
+	
+	@Override
+	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+		// do nothing for struct simple
+		return null;
+	}
+	
+	@Override
+	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+		// do nothing for struct simple
+		return true;
 	}
 	
 	//--------------------------------------------------------------------------

@@ -1,28 +1,13 @@
 package picoded.dstack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.management.RuntimeErrorException;
-
-import picoded.core.conv.ArrayConv;
 import picoded.core.conv.GenericConvert;
-import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
-import picoded.dstack.core.CoreStack;
-import picoded.dstack.core.Core_DataStructure;
-import picoded.dstack.core.Core_FileWorkspaceMap;
-import picoded.dstack.core.Core_KeyLong;
-import picoded.dstack.core.Core_KeyLongMap;
-import picoded.dstack.core.Core_KeyValueMap;
-import picoded.dstack.core.Core_DataObjectMap;
-import picoded.dstack.stack.ProviderConfig;
-import picoded.dstack.stack.Stack_DataObjectMap;
-import picoded.dstack.stack.Stack_FileWorkspaceMap;
-import picoded.dstack.stack.Stack_KeyLongMap;
-import picoded.dstack.stack.Stack_KeyValueMap;
+import picoded.dstack.core.*;
+import picoded.dstack.stack.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DStack extends CoreStack {
 	
@@ -49,10 +34,10 @@ public class DStack extends CoreStack {
 	
 	/**
 	 * Initilize and return the requested data structure with the given name or type if its supported
-	 * 
-	 * @param  name  name of the datastructure to initialize
-	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
-	 * 
+	 *
+	 * @param name name of the datastructure to initialize
+	 * @param type implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)
+	 *
 	 * @return initialized data structure if type is supported
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
@@ -80,12 +65,12 @@ public class DStack extends CoreStack {
 	
 	/**
 	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
-	 * 
-	 * @param  name of data structure to use
-	 * @param  type of data structure to implement
-	 * @param  refrenceType return array to use for type reference (not actually used)
-	 * 
-	 * @return  array of data structures found applicable, which is the same as referenceType
+	 *
+	 * @param name         of data structure to use
+	 * @param type         of data structure to implement
+	 * @param refrenceType return array to use for type reference (not actually used)
+	 *
+	 * @return array of data structures found applicable, which is the same as referenceType
 	 */
 	protected <V extends Core_DataStructure> V[] fetchCommonStructureImplementation(String name,
 		String type, V[] refrenceType) {
@@ -140,9 +125,9 @@ public class DStack extends CoreStack {
 	
 	/**
 	 * This function will find the first namespaceConfig that matches the requested name
-	 * 
+	 *
 	 * @param name of the object to be searched
-	 * 
+	 *
 	 * @return the configuration or null
 	 */
 	protected GenericConvertMap<String, Object> resolveNamespaceConfig(String name) {
@@ -159,10 +144,10 @@ public class DStack extends CoreStack {
 	
 	/**
 	 * Attempts to match the name with the regex pattern given in the param
-	 * 
+	 *
 	 * @param nameToMatch is the string to check if it matches with the pattern
-	 * @param pattern     is the `regex` that is set in the namespace 
-	 * 
+	 * @param pattern     is the `regex` that is set in the namespace
+	 *
 	 * @return true if match is valid
 	 */
 	protected boolean regexNameMatcher(String nameToMatch, String pattern) {

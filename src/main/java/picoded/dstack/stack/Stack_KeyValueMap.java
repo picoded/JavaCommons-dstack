@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import picoded.dstack.CommonStructure;
+import picoded.dstack.KeyValue;
 import picoded.dstack.KeyValueMap;
 import picoded.dstack.core.Core_KeyValueMap;
 import picoded.core.struct.GenericConvertMap;
@@ -160,6 +161,47 @@ public class Stack_KeyValueMap extends Core_KeyValueMap implements Stack_CommonS
 	@Override
 	public Set<String> keySet(String value) {
 		return queryLayer.keySet(value);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Remove support implementation
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Remove the value, given the key
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  null
+	 **/
+	@Override
+	public KeyValue remove(Object key) {
+		// Write data from the lowest layer upwards
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].remove(key);
+		}
+		return null;
+	}
+	
+	/**
+	 * Remove the value, given the key
+	 *
+	 * Important note: It does not return the previously stored value
+	 * Its return String type is to maintain consistency with Map interfaces
+	 *
+	 * @param key param find the thae meta key
+	 *
+	 * @return  null
+	 **/
+	@Override
+	public String removeValue(Object key) {
+		// Write data from the lowest layer upwards
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].removeValue(key);
+		}
+		return null;
 	}
 	
 	//--------------------------------------------------------------------------

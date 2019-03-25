@@ -104,7 +104,7 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @param key
 	 * @param value, null means removal
-	 * @param expire timestamp, 0 means not timestamp
+	 * @param expire timestamp in milliseconds, 0 means NO expire
 	 *
 	 * @return null
 	 **/

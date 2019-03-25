@@ -54,6 +54,9 @@ public class Stack_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 		data.saveAll();
 		String oid = data._oid();
 		
+		// Validate upper layer does not have data
+		assertNull(layer1.get(oid));
+		
 		// Gettign from the stack
 		data = mtObj.get(oid);
 		assertNotNull(data);

@@ -7,22 +7,25 @@ import java.util.Map;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
+import picoded.dstack.file.layered.FileLayeredStack;
+import picoded.dstack.file.simple.FileSimpleStack;
 import picoded.dstack.struct.simple.StructSimpleStack;
+import picoded.dstack.struct.cache.StructCacheStack;
 import picoded.dstack.core.CoreStack;
 import picoded.dstack.jsql.JSqlStack;
 
 /**
  * [Internal use only]
- * 
+ *
  * Utility class used to read the provider configruation list,
  * and generate the provider specific data stacks in the process.
- * 
+ *
  * This takes in a list of provider config, for example (in json form)
- * 
+ *
  * @TODO
  * + Read-Only support
  * + Caching / Query priority support
- * 
+ *
  * ```
  * [
  * 	{
@@ -44,7 +47,7 @@ public class ProviderConfig {
 	
 	//--------------------------------------------------------------------------
 	//
-	// Constructor 
+	// Constructor
 	//
 	//--------------------------------------------------------------------------
 	
@@ -68,11 +71,11 @@ public class ProviderConfig {
 	
 	/**
 	 * Loads a configuration array of backend providers for dstack, into the provider map
-	 * 
+	 *
 	 * @param  inConfigList of providers
 	 **/
 	protected void loadConfigArray(List<Object> inConfigList) {
-		// Map it as a generic list 
+		// Map it as a generic list
 		GenericConvertList<Object> configList = GenericConvertList.build(inConfigList);
 		
 		// Iterate each config item
@@ -99,9 +102,9 @@ public class ProviderConfig {
 	
 	/**
 	 * Get and return the config selected by name
-	 * 
+	 *
 	 * @param  name of config to get
-	 * 
+	 *
 	 * @return  config map if found
 	 */
 	protected GenericConvertMap<String, Object> getStackConfig(String name) {
@@ -122,9 +125,9 @@ public class ProviderConfig {
 	/**
 	 * Get the stack of the provider specified by the name,
 	 * initializing the stack if necessary
-	 * 
+	 *
 	 * @param name - Name of the provider
-	 * 
+	 *
 	 * @return the stack provider if found
 	 */
 	public CoreStack getProviderStack(String name) {
@@ -150,15 +153,27 @@ public class ProviderConfig {
 	
 	/**
 	 * Initialize a new stack object based on the given type
-	 * 
+	 *
 	 * @param  type of stack to initialize ( StructSimple / JSql / JConfig / Stack )
 	 */
 	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
 		if (type.equalsIgnoreCase("StructSimple")) {
 			return new StructSimpleStack(config);
 		}
+		if (type.equalsIgnoreCase("StructCache")) {
+			return new StructCacheStack(config);
+		}
 		if (type.equalsIgnoreCase("JSql")) {
 			return new JSqlStack(config);
+		}
+		if (type.equalsIgnoreCase("Hazelcast")) {
+			return new picoded.dstack.hazelcast.HazelcastStack(config);
+		}
+		if (type.equalsIgnoreCase("FileSimple")) {
+			return new FileSimpleStack(config);
+		}
+		if (type.equalsIgnoreCase("FileLayered")) {
+			return new FileLayeredStack(config);
 		}
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
