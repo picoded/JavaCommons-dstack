@@ -24,7 +24,7 @@ public class FileLayeredStack extends FileSimpleStack {
 	@Override
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new FileLayered_FileWorkspaceMap(baseDir + "/" + name);
+			return new FileLayered_FileWorkspaceMap(baseDir);
 		}
 		// No valid type, return null
 		return null;

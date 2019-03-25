@@ -42,7 +42,7 @@ public class FileSimpleStack extends CoreStack {
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new FileSimple_FileWorkspaceMap(baseDir + "/" + name);
+			return new FileSimple_FileWorkspaceMap(baseDir);
 		}
 		// No valid type, return null
 		return null;
