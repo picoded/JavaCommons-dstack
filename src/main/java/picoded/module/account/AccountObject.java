@@ -65,7 +65,7 @@ public class AccountObject extends Core_DataObject {
 	 * @return TRUE if login ID belongs to this account
 	 **/
 	public boolean hasLoginName(String name) {
-		return _oid.equals(mainTable.accountLoginNameMap.get(name));
+		return _oid.equals(mainTable.accountLoginNameMap.get(name).getValue());
 	}
 	
 	/**
