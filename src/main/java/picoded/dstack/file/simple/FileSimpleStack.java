@@ -41,8 +41,33 @@ public class FileSimpleStack extends CoreStack {
 	 * @return initialized data structure if type is supported
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
+		
+		//	appendNameSpace is a configuration setting in cases where developers
+		//	want to append the regex value of the namespace as part of the directory
+		//	this attribute can be set as true to achieve that.
+		//	"provider" : [
+		//		{
+		//			"name" : "project_workspace",
+		//			"type" : "filelayered",
+		//			"storage" : "./storage/webstudio",
+		//			"appendNameSpace": true <-- set as true/false accordingly
+		//		}
+		//	],
+		//	namespace" : [
+		//		{
+		//			"regex" : "PROJECTWORKSPACE", <-- this value to be append as part of the directory
+		//			"providers" : [ "project_workspace" ]
+		//		}
+		//	]
+		//
+		boolean appendNameSpace = this.config.getBoolean("appendNameSpace", true);
+		
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new FileSimple_FileWorkspaceMap(baseDir + "/" + name);
+			String fileNamespace = baseDir;
+			if (appendNameSpace) {
+				fileNamespace = baseDir + "/" + name;
+			}
+			return new FileSimple_FileWorkspaceMap(fileNamespace);
 		}
 		// No valid type, return null
 		return null;
