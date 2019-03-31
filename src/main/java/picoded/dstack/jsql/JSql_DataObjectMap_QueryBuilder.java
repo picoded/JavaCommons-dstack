@@ -1,4 +1,4 @@
-import picoded.core.struct.MutablePair;
+package picoded.dstack.jsql;
 
 // Java imports
 import java.util.*;
@@ -20,6 +20,7 @@ import picoded.core.struct.*;
 import picoded.core.struct.query.*;
 import picoded.core.struct.query.condition.*;
 import picoded.core.struct.query.internal.*;
+import picoded.core.struct.MutablePair;
 
 /**
  * Protected class, used to orgainze the various DataObjectMap query builder logic.
@@ -82,19 +83,20 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="sourceOfLead") AS D1 ON (DP.oID = D1.oID)
 	 * ```
 	 * 
-	 * @param  tablename to build the query using
+	 * @param  primaryKeyTable to build the query using
+	 * @param  dataStorageTable to build the query using
 	 * @param  collumns that is needed, in the given order
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private static MutablePair<StringBuilder, List<Object>> innerJoinBuilder(String tablename,
-		List<String> collumns) {
+	private static MutablePair<StringBuilder, List<Object>> innerJoinBuilder(String primaryKeyTable,
+		String dataStorageTable, List<String> collumns) {
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
 		
 		// oID collumn first
-		queryStr.append("(SELECT oID FROM DP_").append(tablename).append(") AS DP \n");
+		queryStr.append("(SELECT oID FROM ").append(primaryKeyTable).append(") AS DP \n");
 		
 		// No collumns required (fast ending)
 		if (collumns == null || collumns.size() <= 0) {
@@ -104,7 +106,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// For each collumn that is required, perform an inner join
 		for (int i = 0; i < collumns.size(); ++i) {
 			// Single collumn inner join
-			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_").append(tablename) //
+			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
 				.append(" WHERE kID=? AND idx=? AS D" + i + " ON (") //
 				.append("DP.oID = D" + i + ".oID) \n");
 			// With arguments
@@ -121,7 +123,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * This works by taking the query and its args, building its complex inner view, then querying that view.
 	 *
 	 * @param   JSql connection to use
-	 * @param   JSql table name to use
+	 * @param   primaryKeyTable to build the query using
+	 * @param   dataStorageTable to build the query using
 	 * @param   The selected columns to query
 	 * @param   where query statement
 	 * @param   where clause values array
@@ -132,7 +135,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @return  The JSql query result
 	 **/
 	protected static JSqlResult runComplexQuery( //
-		JSql sql, String tablename, String selectedCols, //
+		JSql sql, String primaryKeyTable, String dataStorageTable, String selectedCols, //
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
 	
@@ -156,7 +159,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// )
 		) {
 			// Blank query search, quick and easy
-			return sql.select("DP_" + tablename, selectedCols);
+			return sql.select(primaryKeyTable, selectedCols);
 		}
 		
 		//--------------------------------------------------------------------------
@@ -234,8 +237,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQuery.append("SELECT ").append(selectedCols).append(" FROM \n");
 		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(tablename,
-			collumnNames);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(primaryKeyTable,
+			dataStorageTable, collumnNames);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
@@ -269,9 +272,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 				if (collumn.equalsIgnoreCase("_oid") || collumn.equals("oID")) {
 					// Scan for the query to remap to DP.oID
 					for (Query toReplace : toReplaceQueries) {
-						Query replacement = QueryFilter.basicQueryFromTokens( //
-							queryArgMap, "DP.oID", toReplace.operatorSymbol(), toReplace.argumentName() //
-							);
+						Query replacement = QueryFilter.basicQueryFromTokens(
+							//
+							queryArgMap, "DP.oID", toReplace.operatorSymbol(),
+							":" + toReplace.argumentName() //
+						);
 						// Replaces old query with new query
 						queryObj = queryObj.replaceQuery(toReplace, replacement);
 					}
@@ -291,32 +296,24 @@ public class JSql_DataObjectMap_QueryBuilder {
 					
 					// Does special numeric handling
 					if (argObj == null) {
-						replacement = QueryFilter.basicQueryFromTokens(
-							//
-							queryArgMap, collumnTableAlias + ".sVl", toReplace.operatorSymbol(),
-							toReplace.argumentName() //
-							);
+						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+							+ ".sVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+						);
 					} else if (argObj instanceof Number) {
-						replacement = QueryFilter.basicQueryFromTokens(
-							//
-							queryArgMap, collumnTableAlias + ".nVl", toReplace.operatorSymbol(),
-							toReplace.argumentName() //
-							);
+						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+							+ ".nVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+						);
 					} else if (argObj instanceof String) {
 						if (toReplace.operatorSymbol().equalsIgnoreCase("LIKE")) {
 							// Like operator maps to tVl
-							replacement = QueryFilter.basicQueryFromTokens(
-								//
-								queryArgMap, collumnTableAlias + ".tVl", toReplace.operatorSymbol(),
-								toReplace.argumentName() //
-								);
+							replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+								+ ".tVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+							);
 						} else {
 							// Else it maps to sVl, with applied limits
-							replacement = QueryFilter.basicQueryFromTokens(
-								//
-								queryArgMap, collumnTableAlias + ".sVl", toReplace.operatorSymbol(),
-								toReplace.argumentName() //
-								);
+							replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+								+ ".sVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+							);
 							// Update the argument with limits
 							queryArgMap.put(toReplace.argumentName(),
 								JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
@@ -422,9 +419,9 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// And finally, the query
 		//----------------------------------------------------------------------
 		
-		// // In case you want to debug the query =(
-		// System.out.println(">>> "+queryBuilder.toString());
-		// System.out.println(">>> "+ConvertJSON.fromList(complexQueryArgs));
+		// In case you want to debug the query =(
+		System.out.println(">>> " + fullQuery.toString());
+		System.out.println(">>> " + ConvertJSON.fromList(fullQueryArgs));
 		
 		// // Dump and debug the table
 		// System.out.println(">>> TABLE DUMP");
@@ -447,7 +444,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @TODO: Performs the search pattern using the respective type map
 	 *
 	 * @param   JSql connection to use
-	 * @param   JSql table name to use
+	 * @param   primaryKeyTable to build the query using
+	 * @param   dataStorageTable to build the query using
 	 * @param   where query statement
 	 * @param   where clause values array
 	 * @param   query string to sort the order by, use null to ignore
@@ -458,12 +456,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 **/
 	public static String[] dataObjectMapQuery_id( //
 		// The meta table / sql configs
-		JSql sql, String tablename, //
+		JSql sql, String primaryKeyTable, String dataStorageTable, //
 		// The actual query
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(sql, tablename, "DP.oID", whereClause, whereValues,
-			orderByStr, offset, limit);
+		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable, "\"DP.oID\"",
+			whereClause, whereValues, orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
 		if (oID_list != null) {
@@ -480,7 +478,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @TODO: Performs the search pattern using the respective type map
 	 *
 	 * @param   JSql connection to use
-	 * @param   JSql table name to use
+	 * @param   primaryKeyTable to build the query using
+	 * @param   dataStorageTable to build the query using
 	 * @param   where query statement
 	 * @param   where clause values array
 	 * @param   query string to sort the order by, use null to ignore
@@ -491,12 +490,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 **/
 	public static long dataObjectMapCount( //
 		// The meta table / sql configs
-		JSql sql, String tablename, //
+		JSql sql, String primaryKeyTable, String dataStorageTable, //
 		// The actual query
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(sql, tablename, "COUNT(DP.oID) AS rcount", whereClause,
-			whereValues, orderByStr, offset, limit);
+		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable,
+			"COUNT(\"DP.oID\") AS rcount", whereClause, whereValues, orderByStr, offset, limit);
 		// Get rcount result
 		GenericConvertList<Object> rcountArr = r.get("rcount");
 		// Generate the object list
