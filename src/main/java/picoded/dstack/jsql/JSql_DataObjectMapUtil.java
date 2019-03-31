@@ -115,7 +115,7 @@ public class JSql_DataObjectMapUtil {
 	 *
 	 * @return the shorten return value
 	 **/
-	protected static String shortenStringValue(Object value) {
+	public static String shortenStringValue(Object value) {
 		String shortenValue = value.toString().toLowerCase();
 		if (shortenValue.length() > 64) {
 			shortenValue = shortenValue.substring(0, 64);

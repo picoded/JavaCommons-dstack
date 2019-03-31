@@ -246,6 +246,13 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		sqlObj.createIndex( //
 			dataStorageTable, "kID, sVl", null, "ksIdx" //
 		); //
+
+		// This optimizes for numeric, string value sorting
+		// + kID, nVl
+		// + kID, nVl, sVl
+		sqlObj.createIndex( //
+			dataStorageTable, "kID, nVl, sVl", null, "knsIdx" //
+		); //
 		
 		// Full text index, for textual data
 		// @TODO FULLTEXT index support
