@@ -18,6 +18,7 @@ import picoded.core.struct.query.Query;
 import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
 import picoded.dstack.core.Core_DataObject;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.ProxyGenericConvertMap;
 
 /**
  * DataObjectMap, serves as the core flexible backend storage implmentation for the whole
@@ -118,6 +119,21 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	DataObject get(String oid, boolean isUnchecked);
 	
 	/**
+	 * Get a DataObject, and returns it. Skips existance checks if required
+	 * Wrapped in an ProxyGenericConvertMap compatible class
+	 *
+	 * @param  classObj for passing over class type
+	 * @param  object GUID to fetch
+	 * @param  boolean used to indicate if an existance check is done for the request
+	 *
+	 * @return  The ProxyGenericConvertMap[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T get(Class<T> classObj, String oid,
+		boolean isUnchecked) {
+		return ProxyGenericConvertMap.ensure(classObj, get(oid, isUnchecked));
+	}
+	
+	/**
 	 * Removes a DataObject if it exists, from the DB
 	 *
 	 * @param  object GUID to fetch
@@ -158,6 +174,91 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	default DataObject[] query(String whereClause, Object[] whereValues, String orderByStr,
 		int offset, int limit) {
 		return getArrayFromID(query_id(whereClause, whereValues, orderByStr, offset, limit), true);
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective DataObjects, 
+	 * wrapped in an ProxyGenericConvertMap compatible class
+	 *
+	 * @param   classObj for passing over class type
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The ProxyGenericConvertMap[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T[] query(Class<T> classObj, String whereClause,
+		Object[] whereValues, String orderByStr, int offset, int limit) {
+		
+		// Does the original query
+		DataObject[] arr = query(whereClause, whereValues, orderByStr, offset, limit);
+		
+		// Quick null response handling
+		if (arr == null) {
+			return null;
+		}
+		
+		// Prepare the return result
+		Object[] ret = new Object[arr.length];
+		for (int i = 0; i < arr.length; ++i) {
+			ret[i] = ProxyGenericConvertMap.ensure(classObj, arr[i]);
+		}
+		
+		// Return wrapped DataObjects
+		return (T[]) ret;
+	}
+	
+	/**
+	 * Performs a search query, and returns one or any of the valid DataObjects
+	 * 
+	 * This _may_ be more performant (depending on use case)
+	 * 
+	 * If multiple object matches the where clause criteria, it does NOT gurantee
+	 * which object it will return.
+	 * 
+	 * This is designed can be used with an optimized cache if avaliable, with potentially stale results.
+	 * Before falling back into more "reliabel" standard query.
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject queryAny(String whereClause, Object[] whereValues) {
+		String[] resID = query_id(whereClause, whereValues, null, 0, 1);
+		if (resID.length > 0) {
+			return get(resID[0], true);
+		}
+		return null;
+	}
+	
+	/**
+	 * Performs a search query, and returns one or any of the valid DataObjects
+	 * wrapped in an ProxyGenericConvertMap compatible class
+	 * 
+	 * This _may_ be more performant (depending on use case)
+	 * 
+	 * If multiple object matches the where clause criteria, it does NOT gurantee
+	 * which object it will return.
+	 * 
+	 * This is designed can be used with an optimized cache if avaliable, with potentially stale results.
+	 * Before falling back into more "reliable" standard query.
+	 *
+	 * @param   classObj for passing over class type
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default <T extends ProxyGenericConvertMap> T queryAny(Class<T> classObj, String whereClause,
+		Object[] whereValues) {
+		String[] resID = query_id(whereClause, whereValues, null, 0, 1);
+		if (resID.length > 0) {
+			return get(classObj, resID[0], true);
+		}
+		return null;
 	}
 	
 	/**
