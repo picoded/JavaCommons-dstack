@@ -47,21 +47,21 @@ class HikaricpUtil {
 		ret.setConnectionTimeout(config.getLong("connectionTimeout", ret.getConnectionTimeout()));
 		
 		// idleTimeout
-		System.out.println("SETIDLETIMEOUT : " + config.getLong("idleTimeout", ret.getIdleTimeout()));
+		// System.out.println("SETIDLETIMEOUT : " + config.getLong("idleTimeout", ret.getIdleTimeout()));
 		ret.setIdleTimeout(config.getLong("idleTimeout", ret.getIdleTimeout()));
 		
 		// maxLifetime
-		System.out.println("SETMAXLIFETIME : " + config.getLong("maxLifetime", ret.getMaxLifetime()));
+		// System.out.println("SETMAXLIFETIME : " + config.getLong("maxLifetime", ret.getMaxLifetime()));
 		ret.setMaxLifetime(config.getLong("maxLifetime", ret.getMaxLifetime()));
 		
 		// connectionTestQuery
 		// **not supported:** we enforce JDBC4 and above drivers (for now)
 		
 		// maximumPoolSize
-		System.out.println("CONFIG POOL SIZE : " + config.getInt("maximumPoolSize"));
-		System.out.println("DEFAULT POOL SIZE : " + defaultMaxPoolSize());
-		System.out.println("MAX POOL SIZE : "
-			+ config.getInt("maximumPoolSize", defaultMaxPoolSize()));
+		// System.out.println("CONFIG POOL SIZE : " + config.getInt("maximumPoolSize"));
+		// System.out.println("DEFAULT POOL SIZE : " + defaultMaxPoolSize());
+		// System.out.println("MAX POOL SIZE : "
+		// 	+ config.getInt("maximumPoolSize", defaultMaxPoolSize()));
 		ret.setMaximumPoolSize(config.getInt("maximumPoolSize", defaultMaxPoolSize()));
 		// ret.setMaximumPoolSize(10);
 		

@@ -247,6 +247,13 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			dataStorageTable, "kID, sVl", null, "ksIdx" //
 		); //
 		
+		// This optimizes for numeric, string value sorting
+		// + kID, nVl
+		// + kID, nVl, sVl
+		sqlObj.createIndex( //
+			dataStorageTable, "kID, nVl, sVl", null, "knsIdx" //
+		); //
+		
 		// Full text index, for textual data
 		// @TODO FULLTEXT index support
 		//------------------------------------------------
@@ -413,14 +420,14 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 		if (queryClause == null) {
-			return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
-				this, sqlObj, dataStorageTable, //
+			return JSql_DataObjectMap_QueryBuilder.dataObjectMapQuery_id( //
+				sqlObj, primaryKeyTable, dataStorageTable, //
 				null, null, //
 				orderByStr, offset, limit //
 				);
 		}
-		return JSql_DataObjectMapUtil.dataObjectMapQuery_id( //
-			this, sqlObj, dataStorageTable, //
+		return JSql_DataObjectMap_QueryBuilder.dataObjectMapQuery_id( //
+			sqlObj, primaryKeyTable, dataStorageTable, //
 			queryClause.toSqlString(), //
 			queryClause.queryArgumentsArray(), //
 			orderByStr, offset, limit //
@@ -437,8 +444,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return JSql_DataObjectMapUtil.dataObjectMapCount(this, sqlObj, dataStorageTable, whereClause,
-			whereValues, null, -1, -1);
+		return JSql_DataObjectMap_QueryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable,
+			dataStorageTable, whereClause, whereValues, null, -1, -1);
 	}
 	
 	//--------------------------------------------------------------------------
