@@ -107,7 +107,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		for (int i = 0; i < collumns.size(); ++i) {
 			// Single collumn inner join
 			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
-				.append(" WHERE kID=? AND idx=? AS D" + i + " ON (") //
+				.append(" WHERE kID=? AND idx=?) AS D" + i + " ON (") //
 				.append("DP.oID = D" + i + ".oID) \n");
 			// With arguments
 			queryArg.add(collumns.get(i));
@@ -159,7 +159,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// )
 		) {
 			// Blank query search, quick and easy
-			return sql.select(primaryKeyTable, selectedCols);
+			return sql.select(primaryKeyTable, selectedCols.replaceAll("DP.oID", "oID"));
 		}
 		
 		//--------------------------------------------------------------------------
@@ -335,8 +335,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 			//--------------------------------------------------------------------------
 			
 			// WHERE query is built from queryObj, this acts as a form of sql sanitization
-			fullQuery.append(" WHERE ");
-			fullQuery.append(queryObj.toSqlString());
+			fullQuery.append("WHERE ");
+			fullQuery.append(queryObj.toSqlString().replaceAll("\"", ""));
 			fullQueryArgs.addAll(queryObj.queryArgumentsList());
 		}
 		
@@ -400,7 +400,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			
 			// ORDER BY query is built from orderByObj
 			fullQuery.append(" ORDER BY ");
-			fullQuery.append(orderByObj.toString() + "\n");
+			fullQuery.append(orderByObj.toString().replaceAll("\"", "") + "\n");
 		}
 		
 		//----------------------------------------------------------------------
@@ -419,9 +419,9 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// And finally, the query
 		//----------------------------------------------------------------------
 		
-		// In case you want to debug the query =(
-		System.out.println(">>> " + fullQuery.toString());
-		System.out.println(">>> " + ConvertJSON.fromList(fullQueryArgs));
+		// // In case you want to debug the query =(
+		// System.err.println(">>> " + fullQuery.toString());
+		// System.err.println(">>> " + ConvertJSON.fromList(fullQueryArgs));
 		
 		// // Dump and debug the table
 		// System.out.println(">>> TABLE DUMP");
@@ -460,8 +460,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// The actual query
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable, "\"DP.oID\"",
-			whereClause, whereValues, orderByStr, offset, limit);
+		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable, "DP.oID", whereClause,
+			whereValues, orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
 		if (oID_list != null) {
@@ -495,7 +495,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
 		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable,
-			"COUNT(\"DP.oID\") AS rcount", whereClause, whereValues, orderByStr, offset, limit);
+			"COUNT(DP.oID) AS rcount", whereClause, whereValues, orderByStr, offset, limit);
 		// Get rcount result
 		GenericConvertList<Object> rcountArr = r.get("rcount");
 		// Generate the object list
