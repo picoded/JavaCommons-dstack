@@ -91,13 +91,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 		List<String> collumns) {
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
-		List<Object> queryArg = new List<Object>();
+		List<Object> queryArg = new ArrayList<>();
 		
 		// oID collumn first
 		queryStr.append("(SELECT oID FROM DP_").append(tablename).append(") AS DP \n");
 		
 		// No collumns required (fast ending)
-		if (collumns == null || collumns.length <= 0) {
+		if (collumns == null || collumns.size() <= 0) {
 			return new MutablePair<>(queryStr, queryArg);
 		}
 		
@@ -175,13 +175,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Set<String> rawWhereClauseCollumns = null;
 		Set<String> rawOrderByClauseCollumns = null;
 		
+		// List of collumns that is needed for both where / order by
+		Set<String> rawCollumnNameSet = new HashSet<>();
+		
 		// Where clause exists, build it!
 		if (whereClause != null && whereClause.length() >= 0) {
 			// The complex query object
 			queryObj = Query.build(whereClause, whereValues);
 			
 			// Get the collumn keynames
-			rawWhereClauseCollumns = queryObj.keyValuesMap.keySet();
+			rawWhereClauseCollumns = queryObj.keyValuesMap().keySet();
 			rawCollumnNameSet.addAll(rawWhereClauseCollumns);
 		}
 		
@@ -194,9 +197,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 			rawOrderByClauseCollumns = orderByObj.getKeyNames();
 			rawCollumnNameSet.addAll(rawOrderByClauseCollumns);
 		}
-		
-		// List of collumns that is needed for the where / order by
-		Set<String> rawCollumnNameSet = new HashSet<>();
 		
 		//--------------------------------------------------------------------------
 		// Sort out and filter the required collumnNameSet
@@ -238,7 +238,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			collumnNames);
 		
 		// Merged together with full query, with the inner join clauses
-		fullQuery.append(ineerJoinPair.left);
+		fullQuery.append(innerJoinPair.left);
 		fullQueryArgs.addAll(innerJoinPair.right);
 		
 		//--------------------------------------------------------------------------
@@ -392,7 +392,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			}
 			
 			// Order by clause is fully rebuilt, lets append it together
-			String rebuiltOrderByStr = String.join(",", Arrays.asList(rebuiltOrderByList));
+			String rebuiltOrderByStr = String.join(",", rebuiltOrderByList.toArray(EmptyArray.STRING));
 			
 			// Final sanity check?
 			orderByObj = getOrderByObject(rebuiltOrderByStr);
@@ -431,7 +431,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// System.out.println( ConvertJSON.fromMap( sql.select(tablename).readRow(0) ) );
 		
 		// Execute and get the result
-		return sql.query(queryBuilder.toString(), queryArgs);
+		return sql.query(fullQuery.toString(), fullQueryArgs.toArray(EmptyArray.OBJECT));
 	}
 	
 	//-----------------------------------------------------------------------------------------------
@@ -473,39 +473,38 @@ public class JSql_DataObjectMap_QueryBuilder {
 		return new String[0];
 	}
 	
-	// /**
-	//  * Performs a search query, and returns the respective DataObjects
-	//  *
-	//  * CURRENTLY: It is entirely dependent on the whereValues object type to perform the relevent search criteria
-	//  * @TODO: Performs the search pattern using the respective type map
-	//  *
-	//  * @param   DataObjectMap object to refrence from
-	//  * @param   JSql connection to use
-	//  * @param   JSql table name to use
-	//  * @param   where query statement
-	//  * @param   where clause values array
-	//  * @param   query string to sort the order by, use null to ignore
-	//  * @param   offset of the result to display, use -1 to ignore
-	//  * @param   number of objects to return max
-	//  *
-	//  * @return  The DataObject[] array
-	//  **/
-	// public static long dataObjectMapCount( //
-	// 	//
-	// 	DataObjectMap dataObjectMapObj, JSql sql, String tablename, //
-	// 	//
-	// 	String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
-	// ) { //
-	// 	JSqlResult r = runComplexQuery(dataObjectMapObj, sql, tablename,
-	// 		"COUNT(DISTINCT \"oID\") AS rcount", whereClause, whereValues, orderByStr, offset, limit);
-	
-	// 	GenericConvertList<Object> rcountArr = r.get("rcount");
-	// 	// Generate the object list
-	// 	if (rcountArr != null && rcountArr.size() > 0) {
-	// 		return rcountArr.getLong(0);
-	// 	}
-	// 	// Blank as fallback
-	// 	return 0;
-	// }
+	/**
+	 * Performs a search query, and returns the respective DataObjects
+	 *
+	 * CURRENTLY: It is entirely dependent on the whereValues object type to perform the relevent search criteria
+	 * @TODO: Performs the search pattern using the respective type map
+	 *
+	 * @param   JSql connection to use
+	 * @param   JSql table name to use
+	 * @param   where query statement
+	 * @param   where clause values array
+	 * @param   query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	public static long dataObjectMapCount( //
+		// The meta table / sql configs
+		JSql sql, String tablename, //
+		// The actual query
+		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
+	) { //
+		JSqlResult r = runComplexQuery(sql, tablename, "COUNT(DP.oID) AS rcount", whereClause,
+			whereValues, orderByStr, offset, limit);
+		// Get rcount result
+		GenericConvertList<Object> rcountArr = r.get("rcount");
+		// Generate the object list
+		if (rcountArr != null && rcountArr.size() > 0) {
+			return rcountArr.getLong(0);
+		}
+		// Blank as fallback
+		return 0;
+	}
 	
 }
