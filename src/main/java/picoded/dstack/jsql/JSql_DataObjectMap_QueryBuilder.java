@@ -33,13 +33,13 @@ import picoded.core.struct.query.internal.*;
  * ```
  **/
 public class JSql_DataObjectMap_QueryBuilder {
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Utility functions
 	//
 	//-----------------------------------------------------------------------------------------------
-
+	
 	/**
 	 * Sanatize the order by string, and places the field name as query arguments
 	 *
@@ -87,34 +87,35 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private static MutablePair<StringBuilder, List<Object>> innerJoinBuilder(String tablename, List<String> collumns) {
+	private static MutablePair<StringBuilder, List<Object>> innerJoinBuilder(String tablename,
+		List<String> collumns) {
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new List<Object>();
-
+		
 		// oID collumn first
 		queryStr.append("(SELECT oID FROM DP_").append(tablename).append(") AS DP \n");
 		
 		// No collumns required (fast ending)
-		if( collumns == null || collumns.length <= 0 ) {
+		if (collumns == null || collumns.length <= 0) {
 			return new MutablePair<>(queryStr, queryArg);
 		}
-
+		
 		// For each collumn that is required, perform an inner join
-		for(int i=0; i<collumns.size(); ++i) {
+		for (int i = 0; i < collumns.size(); ++i) {
 			// Single collumn inner join
 			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_").append(tablename) //
-				.append(" WHERE kID=? AND idx=? AS D"+i+" ON (") //
-				.append("DP.oID = D"+i+".oID) \n");
+				.append(" WHERE kID=? AND idx=? AS D" + i + " ON (") //
+				.append("DP.oID = D" + i + ".oID) \n");
 			// With arguments
 			queryArg.add(collumns.get(i));
 			queryArg.add(0);
 		}
-
+		
 		// The inner join query
 		return new MutablePair<>(queryStr, queryArg);
 	}
-
+	
 	/**
 	 * Performs a search query, and returns the respective result containing the DataObjects information
 	 * This works by taking the query and its args, building its complex inner view, then querying that view.
@@ -140,22 +141,22 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Does not do any complex building of clauses
 		// Runs the query and exit immediately
 		//--------------------------------------------------------------------------
-
+		
 		if (whereClause == null && orderByStr == null && offset <= 0 && limit <= 0
-			// ---
-			// Note the following checks has been commented out as in its
-			// current use case, its always "true"
-			// ---
-			// && (
-			// 	selectedCols.equalsIgnoreCase("DISTINCT DP.oID") || 
-			// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT DP.oID) AS rcount")
-			// 	selectedCols.equalsIgnoreCase("oID") || 
-			// 	selectedCols.equalsIgnoreCase("DISTINCT oID") || 
-			// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT oID) AS rcount")
-			// )
+		// ---
+		// Note the following checks has been commented out as in its
+		// current use case, its always "true"
+		// ---
+		// && (
+		// 	selectedCols.equalsIgnoreCase("DISTINCT DP.oID") || 
+		// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT DP.oID) AS rcount")
+		// 	selectedCols.equalsIgnoreCase("oID") || 
+		// 	selectedCols.equalsIgnoreCase("DISTINCT oID") || 
+		// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT oID) AS rcount")
+		// )
 		) {
 			// Blank query search, quick and easy
-			return sql.select("DP_"+tablename, selectedCols);
+			return sql.select("DP_" + tablename, selectedCols);
 		}
 		
 		//--------------------------------------------------------------------------
@@ -166,34 +167,34 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// The where clause query object, that is built, and actually used
 		Query queryObj = null;
-
+		
 		// Result ordering by
 		OrderBy<DataObject> orderByObj = null;
 		
 		// Collumn name sets
 		Set<String> rawWhereClauseCollumns = null;
 		Set<String> rawOrderByClauseCollumns = null;
-
+		
 		// Where clause exists, build it!
 		if (whereClause != null && whereClause.length() >= 0) {
 			// The complex query object
 			queryObj = Query.build(whereClause, whereValues);
-
+			
 			// Get the collumn keynames
 			rawWhereClauseCollumns = queryObj.keyValuesMap.keySet();
-			rawCollumnNameSet.addAll( rawWhereClauseCollumns );
+			rawCollumnNameSet.addAll(rawWhereClauseCollumns);
 		}
-
+		
 		// OrderBy clause exist, build it
-		if( orderByStr != null ) {
+		if (orderByStr != null) {
 			// Lets build the order by object
 			orderByObj = getOrderByObject(orderByStr);
-
+			
 			// Get the collumn keynames
 			rawOrderByClauseCollumns = orderByObj.getKeyNames();
-			rawCollumnNameSet.addAll( rawOrderByClauseCollumns );
+			rawCollumnNameSet.addAll(rawOrderByClauseCollumns);
 		}
-
+		
 		// List of collumns that is needed for the where / order by
 		Set<String> rawCollumnNameSet = new HashSet<>();
 		
@@ -203,24 +204,24 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// List of collumn names for the inner query builder
 		List<String> collumnNames = new ArrayList<>();
-
+		
 		// alias mapping of the collumn names
-		Map<String,String> collumnAliasMap = new HashMap<>();
-
+		Map<String, String> collumnAliasMap = new HashMap<>();
+		
 		// For each collumnName in the collumnNameSet, set it up if applicable
-		for( String collumn : rawCollumnNameSet ) {
-
+		for (String collumn : rawCollumnNameSet) {
+			
 			// Collumn names to skip setup (reseved keywords?)
-			if( collumn.equalsIgnoreCase("_oid") ) {
+			if (collumn.equalsIgnoreCase("_oid")) {
 				continue;
 			}
-
+			
 			// collumn nmaes that requires setup
-			collumnAliasMap.put(collumn, "D"+collumnNames.size());
+			collumnAliasMap.put(collumn, "D" + collumnNames.size());
 			// note: registering alias map, before adding to list is intentional
-			collumnNames.add(collumn); 
+			collumnNames.add(collumn);
 		}
-
+		
 		//--------------------------------------------------------------------------
 		// Build the complex inner join table
 		//--------------------------------------------------------------------------
@@ -228,33 +229,34 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Final query string builder and arguments
 		StringBuilder fullQuery = new StringBuilder();
 		List<Object> fullQueryArgs = new ArrayList<>();
-
+		
 		// The select clause
 		fullQuery.append("SELECT ").append(selectedCols).append(" FROM \n");
-
+		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(tablename, collumnNames);
-
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(tablename,
+			collumnNames);
+		
 		// Merged together with full query, with the inner join clauses
-		fullQuery.append( ineerJoinPair.left );
-		fullQueryArgs.addAll( innerJoinPair.right );
-
+		fullQuery.append(ineerJoinPair.left);
+		fullQueryArgs.addAll(innerJoinPair.right);
+		
 		//--------------------------------------------------------------------------
 		// Update the query clauses collumn linkage
 		//--------------------------------------------------------------------------
-		if( queryObj != null ) {
-
+		if (queryObj != null) {
+			
 			// Gets the original field to "raw query" maps
 			// of keys, to do subtitution on,
 			// and their respective argument map.
 			Map<String, List<Query>> fieldQueryMap = queryObj.fieldQueryMap();
 			Map<String, Object> queryArgMap = queryObj.queryArgumentsMap();
-				
+			
 			// Gets the new index position to add new arguments if needed
 			int newQueryArgsPos = queryArgMap.size() + 1;
 			
 			// Lets iterate through the collumn names
-			for(String collumn : rawWhereClauseCollumns) {
+			for (String collumn : rawWhereClauseCollumns) {
 				// The query list to do processing on
 				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
 				
@@ -264,64 +266,73 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 				
 				// Special handling for _oid
-				if( collumn.equalsIgnoreCase("_oid") || collumn.equals("oID") ) {
+				if (collumn.equalsIgnoreCase("_oid") || collumn.equals("oID")) {
 					// Scan for the query to remap to DP.oID
-					for( Query toReplace : toReplaceQueries ) {
+					for (Query toReplace : toReplaceQueries) {
 						Query replacement = QueryFilter.basicQueryFromTokens( //
 							queryArgMap, "DP.oID", toReplace.operatorSymbol(), toReplace.argumentName() //
-						);
+							);
 						// Replaces old query with new query
 						queryObj = queryObj.replaceQuery(toReplace, replacement);
 					}
 					continue;
 				}
-
+				
 				// Get the replacment table alias
 				String collumnTableAlias = collumnAliasMap.get(collumn);
-
+				
 				// Scan for the query to perform replacements
-				for( Query toReplace : toReplaceQueries ) {
+				for (Query toReplace : toReplaceQueries) {
 					// Get the argument
-					Object argObj = queryArgMap.get( toReplace.argumentName() );
-
+					Object argObj = queryArgMap.get(toReplace.argumentName());
+					
 					// Setup the replacement query
 					Query replacement = null;
-
+					
 					// Does special numeric handling
-					if( argObj == null ) {
-						replacement = QueryFilter.basicQueryFromTokens( //
-							queryArgMap, collumnTableAlias+".sVl", toReplace.operatorSymbol(), toReplace.argumentName() //
-						);
-					} else if( argObj instanceof Number ) {
-						replacement = QueryFilter.basicQueryFromTokens( //
-							queryArgMap, collumnTableAlias+".nVl", toReplace.operatorSymbol(), toReplace.argumentName() //
-						);
-					} else if( argObj instanceof String ) {
-						if( toReplace.operatorSymbol().equalsIgnoreCase("LIKE") ) {
-							// Like operator maps to tVl
-							replacement = QueryFilter.basicQueryFromTokens( //
-								queryArgMap, collumnTableAlias+".tVl", toReplace.operatorSymbol(), toReplace.argumentName() //
+					if (argObj == null) {
+						replacement = QueryFilter.basicQueryFromTokens(
+							//
+							queryArgMap, collumnTableAlias + ".sVl", toReplace.operatorSymbol(),
+							toReplace.argumentName() //
 							);
+					} else if (argObj instanceof Number) {
+						replacement = QueryFilter.basicQueryFromTokens(
+							//
+							queryArgMap, collumnTableAlias + ".nVl", toReplace.operatorSymbol(),
+							toReplace.argumentName() //
+							);
+					} else if (argObj instanceof String) {
+						if (toReplace.operatorSymbol().equalsIgnoreCase("LIKE")) {
+							// Like operator maps to tVl
+							replacement = QueryFilter.basicQueryFromTokens(
+								//
+								queryArgMap, collumnTableAlias + ".tVl", toReplace.operatorSymbol(),
+								toReplace.argumentName() //
+								);
 						} else {
 							// Else it maps to sVl, with applied limits
-							replacement = QueryFilter.basicQueryFromTokens( //
-								queryArgMap, collumnTableAlias+".sVl", toReplace.operatorSymbol(), toReplace.argumentName() //
-							);
+							replacement = QueryFilter.basicQueryFromTokens(
+								//
+								queryArgMap, collumnTableAlias + ".sVl", toReplace.operatorSymbol(),
+								toReplace.argumentName() //
+								);
 							// Update the argument with limits
-							queryArgMap.put( toReplace.argumentName(), JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
+							queryArgMap.put(toReplace.argumentName(),
+								JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
 						}
 					}
-
+					
 					// Unprocessed arg type
-					if( replacement == null ) {
-						throw new RuntimeException("Unexpeced query argument (unkown type) : "+argObj);
+					if (replacement == null) {
+						throw new RuntimeException("Unexpeced query argument (unkown type) : " + argObj);
 					}
-
+					
 					// Replaces old query with new query
 					queryObj = queryObj.replaceQuery(toReplace, replacement);
 				}
 			}
-
+			
 			//--------------------------------------------------------------------------
 			// Update the query clauses collumn linkage, and apply to fullQuery
 			//--------------------------------------------------------------------------
@@ -335,66 +346,66 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//--------------------------------------------------------------------------
 		// Update the order by clauses collumn linkage
 		//--------------------------------------------------------------------------
-		if( orderByObj != null ) {
+		if (orderByObj != null) {
 			// Rebuilt orderByStr
 			List<String> rebuiltOrderByList = new ArrayList<>();
-
+			
 			// Lets split up the orderby str
 			String[] orderSplitting = orderByStr.trim().replaceAll("\\s+", " ").split(",");
-
+			
 			// Lets iterate the orderby 
-			for( int i=0; i<orderSplitting.length; ++i ) {
+			for (int i = 0; i < orderSplitting.length; ++i) {
 				// Get order segment
 				String orderSegmentStr = orderSplitting[i].trim();
 				
 				// Blank string, skip
-				if( orderSegmentStr.length() <= 0 ) {
+				if (orderSegmentStr.length() <= 0) {
 					continue;
 				}
-
+				
 				// Lets build the order string
 				OrderBy<DataObject> numericOrderBy = new OrderBy<DataObject>(orderSegmentStr);
 				OrderBy<DataObject> stringOrderBy = new OrderBy<DataObject>(orderSegmentStr);
-
+				
 				// Lets perform the collumn aliasing replacement
-				for( String collumn : numericOrderBy.getKeyNames() ) {
-
+				for (String collumn : numericOrderBy.getKeyNames()) {
+					
 					// Special handling for _oid
-					if( collumn.equalsIgnoreCase("_oid") || collumn.equals("oID") ) {
+					if (collumn.equalsIgnoreCase("_oid") || collumn.equals("oID")) {
 						// Replace for DP.oID
 						stringOrderBy.replaceKeyName(collumn, "DP.oID");
-						rebuiltOrderByList.add( stringOrderBy.toString() );
+						rebuiltOrderByList.add(stringOrderBy.toString());
 						continue;
 					}
-
+					
 					// Get the replacment table alias
 					String collumnTableAlias = collumnAliasMap.get(collumn);
-	
+					
 					// Lets update the numeric, and string order by settings
-					numericOrderBy.replaceKeyName(collumn, collumnTableAlias+".nVl");
-					stringOrderBy.replaceKeyName(collumn, collumnTableAlias+".sVl");
-
+					numericOrderBy.replaceKeyName(collumn, collumnTableAlias + ".nVl");
+					stringOrderBy.replaceKeyName(collumn, collumnTableAlias + ".sVl");
+					
 					// Lets append the order by clauses
-					rebuiltOrderByList.add( numericOrderBy.toString() );
-					rebuiltOrderByList.add( stringOrderBy.toString() );
+					rebuiltOrderByList.add(numericOrderBy.toString());
+					rebuiltOrderByList.add(stringOrderBy.toString());
 				}
 			}
-
+			
 			// Order by clause is fully rebuilt, lets append it together
 			String rebuiltOrderByStr = String.join(",", Arrays.asList(rebuiltOrderByList));
 			
 			// Final sanity check?
 			orderByObj = getOrderByObject(rebuiltOrderByStr);
-
+			
 			//--------------------------------------------------------------------------
 			// Update the order clause to fullQuery
 			//--------------------------------------------------------------------------
 			
 			// ORDER BY query is built from orderByObj
 			fullQuery.append(" ORDER BY ");
-			fullQuery.append(orderByObj.toString()+"\n");
+			fullQuery.append(orderByObj.toString() + "\n");
 		}
-
+		
 		//----------------------------------------------------------------------
 		// Limit and offset clause handling
 		//----------------------------------------------------------------------
@@ -451,8 +462,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// The actual query
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(
-			sql, tablename, "DP.oID", whereClause, whereValues,
+		JSqlResult r = runComplexQuery(sql, tablename, "DP.oID", whereClause, whereValues,
 			orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
@@ -462,7 +472,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Blank list as fallback
 		return new String[0];
 	}
-
+	
 	// /**
 	//  * Performs a search query, and returns the respective DataObjects
 	//  *
@@ -488,7 +498,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	// ) { //
 	// 	JSqlResult r = runComplexQuery(dataObjectMapObj, sql, tablename,
 	// 		"COUNT(DISTINCT \"oID\") AS rcount", whereClause, whereValues, orderByStr, offset, limit);
-		
+	
 	// 	GenericConvertList<Object> rcountArr = r.get("rcount");
 	// 	// Generate the object list
 	// 	if (rcountArr != null && rcountArr.size() > 0) {
