@@ -163,7 +163,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		}
 		
 		//--------------------------------------------------------------------------
-		// Sadly looks like things must be done the hardway, 
+		// Sadly looks like things must be done the hard way, 
 		// lets build the query and orderby clause objects
 		// and extract out the collumn names
 		//--------------------------------------------------------------------------
@@ -245,7 +245,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQueryArgs.addAll(innerJoinPair.right);
 		
 		//--------------------------------------------------------------------------
-		// Update the query clauses collumn linkage
+		// Rebuild the query clauses collumn linkage
 		//--------------------------------------------------------------------------
 		if (queryObj != null) {
 			
@@ -255,8 +255,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 			Map<String, List<Query>> fieldQueryMap = queryObj.fieldQueryMap();
 			Map<String, Object> queryArgMap = queryObj.queryArgumentsMap();
 			
-			// Gets the new index position to add new arguments if needed
-			int newQueryArgsPos = queryArgMap.size() + 1;
+			// [old dead code] Gets the new index position to add new arguments if needed
+			// int newQueryArgsPos = queryArgMap.size() + 1;
 			
 			// Lets iterate through the collumn names
 			for (String collumn : rawWhereClauseCollumns) {
@@ -361,8 +361,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 				
 				// Lets build the order string
-				OrderBy<DataObject> numericOrderBy = new OrderBy<DataObject>(orderSegmentStr);
-				OrderBy<DataObject> stringOrderBy = new OrderBy<DataObject>(orderSegmentStr);
+				OrderBy<DataObject> numericOrderBy = new OrderBy<>(orderSegmentStr);
+				OrderBy<DataObject> stringOrderBy = new OrderBy<>(orderSegmentStr);
 				
 				// Lets perform the collumn aliasing replacement
 				for (String collumn : numericOrderBy.getKeyNames()) {
