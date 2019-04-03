@@ -227,8 +227,10 @@ test {
 	exclude "**/perf/*.java"
 	exclude "**/*_perf*"
 
-	// Include mssql, mysql, and oracle test
-	// only if they are configured respectively
+	// Include mssql, mysql, and oracle test only if they are configured respectively
+	//
+	// You can enable any of them by running the `gradle test` command with their `-P`
+	// option, for example `gradle test -Ptest_mssql`
 	if(!project.hasProperty("test_mssql")) {
 		exclude "**/*Mssql*"
 	}
