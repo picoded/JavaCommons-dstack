@@ -215,7 +215,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		for (String collumn : rawCollumnNameSet) {
 			
 			// Collumn names to skip setup (reseved keywords?)
-			if (collumn.equalsIgnoreCase("_oid")) {
+			if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
 				continue;
 			}
 			
