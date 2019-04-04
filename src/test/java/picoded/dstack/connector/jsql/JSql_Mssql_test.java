@@ -47,7 +47,7 @@ public class JSql_Mssql_test extends JSql_Base_test {
 		jsqlObj
 			.update("CREATE TABLE IF NOT EXISTS "
 				+ testTableName
-				+ "_1 ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50), col4 VARCHAR(100) DEFAULT 'ABC' NOT NULL )");
+				+ "_1 ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50), col4 VARCHAR(100) NOT NULL DEFAULT 'ABC' )");
 		//valid table creation : no exception
 		//jsqlObj.update("ALTER TABLE " + testTableName + "_1 ADD CONSTRAINT c_col4 DEFAULT (ABC) FOR col4;");
 		

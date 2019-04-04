@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.Closeable;
+import javax.sql.DataSource;
 
 import com.zaxxer.hikari.*;
 
@@ -59,7 +61,7 @@ public abstract class JSql_Base extends JSql {
 	/**
 	 * Internal HirkariDataSource, used for connection pooling and requests
 	 */
-	protected HikariDataSource datasource = null;
+	protected DataSource datasource = null;
 	
 	//-------------------------------------------------------------------------
 	//
@@ -81,7 +83,9 @@ public abstract class JSql_Base extends JSql {
 		// Disposes the instancce connection
 		if (datasource != null) {
 			try {
-				datasource.close();
+				if (datasource instanceof Closeable) {
+					((Closeable) datasource).close();
+				}
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

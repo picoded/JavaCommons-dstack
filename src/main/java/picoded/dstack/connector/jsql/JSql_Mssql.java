@@ -25,8 +25,12 @@ import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.CaseInsensitiveHashMap;
 import picoded.core.struct.MutablePair;
 
+// We will not be using connection pooling for MSSQL,
+// lets use the datasource directly
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+
 /**
- * Pure "MY"SQL implentation of JSql
+ * Pure "MS"SQL implentation of JSql
  **/
 public class JSql_Mssql extends JSql_Base {
 	
@@ -37,7 +41,7 @@ public class JSql_Mssql extends JSql_Base {
 	//-------------------------------------------------------------------------
 	
 	/**
-	 * Runs JSql with the JDBC "MY"SQL engine
+	 * Runs JSql with the JDBC "MS"SQL engine
 	 *
 	 * @param   dbHost, is just IP or HOSTNAME. For example, "127.0.0.1"
 	 * @param   dbPort to connect to
@@ -78,7 +82,18 @@ public class JSql_Mssql extends JSql_Base {
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.MSSQL;
-		datasource = HikaricpUtil.mssql(config);
+		
+		// Create MSSQL datasource.
+		SQLServerDataSource ds = new SQLServerDataSource();
+		ds.setUser(config.getString("user", ""));
+		ds.setPassword(config.getString("pass", ""));
+		ds.setServerName(config.getString("host", ""));
+		ds.setPortNumber(config.getInt("port", 1433));
+		ds.setDatabaseName(config.getString("name", ""));
+		datasource = ds;
+		
+		// HikariCP implementation is having huge connection overheads
+		// datasource = HikaricpUtil.mssql(config);
 	}
 	
 	//-------------------------------------------------------------------------
