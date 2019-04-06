@@ -305,7 +305,7 @@ class HikaricpUtil {
 		// hconfig.setJdbcUrl("jdbc:oracle:thin:" + host + ":" + port + "/" + name);
 		hconfig.setJdbcUrl("jdbc:oracle:thin:" + host);
 		
-		System.out.println("HIKARI JDBC URL:: jdbc:oracle:thin:" + host);
+		//System.out.println("HIKARI JDBC URL:: jdbc:oracle:thin:" + host);
 		
 		// Setup the username and password
 		hconfig.setUsername(user);

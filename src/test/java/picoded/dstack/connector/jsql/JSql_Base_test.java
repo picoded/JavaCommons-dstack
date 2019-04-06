@@ -15,6 +15,12 @@ import picoded.core.struct.GenericConvertMap;
 ///
 public abstract class JSql_Base_test {
 	
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// Constructor setup
+	//
+	//////////////////////////////////////////////////////////////////////////
+	
 	/**
 	 * SQL implmentation to actually overwrite
 	 * @return the JSql connection to test, this is called on every test
@@ -58,6 +64,31 @@ public abstract class JSql_Base_test {
 		assertNotNull(jsqlObj);
 	}
 	
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// Utility functions
+	//
+	//////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Validation of JSqlResult, with conformaity for various JSql provider quirks
+	 * 
+	 * @param res result to validate
+	 * @param expected string to validate with
+	 */
+	public void jsqlResultValidate(JSqlResult res, String expected) {
+		String jsqlResultStr = ConvertJSON.fromMap(res);
+		jsqlResultStr = jsqlResultStr.replaceAll("\\s", "").replace("\\.0", "").toLowerCase();
+		String expectedStr = expected.replaceAll("\\s", "").replace("\\.0", "").toLowerCase();
+		assertEquals(expectedStr, jsqlResultStr);
+	}
+	
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// JSql testing
+	//
+	//////////////////////////////////////////////////////////////////////////
+	
 	/**
 	 * Simple raw query of creating, writing, reading, and deleting test
 	 * This is considered the simplest minimal test flow
@@ -74,15 +105,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		//
-		// Assert both with or without decimal places
-		Map<String, Object> expected_a = ConvertJSON.toMap("{ \"col1\" : [1.0] }");
-		Map<String, Object> expected_b = ConvertJSON.toMap("{ \"col1\" : [1] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
 		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
@@ -104,15 +127,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		//
-		// Assert both with or without decimal places
-		Map<String, Object> expected_a = ConvertJSON.toMap("{ \"col1\" : [1.0] }");
-		Map<String, Object> expected_b = ConvertJSON.toMap("{ \"col1\" : [1] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
 		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
@@ -133,15 +148,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		//
-		// Assert both with or without decimal places
-		Map<String, Object> expected_a = ConvertJSON.toMap("{ \"col1\" : [1.0] }");
-		Map<String, Object> expected_b = ConvertJSON.toMap("{ \"col1\" : [1] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
 		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
@@ -166,15 +173,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		//
-		// Assert both with or without decimal places
-		Map<String, Object> expected_a = ConvertJSON.toMap("{ \"col1\" : [1.0] }");
-		Map<String, Object> expected_b = ConvertJSON.toMap("{ \"col1\" : [1] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
 		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
@@ -197,15 +196,7 @@ public abstract class JSql_Base_test {
 		
 		// Note that expected is in lower case, 
 		// as results is stored in case insensitive hashmap
-		//
-		// Assert both with or without decimal places
-		Map<String, Object> expected_a = ConvertJSON.toMap("{ \"col1\" : [1.0] }");
-		Map<String, Object> expected_b = ConvertJSON.toMap("{ \"col1\" : [1] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Delete from the table
 		assertEquals(1, jsqlObj.delete(testTableName));
@@ -224,13 +215,8 @@ public abstract class JSql_Base_test {
 		// Validate the result
 		//
 		// Assert both with or without decimal places
-		expected_a = ConvertJSON.toMap("{ \"col1\" : [2.0] }");
-		expected_b = ConvertJSON.toMap("{ \"col1\" : [2] }");
-		if (ConvertJSON.fromMap(expected_a) == ConvertJSON.fromMap(res)) {
-			assertEquals(ConvertJSON.fromMap(expected_a), ConvertJSON.fromMap(res));
-		} else {
-			assertEquals(ConvertJSON.fromMap(expected_b), ConvertJSON.fromMap(res));
-		}
+		jsqlResultValidate(res, "{ \"col1\" : [2.0] }");
+		
 		// Table cleanup
 		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
 	}
@@ -730,10 +716,10 @@ public abstract class JSql_Base_test {
 		// Validate the info
 		assertEquals(2, res.size());
 		
-		System.out.println("getTableColumnTypeMapTest");
+		//System.out.println("getTableColumnTypeMapTest");
 		
 		for (String key : res.keySet()) {
-			System.out.println("key : " + key + " | value : " + res.get(key));
+			//System.out.println("key : " + key + " | value : " + res.get(key));
 		}
 		
 		// assertTrue(res.getString("pKy").contains("INT"));

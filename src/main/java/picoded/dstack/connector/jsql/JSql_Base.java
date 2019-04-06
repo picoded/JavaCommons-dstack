@@ -201,7 +201,7 @@ public abstract class JSql_Base extends JSql {
 			sqlpstmt = prepareSqlStatment(conn, qString, values);
 			// System.out.println("JSql_Base query : " + qString);
 			// for (Object value : values) {
-			// 	System.out.println("args : " + value.toString());
+			// 	//System.out.println("args : " + value.toString());
 			// }
 			
 			// Performing the query, get the result set, and immediately pass it to JSqlResult
