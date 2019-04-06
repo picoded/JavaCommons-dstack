@@ -77,9 +77,9 @@ public abstract class JSql_Base_test {
 	 * @param expected string to validate with
 	 */
 	public void jsqlResultValidate(JSqlResult res, String expected) {
-		String jsqlResultStr = ConvertJSON.fromMap(res);
-		jsqlResultStr = jsqlResultStr.replaceAll("\\s", "").replace("\\.0", "").toLowerCase();
-		String expectedStr = expected.replaceAll("\\s", "").replace("\\.0", "").toLowerCase();
+		String jsqlResultStr = ConvertJSON.fromMap(res).replaceAll("\\s", "").replaceAll("\\.0", "")
+			.toLowerCase();
+		String expectedStr = expected.replaceAll("\\s", "").replaceAll("\\.0", "").toLowerCase();
 		assertEquals(expectedStr, jsqlResultStr);
 	}
 	
@@ -718,9 +718,9 @@ public abstract class JSql_Base_test {
 		
 		//System.out.println("getTableColumnTypeMapTest");
 		
-		for (String key : res.keySet()) {
-			//System.out.println("key : " + key + " | value : " + res.get(key));
-		}
+		// for (String key : res.keySet()) {
+		// 	//System.out.println("key : " + key + " | value : " + res.get(key));
+		// }
 		
 		// assertTrue(res.getString("pKy").contains("INT"));
 		// assertTrue(res.getString("iVl").contains("INT"));

@@ -83,17 +83,17 @@ public class JSql_Mssql extends JSql_Base {
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.MSSQL;
 		
-		// Create MSSQL datasource.
-		SQLServerDataSource ds = new SQLServerDataSource();
-		ds.setUser(config.getString("user", ""));
-		ds.setPassword(config.getString("pass", ""));
-		ds.setServerName(config.getString("host", ""));
-		ds.setPortNumber(config.getInt("port", 1433));
-		ds.setDatabaseName(config.getString("name", ""));
-		datasource = ds;
+		// // Create MSSQL datasource.
+		// SQLServerDataSource ds = new SQLServerDataSource();
+		// ds.setUser(config.getString("user", ""));
+		// ds.setPassword(config.getString("pass", ""));
+		// ds.setServerName(config.getString("host", ""));
+		// ds.setPortNumber(config.getInt("port", 1433));
+		// ds.setDatabaseName(config.getString("name", ""));
+		// datasource = ds;
 		
 		// HikariCP implementation is having huge connection overheads
-		// datasource = HikaricpUtil.mssql(config);
+		datasource = HikaricpUtil.mssql(config);
 	}
 	
 	//-------------------------------------------------------------------------

@@ -412,7 +412,7 @@ class HikaricpUtil {
 		hconfig.setConnectionTestQuery("SELECT GETDATE()");
 		
 		// Setup maximum pool size (to review in future)
-		hconfig.setMaximumPoolSize(32);
+		// hconfig.setMaximumPoolSize(32);
 		
 		// Additional configs (to review in future)
 		hconfig.addDataSourceProperty("cacheMetaData", true);
@@ -427,6 +427,9 @@ class HikaricpUtil {
 		
 		// Disable error prone CLOBs
 		hconfig.addDataSourceProperty("uselobs", false);
+		
+		// Disable unicode string conversion, which leads to cache miss
+		hconfig.addDataSourceProperty("sendStringParametersAsUnicode", false);
 		
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
