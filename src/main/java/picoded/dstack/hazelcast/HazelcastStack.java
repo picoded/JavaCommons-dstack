@@ -5,6 +5,7 @@ import picoded.dstack.core.*;
 import picoded.dstack.*;
 import picoded.dstack.connector.hazelcast.*;
 
+import java.util.HashMap;
 import com.hazelcast.core.*;
 
 /**
@@ -25,16 +26,6 @@ public class HazelcastStack extends CoreStack {
 	public HazelcastStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
 		
-		// Extract the connection config object
-		GenericConvertMap<String, Object> hazelcastConfig = inConfig
-			.fetchGenericConvertStringMap("hazelcast");
-		
-		// If hazelcast config is missing, throw
-		if (hazelcastConfig == null) {
-			throw new IllegalArgumentException(
-				"Missing 'hazelcast' config object for Hazelcast stack provider");
-		}
-		
 		// If name config is missing, throw
 		String name = inConfig.getString("name");
 		if (name == null) {
@@ -42,13 +33,17 @@ public class HazelcastStack extends CoreStack {
 				"Missing 'name' config object for Hazelcast stack provider");
 		}
 		
+		// Extract the hazelcast connection config object
+		GenericConvertMap<String, Object> hazelcastConfig = inConfig.fetchGenericConvertStringMap(
+			"hazelcast", new HashMap<String, Object>());
+		
 		// If groupName is not set, configure using the stack name
-		if (inConfig.getString("groupName") == null) {
-			inConfig.put("groupName", name);
+		if (hazelcastConfig.getString("groupName") == null) {
+			hazelcastConfig.put("groupName", name);
 		}
 		
 		// Get the Hazelcast connection
-		conn = HazelcastConnector.getConnection(inConfig);
+		conn = HazelcastConnector.getConnection(hazelcastConfig);
 	}
 	
 	/**
