@@ -127,7 +127,13 @@ public abstract class JSql_Base extends JSql {
 				if (argObj == null) {
 					ps.setNull(pt + 1, 0);
 				} else if (String.class.isInstance(argObj)) {
+					// if (sqlType == JSqlType.MSSQL) {
+					// 	// This is used for MSSQL due to the ridiculous
+					// 	// query penalty for setString
+					// 	ps.setNString(pt + 1, (String) argObj);
+					// } else {
 					ps.setString(pt + 1, (String) argObj);
+					// }
 				} else if (Integer.class.isInstance(argObj)) {
 					ps.setInt(pt + 1, (Integer) argObj);
 				} else if (Long.class.isInstance(argObj)) {

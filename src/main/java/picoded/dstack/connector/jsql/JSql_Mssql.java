@@ -90,6 +90,8 @@ public class JSql_Mssql extends JSql_Base {
 		// ds.setServerName(config.getString("host", ""));
 		// ds.setPortNumber(config.getInt("port", 1433));
 		// ds.setDatabaseName(config.getString("name", ""));
+		
+		// //ds.setSend
 		// datasource = ds;
 		
 		// HikariCP implementation is having huge connection overheads

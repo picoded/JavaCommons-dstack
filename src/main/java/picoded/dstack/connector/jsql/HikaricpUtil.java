@@ -388,6 +388,19 @@ class HikaricpUtil {
 		// Load the common config
 		HikariConfig hconfig = commonConfigLoading(config);
 		
+		// Load JTDS driver
+		return mssql_jtds(hconfig, config);
+	}
+	
+	/**
+	 * Loads a HikariDataSource for MS-SQL with JTDS given the config
+	 *
+	 * @param  config map used
+	 *
+	 * @return HikariDataSource with the appropriate config loaded and initialized
+	 */
+	private static HikariDataSource mssql_jtds(HikariConfig hconfig, GenericConvertMap config) {
+		
 		// Load the DB library
 		// This is only imported on demand, avoid preloading until needed
 		try {
@@ -401,13 +414,14 @@ class HikaricpUtil {
 		hconfig.setDriverClassName("net.sourceforge.jtds.jdbc.Driver");
 		
 		// Setup the JDBC URL - with DB option
-		hconfig.setJdbcUrl("jdbc:jtds:sqlserver://" + host + ":" + port + "/" + name);
+		hconfig.setJdbcUrl("jdbc:jtds:sqlserver://" + config.getString("host", "localhost") + ":"
+			+ config.getInt("port", 1433)); //+ "/" + config.getString("name", null)
 		
 		// For JTDS specifically, setup using datasource user / pass
 		// hconfig.setUsername(user);
 		// hconfig.setPassword(pass);
-		hconfig.addDataSourceProperty("user", user);
-		hconfig.addDataSourceProperty("password", pass);
+		hconfig.addDataSourceProperty("user", config.getString("user", null));
+		hconfig.addDataSourceProperty("password", config.getString("pass", null));
 		
 		hconfig.setConnectionTestQuery("SELECT GETDATE()");
 		
@@ -415,15 +429,23 @@ class HikaricpUtil {
 		// hconfig.setMaximumPoolSize(32);
 		
 		// Additional configs (to review in future)
+		// hconfig.addDataSourceProperty("cacheMetaData", true);
+		
+		//
+		// PrepareSQL java-to-server statement processing "disabled" at 1,
+		// with collumn metadata caching?
+		// 
+		// This makes no sense, but it works faster on larger tables
+		// having it configured to 3 is suppose to speed things up, but somehow makes it worse
+		// so setting up "prepareSQL" as 1 instead (which disables it)
+		//
+		// https://stackoverflow.com/questions/961078/sql-server-query-running-slow-from-java
+		//
+		hconfig.addDataSourceProperty("prepareSQL", 1);
 		hconfig.addDataSourceProperty("cacheMetaData", true);
 		
-		// HikariConfig c = new HikariConfig();
-		// c.getDataSourceProperties().put("user", "user");
-		// c.getDataSourceProperties().put("password", "password");
-		// c.getDataSourceProperties().put("cacheMetaData", true);
-		
 		// [Skipped] Database name support, as its added to URL
-		// hconfig.addDataSourceProperty("databaseName", name);
+		hconfig.addDataSourceProperty("databaseName", config.getString("name", null));
 		
 		// Disable error prone CLOBs
 		hconfig.addDataSourceProperty("uselobs", false);
