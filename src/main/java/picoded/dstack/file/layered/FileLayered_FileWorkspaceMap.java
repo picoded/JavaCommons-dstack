@@ -44,7 +44,8 @@ public class FileLayered_FileWorkspaceMap extends FileSimple_FileWorkspaceMap {
 		}
 		
 		// Make it into a layered directory
-		String workspacePath = oid.substring(0, 2) + "/" + oid.substring(2, 4) + "/" + oid;
+		String workspacePath = oid.substring(0, 2) + "/" + oid.substring(2, 4) + "/" + oid
+			+ "/workspace";
 		
 		// Get the file directory
 		return new File(baseDir, workspacePath);
@@ -61,7 +62,8 @@ public class FileLayered_FileWorkspaceMap extends FileSimple_FileWorkspaceMap {
 	@Override
 	public void backend_setupWorkspace(String oid, String folderPath) {
 		File file = null;
-		String workspacePath = oid.substring(0, 2) + "/" + oid.substring(2, 4) + "/" + oid;
+		String workspacePath = oid.substring(0, 2) + "/" + oid.substring(2, 4) + "/" + oid
+			+ "/workspace";
 		
 		if (folderPath.isEmpty()) {
 			file = new File(baseDir + "/" + workspacePath);

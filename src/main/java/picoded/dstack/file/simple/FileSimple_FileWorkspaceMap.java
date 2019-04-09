@@ -100,7 +100,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Get the file directory
-		return new File(baseDir, oid);
+		return new File(baseDir, oid + "/workspace");
 	}
 	
 	/**
