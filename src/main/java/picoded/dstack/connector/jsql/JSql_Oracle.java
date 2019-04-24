@@ -346,7 +346,8 @@ public class JSql_Oracle extends JSql_Base {
 				}
 			}
 			// Remove 'AS' from table alias
-			qString = removeAsAfterTablename(qString);
+			// qString = removeAsAfterTablename(qString);
+			qString = removeASbeforeTableAlias(qString);
 			qString = removeAsAfterOpeningBracket(qString);
 			
 			// Fix the pagination query as per the Oracle 12C
@@ -485,6 +486,10 @@ public class JSql_Oracle extends JSql_Base {
 		
 		// And return it as a list pair
 		return new MutablePair<>(tableInfo.get("column_name"), tableInfo.get("data_type"));
+	}
+	
+	private static String removeASbeforeTableAlias(String qString) {
+		return qString.replace("AS ", "");
 	}
 	
 	private static String removeAsAfterTablename(String qString) {
