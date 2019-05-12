@@ -72,17 +72,6 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 		return new JSql_Oracle(config);
 	}
 	
-	// /*
-	//  * Oracle static constructor, returns picoded.dstack.connector.jsql.JSql_Oracle
-	//  */
-	// public static JSql oracle(String oraclePath, String dbUser, String dbPass) {
-	// 	return new picoded.dstack.connector.jsql.db.JSql_Oracle(oraclePath, dbUser, dbPass);
-	// }
-	
-	// public static JSql oracle(Connection inSqlConn) {
-	// 	return new picoded.dstack.connector.jsql.db.JSql_Oracle(inSqlConn);
-	// }
-	
 	//-------------------------------------------------------------------------
 	//
 	// Database config object constructor
