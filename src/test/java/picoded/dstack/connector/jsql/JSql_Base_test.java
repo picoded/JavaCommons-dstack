@@ -50,7 +50,7 @@ public abstract class JSql_Base_test {
 	@After
 	public void tearDown() {
 		if (jsqlObj != null) {
-			jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
+			dropTableIfExist(testTableName);
 			jsqlObj.close();
 			jsqlObj = null;
 		}
@@ -85,6 +85,26 @@ public abstract class JSql_Base_test {
 	
 	//////////////////////////////////////////////////////////////////////////
 	//
+	// Overwritable drop table command
+	//
+	//////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Common reusable testing DROP TABLE command,
+	 * this is needed as the keyword "CASCADE" is needed for postgres
+	 * 
+	 * It is currently of mixed oppinion if JSQL should auto fill this parameter or not 
+	 * as its main use case should use the official jsqlObj.dropTable command
+	 * which would add it in
+	 * 
+	 * @param tablename
+	 */
+	public void dropTableIfExist(String tablename) {
+		jsqlObj.update("DROP TABLE IF EXISTS `" + tablename + "`");
+	}
+	
+	//////////////////////////////////////////////////////////////////////////
+	//
 	// JSql testing
 	//
 	//////////////////////////////////////////////////////////////////////////
@@ -96,6 +116,7 @@ public abstract class JSql_Base_test {
 	@Test
 	public void simpleQueryFlow_raw() {
 		// Creating and inserting the result
+		dropTableIfExist(testTableName);
 		assertEquals(0, jsqlObj.update_raw("CREATE TABLE " + testTableName + " ( COL1 INTEGER )"));
 		assertEquals(1, jsqlObj.update_raw("INSERT INTO " + testTableName + " VALUES (1)"));
 		
@@ -108,7 +129,7 @@ public abstract class JSql_Base_test {
 		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
-		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
+		dropTableIfExist(testTableName);
 	}
 	
 	/**
@@ -117,6 +138,7 @@ public abstract class JSql_Base_test {
 	@Test
 	public void simpleQueryFlow_createTable() {
 		// Creating and inserting the result
+		dropTableIfExist(testTableName);
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "COL1" },
 			new String[] { "INTEGER" }));
 		assertEquals(1, jsqlObj.update_raw("INSERT INTO " + testTableName + " VALUES (1)"));
@@ -130,7 +152,7 @@ public abstract class JSql_Base_test {
 		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
-		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
+		dropTableIfExist(testTableName);
 	}
 	
 	/**
@@ -151,7 +173,7 @@ public abstract class JSql_Base_test {
 		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
-		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
+		dropTableIfExist(testTableName);
 	}
 	
 	/**
@@ -176,7 +198,7 @@ public abstract class JSql_Base_test {
 		jsqlResultValidate(res, "{ \"col1\" : [1.0] }");
 		
 		// Table cleanup
-		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
+		dropTableIfExist(testTableName);
 	}
 	
 	/**
@@ -218,7 +240,7 @@ public abstract class JSql_Base_test {
 		jsqlResultValidate(res, "{ \"col1\" : [2.0] }");
 		
 		// Table cleanup
-		jsqlObj.update_raw("DROP TABLE " + testTableName + "");
+		dropTableIfExist(testTableName);
 	}
 	
 	/**
@@ -227,7 +249,7 @@ public abstract class JSql_Base_test {
 	@Test
 	public void createTableStatementBuilder() {
 		// cleanup (just incase)
-		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
+		dropTableIfExist(testTableName);
 		
 		// valid table creation : no exception
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "col1", "col2" }, new String[] {
@@ -260,9 +282,9 @@ public abstract class JSql_Base_test {
 	 * This is the base execute sql test example, in which other examples are built on
 	 */
 	@Test
-	public void updateStatements() {
+	public void setupAndAddRowRecord() {
 		// cleanup (just incase)
-		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "`");
+		dropTableIfExist(testTableName);
 		
 		// assertEquals(
 		// 	0,
@@ -285,6 +307,15 @@ public abstract class JSql_Base_test {
 		jsqlObj.update("INSERT INTO " + testTableName + " ( col1, col2, col3 ) VALUES (?,?,?)", 404,
 			"has nothing", "do nothing");
 		
+	}
+	
+	/**
+	 * This is the base execute sql test example, in which other examples are built on
+	 */
+	@Test
+	public void create_and_drop_view() {
+		setupAndAddRowRecord();
+		
 		// Drop non existent view
 		jsqlObj.update("DROP VIEW IF EXISTS `" + testTableName + "_View`");
 		
@@ -293,13 +324,12 @@ public abstract class JSql_Base_test {
 		
 		// Drop created view
 		jsqlObj.update("DROP VIEW IF EXISTS `" + testTableName + "_View`");
-		
 	}
 	
 	@Test
 	public void update_expectedExceptions() {
 		// runs the no exception varient. to pre populate the tables for exceptions
-		updateStatements();
+		setupAndAddRowRecord();
 		
 		// Reduce exception level of sqlite library
 		java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(
@@ -342,7 +372,7 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void JSqlResultFetch() {
-		updateStatements();
+		setupAndAddRowRecord();
 		
 		// added more data to test
 		jsqlObj.update("INSERT INTO " + testTableName + " ( col1, col2 ) VALUES (?,?)", 405, "hello");
@@ -374,7 +404,7 @@ public abstract class JSql_Base_test {
 	 */
 	@Test
 	public void uniqueIndexIfNotExists() {
-		updateStatements();
+		setupAndAddRowRecord();
 		
 		/// 1st unique index
 		jsqlObj.update("CREATE UNIQUE INDEX IF NOT EXISTS `" + testTableName + "_uni1` ON `"
@@ -386,7 +416,7 @@ public abstract class JSql_Base_test {
 	}
 	
 	public void row1to7setup() {
-		updateStatements();
+		setupAndAddRowRecord();
 		
 		// added more data to test
 		jsqlObj.update("INSERT INTO " + testTableName + " ( col1, col2 ) VALUES (?,?)", 405, "hello");
@@ -483,7 +513,7 @@ public abstract class JSql_Base_test {
 		JSqlResult r = null;
 		JSqlPreparedStatement preparedStatment = null;
 		
-		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "_1`"); //cleanup (just incase)
+		dropTableIfExist(testTableName + "_1"); //cleanup (just incase)
 		
 		jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 			+ "_1 ( col1 INT PRIMARY KEY, col2 TEXT, col3 VARCHAR(50), col4 VARCHAR(100) )"); //valid table creation : no exception
@@ -510,7 +540,7 @@ public abstract class JSql_Base_test {
 		row1to7setup();
 		JSqlResult r = null;
 		
-		jsqlObj.update("DROP TABLE IF EXISTS `" + testTableName + "_1`"); //cleanup (just incase)
+		dropTableIfExist(testTableName + "_1"); //cleanup (just incase)
 		
 		jsqlObj
 			.update("CREATE TABLE IF NOT EXISTS "
@@ -603,7 +633,7 @@ public abstract class JSql_Base_test {
 	 */
 	@Test
 	public void mssqlClosingBracketInCollumnName() {
-		jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + "");
+		dropTableIfExist(testTableName);
 		
 		jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 			+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )"); //valid table creation : no exception
@@ -629,7 +659,7 @@ public abstract class JSql_Base_test {
 	// // commit was deprecated with the hikari cp rewrite
 	// @Test
 	// public void commitTest() {
-	// 	jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + ""); //cleanup (just incase)
+	// 	dropTableIfExist(testTableName); //cleanup (just incase)
 	
 	// 	jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 	// 		+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )");
@@ -646,7 +676,7 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void createTableIndexStatementTest() {
-		jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + "");
+		dropTableIfExist(testTableName);
 		
 		jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 			+ " ( `col1` INT PRIMARY KEY, col2 TEXT )");
@@ -655,7 +685,7 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void createTableIndexStatementTestThreeParam() {
-		jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + "");
+		dropTableIfExist(testTableName);
 		
 		jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 			+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )");
@@ -664,7 +694,7 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void createTableIndexStatementTestFourParam() {
-		jsqlObj.update("DROP TABLE IF EXISTS " + testTableName + "");
+		dropTableIfExist(testTableName);
 		
 		jsqlObj.update("CREATE TABLE IF NOT EXISTS " + testTableName
 			+ " ( `col[1].pk` INT PRIMARY KEY, col2 TEXT )");
