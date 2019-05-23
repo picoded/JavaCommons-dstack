@@ -97,17 +97,22 @@ public class JSql_Postgres extends JSql_Base {
 	 * @return  SQL query that was converted
 	 **/
 	public String genericSqlParser(String qString) {
+		String originalStr = qString;
+		
 		// Quotes are just "wierd" in postgres (to say the least)
 		// this is due to the messy mess of lower case preference done in postgres
 		// see : https://dev.to/lefebvre/dont-get-bit-by-postgresql-case-sensitivity--457i
 		//
 		// Ironically making it the opposite of oracle
-		// qString = StringReplacer.replace(qString,
-		// Pattern.compile("\\S+"),
-		// )
-
-
-		return qString; //.replaceAll("`", "").replaceAll("'", "").replaceAll("", "");
+		
+		// normalize everything to double quotes + lowercase
+		qString = qString.replaceAll("`", "\"").replaceAll("'", "\"").toLowerCase();
+		
+		// replace BLOB with BYTEA
+		qString = qString.replaceAll("blob", "bytea");
+		
+		// Return formatted string
+		return qString;
 	}
 	
 	//-------------------------------------------------------------------------

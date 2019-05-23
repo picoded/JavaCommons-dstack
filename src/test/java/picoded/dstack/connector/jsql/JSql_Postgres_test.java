@@ -55,4 +55,15 @@ public class JSql_Postgres_test extends JSql_Base_test {
 		jsqlObj.update("DROP TABLE IF EXISTS \"" + tablename + "\" CASCADE");
 	}
 	
+	/**
+	 * Some basic test for genericSqlParser conversions
+	 */
+	@Test
+	public void genericSqlParserTest() {
+		String s = ((JSql_Base) jsqlObj).genericSqlParser("SELECT * FROM " + testTableName
+			+ " WHERE COL1 = ?");
+		assertEquals(("SELECT * FROM " + testTableName + " WHERE COL1=?").toLowerCase(), s
+			.toLowerCase().replaceAll("col1 = \\?", "col1=?"));
+	}
+	
 }
