@@ -102,6 +102,9 @@ dependencies {
 	api "com.hazelcast:hazelcast:3.10.5"
 	api "com.hazelcast:hazelcast-client:3.10.5"
 
+	// PostgresSQL library
+	api "org.postgresql:postgresql:42.2.5"
+
 	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 	// implementation 'com.google.guava:guava:23.0'

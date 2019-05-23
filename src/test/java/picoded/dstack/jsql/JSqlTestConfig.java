@@ -157,6 +157,25 @@ public class JSqlTestConfig {
 		return ORACLE_PASS;
 	}
 	
+	//----------------------------------//
+	// Default Credentials for POSTGRES //
+	//----------------------------------//
+	static private String POSTGRES_HOST = "127.0.0.1";
+	static private String POSTGRES_USER = "JAVACOMMONS";
+	static private String POSTGRES_PASS = "JAVACOMMONS";
+	
+	static public String POSTGRES_HOST() {
+		return POSTGRES_HOST;
+	}
+	
+	static public String POSTGRES_USER() {
+		return POSTGRES_USER;
+	}
+	
+	static public String POSTGRES_PASS() {
+		return POSTGRES_PASS;
+	}
+	
 	//-------------------------------//
 	// LDAP Server location          //
 	//-------------------------------//
