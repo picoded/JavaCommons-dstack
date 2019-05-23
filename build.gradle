@@ -88,10 +88,10 @@ dependencies {
 	api "org.xerial:sqlite-jdbc:3.25.2" // for sqlite
 	api "mysql:mysql-connector-java:6.0.6" // for mysql
 
-	// Newer MSSQL connection
-	api "com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8" // for mssql
+	// Newer MSSQL connection (THIS DOES NOT WORK)
+	// api "com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8" // for mssql
 
-	// Older MSSQL connection
+	// Older MSSQL connection (THIS DOES)
 	api "net.sourceforge.jtds:jtds:1.3.1" // for mssql
 
 	// Cache2k implementation

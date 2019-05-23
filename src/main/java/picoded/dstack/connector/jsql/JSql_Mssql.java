@@ -25,10 +25,6 @@ import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.CaseInsensitiveHashMap;
 import picoded.core.struct.MutablePair;
 
-// We will not be using connection pooling for MSSQL,
-// lets use the datasource directly
-import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
-
 /**
  * Pure "MS"SQL implentation of JSql
  **/
