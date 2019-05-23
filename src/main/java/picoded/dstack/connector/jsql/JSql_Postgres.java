@@ -111,6 +111,21 @@ public class JSql_Postgres extends JSql_Base {
 		// replace BLOB with BYTEA
 		qString = qString.replaceAll("blob", "bytea");
 		
+		// replace varchar(max) with varchar
+		qString = qString.replaceAll("varchar\\(max\\)", "varchar");
+		
+		// replace tinyint with smallint
+		qString = qString.replaceAll("tinyint", "smallint");
+		
+		// replace AUTO_INCREMENT with SERIAL or BIGSERIAL (depending on use case)
+		qString = qString.replaceAll("bigint primary key autoincrement", "bigserial primary key");
+		qString = qString.replaceAll("int primary key autoincrement", "serial primary key");
+		qString = qString.replaceAll("smallint primary key autoincrement", "smallserial primary key");
+		
+		qString = qString.replaceAll("bigint autoincrement", "bigserial");
+		qString = qString.replaceAll("int autoincrement", "serial");
+		qString = qString.replaceAll("smallint autoincrement", "smallserial");
+		
 		// Return formatted string
 		return qString;
 	}

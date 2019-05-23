@@ -21,4 +21,11 @@ public class JSqlTestConnection {
 		return new JSql_Mssql(JSqlTestConfig.MSSQL_HOST(), JSqlTestConfig.MSSQL_PORT(),
 			JSqlTestConfig.MSSQL_NAME(), JSqlTestConfig.MSSQL_USER(), JSqlTestConfig.MSSQL_PASS());
 	}
+	
+	/// POSTGRES connection
+	public static JSql postgres() {
+		return new JSql_Postgres(JSqlTestConfig.POSTGRES_HOST(), JSqlTestConfig.POSTGRES_PORT(),
+			JSqlTestConfig.POSTGRES_NAME(), JSqlTestConfig.POSTGRES_USER(),
+			JSqlTestConfig.POSTGRES_PASS());
+	}
 }

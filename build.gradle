@@ -244,7 +244,7 @@ test {
 		exclude "**/*Mysql*"
 	}
 	if(!project.hasProperty("test_postgres")) {
-		exclude "**/*Mysql*"
+		exclude "**/*Postgres*"
 	}
 	if(!project.hasProperty("test_sqlite")) {
 		exclude "**/*Sqlite*"
