@@ -311,7 +311,7 @@ class HikaricpUtil {
 		}
 		
 		// Setup the configured connection URL + DB
-		hconfig.setDriverClassName("org.postgresql.ds.PGSimpleDataSource");
+		hconfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
 		
 		// Standard DataSource connection configuration
 		hconfig.addDataSourceProperty("user", user);
