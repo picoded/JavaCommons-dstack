@@ -65,11 +65,18 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 		return new JSql_Mssql(config);
 	}
 	
-	// /**
-	//  * Oracle static constructor, returns picoded.dstack.connector.jsql.JSql_Oracle
-	//  **/
+	/**
+	 * Oracle static constructor, returns picoded.dstack.connector.jsql.JSql_Oracle
+	 **/
 	public static JSql oracle(GenericConvertMap<String, Object> config) {
 		return new JSql_Oracle(config);
+	}
+	
+	/**
+	 * Postgres static constructor, returns picoded.dstack.connector.jsql.JSql_Postgres
+	 **/
+	public static JSql postgres(GenericConvertMap<String, Object> config) {
+		return new JSql_Postgres(config);
 	}
 	
 	//-------------------------------------------------------------------------
@@ -103,6 +110,9 @@ public abstract class JSql implements StatementBuilderTableAndIndex, StatementBu
 		}
 		if (type.equalsIgnoreCase("oracle")) {
 			return oracle(config);
+		}
+		if (type.equalsIgnoreCase("postgres")) {
+			return postgres(config);
 		}
 		
 		// Invalid / Unsupported db type
