@@ -6,7 +6,7 @@ import picoded.dstack.jsql.*;
 import picoded.dstack.connector.jsql.*;
 import picoded.dstack.struct.simple.*;
 
-public class JSql_DataObjectMap_Postgres_test extends JSql_DataObjectMap_test {
+public class JSql_KeyLongMap_Postgres_test extends JSql_KeyLongMap_test {
 	
 	// To override for implementation
 	//-----------------------------------------------------
