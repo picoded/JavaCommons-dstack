@@ -98,7 +98,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// Various sub table access
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Group table - that represent the group ownership
 	 * @return DataObjectMap which represents the group table
@@ -106,7 +106,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	public DataObjectMap groupTable() {
 		return groupTable;
 	}
-
+	
 	/**
 	 * Member table - that represent the respective members
 	 * @return DataObjectMap which represents the Member table
@@ -114,7 +114,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	public DataObjectMap memberTable() {
 		return memberTable;
 	}
-
+	
 	/**
 	 * Membership table - that represent the respective relationships between group and member
 	 * @return DataObjectMap which represents the membership table
@@ -158,21 +158,21 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * @param  memberID  member id to remove, effectively ignored if null
 	 */
 	protected void cleanupMembership(String groupID, String memberID) {
-
+		
 		// The id's needed to perform cleanup
 		String[] ids = null;
-
+		
 		// Different query behaviours according to the parmameters provided
-		if( groupID != null && memberID != null ) {
+		if (groupID != null && memberID != null) {
 			// Both params is provided, does a larger query
 			ids = membershipTable.query_id("_groupid=? OR _memberid=?", new Object[] { groupID,
 				memberID }, null);
-		} else if( groupID != null ) {
+		} else if (groupID != null) {
 			// Only group ID is provided
 			ids = membershipTable.query_id("_groupid=?", new Object[] { groupID }, null);
-		} else if( memberID != null ) {
+		} else if (memberID != null) {
 			// Only member ID is provided
-			ids = membershipTable.query_id("_memberid=?", new Object[] { memberid }, null);
+			ids = membershipTable.query_id("_memberid=?", new Object[] { memberID }, null);
 		} else {
 			// Does nothing (no valid conditions)
 			return;
@@ -219,7 +219,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// Basic add / get / remove membership
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Gets and return the membership object, only if it exists.
 	 *
@@ -251,7 +251,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		// if it does not exists
 		if (id == null) {
 			DataObject obj = membershipTable.newEntry();
-
+			
 			// Relationship mapping
 			obj.put("_groupid", groupID);
 			obj.put("_memberid", memberID);
@@ -282,7 +282,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// Membership relation lookup
 	//
 	///////////////////////////////////////////////////////////////////////////
-
+	
 	/**
 	 * Get and list all the related membership objects, given the memberID
 	 * 
@@ -291,9 +291,9 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * @return list of membership objects
 	 */
 	private List<DataObject> listMembership_fromMemberID(String memberID) {
-		return Arrays.asList( membershipTable.query("_memberid = ?", new Object[] { memberID }) );
+		return Arrays.asList(membershipTable.query("_memberid = ?", new Object[] { memberID }));
 	}
-
+	
 	/**
 	 * Get and list all the related membership objects, given the memberID,
 	 * filtered by the given query
@@ -302,42 +302,21 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * 
 	 * @return list of membership objects
 	 */
-	private List<DataObject> listMembership_fromMemberID(String memberID, String membershipQuery, Object[] queryArgs) {
+	private List<DataObject> listMembership_fromMemberID(String memberID, String membershipQuery,
+		Object[] queryArgs) {
 		// Get list of membership objects via memberID
 		List<DataObject> raw = listMembership_fromMemberID(memberID);
-
+		
 		// Return as it is
-		if( membershipQuery == null ) {
+		if (membershipQuery == null) {
 			return raw;
 		}
-
+		
 		// Apply additional query
 		Query query = Query.build(membershipQuery, queryArgs);
 		return query.search(raw);
 	}
-
 	
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// basic Membership listing

@@ -112,7 +112,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 * 3600 seconds = 1 hour
 	 */
 	public int calculateDelay_maxLockTimeout = 3600;
-
+	
 	// /**
 	//  * Load and configures the session config from the given map
 	//  */
@@ -161,10 +161,8 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// 7     - 15
 		//
 		// For a maximum of 1 hour
-		return (long) Math.max(
-			(Math.pow(2, Math.max(0, attempts - 3)) - 1),
-			calculateDelay_maxLockTimeout	
-		);
+		return (long) Math.max((Math.pow(2, Math.max(0, attempts - 3)) - 1),
+			calculateDelay_maxLockTimeout);
 	};
 	
 	///////////////////////////////////////////////////////////////////////////
