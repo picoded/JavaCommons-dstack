@@ -298,12 +298,14 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * Get and list all the related membership objects, given the memberID,
 	 * filtered by the given query
 	 * 
-	 * @param memberID to lookup for
+	 * @param memberID              to lookup for
+	 * @param membershipQuery       query to apply on the membership objects
+	 * @param membershipQueryArgs   apply membership query arguments 
 	 * 
 	 * @return list of membership objects
 	 */
 	private List<DataObject> listMembership_fromMemberID(String memberID, String membershipQuery,
-		Object[] queryArgs) {
+		Object[] membershipQueryArgs) {
 		// Get list of membership objects via memberID
 		List<DataObject> raw = listMembership_fromMemberID(memberID);
 		
@@ -313,10 +315,32 @@ public abstract class MembershipTable extends ModuleStructure {
 		}
 		
 		// Apply additional query
-		Query query = Query.build(membershipQuery, queryArgs);
+		Query query = Query.build(membershipQuery, membershipQueryArgs);
 		return query.search(raw);
 	}
 	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Public ID based lookups
+	//
+	///////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Given the member ID, and the query, perform the respective lookup
+	 * 
+	 * @param memberID              memberID to enforce on lookup
+	 * @param membershipQuery       query to apply on the membership objects
+	 * @param membershipQueryArgs   apply membership query arguments 
+	 * 
+	 * @return list of group ID's for lookup
+	 */
+	public List<String> listGroupID_fromMemberID(String memberID, String membershipQuery, Object[] membershipQueryArgs) {
+
+	}
+
+
+
+
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// basic Membership listing
