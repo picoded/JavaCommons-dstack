@@ -161,8 +161,8 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// 7     - 15
 		//
 		// For a maximum of 1 hour
-		return (long) Math.max((Math.pow(2, Math.max(0, attempts - 3)) - 1),
-				calculateDelay_maxLockTimeout);
+		return (long) Math.min((Math.pow(2, Math.max(0, attempts - 3)) - 1),
+			calculateDelay_maxLockTimeout);
 	};
 	
 	///////////////////////////////////////////////////////////////////////////
