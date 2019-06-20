@@ -14,8 +14,8 @@ import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
  * setup, and config variables house keeping
  **/
 abstract class AccountTableConfig extends ModuleStructure implements
-	UnsupportedDefaultMap<String, AccountObject>,
-	CollectionQueryForIDInterface<String, AccountObject> {
+		UnsupportedDefaultMap<String, AccountObject>,
+		CollectionQueryForIDInterface<String, AccountObject> {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -161,7 +161,7 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// 7     - 15
 		//
 		// For a maximum of 1 hour
-		return (long) Math.max((Math.pow(2, Math.max(0, attempts - 3)) - 1),
+		return (long) Math.min((Math.pow(2, Math.max(0, attempts - 3)) - 1),
 			calculateDelay_maxLockTimeout);
 	};
 	
