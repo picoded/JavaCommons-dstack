@@ -23,32 +23,63 @@ public class MembershipTable_test {
 	// Setup and sanity test
 	// -----------------------------------------------------
 
-	DataObjectMap user;
-	DataObjectMap group;
-	DataObjectMap relationship;
+	DataObjectMap userTable;
+	DataObjectMap groupTable;
+	DataObjectMap relationshipTable;
 
 	MembershipTable membershipTable;
 
 	@Before
 	public void systemSetup() {
-		user = implementationConstructor();
-		user.systemSetup();
+		userTable = implementationConstructor();
+		userTable.systemSetup();
 
-		group = implementationConstructor();
-		group.systemSetup();
+		groupTable = implementationConstructor();
+		groupTable.systemSetup();
 
-		relationship = implementationConstructor();
-		relationship.systemSetup();
+		relationshipTable = implementationConstructor();
+		relationshipTable.systemSetup();
 
-		membershipTable = new MembershipTable(group, user, relationship);
+		membershipTable = new MembershipTable(groupTable, userTable, relationshipTable);
 		membershipTable.systemSetup();
 	}
 
 	@After
 	public void systemDestroy() {
-		if (testAT != null) {
-			testAT.systemDestroy();
-			testAT = null;
+		if (userTable != null) {
+			userTable.systemDestroy();
+			userTable = null;
 		}
+
+		if (groupTable != null) {
+			groupTable.systemDestroy();
+			groupTable = null;
+		}
+
+		if (relationshipTable != null) {
+			relationshipTable.systemDestroy();
+			relationshipTable = null;
+		}
+		
+		if (membershipTable != null) {
+			membershipTable.systemDestroy();
+			membershipTable = null;
+		}
+	}
+
+	@Test
+	public void successfullyAddUserRElationToGroup(){
+
+		// Adding of users
+		DataObject user =  userTable.newEntry();
+		user.put("name", "Testing"); 
+		user.put("email", "Testing@inboxkitten.com"); 
+		user.saveAll();
+
+		// Adding of groups
+		DataObject group= groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		membershipTable.addMembership(group._oid(), user._oid())
 	}
 }
