@@ -4,58 +4,58 @@ import picoded.picoded.core.CoreStack;
 import picoded.picoded.module.group.MembershipTable;
 
 public class MembershipTable_test {
-
+	
 	// Test object for reuse
 	public CoreStack testObj = null;
-
+	
 	public String tablePrefix = "";
-
+	
 	// To override for implementation
 	// -----------------------------------------------------
-
+	
 	/// Note that this implementation constructor
 	/// is to be overriden for the various backend
 	/// specific test cases
 	public CoreStack implementationConstructor() {
 		return new StructSimpleStack(new GenericConvertHashMap<String, Object>());
 	}
-
+	
 	// Setup and sanity test
 	// -----------------------------------------------------
-
+	
 	DataObjectMap userTable;
 	DataObjectMap groupTable;
 	DataObjectMap relationshipTable;
-
+	
 	MembershipTable membershipTable;
-
+	
 	@Before
 	public void systemSetup() {
 		userTable = implementationConstructor();
 		userTable.systemSetup();
-
+		
 		groupTable = implementationConstructor();
 		groupTable.systemSetup();
-
+		
 		relationshipTable = implementationConstructor();
 		relationshipTable.systemSetup();
-
+		
 		membershipTable = new MembershipTable(groupTable, userTable, relationshipTable);
 		membershipTable.systemSetup();
 	}
-
+	
 	@After
 	public void systemDestroy() {
 		if (userTable != null) {
 			userTable.systemDestroy();
 			userTable = null;
 		}
-
+		
 		if (groupTable != null) {
 			groupTable.systemDestroy();
 			groupTable = null;
 		}
-
+		
 		if (relationshipTable != null) {
 			relationshipTable.systemDestroy();
 			relationshipTable = null;
@@ -66,7 +66,7 @@ public class MembershipTable_test {
 			membershipTable = null;
 		}
 	}
-
+	
 	@Test
 	public void successfullyAddUserRElationToGroup(){
 
