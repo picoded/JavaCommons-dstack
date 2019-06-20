@@ -9,6 +9,7 @@ import picoded.core.struct.*;
 
 /**
  * Represents a single group / member relationship.
+ * @ToConsider
  **/
 public class MembershipObject
 // extends Core_DataObject 

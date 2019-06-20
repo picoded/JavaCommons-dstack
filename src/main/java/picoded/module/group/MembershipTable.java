@@ -7,6 +7,7 @@ import picoded.dstack.*;
 import picoded.module.*;
 import picoded.core.conv.*;
 import picoded.core.struct.*;
+import picoded.core.struct.query.Query;
 
 /**
  * MembershipTable used to provide group ownership based functionality,
@@ -94,21 +95,55 @@ public abstract class MembershipTable extends ModuleStructure {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
+	// Various sub table access
+	//
+	///////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Group table - that represent the group ownership
+	 * @return DataObjectMap which represents the group table
+	 */
+	public DataObjectMap groupTable() {
+		return groupTable;
+	}
+
+	/**
+	 * Member table - that represent the respective members
+	 * @return DataObjectMap which represents the Member table
+	 */
+	public DataObjectMap memberTable() {
+		return memberTable;
+	}
+
+	/**
+	 * Membership table - that represent the respective relationships between group and member
+	 * @return DataObjectMap which represents the membership table
+	 */
+	public DataObjectMap membershipTable() {
+		return membershipTable;
+	}
+	
+	///////////////////////////////////////////////////////////////////////////
+	//
 	// Membership based utility functions
 	//
 	///////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Validate group and member ID, throws runtime exception on failure
+	 * Validate group and member ID, returns false on failure
 	 *
 	 * @param  groupID   group id to fetch from
 	 * @param  memberID  member id to fetch from
+	 * 
+	 * @return true, if membership is validated
 	 */
 	protected boolean validateMembership(String groupID, String memberID) {
+		// Perform cleanup, if the parent group object was removed
 		if (!groupTable.containsKey(groupID)) {
 			cleanupMembership(groupID, null);
 			return false;
 		}
+		// Perform cleanup, if the member object was removed
 		if (!memberTable.containsKey(memberID)) {
 			cleanupMembership(null, memberID);
 			return false;
@@ -123,8 +158,26 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * @param  memberID  member id to remove, effectively ignored if null
 	 */
 	protected void cleanupMembership(String groupID, String memberID) {
-		String[] ids = membershipTable.query_id("groupid=? OR memberid=?", new Object[] { groupID,
-			memberID }, null);
+
+		// The id's needed to perform cleanup
+		String[] ids = null;
+
+		// Different query behaviours according to the parmameters provided
+		if( groupID != null && memberID != null ) {
+			// Both params is provided, does a larger query
+			ids = membershipTable.query_id("_groupid=? OR _memberid=?", new Object[] { groupID,
+				memberID }, null);
+		} else if( groupID != null ) {
+			// Only group ID is provided
+			ids = membershipTable.query_id("_groupid=?", new Object[] { groupID }, null);
+		} else if( memberID != null ) {
+			// Only member ID is provided
+			ids = membershipTable.query_id("_memberid=?", new Object[] { memberid }, null);
+		} else {
+			// Does nothing (no valid conditions)
+			return;
+		}
+		
 		if (ids != null && ids.length > 0) {
 			// Detecting more then one object match, remove obseleted items
 			for (int i = 0; i < ids.length; ++i) {
@@ -147,7 +200,7 @@ public abstract class MembershipTable extends ModuleStructure {
 		
 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to membership-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
-		String[] ids = membershipTable.query_id("groupid=? AND memberid=?", new Object[] { groupID,
+		String[] ids = membershipTable.query_id("_groupid=? AND _memberid=?", new Object[] { groupID,
 			memberID }, "DESC _oid");
 		if (ids != null && ids.length > 0) {
 			// Detecting more then one object match, remove collision
@@ -161,31 +214,12 @@ public abstract class MembershipTable extends ModuleStructure {
 		return null;
 	}
 	
-	// 	/**
-	// 	 * Utility function to cast membership DataObject to MembershipObject
-	// 	 *
-	// 	 * @param  objList  array of data objects to cast
-	// 	 *
-	// 	 * @return MembershipObject array
-	// 	 */
-	// 	protected MembershipObject[] castFromDataObject(DataObject[] objList) {
-	// 		if(objList == null) {
-	// 			return null;
-	// 		}
-	
-	// 		MembershipObject[] ret = new MembershipObject[ objList.length ];
-	// 		for( int i=0; i<objList.length; ++i ) {
-	// 			ret[i] = new MembershipObject(this, objList[i]._oid());
-	// 		}
-	// 		return ret;
-	// 	}
-	
-	// 	///////////////////////////////////////////////////////////////////////////
-	// 	//
-	// 	// Basic add / get / remove membership
-	// 	//
-	// 	///////////////////////////////////////////////////////////////////////////
-	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Basic add / get / remove membership
+	//
+	///////////////////////////////////////////////////////////////////////////
+
 	/**
 	 * Gets and return the membership object, only if it exists.
 	 *
@@ -217,8 +251,10 @@ public abstract class MembershipTable extends ModuleStructure {
 		// if it does not exists
 		if (id == null) {
 			DataObject obj = membershipTable.newEntry();
-			obj.put("groupid", groupID);
-			obj.put("memberid", memberID);
+
+			// Relationship mapping
+			obj.put("_groupid", groupID);
+			obj.put("_memberid", memberID);
 			obj.saveAll();
 		}
 		// Get the newly saved membership object
@@ -241,6 +277,67 @@ public abstract class MembershipTable extends ModuleStructure {
 		}
 	}
 	
+	///////////////////////////////////////////////////////////////////////////
+	//
+	// Membership relation lookup
+	//
+	///////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Get and list all the related membership objects, given the memberID
+	 * 
+	 * @param memberID to lookup for
+	 * 
+	 * @return list of membership objects
+	 */
+	private List<DataObject> listMembership_fromMemberID(String memberID) {
+		return Arrays.asList( membershipTable.query("_memberid = ?", new Object[] { memberID }) );
+	}
+
+	/**
+	 * Get and list all the related membership objects, given the memberID,
+	 * filtered by the given query
+	 * 
+	 * @param memberID to lookup for
+	 * 
+	 * @return list of membership objects
+	 */
+	private List<DataObject> listMembership_fromMemberID(String memberID, String membershipQuery, Object[] queryArgs) {
+		// Get list of membership objects via memberID
+		List<DataObject> raw = listMembership_fromMemberID(memberID);
+
+		// Return as it is
+		if( membershipQuery == null ) {
+			return raw;
+		}
+
+		// Apply additional query
+		Query query = Query.build(membershipQuery, queryArgs);
+		return query.search(raw);
+	}
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	// 	///////////////////////////////////////////////////////////////////////////
 	// 	//
 	// 	// basic Membership listing
@@ -255,7 +352,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	 * @return  list of relevent members
 	// 	 */
 	// 	public MembershipObject[] listMembership_fromGroup(String groupID) {
-	// 		return castFromDataObject ( groupTable.query("groupid=?", new Object[] { groupID }) );
+	// 		return castFromDataObject ( groupTable.query("_groupid=?", new Object[] { groupID }) );
 	// 	}
 	
 	// 	/**
@@ -266,7 +363,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	// 	 * @return  list of relevent members
 	// 	 */
 	// 	public MembershipObject[] listMembership_fromMember(String memberID) {
-	// 		return castFromDataObject ( groupTable.query("memberid=?", new Object[] { memberID }) );
+	// 		return castFromDataObject ( groupTable.query("_memberid=?", new Object[] { memberID }) );
 	// 	}
 	
 	// 	///////////////////////////////////////////////////////////////////////////
