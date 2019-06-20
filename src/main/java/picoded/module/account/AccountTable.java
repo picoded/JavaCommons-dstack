@@ -181,6 +181,7 @@ public class AccountTable extends AccountTableBasic {
 		
 		// Apply password reset accordingly
 		accountToUpdate.setPassword(password);
+		accountToUpdate.resetLoginThrottle();
 		return true;
 	}
 	
