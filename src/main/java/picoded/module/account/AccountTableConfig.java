@@ -14,8 +14,8 @@ import picoded.core.struct.query.utils.CollectionQueryForIDInterface;
  * setup, and config variables house keeping
  **/
 abstract class AccountTableConfig extends ModuleStructure implements
-		UnsupportedDefaultMap<String, AccountObject>,
-		CollectionQueryForIDInterface<String, AccountObject> {
+	UnsupportedDefaultMap<String, AccountObject>,
+	CollectionQueryForIDInterface<String, AccountObject> {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//

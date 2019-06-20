@@ -13,6 +13,11 @@ import picoded.core.struct.query.Query;
 /**
  * MembershipTable used to provide group ownership based functionality,
  * against existing data table compatible backend.
+ * 
+ * Note that membership and relationship is used interchangably.
+ * 
+ * In general for parameters and internal function we use the term
+ * relationship, to avoid confusion of the word "member" with "membership"
  **/
 public abstract class MembershipTable extends ModuleStructure {
 	
@@ -64,13 +69,13 @@ public abstract class MembershipTable extends ModuleStructure {
 	 *
 	 * @param  inGroup         group table to build / extend from
 	 * @param  inMember        partipant table to build / extend from
-	 * @param  relationship    primary relationship table to link the group / partipant table
+	 * @param  inRelationship    primary relationship table to link the group / partipant table
 	 **/
-	public MembershipTable(DataObjectMap inGroup, DataObjectMap inMember, DataObjectMap relationship) {
+	public MembershipTable(DataObjectMap inGroup, DataObjectMap inMember, DataObjectMap inRelationship) {
 		super();
 		groupTable = inGroup;
 		memberTable = inMember;
-		relationshipTable = relationship;
+		relationshipTable = inRelationship;
 		// Setup the internal structure list
 		internalStructureList = internalStructureList();
 	}
@@ -425,7 +430,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	///////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * List various relationship objects, given any combinations of the following complex query options
+	 * List various membership objects, given any combinations of the following complex query options
 	 * 
 	 * @param groupID                 Optimized groupID based lookup
 	 * @param groupQuery              Group query to perform (ignored if groupID is given)
@@ -450,7 +455,7 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * 
 	 * @return list of relationship DataObject's
 	 */
-	public List<DataObject> listRelationship_complexMultiQuery(
+	public List<DataObject> listMembership_complexMultiQuery(
 	// Optimal group ID lookup
 		String groupID,
 		// Group queyr
@@ -558,155 +563,4 @@ public abstract class MembershipTable extends ModuleStructure {
 		return null;
 	}
 	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Membership relation lookup
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * Get and list all the related relationship objects, given the memberID
-	//  * 
-	//  * @param memberID to lookup for
-	//  * 
-	//  * @return list of relationship objects
-	//  */
-	// private List<DataObject> listRelationship_fromMemberID(String memberID) {
-	// 	return Arrays.asList(relationshipTable.query("_memberid = ?", new Object[] { memberID }));
-	// }
-	
-	// /**
-	//  * Get and list all the related relationship objects, given the memberID,
-	//  * filtered by the given query
-	//  * 
-	//  * @param memberID              to lookup for
-	//  * @param relationshipQuery       query to apply on the relationship objects
-	//  * @param relationshipQueryArgs   apply relationship query arguments 
-	//  * 
-	//  * @return list of relationship objects
-	//  */
-	// private List<DataObject> listRelationship_fromMemberID(String memberID, String relationshipQuery,
-	// 	Object[] relationshipQueryArgs) {
-	// 	// Get list of relationship objects via memberID
-	// 	List<DataObject> raw = listRelationship_fromMemberID(memberID);
-	
-	// 	// Return as it is
-	// 	if (relationshipQuery == null) {
-	// 		return raw;
-	// 	}
-	
-	// 	// Apply additional query
-	// 	Query query = Query.build(relationshipQuery, relationshipQueryArgs);
-	// 	return query.search(raw);
-	// }
-	
-	// ///////////////////////////////////////////////////////////////////////////
-	// //
-	// // Public ID based lookups
-	// //
-	// ///////////////////////////////////////////////////////////////////////////
-	
-	// /**
-	//  * Given the member ID, and the query, perform the respective lookup
-	//  * 
-	//  * @param memberID              memberID to enforce on lookup
-	//  * @param relationshipQuery       query to apply on the relationship objects
-	//  * @param relationshipQueryArgs   apply relationship query arguments 
-	//  * 
-	//  * @return list of group ID's for lookup
-	//  */
-	// public List<String> listGroupID_fromMemberID(String memberID, String relationshipQuery, Object[] relationshipQueryArgs) {
-	
-	// }
-	
-	// 	///////////////////////////////////////////////////////////////////////////
-	// 	//
-	// 	// basic Membership listing
-	// 	//
-	// 	///////////////////////////////////////////////////////////////////////////
-	
-	// 	/**
-	// 	 * Gets the list of relationship given a group
-	// 	 *
-	// 	 * @param  groupID   group id to fetch from
-	// 	 *
-	// 	 * @return  list of relevent members
-	// 	 */
-	// 	public MembershipObject[] listRelationship_fromGroup(String groupID) {
-	// 		return castFromDataObject ( groupTable.query("_groupid=?", new Object[] { groupID }) );
-	// 	}
-	
-	// 	/**
-	// 	 * Gets the list of relationship given a member
-	// 	 *
-	// 	 * @param  memberID  member id to fetch from
-	// 	 *
-	// 	 * @return  list of relevent members
-	// 	 */
-	// 	public MembershipObject[] listRelationship_fromMember(String memberID) {
-	// 		return castFromDataObject ( groupTable.query("_memberid=?", new Object[] { memberID }) );
-	// 	}
-	
-	// 	///////////////////////////////////////////////////////////////////////////
-	// 	//
-	// 	// DataObjectMap based query
-	// 	//
-	// 	// @TODO : Refactor this out to a core.struct.query.AbstractMapMapQuery
-	// 	//
-	// 	///////////////////////////////////////////////////////////////////////////
-	
-	// 	// ///////////////////////////////////////////////////////////////////////////
-	// 	// //
-	// 	// // Universal object listing =/
-	// 	// //
-	// 	// ///////////////////////////////////////////////////////////////////////////
-	
-	// 	// /**
-	// 	//  * Does a rather complex multi-query, across group, member, and relationship.
-	// 	//  * And return the chosen object type.
-	// 	//  *
-	// 	//  * For query / args pairs that are null, they are effectively wildcards.
-	// 	//  *
-	// 	//  * @param  groupQuery        group based query
-	// 	//  * @param  groupArgs         group based query args
-	// 	//  * @param  memberQuery       member based query
-	// 	//  * @param  memberArgs        member based query args
-	// 	//  * @param  relationshipQuery   relationship based query
-	// 	//  * @param  relationshipArgs    relationship based query args
-	// 	//  *
-	// 	//  * @return list of relationships, after all the various queries
-	// 	//  */
-	// 	// public List<MembershipObject> multiQuery(
-	// 	// 	String groupQuery,      Object[] groupArgs,
-	// 	// 	String memberQuery,     Object[] memberArgs,
-	// 	// 	String relationshipQuery, Object[] relationshipArgs
-	// 	// ) {
-	// 	// 	// Note that the query route changes
-	// 	// 	// According to the parameters provided
-	// 	// 	// Under currently best guess assumptions
-	// 	// 	//
-	// 	// 	// @CONSIDER : Optimizing the query based on real usage
-	// 	// 	//             or alternatively with a hint parameter
-	// 	// 	if( groupQuery != null && groupArgs != null ) {
-	// 	// 		// If group query is provided, query will be executed
-	// 	// 		// in the following sequence, skipping if needed.
-	// 	// 		//
-	// 	// 		// 1. groupQuery
-	// 	// 		// 2. relationshipQuery
-	// 	// 		// 3. memberQuery
-	// 	// 	}
-	// 	// 	// DataObject[] groupList = null;
-	// 	// 	// DataObject[] memberList = null;
-	// 	// 	// // Build using group list first, if query is given
-	// 	// 	// if( groupQuery != null && groupArgs != null ) {
-	// 	// 	// 	groupList = groupTable.query(groupQuery, groupArgs);
-	// 	// 	// }
-	// 	// 	// // Build from member list
-	// 	// 	// if( memberList != null && memberArgs != null ) {
-	// 	// 	// 	// Group list is null, so use member query directly
-	// 	// 	// 	if( groupList == null ) {
-	// 	// 	// 	}
-	// 	// 	// }
-	// 	// 	return null;
-	// 	// }
 }
