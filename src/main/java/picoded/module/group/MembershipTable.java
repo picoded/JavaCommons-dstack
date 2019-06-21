@@ -19,7 +19,7 @@ import picoded.core.struct.query.Query;
  * In general for parameters and internal function we use the term
  * relationship, to avoid confusion of the word "member" with "membership"
  **/
-public abstract class MembershipTable extends ModuleStructure {
+public class MembershipTable extends ModuleStructure {
 	
 	///////////////////////////////////////////////////////////////////////////
 	//
@@ -71,13 +71,25 @@ public abstract class MembershipTable extends ModuleStructure {
 	 * @param  inMember        partipant table to build / extend from
 	 * @param  inRelationship    primary relationship table to link the group / partipant table
 	 **/
-	public MembershipTable(DataObjectMap inGroup, DataObjectMap inMember, DataObjectMap inRelationship) {
+	public MembershipTable(DataObjectMap inGroup, DataObjectMap inMember,
+		DataObjectMap inRelationship) {
 		super();
 		groupTable = inGroup;
 		memberTable = inMember;
 		relationshipTable = inRelationship;
 		// Setup the internal structure list
 		internalStructureList = internalStructureList();
+	}
+	
+	/**
+	 * Initialize the various internal data structures,
+	 * used by account from the stack.
+	 **/
+	protected List<CommonStructure> setupInternalStructureList() {
+		// Return it as a list
+		return Arrays.asList( //
+			groupTable, memberTable, relationshipTable //
+			);
 	}
 	
 	//----------------------------------------------------------------
