@@ -226,4 +226,60 @@ public class MembershipTable_test {
 		}
 	}
 	
+	@Test
+	public void successfullyListMemberRelationOfSeveralGroups() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		int number = 3;
+		List<String> groups = new ArrayList();
+		
+		// Creating a single user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		// User will be added to multiple groups
+		for (int i = 0; i < number; i++) {
+			
+			// Creating a group
+			DataObject group = groupTable.newEntry();
+			group.put("name", GUID.base58());
+			group.saveAll();
+			assertNotNull(group);
+			assertNotNull(groupTable.get(group._oid()));
+			
+			DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
+			
+			assertNotNull(relationship);
+			assertEquals(group._oid(), relationship.getString("_groupid"));
+			assertEquals(user._oid(), relationship.getString("_memberid"));
+			groups.add(group._oid());
+		}
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		
+		List<DataObject> relations = membershipTable.listMembership_complexMultiQuery(null, null,
+			null, user._oid(), null, null, null, null);
+		
+		assertTrue("There should be 1 user belonging to 3 groups", relations.size() == 3);
+		for (DataObject relation : relations) {
+			String groupid = relation.getString("_groupid");
+			assertTrue(
+				"Relation's userID " + groupid + " is not in " + ConvertJSON.fromObject(groups),
+				groups.contains(groupid));
+		}
+	}
+	
 }
