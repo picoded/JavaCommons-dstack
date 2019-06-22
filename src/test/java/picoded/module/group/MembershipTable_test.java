@@ -128,6 +128,49 @@ public class MembershipTable_test {
 	}
 	
 	@Test
+	public void cannotCreateARelationWithNullMember() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(group._oid(), null);
+		} catch (IllegalArgumentException e) {
+			assertEquals("Both Group ID and Member ID must not be null/empty", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void cannotCreateARelationWithNonExistenceMember() {
+		
+	}
+	
+	@Test
+	public void cannotCreateARelationWithNullGroup() {
+		
+	}
+	
+	@Test
+	public void cannotCreateARelationWithNonExistenceGroup() {
+		
+	}
+	
+	@Test
 	public void successfullyRemoveUserRelation() {
 		
 		////////////////////////////////////////////////////////////
