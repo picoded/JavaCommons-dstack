@@ -264,6 +264,15 @@ public class MembershipTable extends ModuleStructure {
 	 * @return  relationship object (if created / existed)
 	 */
 	public DataObject addMembership(String groupID, String memberID) {
+		
+		// Normalize all null parameters to be empty strings
+		groupID = (groupID == null) ? "" : groupID;
+		memberID = (memberID == null) ? "" : memberID;
+		
+		if (memberID.isEmpty() || groupID.isEmpty()) {
+			throw new IllegalArgumentException("Both Group ID and Member ID must not be null/empty");
+		}
+		
 		// Get the membership obj
 		DataObject ret = getMembership(groupID, memberID);
 		
