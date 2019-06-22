@@ -264,19 +264,23 @@ public class MembershipTable extends ModuleStructure {
 	 * @return  relationship object (if created / existed)
 	 */
 	public DataObject addMembership(String groupID, String memberID) {
-		String id = getMembershipID(groupID, memberID);
-		// Create and save a new relationship object
-		// if it does not exists
-		if (id == null) {
-			DataObject obj = relationshipTable.newEntry();
-			
-			// Relationship mapping
-			obj.put("_groupid", groupID);
-			obj.put("_memberid", memberID);
-			obj.saveAll();
+		// Get the membership obj
+		DataObject ret = getMembership(groupID, memberID);
+		
+		// Exit early if found
+		if (ret != null) {
+			return ret;
 		}
-		// Get the newly saved relationship object
-		return getMembership(groupID, memberID);
+		
+		// Create and save a new relationship object
+		DataObject obj = relationshipTable.newEntry();
+		
+		// Relationship mapping
+		obj.put("_groupid", groupID);
+		obj.put("_memberid", memberID);
+		obj.saveAll();
+		
+		return obj;
 	}
 	
 	/**
@@ -571,8 +575,9 @@ public class MembershipTable extends ModuleStructure {
 		}
 		
 		// blank query - what were you doing
-		//------------------------------------------------------------------------------------------
-		return null;
+		// ------------------------------------------------------------------------------------------
+		throw new IllegalArgumentException(
+			"This query requires at least one non null argument to retrieve the dataset");
 	}
 	
 }
