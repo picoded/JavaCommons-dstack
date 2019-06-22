@@ -155,15 +155,13 @@ public class MembershipTable extends ModuleStructure {
 	 * 
 	 * @return true, if relationship is validated
 	 */
-	protected boolean validateMembership(String groupID, String memberID) {
-		// Perform cleanup, if the parent group object was removed
-		if (!groupTable.containsKey(groupID)) {
-			cleanupMembership(groupID, null);
-			return false;
-		}
-		// Perform cleanup, if the member object was removed
-		if (!memberTable.containsKey(memberID)) {
-			cleanupMembership(null, memberID);
+	protected boolean validateIDWithoutCleanup(String groupID, String memberID) {
+		
+		// @TODO: Create another validation ID function that will perform the cleanup action
+		// For now, the scope is to just validate the IDs
+		
+		// Validate that the IDs exists in the group and member tables
+		if (!groupTable.containsKey(groupID) || !memberTable.containsKey(memberID)) {
 			return false;
 		}
 		return true;
@@ -214,7 +212,9 @@ public class MembershipTable extends ModuleStructure {
 	 */
 	protected String getMembershipID(String groupID, String memberID) {
 		// Basic id validation
-		validateMembership(groupID, memberID);
+		if (!validateIDWithoutCleanup(groupID, memberID)) {
+			throw new IllegalArgumentException("Either the Group ID or Member ID does not exist");
+		}
 		
 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to relationship-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
