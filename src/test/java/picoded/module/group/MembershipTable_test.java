@@ -98,7 +98,7 @@ public class MembershipTable_test {
 		//
 		////////////////////////////////////////////////////////////
 		
-		// Adding of users
+		// Creating a user
 		DataObject user = userTable.newEntry();
 		user.put("name", GUID.base58());
 		user.put("email", GUID.base58() + "@inboxkitten.com");
@@ -106,7 +106,7 @@ public class MembershipTable_test {
 		assertNotNull(user);
 		assertNotNull(userTable.get(user._oid()));
 		
-		// Adding of groups
+		// Creating a group
 		DataObject group = groupTable.newEntry();
 		group.put("name", "GROUP 1");
 		group.saveAll();
@@ -179,7 +179,7 @@ public class MembershipTable_test {
 		//
 		////////////////////////////////////////////////////////////
 		
-		// Adding of users
+		// Creating a user
 		DataObject user = userTable.newEntry();
 		user.put("name", GUID.base58());
 		user.put("email", GUID.base58() + "@inboxkitten.com");
@@ -187,7 +187,7 @@ public class MembershipTable_test {
 		assertNotNull(user);
 		assertNotNull(userTable.get(user._oid()));
 		
-		// Adding of groups
+		// Creating a group
 		DataObject group = groupTable.newEntry();
 		group.put("name", "GROUP 1");
 		group.saveAll();
@@ -215,7 +215,7 @@ public class MembershipTable_test {
 	}
 	
 	@Test
-	public void successfullyListSingleGroupRelation() {
+	public void successfullyListSingleGroupRelationWithMultipleMembers() {
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -228,14 +228,14 @@ public class MembershipTable_test {
 		
 		// Adding a single group
 		DataObject group = groupTable.newEntry();
-		group.put("name", "GUID.base58()");
+		group.put("name", GUID.base58());
 		group.saveAll();
 		assertNotNull(group);
 		assertNotNull(groupTable.get(group._oid()));
 		
 		// All users to be added to that group
 		for (int i = 0; i < number; i++) {
-			// Adding of users
+			// Creating a user
 			DataObject user = userTable.newEntry();
 			user.put("name", GUID.base58());
 			user.put("email", GUID.base58() + "@inboxkitten.com");
