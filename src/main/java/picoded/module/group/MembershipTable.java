@@ -155,15 +155,13 @@ public class MembershipTable extends ModuleStructure {
 	 * 
 	 * @return true, if relationship is validated
 	 */
-	protected boolean validateMembership(String groupID, String memberID) {
-		// Perform cleanup, if the parent group object was removed
-		if (!groupTable.containsKey(groupID)) {
-			cleanupMembership(groupID, null);
-			return false;
-		}
-		// Perform cleanup, if the member object was removed
-		if (!memberTable.containsKey(memberID)) {
-			cleanupMembership(null, memberID);
+	protected boolean validateIDWithoutCleanup(String groupID, String memberID) {
+		
+		// @TODO: Create another validation ID function that will perform the cleanup action
+		// For now, the scope is to just validate the IDs
+		
+		// Validate that the IDs exists in the group and member tables
+		if (!groupTable.containsKey(groupID) || !memberTable.containsKey(memberID)) {
 			return false;
 		}
 		return true;
@@ -214,7 +212,9 @@ public class MembershipTable extends ModuleStructure {
 	 */
 	protected String getMembershipID(String groupID, String memberID) {
 		// Basic id validation
-		validateMembership(groupID, memberID);
+		if (!validateIDWithoutCleanup(groupID, memberID)) {
+			throw new IllegalArgumentException("Either the Group ID or Member ID does not exist");
+		}
 		
 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to relationship-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
@@ -264,19 +264,32 @@ public class MembershipTable extends ModuleStructure {
 	 * @return  relationship object (if created / existed)
 	 */
 	public DataObject addMembership(String groupID, String memberID) {
-		String id = getMembershipID(groupID, memberID);
-		// Create and save a new relationship object
-		// if it does not exists
-		if (id == null) {
-			DataObject obj = relationshipTable.newEntry();
-			
-			// Relationship mapping
-			obj.put("_groupid", groupID);
-			obj.put("_memberid", memberID);
-			obj.saveAll();
+		
+		// Normalize all null parameters to be empty strings
+		groupID = (groupID == null) ? "" : groupID;
+		memberID = (memberID == null) ? "" : memberID;
+		
+		if (memberID.isEmpty() || groupID.isEmpty()) {
+			throw new IllegalArgumentException("Both Group ID and Member ID must not be null/empty");
 		}
-		// Get the newly saved relationship object
-		return getMembership(groupID, memberID);
+		
+		// Get the membership obj
+		DataObject ret = getMembership(groupID, memberID);
+		
+		// Exit early if found
+		if (ret != null) {
+			return ret;
+		}
+		
+		// Create and save a new relationship object
+		DataObject obj = relationshipTable.newEntry();
+		
+		// Relationship mapping
+		obj.put("_groupid", groupID);
+		obj.put("_memberid", memberID);
+		obj.saveAll();
+		
+		return obj;
 	}
 	
 	/**
@@ -577,8 +590,9 @@ public class MembershipTable extends ModuleStructure {
 		}
 		
 		// blank query - what were you doing
-		//------------------------------------------------------------------------------------------
-		return null;
+		// ------------------------------------------------------------------------------------------
+		throw new IllegalArgumentException(
+			"This query requires at least one non null argument to retrieve the dataset");
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
