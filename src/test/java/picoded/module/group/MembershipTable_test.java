@@ -158,15 +158,88 @@ public class MembershipTable_test {
 	@Test
 	public void cannotCreateARelationWithNonExistenceMember() {
 		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(group._oid(), GUID.base58());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
 	}
 	
 	@Test
 	public void cannotCreateARelationWithNullGroup() {
 		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(null, user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Both Group ID and Member ID must not be null/empty", e.getMessage());
+		}
+		
 	}
 	
 	@Test
 	public void cannotCreateARelationWithNonExistenceGroup() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(GUID.base58(), user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
 		
 	}
 	
