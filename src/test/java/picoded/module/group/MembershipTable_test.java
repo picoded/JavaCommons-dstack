@@ -98,7 +98,7 @@ public class MembershipTable_test {
 		//
 		////////////////////////////////////////////////////////////
 		
-		// Adding of users
+		// Creating a user
 		DataObject user = userTable.newEntry();
 		user.put("name", GUID.base58());
 		user.put("email", GUID.base58() + "@inboxkitten.com");
@@ -106,7 +106,7 @@ public class MembershipTable_test {
 		assertNotNull(user);
 		assertNotNull(userTable.get(user._oid()));
 		
-		// Adding of groups
+		// Creating a group
 		DataObject group = groupTable.newEntry();
 		group.put("name", "GROUP 1");
 		group.saveAll();
@@ -158,15 +158,88 @@ public class MembershipTable_test {
 	@Test
 	public void cannotCreateARelationWithNonExistenceMember() {
 		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(group._oid(), GUID.base58());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
 	}
 	
 	@Test
 	public void cannotCreateARelationWithNullGroup() {
 		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(null, user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Both Group ID and Member ID must not be null/empty", e.getMessage());
+		}
+		
 	}
 	
 	@Test
 	public void cannotCreateARelationWithNonExistenceGroup() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		try {
+			DataObject relationship = membershipTable.addMembership(GUID.base58(), user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
 		
 	}
 	
@@ -179,7 +252,7 @@ public class MembershipTable_test {
 		//
 		////////////////////////////////////////////////////////////
 		
-		// Adding of users
+		// Creating a user
 		DataObject user = userTable.newEntry();
 		user.put("name", GUID.base58());
 		user.put("email", GUID.base58() + "@inboxkitten.com");
@@ -187,7 +260,7 @@ public class MembershipTable_test {
 		assertNotNull(user);
 		assertNotNull(userTable.get(user._oid()));
 		
-		// Adding of groups
+		// Creating a group
 		DataObject group = groupTable.newEntry();
 		group.put("name", "GROUP 1");
 		group.saveAll();
@@ -215,7 +288,181 @@ public class MembershipTable_test {
 	}
 	
 	@Test
-	public void successfullyListSingleGroupRelation() {
+	public void removeNonExistenceMemberRelationShouldThrowException() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
+		
+		assertNotNull(relationship);
+		assertEquals(group._oid(), relationship.getString("_groupid"));
+		assertEquals(user._oid(), relationship.getString("_memberid"));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		
+		try {
+			membershipTable.removeMembership(group._oid(), GUID.base58());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
+		
+	}
+	
+	@Test
+	public void removeNullMemberRelationShouldThrowException() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
+		
+		assertNotNull(relationship);
+		assertEquals(group._oid(), relationship.getString("_groupid"));
+		assertEquals(user._oid(), relationship.getString("_memberid"));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		
+		try {
+			membershipTable.removeMembership(group._oid(), GUID.base58());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void removeNonExistenceGroupRelationShouldThrowException() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
+		
+		assertNotNull(relationship);
+		assertEquals(group._oid(), relationship.getString("_groupid"));
+		assertEquals(user._oid(), relationship.getString("_memberid"));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		
+		try {
+			membershipTable.removeMembership(GUID.base58(), user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
+		
+	}
+	
+	@Test
+	public void removeNullGroupRelationShouldThrowException() {
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST SETUP
+		//
+		////////////////////////////////////////////////////////////
+		
+		// Creating a user
+		DataObject user = userTable.newEntry();
+		user.put("name", GUID.base58());
+		user.put("email", GUID.base58() + "@inboxkitten.com");
+		user.saveAll();
+		assertNotNull(user);
+		assertNotNull(userTable.get(user._oid()));
+		
+		// Creating a group
+		DataObject group = groupTable.newEntry();
+		group.put("name", "GROUP 1");
+		group.saveAll();
+		assertNotNull(group);
+		assertNotNull(groupTable.get(group._oid()));
+		
+		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
+		
+		assertNotNull(relationship);
+		assertEquals(group._oid(), relationship.getString("_groupid"));
+		assertEquals(user._oid(), relationship.getString("_memberid"));
+		
+		////////////////////////////////////////////////////////////
+		//
+		// TEST EXECUTION
+		//
+		////////////////////////////////////////////////////////////
+		
+		try {
+			membershipTable.removeMembership(GUID.base58(), user._oid());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Either the Group ID or Member ID does not exist", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void successfullyListSingleGroupRelationWithMultipleMembers() {
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -228,14 +475,14 @@ public class MembershipTable_test {
 		
 		// Adding a single group
 		DataObject group = groupTable.newEntry();
-		group.put("name", "GUID.base58()");
+		group.put("name", GUID.base58());
 		group.saveAll();
 		assertNotNull(group);
 		assertNotNull(groupTable.get(group._oid()));
 		
 		// All users to be added to that group
 		for (int i = 0; i < number; i++) {
-			// Adding of users
+			// Creating a user
 			DataObject user = userTable.newEntry();
 			user.put("name", GUID.base58());
 			user.put("email", GUID.base58() + "@inboxkitten.com");
