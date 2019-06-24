@@ -122,8 +122,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 	}
 	
@@ -270,8 +270,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -314,8 +314,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -358,8 +358,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -401,8 +401,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -445,8 +445,8 @@ public class MembershipTable_test {
 		DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 		
 		assertNotNull(relationship);
-		assertEquals(group._oid(), relationship.getString("_groupid"));
-		assertEquals(user._oid(), relationship.getString("_memberid"));
+		assertEquals(group._oid(), relationship.getString("_groupID"));
+		assertEquals(user._oid(), relationship.getString("_memberID"));
 		
 		////////////////////////////////////////////////////////////
 		//
@@ -493,8 +493,8 @@ public class MembershipTable_test {
 			DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 			
 			assertNotNull(relationship);
-			assertEquals(group._oid(), relationship.getString("_groupid"));
-			assertEquals(user._oid(), relationship.getString("_memberid"));
+			assertEquals(group._oid(), relationship.getString("_groupID"));
+			assertEquals(user._oid(), relationship.getString("_memberID"));
 			users.add(user._oid());
 		}
 		
@@ -509,10 +509,10 @@ public class MembershipTable_test {
 		
 		assertTrue("There should be 3 users tagged to 1 group", relations.size() == 3);
 		for (DataObject relation : relations) {
-			String memberid = relation.getString("_memberid");
+			String memberID = relation.getString("_memberID");
 			assertTrue(
-				"Relation's userID " + memberid + " is not in " + ConvertJSON.fromObject(users),
-				users.contains(memberid));
+				"Relation's userID " + memberID + " is not in " + ConvertJSON.fromObject(users),
+				users.contains(memberID));
 		}
 	}
 	
@@ -549,8 +549,8 @@ public class MembershipTable_test {
 			DataObject relationship = membershipTable.addMembership(group._oid(), user._oid());
 			
 			assertNotNull(relationship);
-			assertEquals(group._oid(), relationship.getString("_groupid"));
-			assertEquals(user._oid(), relationship.getString("_memberid"));
+			assertEquals(group._oid(), relationship.getString("_groupID"));
+			assertEquals(user._oid(), relationship.getString("_memberID"));
 			groups.add(group._oid());
 		}
 		
@@ -565,10 +565,10 @@ public class MembershipTable_test {
 		
 		assertTrue("There should be 1 user belonging to 3 groups", relations.size() == 3);
 		for (DataObject relation : relations) {
-			String groupid = relation.getString("_groupid");
+			String groupID = relation.getString("_groupID");
 			assertTrue(
-				"Relation's userID " + groupid + " is not in " + ConvertJSON.fromObject(groups),
-				groups.contains(groupid));
+				"Relation's userID " + groupID + " is not in " + ConvertJSON.fromObject(groups),
+				groups.contains(groupID));
 		}
 	}
 	

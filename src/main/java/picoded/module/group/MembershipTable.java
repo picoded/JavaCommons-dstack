@@ -181,14 +181,14 @@ public class MembershipTable extends ModuleStructure {
 		// Different query behaviours according to the parmameters provided
 		if (groupID != null && memberID != null) {
 			// Both params is provided, does a larger query
-			ids = relationshipTable.query_id("_groupid=? OR _memberid=?", new Object[] { groupID,
+			ids = relationshipTable.query_id("_groupID=? OR _memberID=?", new Object[] { groupID,
 				memberID }, null);
 		} else if (groupID != null) {
 			// Only group ID is provided
-			ids = relationshipTable.query_id("_groupid=?", new Object[] { groupID }, null);
+			ids = relationshipTable.query_id("_groupID=?", new Object[] { groupID }, null);
 		} else if (memberID != null) {
 			// Only member ID is provided
-			ids = relationshipTable.query_id("_memberid=?", new Object[] { memberID }, null);
+			ids = relationshipTable.query_id("_memberID=?", new Object[] { memberID }, null);
 		} else {
 			// Does nothing (no valid conditions)
 			return;
@@ -216,9 +216,9 @@ public class MembershipTable extends ModuleStructure {
 			throw new IllegalArgumentException("Either the Group ID or Member ID does not exist");
 		}
 		
-		// @CONSIDER : Adding key-value map caching layer to optimize group/memberid to relationship-id
+		// @CONSIDER : Adding key-value map caching layer to optimize group/memberID to relationship-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
-		String[] ids = relationshipTable.query_id("_groupid=? AND _memberid=?", new Object[] {
+		String[] ids = relationshipTable.query_id("_groupID=? AND _memberID=?", new Object[] {
 			groupID, memberID }, "DESC _oid");
 		if (ids != null && ids.length > 0) {
 			// Detecting more then one object match, remove collision
@@ -285,8 +285,8 @@ public class MembershipTable extends ModuleStructure {
 		DataObject obj = relationshipTable.newEntry();
 		
 		// Relationship mapping
-		obj.put("_groupid", groupID);
-		obj.put("_memberid", memberID);
+		obj.put("_groupID", groupID);
+		obj.put("_memberID", memberID);
 		obj.saveAll();
 		
 		return obj;
@@ -324,18 +324,18 @@ public class MembershipTable extends ModuleStructure {
 	 *         returns a blank lis if no match was found
 	 */
 	private List<DataObject> listRelationship(String groupID, String memberID) {
-		// Optimized query with both groupid and memberid
+		// Optimized query with both groupID and memberID
 		if (groupID != null && memberID != null) {
-			return Arrays.asList(relationshipTable.query("_groupid = ? AND _memberid = ?",
+			return Arrays.asList(relationshipTable.query("_groupID = ? AND _memberID = ?",
 				new Object[] { groupID, memberID }));
 		}
-		// groupid based query
+		// groupID based query
 		if (groupID != null) {
-			return Arrays.asList(relationshipTable.query("_groupid = ?", new Object[] { groupID }));
+			return Arrays.asList(relationshipTable.query("_groupID = ?", new Object[] { groupID }));
 		}
 		// memberID based query
 		if (memberID != null) {
-			return Arrays.asList(relationshipTable.query("_memberid = ?", new Object[] { memberID }));
+			return Arrays.asList(relationshipTable.query("_memberID = ?", new Object[] { memberID }));
 		}
 		// Above clauses failed, return blank list
 		return new ArrayList<>();
@@ -384,7 +384,7 @@ public class MembershipTable extends ModuleStructure {
 			
 			// Get the group mapping
 			for (DataObject mObj : relationshipList) {
-				groupStateMap.put(mObj.getString("_groupid"), 0);
+				groupStateMap.put(mObj.getString("_groupID"), 0);
 			}
 			
 			// Evaluate each group, and validate using the query
@@ -403,7 +403,7 @@ public class MembershipTable extends ModuleStructure {
 			
 			// Filter the list accordingly
 			filteredList = filteredList.stream().filter(mObj -> {
-				return groupStateMap.getInt(mObj.getString("_groupid")) == 1;
+				return groupStateMap.getInt(mObj.getString("_groupID")) == 1;
 			}).collect(Collectors.toList());
 			
 			// Quick blank list return
@@ -420,7 +420,7 @@ public class MembershipTable extends ModuleStructure {
 			
 			// Get the group mapping
 			for (DataObject mObj : relationshipList) {
-				memberStateMap.put(mObj.getString("_memberid"), 0);
+				memberStateMap.put(mObj.getString("_memberID"), 0);
 			}
 			
 			// Evaluate each group, and validate using the query
@@ -439,7 +439,7 @@ public class MembershipTable extends ModuleStructure {
 			
 			// Filter the list accordingly
 			filteredList = filteredList.stream().filter(mObj -> {
-				return memberStateMap.getInt(mObj.getString("_memberid")) == 1;
+				return memberStateMap.getInt(mObj.getString("_memberID")) == 1;
 			}).collect(Collectors.toList());
 		}
 		
@@ -540,10 +540,10 @@ public class MembershipTable extends ModuleStructure {
 		//------------------------------------------------------------------------------------------
 		if (groupQueryObj != null) {
 			// Get the list of groups
-			String[] groupidStrings = groupTable.query_id(groupQuery, groupQueryArgs);
+			String[] groupIDStrings = groupTable.query_id(groupQuery, groupQueryArgs);
 			
 			// For each group, get and add its memberships
-			for (String gid : groupidStrings) {
+			for (String gid : groupIDStrings) {
 				// @TODO - consdier getting the group relationship listing WITH the relations query filter
 				resultList.addAll(listRelationship(gid, null));
 			}
@@ -579,10 +579,10 @@ public class MembershipTable extends ModuleStructure {
 		//------------------------------------------------------------------------------------------
 		if (memberQueryObj != null) {
 			// Get the list of members
-			String[] memberidStrings = memberTable.query_id(memberQuery, memberQueryArgs);
+			String[] memberIDStrings = memberTable.query_id(memberQuery, memberQueryArgs);
 			
 			// For each group, get and add its memberships
-			for (String mid : memberidStrings) {
+			for (String mid : memberIDStrings) {
 				resultList.addAll(listRelationship(null, mid));
 			}
 			
