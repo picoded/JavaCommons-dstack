@@ -219,7 +219,7 @@ public class MembershipTable extends ModuleStructure {
 		// @CONSIDER : Adding key-value map caching layer to optimize group/memberID to relationship-id
 		// @CONSIDER : Collision removal checking by timestamp, where oldest wins
 		String[] ids = relationshipTable.query_id("_groupID=? AND _memberID=?", new Object[] {
-			groupID, memberID }, "DESC _oid");
+			groupID, memberID });
 		if (ids != null && ids.length > 0) {
 			// Detecting more then one object match, remove collision
 			if (ids.length > 1) {
