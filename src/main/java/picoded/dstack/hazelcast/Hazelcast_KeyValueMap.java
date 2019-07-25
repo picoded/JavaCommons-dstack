@@ -122,15 +122,19 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 				) //
 			); //
 		
-		// Configure max size policy percentage to JVM heap
-		MaxSizeConfig maxSize = new MaxSizeConfig( //
-			configMap.getInt("freeHeapPercentage", 15), //
-			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
-		); //
-		mConfig.setMaxSizeConfig(maxSize);
-		
-		// Set LRU eviction policy
-		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
+		//---------------------------------------------------------------
+		// @TODO : Add in LRU support with a config flag
+		//
+		// // Configure max size policy percentage to JVM heap
+		// MaxSizeConfig maxSize = new MaxSizeConfig( //
+		// 	configMap.getInt("freeHeapPercentage", 15), //
+		// 	MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
+		// ); //
+		// mConfig.setMaxSizeConfig(maxSize);
+		//
+		// // Set LRU eviction policy
+		// mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
+		//---------------------------------------------------------------
 		
 		// and apply it to the instance
 		// see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
