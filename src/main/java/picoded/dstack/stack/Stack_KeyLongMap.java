@@ -210,10 +210,26 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	//
 	//--------------------------------------------------------------------------
 	
-	protected void assertAtomicImplementation() {
-		if (dataLayers.length > 1) {
-			throw new RuntimeException(
-				"Atomic operations are not supported for multi layered data structure");
+	/**
+	 * Called whenever an atomic operations occur - 
+	 * automatically clears all cached layers of a key. That is not on the query layer
+	 * 
+	 * This helps ensure that all atomic operations are performed consistently on the queryLayer
+	 * while providing eventual consistency on all layers above it.
+	 * 
+	 * What this means is - while "get" operations are not guranteed atomicity 
+	 * (and you cant assume it anyway due to networking), all atomic insert operations
+	 * are guranteeded atomicity.
+	 * 
+	 * @param key
+	 */
+	private void clearCachedValuesForGivenKey(Object key) {
+		// Iterate the various layers, and clears the "non-query" layer
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			Core_KeyLongMap layer = dataLayers[i];
+			if (layer != queryLayer) {
+				layer.removeValue(key);
+			}
 		}
 	}
 	
@@ -226,8 +242,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return  value of the given key after adding
 	 **/
 	public Long addAndGet(Object key, Object delta) {
-		assertAtomicImplementation();
-		return queryLayer.addAndGet(key, delta);
+		Long ret = queryLayer.addAndGet(key, delta);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -239,8 +256,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return  value of the given key, note that it returns 0 if there wasnt a previous value set
 	 **/
 	public Long getAndAdd(Object key, Object delta) {
-		assertAtomicImplementation();
-		return queryLayer.getAndAdd(key, delta);
+		Long ret = queryLayer.getAndAdd(key, delta);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -250,8 +268,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return Long
 	 */
 	public Long incrementAndGet(Object key) {
-		assertAtomicImplementation();
-		return queryLayer.incrementAndGet(key);
+		Long ret = queryLayer.incrementAndGet(key);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -261,8 +280,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return Long
 	 */
 	public Long getAndIncrement(Object key) {
-		assertAtomicImplementation();
-		return queryLayer.getAndIncrement(key);
+		Long ret = queryLayer.getAndIncrement(key);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -272,8 +292,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return Long
 	 */
 	public Long decrementAndGet(Object key) {
-		assertAtomicImplementation();
-		return queryLayer.decrementAndGet(key);
+		Long ret = queryLayer.decrementAndGet(key);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -283,8 +304,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 * @return Long
 	 */
 	public Long getAndDecrement(Object key) {
-		assertAtomicImplementation();
-		return queryLayer.getAndDecrement(key);
+		Long ret = queryLayer.getAndDecrement(key);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	/**
@@ -300,8 +322,9 @@ public class Stack_KeyLongMap extends Core_KeyLongMap implements Stack_CommonStr
 	 **/
 	@Override
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
-		assertAtomicImplementation();
-		return queryLayer.weakCompareAndSet(key, expect, update);
+		boolean ret = queryLayer.weakCompareAndSet(key, expect, update);
+		clearCachedValuesForGivenKey(key);
+		return ret;
 	}
 	
 	//--------------------------------------------------------------------------
