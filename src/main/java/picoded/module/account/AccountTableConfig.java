@@ -107,6 +107,12 @@ abstract class AccountTableConfig extends ModuleStructure implements
 	 **/
 	public String cookiePath = null;
 	
+	/**
+	 * Maximum timeout in seconds, using the default calculateDelay function
+	 * 3600 seconds = 1 hour
+	 */
+	public int calculateDelay_maxLockTimeout = 3600;
+	
 	// /**
 	//  * Load and configures the session config from the given map
 	//  */
@@ -153,7 +159,10 @@ abstract class AccountTableConfig extends ModuleStructure implements
 		// 5     - 3
 		// 6     - 7
 		// 7     - 15
-		return (long) (Math.pow(2, Math.max(0, attempts - 3)) - 1);
+		//
+		// For a maximum of 1 hour
+		return (long) Math.min((Math.pow(2, Math.max(0, attempts - 3)) - 1),
+			calculateDelay_maxLockTimeout);
 	};
 	
 	///////////////////////////////////////////////////////////////////////////

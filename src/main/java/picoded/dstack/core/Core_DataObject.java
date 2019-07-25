@@ -345,16 +345,19 @@ public class Core_DataObject implements DataObject {
 	@Override
 	public Object put(String key, Object value) {
 		
-		// // _oid overwriting handling
-		// if ("_oid".equalsIgnoreCase(key.toString())) {
-		// 	// Silently ignore changes, and return existing value
-		// 	return _oid;
-		// }
+		String[] reservedKeys = new String[] { "_oid", "_createTimestamp", "_updateTimestamp" };
 		
-		// Silently ignore reserved _underscore namespace data
-		if (key.toString().substring(0, 1).equalsIgnoreCase("_")) {
-			return get(key);
+		for (String reservedKey : reservedKeys) {
+			if (reservedKey.equalsIgnoreCase(key.toString())) {
+				// Silently ignore changes, and return existing value
+				return get(reservedKey);
+			}
 		}
+		
+		// // Silently ignore reserved _underscore namespace data
+		// if (key.toString().substring(0, 1).equalsIgnoreCase("_")) {
+		// return get(key);
+		// }
 		
 		// Get the previous value
 		Object ret = get(key);
