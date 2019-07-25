@@ -161,10 +161,10 @@ public class JSqlTestConfig {
 	// Default Credentials for POSTGRES //
 	//----------------------------------//
 	static private String POSTGRES_HOST = "127.0.0.1";
-	static private String POSTGRES_NAME = "JAVACOMMONS";
-	static private String POSTGRES_USER = "JAVACOMMONS";
-	static private String POSTGRES_PASS = "JAVACOMMONS";
-	static private int POSTGRES_PORT = 5432;
+	static private String POSTGRES_NAME = "javacommons";
+	static private String POSTGRES_USER = "javacommons";
+	static private String POSTGRES_PASS = "javacommons";
+	static private int POSTGRES_PORT = 26257;
 	
 	static public String POSTGRES_HOST() {
 		return POSTGRES_HOST;
