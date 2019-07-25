@@ -102,14 +102,14 @@ class HikaricpUtil {
 	public static int defaultMaxPoolSize() {
 		// Current pool size has not been calculated - calculate it
 		if (_defaultMaxPoolSize <= 0) {
-			_defaultMaxPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
+			_defaultMaxPoolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
 		}
 		return _defaultMaxPoolSize;
 	}
 	
 	//----------------------------------------------------------------------------------
 	//
-	// SQL specific setup
+	// SQLite specific setup
 	//
 	//----------------------------------------------------------------------------------
 	
@@ -167,6 +167,12 @@ class HikaricpUtil {
 		// Initialize the data source
 		return new HikariDataSource(hconfig);
 	}
+	
+	//----------------------------------------------------------------------------------
+	//
+	// MySQL specific setup
+	//
+	//----------------------------------------------------------------------------------
 	
 	/**
 	 * Loads a HikariDataSource for Mysql given the config
@@ -256,6 +262,73 @@ class HikaricpUtil {
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
 	}
+	
+	//----------------------------------------------------------------------------------
+	//
+	// POSTGRES specific setup
+	//
+	//----------------------------------------------------------------------------------
+	
+	/**
+	 * Loads a HikariDataSource for Mysql given the config
+	 *
+	 * @param  config map used
+	 *
+	 * @return HikariDataSource with the appropriate config loaded and initialized
+	 */
+	public static HikariDataSource postgres(GenericConvertMap config) {
+		// Lets get the mysql required parameters
+		String host = config.getString("host", "localhost");
+		int port = config.getInt("port", 5432);
+		String name = config.getString("name", null);
+		String user = config.getString("user", null);
+		String pass = config.getString("pass", null);
+		
+		// Perform simple validation of mysql params
+		if (host == null || host.length() == 0) {
+			throw new RuntimeException("Missing host configuration for Postgres connection");
+		}
+		if (name == null || name.length() == 0) {
+			throw new RuntimeException("Missing name configuration for Postgres connection");
+		}
+		if (user == null || user.length() == 0) {
+			throw new RuntimeException("Missing user configuration for Postgres connection");
+		}
+		if (pass == null || pass.length() == 0) {
+			throw new RuntimeException("Missing pass configuration for Postgres connection");
+		}
+		
+		// Load the common config
+		HikariConfig hconfig = commonConfigLoading(config);
+		
+		// Load the DB library
+		// This is only imported on demand, avoid preloading until needed
+		try {
+			Class.forName("org.postgresql.ds.PGSimpleDataSource");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"Failed to load POSTGRES JDBC driver - please ensure 'org.postgresql.ds.PGSimpleDataSource' jar is included");
+		}
+		
+		// Setup the configured connection URL + DB
+		hconfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+		
+		// Standard DataSource connection configuration
+		hconfig.addDataSourceProperty("user", user);
+		hconfig.addDataSourceProperty("password", pass);
+		hconfig.addDataSourceProperty("serverName", host);
+		hconfig.addDataSourceProperty("databaseName", name);
+		hconfig.addDataSourceProperty("portNumber", port);
+		
+		// Initialize the data source and return
+		return new HikariDataSource(hconfig);
+	}
+	
+	//----------------------------------------------------------------------------------
+	//
+	// ORACLE specific setup
+	//
+	//----------------------------------------------------------------------------------
 	
 	/**
 	 * Loads a HikariDataSource for Mysql given the config
@@ -355,6 +428,12 @@ class HikaricpUtil {
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
 	}
+	
+	//----------------------------------------------------------------------------------
+	//
+	// MSSQL specific setup
+	//
+	//----------------------------------------------------------------------------------
 	
 	/**
 	 * Loads a HikariDataSource for MS-SQL given the config
