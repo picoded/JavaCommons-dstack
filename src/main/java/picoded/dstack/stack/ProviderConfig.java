@@ -166,15 +166,26 @@ public class ProviderConfig {
 		if (type.equalsIgnoreCase("JSql")) {
 			return new JSqlStack(config);
 		}
-		// if (type.equalsIgnoreCase("Hazelcast")) {
-		// 	return new picoded.dstack.hazelcast.HazelcastStack(config);
-		// }
+		if (type.equalsIgnoreCase("HazelcastStore")) {
+			return new picoded.dstack.hazelcast.store.HazelcastStoreStack(config);
+		}
+		if (type.equalsIgnoreCase("HazelcastCache")) {
+			return new picoded.dstack.hazelcast.cache.HazelcastCacheStack(config);
+		}
 		if (type.equalsIgnoreCase("FileSimple")) {
 			return new FileSimpleStack(config);
 		}
 		if (type.equalsIgnoreCase("FileLayered")) {
 			return new FileLayeredStack(config);
 		}
+		
+		// Deprecated type errors
+		if (type.equalsIgnoreCase("Hazelcast")) {
+			throw new IllegalArgumentException(
+				"Hazlecast backend is deprecated, please use HazelcastStore or HazelcastCache instead (to better reflect their respective use case)");
+		}
+		
+		// Unknown type error
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
 	
