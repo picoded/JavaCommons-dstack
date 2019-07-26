@@ -87,40 +87,8 @@ public abstract class HazelcastStack extends CoreStack {
 	 * @param mConfig                hazelcast map config to setup
 	 * @param dataStructureConfig    data structure config to pass over
 	 */
-	protected void setupHazelcastMapConfig(MapConfig mConfig,
-		GenericConvertMap<String, Object> dataStructureConfig) {
-		//
-		// Lets get some of the key settings
-		//
-		
-		// Backup count
-		int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 2));
-		int asyncBackupCount = dataStructureConfig.getInt("asyncBackupCount",
-			config.getInt("asyncBackupCount", 0));
-		
-		// Enable or disable readBackupData, default is true IF asyncBackupCount == 0
-		boolean readBackupData = dataStructureConfig.getBoolean("readBackupData",
-			config.getBoolean("readBackupData", asyncBackupCount == 0));
-		
-		// Setup the respective configurations
-		mConfig.setBackupCount(backupCount);
-		mConfig.setAsyncBackupCount(asyncBackupCount);
-		mConfig.setReadBackupData(readBackupData);
-		
-		//---------------------------------------------------------------
-		// NOTE: Eviction policy controls are to be done by the stack implementation
-		//
-		// // Configure max size policy percentage to JVM heap
-		// MaxSizeConfig maxSize = new MaxSizeConfig( //
-		// 	configMap.getInt("freeHeapPercentage", 10), //
-		// 	MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
-		// ); //
-		// mConfig.setMaxSizeConfig(maxSize);
-		//
-		// // Set LRU eviction policy
-		// mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
-		//---------------------------------------------------------------
-	}
+	abstract protected void setupHazelcastMapConfig(MapConfig mConfig,
+		GenericConvertMap<String, Object> dataStructureConfig);
 	
 	//--------------------------------------------------------------------------
 	//

@@ -1,4 +1,4 @@
-package picoded.dstack.hazelcast.store;
+package picoded.dstack.hazelcast.cache;
 
 // Java imports
 import java.util.HashMap;
@@ -13,12 +13,13 @@ import picoded.dstack.hazelcast.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
+import com.hazelcast.map.eviction.*;
 
 /**
  * In memory persistent storage for hazelcast, used this for data structures when caching in memory eviction is not desirec
  * (eg. session keys, lock keys)
  */
-public class HazelcastStoreStack extends HazelcastStack {
+public class HazelcastCacheStack extends HazelcastStack {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -29,7 +30,7 @@ public class HazelcastStoreStack extends HazelcastStack {
 	/**
 	 * Constructor with configuration map
 	 */
-	public HazelcastStoreStack(GenericConvertMap<String, Object> inConfig) {
+	public HazelcastCacheStack(GenericConvertMap<String, Object> inConfig) {
 		super(inConfig);
 	}
 	
@@ -41,14 +42,18 @@ public class HazelcastStoreStack extends HazelcastStack {
 	 */
 	protected void setupHazelcastMapConfig(MapConfig mConfig,
 		GenericConvertMap<String, Object> dataStructureConfig) {
+		//---------------------------------------------------------------
+		// Backup is tuned for cache based backend
+		//---------------------------------------------------------------
+		
 		//
-		// Lets tune storage for safe redundent stores
+		// Lets get some of the key settings
 		//
 		
 		// Backup count
-		int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 2));
+		int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 0));
 		int asyncBackupCount = dataStructureConfig.getInt("asyncBackupCount",
-			config.getInt("asyncBackupCount", 0));
+			config.getInt("asyncBackupCount", 1));
 		
 		// Enable or disable readBackupData, default is true IF asyncBackupCount == 0
 		boolean readBackupData = dataStructureConfig.getBoolean("readBackupData",
@@ -59,9 +64,22 @@ public class HazelcastStoreStack extends HazelcastStack {
 		mConfig.setAsyncBackupCount(asyncBackupCount);
 		mConfig.setReadBackupData(readBackupData);
 		
-		//------------------------------------------------------------------------------------
-		// NOTE: Map eviction policy is NONE by default, so nothing needs to be done
-		// see: https://docs.hazelcast.org/docs/3.3-RC3/manual/html/map-eviction.html
-		//------------------------------------------------------------------------------------
+		//---------------------------------------------------------------
+		// Eviction policy controls 
+		//---------------------------------------------------------------
+		
+		// Get required settings
+		int freeHeapPercentage = dataStructureConfig.getInt("freeHeapPercentage",
+			config.getInt("freeHeapPercentage", 20));
+		
+		// Configure max size policy percentage to JVM heap
+		MaxSizeConfig maxSize = new MaxSizeConfig( //
+			freeHeapPercentage, //
+			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
+		); //
+		mConfig.setMaxSizeConfig(maxSize);
+		
+		// Set LRU eviction policy
+		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
 	}
 }
