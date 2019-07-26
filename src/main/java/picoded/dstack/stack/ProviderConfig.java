@@ -166,9 +166,9 @@ public class ProviderConfig {
 		if (type.equalsIgnoreCase("JSql")) {
 			return new JSqlStack(config);
 		}
-		if (type.equalsIgnoreCase("Hazelcast")) {
-			return new picoded.dstack.hazelcast.HazelcastStack(config);
-		}
+		// if (type.equalsIgnoreCase("Hazelcast")) {
+		// 	return new picoded.dstack.hazelcast.HazelcastStack(config);
+		// }
 		if (type.equalsIgnoreCase("FileSimple")) {
 			return new FileSimpleStack(config);
 		}
