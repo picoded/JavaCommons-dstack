@@ -22,11 +22,11 @@ import com.hazelcast.map.eviction.LRUEvictionPolicy;
 import com.hazelcast.query.Predicates;
 
 /**
- * Hazelcast implementation of KeyValueMap data structure.
+ * Hazelcast implementation of KeyLongMap data structure.
  *
- * Built ontop of the Core_KeyValueMap implementation.
+ * Built ontop of the Core_KeyLongMap implementation.
  **/
-public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
+public class Hazelcast_KeyLongMap extends Core_KeyLongMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -45,7 +45,7 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Hazelcast_KeyValueMap(HazelcastInstance instance, String name) {
+	public Hazelcast_KeyLongMap(HazelcastInstance instance, String name) {
 		super();
 		hazelcast = instance;
 		configMap().put("name", name);
@@ -57,7 +57,7 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Hazelcast_KeyValueMap(HazelcastStack inStack, String name) {
+	public Hazelcast_KeyLongMap(HazelcastStack inStack, String name) {
 		super();
 		hazelcastStack = inStack;
 		hazelcast = inStack.getConnection();
@@ -97,13 +97,13 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	/**
 	 * @return backendmap memoizer
 	 */
-	private IMap<String, String> _backendMap = null;
+	private IMap<String, Long> _backendMap = null;
 	
 	/**
 	 * @return Storage map used for the backend operations of one "DataObjectMap"
 	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
 	 */
-	protected IMap<String, String> backendMap() {
+	protected IMap<String, Long> backendMap() {
 		if (_backendMap != null) {
 			return _backendMap;
 		}
@@ -171,7 +171,6 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	// KeySet support implementation
 	//
 	//--------------------------------------------------------------------------
-	
 	/**
 	 * Search using the value, all the relevent key mappings
 	 *
@@ -182,7 +181,7 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 * @return array of keys
 	 **/
 	@Override
-	public Set<String> keySet(String value) {
+	public Set<String> keySet(Long value) {
 		if (value != null) {
 			return backendMap().keySet(Predicates.equal("this", value));
 		}
@@ -194,6 +193,31 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	// Fundemental set/get value (core)
 	//
 	//--------------------------------------------------------------------------
+	
+	/**
+	 * Stores (and overwrites if needed) key, value pair
+	 *
+	 * Important note: It does not return the previously stored value
+	 *
+	 * @param key as String
+	 * @param expect as Long
+	 * @param update as Long
+	 *
+	 * @return true if successful
+	 **/
+	@Override
+	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+		// Possibly a blank setup
+		if (expect == null) {
+			expect = new Long(0);
+		}
+		if (expect.longValue() == 0) {
+			backendMap().putIfAbsent(key, expect);
+		}
+		
+		// Value update - doa atomically directly
+		return backendMap().replace(key, expect, update);
+	}
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -227,7 +251,7 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 *
 	 * @return null
 	 **/
-	public String setValueRaw(String key, String value, long expire) {
+	public Long setValueRaw(String key, Long value, long expire) {
 		// removal
 		if (value == null) {
 			backendMap().remove(key);
@@ -254,17 +278,17 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 	 * @param key as String
 	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
 	 *
-	 * @return String value, and expiry pair
+	 * @return Long value, and expiry pair
 	 **/
-	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
+	public MutablePair<Long, Long> getValueExpiryRaw(String key, long now) {
 		// Get the entry view
-		EntryView<String, String> entry = backendMap().getEntryView(key);
+		EntryView<String, Long> entry = backendMap().getEntryView(key);
 		if (entry == null) {
 			return null;
 		}
 		
 		// Get the value and expire object : milliseconds?
-		String value = entry.getValue();
+		Long value = entry.getValue();
 		Long expireObj = entry.getExpirationTime();
 		if (expireObj == null) {
 			expireObj = 0L;
@@ -277,7 +301,7 @@ public class Hazelcast_KeyValueMap extends Core_KeyValueMap {
 		}
 		
 		// Return the expirary pair
-		return new MutablePair<String, Long>(value, expiry);
+		return new MutablePair<Long, Long>(value, expiry);
 	}
 	
 }

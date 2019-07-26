@@ -144,6 +144,9 @@ public abstract class HazelcastStack extends CoreStack {
 		if (type.equalsIgnoreCase("KeyValueMap")) {
 			return new Hazelcast_KeyValueMap(this, name);
 		}
+		if (type.equalsIgnoreCase("KeyLongMap")) {
+			return new Hazelcast_KeyLongMap(this, name);
+		}
 		// No valid type, return null
 		return null;
 	}
