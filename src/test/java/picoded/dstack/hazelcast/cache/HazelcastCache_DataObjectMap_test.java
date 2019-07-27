@@ -1,4 +1,4 @@
-package picoded.dstack.hazelcast.store;
+package picoded.dstack.hazelcast.cache;
 
 import java.util.HashMap;
 
@@ -13,7 +13,7 @@ import picoded.dstack.struct.simple.*;
 import picoded.dstack.connector.hazelcast.*;
 import picoded.dstack.hazelcast.core.*;
 
-public class Hazelcast_KeyValueMap_test extends StructSimple_KeyValueMap_test {
+public class HazelcastCache_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	
 	// Hazelcast stack instance
 	protected static volatile HazelcastStack instance = null;
@@ -22,24 +22,25 @@ public class Hazelcast_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	//-----------------------------------------------------
 	
 	/// Impomentation constructor
-	public KeyValueMap implementationConstructor() {
+	public DataObjectMap implementationConstructor() {
 		
 		// Initialize hazelcast server
-		synchronized (Hazelcast_KeyValueMap_test.class) {
+		synchronized (HazelcastCache_DataObjectMap_test.class) {
 			if (instance == null) {
 				GenericConvertMap<String, Object> hazelcastConfigMap = new GenericConvertHashMap<>();
-				hazelcastConfigMap.put("groupName", "Hazelcast_KeyValueMap_test");
+				hazelcastConfigMap.put("groupName", "HazelcastCache_DataObjectMap_test");
 				hazelcastConfigMap.put("instanceCache", true);
 				
 				GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
-				stackConfig.put("name", "Hazelcast_KeyValueMap_test");
+				stackConfig.put("name", "HazelcastCache_DataObjectMap_test");
 				stackConfig.put("hazelcast", hazelcastConfigMap);
 				
-				instance = new HazelcastStoreStack(stackConfig);
+				instance = new HazelcastCacheStack(stackConfig);
 			}
 		}
 		
-		// Load the KeyValueMap
-		return instance.keyValueMap(JSqlTestConfig.randomTablePrefix());
+		// Load the DataObjectMap
+		return instance.dataObjectMap(JSqlTestConfig.randomTablePrefix());
 	}
+	
 }
