@@ -78,54 +78,11 @@ public class StructSimple_KeyLongMap_test {
 	}
 	
 	@Test
-	public void getValueFromExpiredKey() throws Exception {
-		long expiredTime = System.currentTimeMillis() - 5000;
-		testObj.putWithExpiry("expiredKey", 12L, expiredTime);
-		
-		assertNull(testObj.getValue("expiredKey"));
-		assertNull(testObj.get("expiredKey"));
-	}
-	
-	@Test
 	public void setNullValueToKey() throws Exception {
 		testObj.putValue("nullKey", null);
 		
 		assertNull(testObj.get("nullKey"));
 		assertNull(testObj.getValue("nullKey"));
-	}
-	
-	@Test
-	public void getExpireTime() throws Exception {
-		long expireTime = System.currentTimeMillis() * 2;
-		testObj.putWithExpiry("yes", 0L, expireTime);
-		
-		assertNotNull(testObj.getExpiry("yes"));
-		assertEquals(expireTime, testObj.getExpiry("yes"));
-	}
-	
-	@Test
-	public void setExpireTime() throws Exception {
-		long expireTime = System.currentTimeMillis() * 2;
-		testObj.putWithExpiry("yes", 0L, expireTime);
-		
-		long newExpireTime = testObj.getExpiry("yes") * 2;
-		testObj.setExpiry("yes", newExpireTime);
-		
-		long fetchedExpireTime = testObj.getExpiry("yes");
-		assertNotNull(fetchedExpireTime);
-		assertEquals(fetchedExpireTime, newExpireTime);
-		
-	}
-	
-	@Test
-	public void setLifeSpan() throws Exception {
-		long lifespanTime = 4 * 24 * 60 * 60 * 60 * 1000;
-		testObj.putWithLifespan("yes", 0L, lifespanTime);
-		
-		long newLifespanTime = testObj.getExpiry("yes");
-		testObj.setLifeSpan("yes", newLifespanTime);
-		
-		assertNotNull(testObj.getLifespan("yes"));
 	}
 	
 	@Test
@@ -204,6 +161,79 @@ public class StructSimple_KeyLongMap_test {
 	}
 	
 	@Test
+	public void maintenanceCheckTest() throws Exception {
+		// put a key with lifespan of 100ms
+		testObj.put("shortLife", 23L);
+		testObj.get("shortLife").setLifeSpan(100);
+		
+		// Ensure the life is over
+		Thread.sleep(100 + expireAccuracy());
+		
+		testObj.maintenance();
+		
+		assertNull(testObj.get("shortLife"));
+	}
+	
+	//-----------------------------------------------------------
+	//
+	//  TTL accuracy dependent tests
+	//
+	//-----------------------------------------------------------
+	
+	// Putting object that exist in the past is currently undefined behaviour
+	// @Test
+	// public void getValueFromExpiredKey() throws Exception {
+	// 	long expiredTime = System.currentTimeMillis() - 5000;
+	// 	testObj.putWithExpiry("expiredKey", 12L, expiredTime);
+	
+	// 	assertNull(testObj.getValue("expiredKey"));
+	// 	assertNull(testObj.get("expiredKey"));
+	// }
+	
+	// Exprie timestamp accuracy overwrites
+	public long expireAccuracy() {
+		return 2000;
+	}
+	
+	@Test
+	public void getExpireTime() throws Exception {
+		long expireTime = System.currentTimeMillis() * 2;
+		testObj.putWithExpiry("yes", 0L, expireTime);
+		
+		assertNotNull(testObj.getExpiry("yes"));
+		
+		long storedExpireTime = testObj.getExpiry("yes");
+		assertTrue(expireTime > (storedExpireTime - expireAccuracy()));
+		assertTrue(expireTime < (storedExpireTime + expireAccuracy()));
+	}
+	
+	@Test
+	public void setExpireTime() throws Exception {
+		long expireTime = System.currentTimeMillis() + 60000;
+		testObj.putWithExpiry("yes", 0L, expireTime);
+		
+		long newExpireTime = testObj.getExpiry("yes") * 2;
+		testObj.setExpiry("yes", newExpireTime);
+		
+		long fetchedExpireTime = testObj.getExpiry("yes");
+		assertNotNull(fetchedExpireTime);
+		assertTrue(newExpireTime > (fetchedExpireTime - expireAccuracy()));
+		assertTrue(newExpireTime < (fetchedExpireTime + expireAccuracy()));
+		
+	}
+	
+	@Test
+	public void setLifeSpan() throws Exception {
+		long lifespanTime = 4 * 24 * 60 * 60 * 60 * 1000;
+		testObj.putWithLifespan("yes", 0L, lifespanTime);
+		
+		long newLifespanTime = testObj.getExpiry("yes");
+		testObj.setLifeSpan("yes", newLifespanTime);
+		
+		assertNotNull(testObj.getLifespan("yes"));
+	}
+	
+	@Test
 	public void SLOW_testColumnExpiration() throws Exception {
 		// set column expiration time to current time + 1 secs.
 		long expirationTime = System.currentTimeMillis() + 1 * 1000;
@@ -217,20 +247,6 @@ public class StructSimple_KeyLongMap_test {
 		
 		// key should be null after expiration time.
 		assertEquals(null, testObj.get("yes"));
-	}
-	
-	@Test
-	public void maintenanceCheckTest() throws Exception {
-		// put a key with lifespan of 100ms
-		testObj.put("shortLife", 23L);
-		testObj.get("shortLife").setLifeSpan(100);
-		
-		// Ensure the life is over
-		Thread.sleep(200);
-		
-		testObj.maintenance();
-		
-		assertNull(testObj.get("shortLife"));
 	}
 	
 }

@@ -99,8 +99,8 @@ dependencies {
 	api "org.cache2k:cache2k-core:${cache2kVersion}"
 
 	// Hazelcast 
-	api "com.hazelcast:hazelcast:3.10.5"
-	api "com.hazelcast:hazelcast-client:3.10.5"
+	api "com.hazelcast:hazelcast:3.12.1"
+	api "com.hazelcast:hazelcast-client:3.12.1"
 
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"

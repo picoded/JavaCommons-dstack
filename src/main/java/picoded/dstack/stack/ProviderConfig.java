@@ -7,12 +7,7 @@ import java.util.Map;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
-import picoded.dstack.file.layered.FileLayeredStack;
-import picoded.dstack.file.simple.FileSimpleStack;
-import picoded.dstack.struct.simple.StructSimpleStack;
-import picoded.dstack.struct.cache.StructCacheStack;
 import picoded.dstack.core.CoreStack;
-import picoded.dstack.jsql.JSqlStack;
 
 /**
  * [Internal use only]
@@ -158,23 +153,34 @@ public class ProviderConfig {
 	 */
 	protected CoreStack initStack(String type, GenericConvertMap<String, Object> config) {
 		if (type.equalsIgnoreCase("StructSimple")) {
-			return new StructSimpleStack(config);
+			return new picoded.dstack.struct.simple.StructSimpleStack(config);
 		}
 		if (type.equalsIgnoreCase("StructCache")) {
-			return new StructCacheStack(config);
+			return new picoded.dstack.struct.cache.StructCacheStack(config);
 		}
 		if (type.equalsIgnoreCase("JSql")) {
-			return new JSqlStack(config);
+			return new picoded.dstack.jsql.JSqlStack(config);
 		}
-		if (type.equalsIgnoreCase("Hazelcast")) {
-			return new picoded.dstack.hazelcast.HazelcastStack(config);
+		if (type.equalsIgnoreCase("HazelcastStore")) {
+			return new picoded.dstack.hazelcast.store.HazelcastStoreStack(config);
+		}
+		if (type.equalsIgnoreCase("HazelcastCache")) {
+			return new picoded.dstack.hazelcast.cache.HazelcastCacheStack(config);
 		}
 		if (type.equalsIgnoreCase("FileSimple")) {
-			return new FileSimpleStack(config);
+			return new picoded.dstack.file.simple.FileSimpleStack(config);
 		}
 		if (type.equalsIgnoreCase("FileLayered")) {
-			return new FileLayeredStack(config);
+			return new picoded.dstack.file.layered.FileLayeredStack(config);
 		}
+		
+		// Deprecated type errors
+		if (type.equalsIgnoreCase("Hazelcast")) {
+			throw new IllegalArgumentException(
+				"Hazlecast backend is deprecated, please use HazelcastStore or HazelcastCache instead (to better reflect their respective use case)");
+		}
+		
+		// Unknown type error
 		throw new IllegalArgumentException("Unknown stack configuration type : " + type);
 	}
 	

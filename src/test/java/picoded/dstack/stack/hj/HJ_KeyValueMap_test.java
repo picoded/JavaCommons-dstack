@@ -11,7 +11,7 @@ import picoded.dstack.*;
 import picoded.dstack.core.*;
 import picoded.dstack.stack.*;
 import picoded.dstack.jsql.*;
-import picoded.dstack.hazelcast.*;
+import picoded.dstack.hazelcast.core.*;
 import picoded.dstack.connector.jsql.*;
 import picoded.dstack.connector.hazelcast.*;
 

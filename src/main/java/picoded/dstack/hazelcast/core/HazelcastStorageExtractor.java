@@ -1,4 +1,4 @@
-package picoded.dstack.hazelcast;
+package picoded.dstack.hazelcast.core;
 
 import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;

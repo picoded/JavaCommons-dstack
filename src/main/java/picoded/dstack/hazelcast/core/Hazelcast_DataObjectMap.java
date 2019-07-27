@@ -1,16 +1,16 @@
-package picoded.dstack.hazelcast;
+package picoded.dstack.hazelcast.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 // Java imports
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-// Picoded imports
+// JavaCommons imports
 import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GenericConvert;
 import picoded.core.conv.NestedObjectFetch;
@@ -43,16 +43,31 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	/** HazelcastInstance representing the backend connection */
 	HazelcastInstance hazelcast = null;
+	HazelcastStack hazelcastStack = null;
+	
+	/**
+	 * (DO NOT USE) Legacy Constructor, with direct instance, without stack support 
+	 * this is used for test cases coverage
+	 * 
+	 * @param  inStack   hazelcast stack to use
+	 * @param  name      of data object map to use
+	 */
+	public Hazelcast_DataObjectMap(HazelcastInstance instance, String name) {
+		super();
+		hazelcast = instance;
+		configMap().put("name", name);
+	}
 	
 	/**
 	 * Constructor, with name constructor
 	 * 
-	 * @param  hazelcast instance to perform operations on
+	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Hazelcast_DataObjectMap(HazelcastInstance inHazelcast, String name) {
+	public Hazelcast_DataObjectMap(HazelcastStack inStack, String name) {
 		super();
-		hazelcast = inHazelcast;
+		hazelcastStack = inStack;
+		hazelcast = inStack.getConnection();
 		configMap().put("name", name);
 	}
 	
@@ -144,29 +159,11 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		// Setup name, backup and async backup count
 		mConfig.setName(name());
-		mConfig.setBackupCount(configMap().getInt("backupCount", 2));
-		mConfig.setAsyncBackupCount(configMap().getInt("asyncBackupCount", 0));
 		
-		// Enable or disable readBackupData, default is true IF asyncBackupCount == 0
-		mConfig.setReadBackupData( //
-			configMap().getBoolean("readBackupData", //
-				configMap().getInt("asyncBackupCount", 0) == 0 //
-				) //
-			); //
-		
-		//---------------------------------------------------------------
-		// @TODO : Add in LRU support with a config flag
-		//
-		// // Configure max size policy percentage to JVM heap
-		// MaxSizeConfig maxSize = new MaxSizeConfig( //
-		// 	configMap.getInt("freeHeapPercentage", 10), //
-		// 	MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
-		// ); //
-		// mConfig.setMaxSizeConfig(maxSize);
-		//
-		// // Set LRU eviction policy
-		// mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
-		//---------------------------------------------------------------
+		// Setup the config based on the shared stack settings
+		if (hazelcastStack != null) {
+			hazelcastStack.setupHazelcastMapConfig(mConfig, configMap());
+		}
 		
 		// Add in the default _oid
 		mConfig.addMapIndexConfig(new MapIndexConfig("self[_oid]", true));
@@ -185,7 +182,7 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		// Setup value extractor for `self` attribute
 		mConfig.addMapAttributeConfig(new MapAttributeConfig("self",
-			"picoded.dstack.hazelcast.HazelcastStorageExtractor"));
+			"picoded.dstack.hazelcast.core.HazelcastStorageExtractor"));
 		
 		// and apply it to the instance
 		// see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
