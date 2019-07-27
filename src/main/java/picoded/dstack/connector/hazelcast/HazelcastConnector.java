@@ -1,8 +1,9 @@
 package picoded.dstack.connector.hazelcast;
 
 import com.hazelcast.core.*;
-import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.*;
+import com.hazelcast.client.config.*;
+import com.hazelcast.client.HazelcastClient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -192,16 +193,8 @@ public class HazelcastConnector {
 		// Initialize the config 
 		Config cfg = new Config();
 		
-		// and set the group name
-		GroupConfig grpConfig = cfg.getGroupConfig();
-		grpConfig.setName(groupName);
-		
-		// with default password handling
-		boolean noPassword = configMap.getBoolean("noPassword", false);
-		if (!noPassword) {
-			String password = configMap.getString("password", "default-hazelcast-password");
-			grpConfig.setPassword(password);
-		}
+		// Initialize the common group config 
+		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
 		
 		// Get network settings
 		NetworkConfig network = cfg.getNetworkConfig();
@@ -234,7 +227,45 @@ public class HazelcastConnector {
 	 */
 	protected static HazelcastInstance initializeClientInstanceFromConfig(String groupName,
 		GenericConvertMap<String, Object> configMap) {
-		throw new RuntimeException("Client mode - not yet supported");
-		//return HazelcastClient.newHazelcastClient(cfg);
+		// Initialize the config 
+		ClientConfig cfg = new ClientConfig();
+		
+		// Initialize the common group config 
+		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
+		
+		// Get network settings
+		ClientNetworkConfig network = cfg.getNetworkConfig();
+		
+		// Member TCP list, to setup
+		List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
+		if (memberTcpList != null && memberTcpList.size() > 0) {
+			network.setAddresses(memberTcpList);
+		} else {
+			throw new IllegalArgumentException(
+				"Missing `memberTcpList` config for hazelcast client : " + groupName);
+		}
+		
+		// Intialize the server instance and return 
+		return HazelcastClient.newHazelcastClient(cfg);
+	}
+	
+	/**
+	 * Setup the shared group config across both server / client mode
+	 * 
+	 * @param grpConfig configuration to setup
+	 * @param groupName group name for the cluster 
+	 * @param configMap configuration map to initialize the cluster with
+	 */
+	protected static void setupGroupConfig(GroupConfig grpConfig, String groupName,
+		GenericConvertMap<String, Object> configMap) {
+		// Setup grpConfig name
+		grpConfig.setName(groupName);
+		
+		// with default password handling
+		boolean noPassword = configMap.getBoolean("noPassword", false);
+		if (!noPassword) {
+			String password = configMap.getString("password", "default-hazelcast-password");
+			grpConfig.setPassword(password);
+		}
 	}
 }
