@@ -189,9 +189,19 @@ public class HazelcastConnector {
 	 */
 	protected static HazelcastInstance initializeServerInstanceFromConfig(String groupName,
 		GenericConvertMap<String, Object> configMap) {
-		// Initialize the config and set the group name
+		// Initialize the config 
 		Config cfg = new Config();
-		cfg.getGroupConfig().setName(groupName);
+		
+		// and set the group name
+		GroupConfig grpConfig = cfg.getGroupConfig();
+		grpConfig.setName(groupName);
+		
+		// with default password handling
+		boolean noPassword = configMap.getBoolean("noPassword", false);
+		if (!noPassword) {
+			String password = configMap.getString("password", "default-hazelcast-password");
+			grpConfig.setPassword(password);
+		}
 		
 		// Get network settings
 		NetworkConfig network = cfg.getNetworkConfig();
