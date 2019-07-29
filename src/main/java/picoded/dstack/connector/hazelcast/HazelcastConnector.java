@@ -45,10 +45,10 @@ public class HazelcastConnector {
 		}
 		
 		// Get caching configuration
-		boolean instanceCache = configMap.getBoolean("instanceCache", true);
+		boolean ignoreInstanceCache = configMap.getBoolean("ignoreInstanceCache", false);
 		
 		// Lets initialize and return - without caching!
-		if (!instanceCache) {
+		if (ignoreInstanceCache) {
 			return initializeInstanceFromConfig(groupName, configMap);
 		}
 		
@@ -200,17 +200,17 @@ public class HazelcastConnector {
 		NetworkConfig network = cfg.getNetworkConfig();
 		JoinConfig join = network.getJoin();
 		
-		// Configure multicast mode
-		join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
-		
 		// Get the port, and auto increment settings
-		network.setPort(configMap.getInt("port", 5900));
+		network.setPort(configMap.getInt("port", 5701));
 		network.setPortAutoIncrement(configMap.getBoolean("portAutoIncrement", true));
 		
 		// Member TCP list, to setup
 		List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
 		if (memberTcpList != null && memberTcpList.size() > 0) {
 			join.getTcpIpConfig().setMembers(memberTcpList).setEnabled(true);
+		} else {
+			// Falls back to multicast mode
+			join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
 		}
 		
 		// Intialize the server instance and return 

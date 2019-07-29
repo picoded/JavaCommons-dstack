@@ -4,6 +4,8 @@ import picoded.core.conv.ArrayConv;
 import picoded.core.conv.StringConv;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 /**
@@ -145,6 +147,25 @@ public interface FileWorkspace {
 	default void writeString(final String filepath, String content, String encoding) {
 		writeByteArray(filepath, StringConv.toByteArray(content, encoding));
 	}
+	
+	//
+	// Streaming support for FileWorkspace
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get the input stream representation of a given filepath
+	 * 
+	 * @param filePath in the workspace to extract
+	 * @return the file contents, null if file does not exists
+	 */
+	default InputStream readInputStream(final String filePath) {
+		byte[] byteArr = readByteArray(filePath);
+		return new ByteArrayInputStream(byteArr);
+	}
+	
+	//
+	// Listing support
+	//--------------------------------------------------------------------------
 	
 	FileNode listWorkspaceInTreeView(String folderPath, int depth);
 	
