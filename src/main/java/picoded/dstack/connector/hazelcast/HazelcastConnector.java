@@ -208,6 +208,7 @@ public class HazelcastConnector {
 		List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
 		if (memberTcpList != null && memberTcpList.size() > 0) {
 			join.getTcpIpConfig().setMembers(memberTcpList).setEnabled(true);
+			join.getMulticastConfig().setEnabled(false); // Disables multicast, cannot be used with TCP
 		} else {
 			// Falls back to multicast mode
 			join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
