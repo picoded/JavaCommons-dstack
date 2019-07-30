@@ -214,6 +214,13 @@ public class HazelcastConnector {
 			join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
 		}
 		
+		// @TODO - consider configuring the network binding addresses
+		// //this sets the allowed connections to the cluster? necessary for multicast, too?
+		// network.getInterfaces().setEnabled(true).addInterface("192.168.0.*");
+		
+		// @TODO - consider minimum cluster size support
+		// config.setProperty("hazelcast.initial.min.cluster.size","3");
+		
 		// Intialize the server instance and return 
 		return Hazelcast.newHazelcastInstance(cfg);
 	}

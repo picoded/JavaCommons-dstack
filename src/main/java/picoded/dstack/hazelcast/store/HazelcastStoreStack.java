@@ -13,6 +13,7 @@ import picoded.dstack.hazelcast.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
+import com.hazelcast.map.merge.LatestUpdateMapMergePolicy;
 
 /**
  * In memory persistent storage for hazelcast, used this for data structures when caching in memory eviction is not desirec
@@ -44,6 +45,11 @@ public class HazelcastStoreStack extends HazelcastStack {
 		//
 		// Lets tune storage for safe redundent stores
 		//
+		
+		// Lets configure the merge policy (latest update is default)
+		MergePolicyConfig mergePolicyConfig = new MergePolicyConfig()
+			.setPolicy("com.hazelcast.map.merge.LatestUpdateMapMergePolicy");
+		mConfig.setMergePolicyConfig(mergePolicyConfig);
 		
 		// Backup count
 		int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 2));

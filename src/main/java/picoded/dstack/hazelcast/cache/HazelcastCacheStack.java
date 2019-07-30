@@ -42,6 +42,12 @@ public class HazelcastCacheStack extends HazelcastStack {
 	 */
 	protected void setupHazelcastMapConfig(MapConfig mConfig,
 		GenericConvertMap<String, Object> dataStructureConfig) {
+		
+		// Lets configure the merge policy (latest update is default)
+		MergePolicyConfig mergePolicyConfig = new MergePolicyConfig()
+			.setPolicy("com.hazelcast.map.merge.LatestUpdateMapMergePolicy");
+		mConfig.setMergePolicyConfig(mergePolicyConfig);
+		
 		//---------------------------------------------------------------
 		// Backup is tuned for cache based backend
 		//---------------------------------------------------------------
