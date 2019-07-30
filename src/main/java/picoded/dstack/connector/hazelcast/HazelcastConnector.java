@@ -264,7 +264,7 @@ public class HazelcastConnector {
 		
 		// Configuring password if provided
 		String password = configMap.getString("password", null);
-		if (password != null) {
+		if (password != null && password.length() > 0) {
 			grpConfig.setPassword(password);
 		}
 	}
