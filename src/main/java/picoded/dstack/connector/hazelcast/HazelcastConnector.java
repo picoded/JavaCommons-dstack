@@ -262,10 +262,9 @@ public class HazelcastConnector {
 		// Setup grpConfig name
 		grpConfig.setName(groupName);
 		
-		// with default password handling
-		boolean noPassword = configMap.getBoolean("noPassword", false);
-		if (!noPassword) {
-			String password = configMap.getString("password", "default-hazelcast-password");
+		// Configuring password if provided
+		String password = configMap.getString("password", null);
+		if (password != null) {
 			grpConfig.setPassword(password);
 		}
 	}
