@@ -64,15 +64,6 @@ public interface FileWorkspace {
 	 */
 	boolean fileExist(final String filepath);
 	
-	/**
-	 * Checks if the directory exists.
-	 *
-	 * @param  dirPath in the workspace to check
-	 *
-	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
-	 */
-	boolean dirExist(final String dirPath);
-	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
 	
@@ -164,19 +155,53 @@ public interface FileWorkspace {
 	}
 	
 	//
-	// Listing support
+	// Pathing support
 	//--------------------------------------------------------------------------
 	
+	/**
+	 * Delete an existing directory from the workspace.
+	 * This recursively removes all file content under the given path
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	void removePath(final String filepath);
+	
+	//--------------------------------------------------------------------------
+	// TO DROP SUPPORT
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objects in tree view
+	 */
 	FileNode listWorkspaceInTreeView(String folderPath, int depth);
 	
+	/**
+	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 *
+	 * @param folderPath start of the folderPath to retrieve from
+	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * @return back a list of Objectsin in list view
+	 */
 	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
+	
+	/**
+	 * Checks if the directory exists.
+	 *
+	 * @param  dirPath in the workspace to check
+	 *
+	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
+	 */
+	boolean dirExist(final String dirPath);
 	
 	boolean moveFile(String source, String destination);
 	
 	// @TODO - once this API is more stable
 	//
 	// + File copies within workspace
-	// + File moving within workspace
 	// + Folder deletion
 	// + Folder listing
 	//--------------------------------------------------------------------------

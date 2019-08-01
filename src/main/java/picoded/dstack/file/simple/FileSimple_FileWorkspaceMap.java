@@ -3,6 +3,7 @@ package picoded.dstack.file.simple;
 import picoded.core.file.FileUtil;
 import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
+import picoded.dstack.core.Core_FileNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -299,13 +300,36 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	/**
+	 * Remove a file from the workspace by its id
+	 *
+	 * @param oid      identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	@Override
+	public void backend_removePath(String oid, String filepath) {
+		// Get the file object
+		File fileObj = workspaceFileObj(oid, filepath);
+		
+		// Invalid file path?
+		if (fileObj == null) {
+			return;
+		}
+		
+		// Check if its a file exist, and delete it
+		if (fileObj.exists()) {
+			FileUtil.forceDelete(fileObj);
+		}
+	}
+	
+	/**
 	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
 	 * List the files and folder recursively depending on the folderPath that was passed in.
 	 *
 	 * @param oid        of the workspace to search
 	 * @param folderPath start of the folderPath to retrieve from
 	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects in tree view
+	 * 
+	 * @return back filenode, representing a folder or file
 	 */
 	@Override
 	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
@@ -313,7 +337,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		File node = workspaceFileObj(oid, folderPath);
 		File rootFolder = workspaceDirObj(oid);
 		
-		FileNode fileNode = new FileSimple_FileNode(node.getName(), node.isDirectory());
+		FileNode fileNode = new Core_FileNode(node.getName(), node.isDirectory());
 		
 		// File processing
 		//----------------------
@@ -358,6 +382,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param oid        of the workspace to search
 	 * @param folderPath start of the folderPath to retrieve from
 	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
+	 * 
 	 * @return back a list of Objects in list view
 	 */
 	@Override
@@ -385,7 +410,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				
 				File pathFile = path.toFile();
 				String name = pathFile.getAbsolutePath().replace(node.getAbsolutePath(), "");
-				FileNode fileNode = new FileSimple_FileNode(name, pathFile.isDirectory());
+				FileNode fileNode = new Core_FileNode(name, pathFile.isDirectory());
 				fileNode.removeChildrenNodes();
 				
 				return name == null ? null : fileNode;

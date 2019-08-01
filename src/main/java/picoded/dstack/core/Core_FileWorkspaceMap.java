@@ -172,6 +172,24 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	
 	//--------------------------------------------------------------------------
 	//
+	// PATH Functions, used by FileWorkspace
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 * Note that this aggressively removes all other files sharing this path
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	abstract public void backend_removePath(final String oid, final String filepath);
+	
+	//--------------------------------------------------------------------------
+	//
 	// FileWorkspace operations
 	//
 	//--------------------------------------------------------------------------

@@ -184,22 +184,41 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// do nothing for struct simple
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// WHAT IS THIS ???
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	@Override
+	public void backend_removePath(String oid, String filepath) {
+		throw new RuntimeException("Not yet implemented");
+	}
+	
 	@Override
 	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
 		// do nothing for struct simple
-		return null;
+		throw new RuntimeException("Not yet implemented");
 	}
 	
 	@Override
 	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
 		// do nothing for struct simple
-		return null;
+		throw new RuntimeException("Not yet implemented");
 	}
 	
 	@Override
 	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
 		// do nothing for struct simple
-		return true;
+		throw new RuntimeException("Not yet implemented");
 	}
 	
 	//--------------------------------------------------------------------------

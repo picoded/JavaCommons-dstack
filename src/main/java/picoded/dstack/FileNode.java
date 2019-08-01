@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 
+ * THIS IS TO BE DEPRECATED IN FAVOUR OF "path" commands
+ * 
+ */
 public interface FileNode {
 	
 	public String name();

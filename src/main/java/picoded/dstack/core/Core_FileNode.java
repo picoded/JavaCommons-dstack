@@ -36,6 +36,8 @@ public class Core_FileNode extends HashMap<String, Object> implements FileNode {
 	
 	@Override
 	public List<FileNode> nodes() {
+		// This should be optimized to do a backend call at some point
+		// to avoid the need of a giant huge initial lookup to initialize "this" node
 		return (List<FileNode>) this.get("children");
 	}
 	

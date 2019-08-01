@@ -173,6 +173,10 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_removeFile(_oid, filepath);
 	}
 	
+	public void removePath(final String filepath) {
+		main.backend_removePath(_oid, filepath);
+	}
+	
 	@Override
 	public FileNode listWorkspaceInTreeView(String folderPath, int depth) {
 		return main.backend_listWorkspaceTreeView(_oid(), folderPath, depth);

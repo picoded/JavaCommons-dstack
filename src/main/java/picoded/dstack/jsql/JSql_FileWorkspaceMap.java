@@ -184,6 +184,20 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	@Override
+	public void backend_removePath(String oid, String filepath) {
+		throw new RuntimeException("NOT YET SUPPORTED");
+		// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid, filepath });
+	}
+	
+	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,
