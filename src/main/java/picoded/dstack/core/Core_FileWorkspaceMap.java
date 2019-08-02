@@ -80,28 +80,6 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 **/
 	abstract public boolean backend_workspaceExist(String oid);
 	
-	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
-	 */
-	abstract public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth);
-	
-	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects in list view
-	 */
-	abstract public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath,
-		int depth);
-	
 	abstract public boolean backend_moveFileInWorkspace(String oid, String source, String destination);
 	
 	//--------------------------------------------------------------------------

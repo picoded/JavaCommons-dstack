@@ -170,34 +170,16 @@ public interface FileWorkspace {
 	// TO DROP SUPPORT
 	//--------------------------------------------------------------------------
 	
-	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects in tree view
-	 */
-	FileNode listWorkspaceInTreeView(String folderPath, int depth);
+	// /**
+	//  * Checks if the directory exists.
+	//  *
+	//  * @param  dirPath in the workspace to check
+	//  *
+	//  * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
+	//  */
+	// boolean dirExist(final String dirPath);
 	
-	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objectsin in list view
-	 */
-	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
-	
-	/**
-	 * Checks if the directory exists.
-	 *
-	 * @param  dirPath in the workspace to check
-	 *
-	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
-	 */
-	boolean dirExist(final String dirPath);
-	
-	boolean moveFile(String source, String destination);
+	// boolean moveFile(String source, String destination);
 	
 	// @TODO - once this API is more stable
 	//

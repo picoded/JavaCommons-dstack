@@ -1,6 +1,5 @@
 package picoded.dstack.jsql;
 
-import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
@@ -219,20 +218,6 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			new Object[] { now, 0, null }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
-	}
-	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		// @TODO: To be implemented for Jsql
-		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
-		return null;
-	}
-	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		// @TODO: To be implemented for Jsql
-		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
-		return null;
 	}
 	
 	@Override

@@ -1,9 +1,7 @@
 package picoded.dstack.file.simple;
 
 import picoded.core.file.FileUtil;
-import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
-import picoded.dstack.core.Core_FileNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -318,113 +316,6 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Check if its a file exist, and delete it
 		if (fileObj.exists()) {
 			FileUtil.forceDelete(fileObj);
-		}
-	}
-	
-	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * 
-	 * @return back filenode, representing a folder or file
-	 */
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		
-		File node = workspaceFileObj(oid, folderPath);
-		File rootFolder = workspaceDirObj(oid);
-		
-		FileNode fileNode = new Core_FileNode(node.getName(), node.isDirectory());
-		
-		// File processing
-		//----------------------
-		if (node.isFile()) {
-			return fileNode;
-		}
-		
-		// Folder processing
-		//----------------------
-		if (node.isDirectory()) {
-			File[] subFiles = node.listFiles();
-			
-			// Go deeper if depth is not 0 yet or depth is -1 (list all the way)
-			if (subFiles != null && subFiles.length > 0 && (depth != 0 || depth == -1)) {
-				
-				// Calculating the next depth
-				depth = (depth == -1) ? -1 : depth - 1;
-				
-				for (File fileItem : subFiles) {
-					
-					// Get the inner level files and folder
-					FileNode fileItemNode = backend_listWorkspaceTreeView(oid, fileItem
-						.getAbsolutePath().replace(rootFolder.getAbsolutePath(), ""), depth);
-					
-					if (fileItemNode != null) {
-						fileNode.add(fileItemNode);
-					}
-				}
-			}
-			
-			return fileNode;
-		}
-		
-		throw new IllegalArgumentException("Unexpected file/folder type - " + node.getPath());
-		
-	}
-	
-	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * 
-	 * @return back a list of Objects in list view
-	 */
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		File node = workspaceFileObj(oid, folderPath);
-		File rootFolder = workspaceDirObj(oid);
-		
-		if (!node.exists()) {
-			throw new RuntimeException("folderPath does not exist");
-		}
-		
-		try {
-			
-			Stream<Path> pathStream;
-			
-			// Walking through the path with a depth or all the way
-			if (depth == -1) {
-				pathStream = Files.walk(node.toPath());
-			} else {
-				pathStream = Files.walk(node.toPath(), depth, FileVisitOption.FOLLOW_LINKS);
-			}
-			
-			// Convert the Stream<Path> into List<FileNode>
-			List<FileNode> fileNodes = pathStream.map(path -> {
-				
-				File pathFile = path.toFile();
-				String name = pathFile.getAbsolutePath().replace(node.getAbsolutePath(), "");
-				FileNode fileNode = new Core_FileNode(name, pathFile.isDirectory());
-				fileNode.removeChildrenNodes();
-				
-				return name == null ? null : fileNode;
-				
-			}).collect(Collectors.toList());
-			
-			// Remove all items that are null (specifically it will be the root folder)
-			fileNodes.removeIf(item -> item == null);
-			
-			return fileNodes;
-			
-		} catch (IOException e) {
-			throw new RuntimeException(String.format(
-				"Unable to walk through folderPath: %s of workspace ID: %s", folderPath, oid));
 		}
 	}
 	

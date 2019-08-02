@@ -1,6 +1,5 @@
 package picoded.dstack.struct.simple;
 
-import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
@@ -200,18 +199,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	@Override
 	public void backend_removePath(String oid, String filepath) {
-		throw new RuntimeException("Not yet implemented");
-	}
-	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		// do nothing for struct simple
-		throw new RuntimeException("Not yet implemented");
-	}
-	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		// do nothing for struct simple
 		throw new RuntimeException("Not yet implemented");
 	}
 	

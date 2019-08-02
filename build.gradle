@@ -357,6 +357,12 @@ task srcBeautify(type:Exec) {
 // Forcing srcBeautify on compile step
 compileJava.dependsOn srcBeautify
 
+//----------------------------------------------------------------
+//
+//  Compile aliases
+//
+//----------------------------------------------------------------
+
 // Doing compile alias for java
 task src(dependsOn: compileJava) 
 task compile(dependsOn: compileJava) 

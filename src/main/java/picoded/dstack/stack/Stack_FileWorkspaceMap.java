@@ -1,7 +1,6 @@
 package picoded.dstack.stack;
 
 import picoded.dstack.CommonStructure;
-import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
 import java.util.List;
@@ -229,31 +228,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_setupWorkspace(oid, folderPath);
 		}
-	}
-	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			FileNode fileNode = dataLayers[i].backend_listWorkspaceTreeView(oid, folderPath, depth);
-			if (fileNode != null) {
-				return fileNode;
-			}
-		}
-		
-		return null;
-	}
-	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			List<FileNode> fileNode = dataLayers[i].backend_listWorkspaceListView(oid, folderPath,
-				depth);
-			if (fileNode != null) {
-				return fileNode;
-			}
-		}
-		
-		return null;
 	}
 	
 	@Override
