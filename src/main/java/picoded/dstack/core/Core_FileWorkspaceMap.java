@@ -94,6 +94,16 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	abstract public void backend_setupWorkspace(String oid);
 	
+	//--------------------------------------------------------------------------
+	//
+	// Functions, used by FileWorkspace
+	// Note: It is safe to assume for all backend_* operations
+	// that their filepath has been normalized by Core_FileWorkspace
+	//
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
+	
 	// File exists / removal
 	//--------------------------------------------------------------------------
 	

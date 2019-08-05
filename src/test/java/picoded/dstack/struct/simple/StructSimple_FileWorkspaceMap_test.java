@@ -94,29 +94,72 @@ public class StructSimple_FileWorkspaceMap_test {
 	//
 	//-----------------------------------------------------------------------------------
 	
-	// @Test
-	// public void folderSetupAndRemove() {
-	// 	// Get the file workspace to use
-	// 	FileWorkspace fileWorkspace = testObj.newEntry();
-	// 	assertNotNull(fileWorkspace);
+	@Test
+	public void folderSetupAndRemove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Set it up and assert
+		fileWorkspace.ensureFolderPath("test/folder");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test"));
+		
+	}
 	
-	// 	// Folder does not exist first
-	// 	assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+	@Test
+	public void folderSetupAndRemove_pathVarients() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertFalse(fileWorkspace.hasFolderPath("test/folder/"));
+		assertFalse(fileWorkspace.hasFolderPath("/test/folder/"));
+		
+		// Set it up and assert
+		fileWorkspace.ensureFolderPath("test/folder");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test/folder/"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/folder/"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("/test"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/"));
+		
+	}
 	
-	// 	// Set it up and assert
-	// 	fileWorkspace.ensureFolderPath("test/folder");
-	// 	assertTrue(fileWorkspace.hasFolderPath("test/folder"));
-	
-	// 	// Remove and assert
-	// 	fileWorkspace.removeFolderPath("test/folder");
-	// 	assertFalse(fileWorkspace.hasFolderPath("test/folder"));
-	// 	assertTrue(fileWorkspace.hasFolderPath("test"));
-	
-	// }
-	
-	// @Test 
-	// public void fileWrite_andProperlySetupFolder() {
-	// }
+	@Test
+	public void fileWrite_andProperlySetupFolder() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test"));
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+	}
 	
 	//-----------------------------------------------------------------------------------
 	//

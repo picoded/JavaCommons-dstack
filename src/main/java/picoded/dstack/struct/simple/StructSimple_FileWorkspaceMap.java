@@ -1,24 +1,95 @@
 package picoded.dstack.struct.simple;
 
+import picoded.core.common.EmptyArray;
+import picoded.core.file.FileUtil;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
+	// Stores all the various data for structSimple
 	protected ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
 	
+	// Handles read / write locks
 	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
 	
 	//--------------------------------------------------------------------------
 	//
-	// Functions, used by FileWorkspace
+	// Internal functionality (StructSimple specific)
+	//
+	//--------------------------------------------------------------------------
+	
+	// internal blank byte[] used to represent a folder
+	protected static byte[] FOLDER_OBJ = new byte[] {};
+	
+	/**
+	 * Ensure the setup of folder, in the given workspace (initialized by OID)
+	 * The calling function, MUST ensure that the appropriate write lock is performed.
+	 * 
+	 * @param  ObjectId of the workspace to get
+	 * @param  folderPath to ensure (optional)
+	 * 
+	 * @return valid workspace map, with folderPath initialized
+	 */
+	protected ConcurrentHashMap<String, byte[]> noLock_setupWorkspaceFolderPath(final String oid,
+		final String folderPath) {
+		// Get the workspace map
+		ConcurrentHashMap<String, byte[]> workspaceMap = fileContentMap.get(oid);
+		
+		// if workspace does not exist, set it up
+		if (workspaceMap == null) {
+			workspaceMap = new ConcurrentHashMap<>();
+			fileContentMap.put(oid, workspaceMap);
+		}
+		
+		// Null folder path = no setup
+		if (folderPath == null) {
+			return workspaceMap;
+		}
+		
+		// Remove the starting and ending "/" in folderPath
+		String reducedFolderPath = folderPath;
+		if (reducedFolderPath.startsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(1);
+		}
+		if (reducedFolderPath.endsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(0, reducedFolderPath.length() - 1);
+		}
+		
+		// Skip setup if blank
+		if (reducedFolderPath.length() <= 0) {
+			return workspaceMap;
+		}
+		
+		// Alrighto, time to split up the folder path
+		String[] splitFolderPath = reducedFolderPath.split("/");
+		String dirPath = "";
+		
+		// and loop + initialize each one of them =x
+		for (int i = 0; i < splitFolderPath.length; ++i) {
+			// We store with ending "/"
+			dirPath = dirPath + splitFolderPath[i] + "/";
+			
+			// And write a known blank byte[] (represents a folder)
+			workspaceMap.put(dirPath, FOLDER_OBJ);
+		}
+		
+		// Return the initialized workspaceMap
+		return workspaceMap;
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Workspace setup / exist funcitons
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
@@ -39,7 +110,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 			return workspace != null;
-			
 		} finally {
 			accessLock.readLock().unlock();
 		}
@@ -59,9 +129,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.writeLock().lock();
 			
 			// if workspace does not exist, set it up
-			if (fileContentMap.get(oid) == null) {
-				fileContentMap.put(oid, new ConcurrentHashMap<>());
-			}
+			noLock_setupWorkspaceFolderPath(oid, "");
 		} finally {
 			accessLock.writeLock().unlock();
 		}
@@ -84,6 +152,13 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// File read / write
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -100,11 +175,9 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.readLock().lock();
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-			
 			if (workspace != null && filepath != null) {
 				return workspace.get(filepath);
 			}
-			
 			return null;
 		} finally {
 			accessLock.readLock().unlock();
@@ -131,7 +204,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.readLock().lock();
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-			
 			if (workspace != null && filepath != null) {
 				return workspace.get(filepath) != null;
 			}
@@ -155,12 +227,12 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		try {
 			accessLock.writeLock().lock();
 			
-			ConcurrentHashMap<String, byte[]> workspace = (fileContentMap.get(oid) == null) ? new ConcurrentHashMap<>()
-				: fileContentMap.get(oid);
+			// Get workspace, with normalized parent path
+			ConcurrentHashMap<String, byte[]> workspace = noLock_setupWorkspaceFolderPath(oid,
+				FileUtil.getParentPath(filepath));
 			
+			// And put in the filepth data
 			workspace.put(filepath, data);
-			
-			fileContentMap.put(oid, workspace);
 			
 		} finally {
 			accessLock.writeLock().unlock();
@@ -201,6 +273,42 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				return;
+			}
+			
+			// Get the keyset - in a new hashset 
+			// (so it wouldnt crash when we do modification)
+			Set<String> allKeys = new HashSet<>(workspace.keySet());
+			for (String key : allKeys) {
+				// If folder path match - remove it
+				if (key.startsWith(folderPath)) {
+					workspace.remove(key);
+				}
+			}
+			
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Validate the given folder path exists.
 	 *
 	 * @param  ObjectID of workspace
@@ -209,7 +317,32 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
-		throw new RuntimeException("Missing backend implementation");
+		try {
+			accessLock.readLock().lock();
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			return workspace != null && workspace.get(folderPath) != null;
+		} finally {
+			accessLock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		try {
+			accessLock.writeLock().lock();
+			noLock_setupWorkspaceFolderPath(oid, folderPath);
+		} finally {
+			accessLock.writeLock().unlock();
+		}
 	}
 	
 	//--------------------------------------------------------------------------

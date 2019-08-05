@@ -14,9 +14,6 @@ import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
 import picoded.core.common.ObjectToken;
 
-// lib imports
-import org.apache.commons.io.FilenameUtils;
-
 /**
  * Represents a single workspace in the FileWorkspaceMap collection.
  *
@@ -104,12 +101,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 	
 	/**
 	 * @param filePath
-	 * @return filePath normalized with ending "/"
+	 * @return filePath normalized to remove ending "/"
 	 */
 	private static String normalizeFilePathString(final String filePath) {
-		String res = FilenameUtils.normalize(filePath, true);
-		if (!res.startsWith("/")) {
-			res = "/" + res;
+		if (filePath == null) {
+			throw new IllegalArgumentException("Invalid null filePath");
+		}
+		
+		String res = FileUtil.normalize(filePath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
 		}
 		if (res.endsWith("/")) {
 			res = res.substring(0, res.length() - 1);
@@ -122,9 +123,13 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return folderPath normalized with ending "/"
 	 */
 	private static String normalizeFolderPathString(final String folderPath) {
-		String res = FilenameUtils.normalize(folderPath, true);
-		if (!res.startsWith("/")) {
-			res = "/" + res;
+		if (folderPath == null || folderPath.length() <= 0) {
+			return "/";
+		}
+		
+		String res = FileUtil.normalize(folderPath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
 		}
 		if (!res.endsWith("/")) {
 			res = res + "/";
