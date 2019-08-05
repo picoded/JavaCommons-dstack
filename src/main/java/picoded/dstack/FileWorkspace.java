@@ -174,7 +174,7 @@ public interface FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	void removeFolderPath(final String folderPath);
-
+	
 	/**
 	 * Validate the given folder path exists.
 	 * 
@@ -182,14 +182,14 @@ public interface FileWorkspace {
 	 * @return true if folderPath is valid
 	 */
 	boolean hasFolderPath(final String folderPath);
-
+	
 	/**
 	 * Automatically generate a given folder path if it does not exist
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	void ensureFolderPath(final String folderPath);
-
+	
 	//
 	// Move support
 	//--------------------------------------------------------------------------
@@ -200,7 +200,7 @@ public interface FileWorkspace {
 	default boolean atomicMoveSupported() {
 		return false;
 	}
-
+	
 	/**
 	 * Move a given file within the system
 	 * 
@@ -218,7 +218,7 @@ public interface FileWorkspace {
 	 * 
 	 */
 	boolean moveFile(String sourceFile, String destinationFile);
-
+	
 	/**
 	 * Move a given file within the system
 	 * 
@@ -237,7 +237,7 @@ public interface FileWorkspace {
 	 * 
 	 */
 	void moveFolder(String sourceFolder, String destinationFolder);
-
+	
 	//
 	// Listing support
 	//--------------------------------------------------------------------------
@@ -251,7 +251,7 @@ public interface FileWorkspace {
 	 * @return list of path strings
 	 */
 	List<String> listFilePath(final String folderPath, final int minRecursion, final int maxRecursion);
-
+	
 	/**
 	 * List all the various files found in the given folderPath
 	 * - min recursion = 0
@@ -263,7 +263,7 @@ public interface FileWorkspace {
 	default List<String> listFilePath(final String folderPath, final int maxRecursion) {
 		return listFilePath(folderPath, 0, maxRecursion);
 	}
-
+	
 	/**
 	 * List all the various files found in the given folderPath
 	 * - min recursion = 0
@@ -284,8 +284,9 @@ public interface FileWorkspace {
 	 * @param maxRecursion maximum recursion count, to stop the listing
 	 * @return list of path strings
 	 */
-	List<String> listFolderPath(final String folderPath, final int minRecursion, final int maxRecursion);
-
+	List<String> listFolderPath(final String folderPath, final int minRecursion,
+		final int maxRecursion);
+	
 	/**
 	 * List all the various files found in the given folderPath
 	 * - min recursion = 0
@@ -297,7 +298,7 @@ public interface FileWorkspace {
 	default List<String> listFolderPath(final String folderPath, final int maxRecursion) {
 		return listFolderPath(folderPath, 0, maxRecursion);
 	}
-
+	
 	/**
 	 * List all the various files found in the given folderPath
 	 * - min recursion = 0
@@ -309,7 +310,7 @@ public interface FileWorkspace {
 	default List<String> listFolderPath(final String folderPath) {
 		return listFolderPath(folderPath, 0, 1);
 	}
-
+	
 	//--------------------------------------------------------------------------
 	// TO DROP SUPPORT
 	//--------------------------------------------------------------------------
