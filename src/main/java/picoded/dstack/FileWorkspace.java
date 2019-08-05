@@ -10,6 +10,15 @@ import java.util.List;
 
 /**
  * Represent a file storage backend for a workspace
+ * 
+ * One of the major distinction between FileWorkspace, and "actual" file storage, is the intentional avoidence of most filesystem commands,
+ * specifically folder commands. As this is modeled to have intercompatibility with object based storage systems instead of true file systems (with folder, and permissions)
+ * 
+ * As many of the S3-like object storage system has no concept of "directory" or "folders",
+ * folder like features are emulated instead, to the minimum required in most use cases.
+ * 
+ * Another common functionality of these S3-like storage, is that if a file written / created for any path.
+ * The preceding "folders" are considered to be automatically generated.
  */
 public interface FileWorkspace {
 	
@@ -52,7 +61,7 @@ public interface FileWorkspace {
 	default void setupWorkspace(String folderPath) {
 	}
 	
-	// File exists checks
+	// File exists / removal
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -63,6 +72,13 @@ public interface FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
 	 */
 	boolean fileExist(final String filepath);
+	
+	/**
+	 * Delete an existing file from the workspace
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	void removeFile(final String filepath);
 	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
@@ -85,13 +101,6 @@ public interface FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	void writeByteArray(final String filepath, final byte[] data);
-	
-	/**
-	 * Delete an existing file from the workspace
-	 *
-	 * @param filepath in the workspace to delete
-	 */
-	void removeFile(final String filepath);
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
@@ -155,17 +164,152 @@ public interface FileWorkspace {
 	}
 	
 	//
-	// Pathing support
+	// Folder Pathing support
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Delete an existing directory from the workspace.
-	 * This recursively removes all file content under the given path
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param filepath in the workspace to delete
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
-	void removePath(final String filepath);
+	void removeFolderPath(final String folderPath);
+
+	/**
+	 * Validate the given folder path exists.
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return true if folderPath is valid
+	 */
+	boolean hasFolderPath(final String folderPath);
+
+	/**
+	 * Automatically generate a given folder path if it does not exist
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 */
+	void ensureFolderPath(final String folderPath);
+
+	//
+	// Move support
+	//--------------------------------------------------------------------------
 	
+	/**
+	 * @return if the current configured implementation supports atomic move operations.
+	 */
+	default boolean atomicMoveSupported() {
+		return false;
+	}
+
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param sourceFile
+	 * @param destinationFile
+	 * 
+	 */
+	boolean moveFile(String sourceFile, String destinationFile);
+
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param sourceFolder
+	 * @param destinationFolder
+	 * 
+	 */
+	void moveFolder(String sourceFolder, String destinationFolder);
+
+	//
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minRecursion minimum recursion count, before outputing the listing
+	 * @param maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
+	 * @return list of path strings
+	 */
+	List<String> listFilePath(final String folderPath, final int minRecursion, final int maxRecursion);
+
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	default List<String> listFilePath(final String folderPath, final int maxRecursion) {
+		return listFilePath(folderPath, 0, maxRecursion);
+	}
+
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * - max recursion = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings
+	 */
+	default List<String> listFilePath(final String folderPath) {
+		return listFilePath(folderPath, 0, 1);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minRecursion minimum recursion count, before outputing the listing
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	List<String> listFolderPath(final String folderPath, final int minRecursion, final int maxRecursion);
+
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	default List<String> listFolderPath(final String folderPath, final int maxRecursion) {
+		return listFolderPath(folderPath, 0, maxRecursion);
+	}
+
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * - max recursion = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings
+	 */
+	default List<String> listFolderPath(final String folderPath) {
+		return listFolderPath(folderPath, 0, 1);
+	}
+
 	//--------------------------------------------------------------------------
 	// TO DROP SUPPORT
 	//--------------------------------------------------------------------------
