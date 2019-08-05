@@ -88,9 +88,41 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(testObj.get(oid));
 	}
 	
+	//-----------------------------------------------------------------------------------
+	//
+	// Folder pathing test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	// @Test
+	// public void folderSetupAndRemove() {
+	// 	// Get the file workspace to use
+	// 	FileWorkspace fileWorkspace = testObj.newEntry();
+	// 	assertNotNull(fileWorkspace);
+	
+	// 	// Folder does not exist first
+	// 	assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+	
+	// 	// Set it up and assert
+	// 	fileWorkspace.ensureFolderPath("test/folder");
+	// 	assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+	
+	// 	// Remove and assert
+	// 	fileWorkspace.removeFolderPath("test/folder");
+	// 	assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+	// 	assertTrue(fileWorkspace.hasFolderPath("test"));
+	
+	// }
+	
+	// @Test 
+	// public void fileWrite_andProperlySetupFolder() {
+	// }
+	
+	//-----------------------------------------------------------------------------------
 	//
 	// @TODO : Refactor the test cases below to make more sense for file systems
 	//
+	//-----------------------------------------------------------------------------------
 	
 	@Test
 	public void checkFileExist() {

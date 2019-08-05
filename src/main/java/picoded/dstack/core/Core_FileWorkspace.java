@@ -14,6 +14,9 @@ import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
 import picoded.core.common.ObjectToken;
 
+// lib imports
+import org.apache.commons.io.FilenameUtils;
+
 /**
  * Represents a single workspace in the FileWorkspaceMap collection.
  *
@@ -96,6 +99,39 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.setupWorkspace(_oid());
 	}
 	
+	// File / Folder string normalization
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @param filePath
+	 * @return filePath normalized with ending "/"
+	 */
+	private static String normalizeFilePathString(final String filePath) {
+		String res = FilenameUtils.normalize(filePath, true);
+		if (!res.startsWith("/")) {
+			res = "/" + res;
+		}
+		if (res.endsWith("/")) {
+			res = res.substring(0, res.length() - 1);
+		}
+		return res;
+	}
+	
+	/**
+	 * @param folderPath
+	 * @return folderPath normalized with ending "/"
+	 */
+	private static String normalizeFolderPathString(final String folderPath) {
+		String res = FilenameUtils.normalize(folderPath, true);
+		if (!res.startsWith("/")) {
+			res = "/" + res;
+		}
+		if (!res.endsWith("/")) {
+			res = res + "/";
+		}
+		return res;
+	}
+	
 	// File exists checks
 	//--------------------------------------------------------------------------
 	
@@ -107,7 +143,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	public boolean fileExist(final String filepath) {
-		return main.backend_fileExist(_oid, filepath);
+		return main.backend_fileExist(_oid, normalizeFilePathString(filepath));
 	}
 	
 	/**
@@ -116,7 +152,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to delete
 	 */
 	public void removeFile(final String filepath) {
-		main.backend_removeFile(_oid, filepath);
+		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
 	}
 	
 	// Read / write byteArray information
@@ -130,7 +166,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return the file contents, null if file does not exists
 	 */
 	public byte[] readByteArray(final String filepath) {
-		return main.backend_fileRead(_oid, filepath);
+		return main.backend_fileRead(_oid, normalizeFilePathString(filepath));
 	}
 	
 	/**
@@ -142,7 +178,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	public void writeByteArray(final String filepath, final byte[] data) {
-		main.backend_fileWrite(_oid, filepath, data);
+		main.backend_fileWrite(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	/**
@@ -155,18 +191,20 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data   the content to write to the file
 	 **/
 	public void appendByteArray(final String filepath, final byte[] data) {
+		// Normalize the file path
+		String path = normalizeFilePathString(filepath);
 		
 		// Get existing data
-		byte[] read = readByteArray(filepath);
+		byte[] read = readByteArray(path);
 		if (read == null) {
-			writeByteArray(filepath, data);
+			writeByteArray(path, data);
 		}
 		
 		// Append new data to existing data
 		byte[] jointData = ArrayConv.addAll(read, data);
 		
 		// Write the new joint data
-		writeByteArray(filepath, jointData);
+		writeByteArray(path, jointData);
 	}
 	
 	// Folder Pathing support
@@ -179,7 +217,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	public void removeFolderPath(final String folderPath) {
-		main.backend_removeFolderPath(_oid, folderPath);
+		main.backend_removeFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
 	/**
@@ -189,7 +227,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true if folderPath is valid
 	 */
 	public boolean hasFolderPath(final String folderPath) {
-		return main.backend_hasFolderPath(_oid, folderPath);
+		return main.backend_hasFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
 	/**
@@ -198,7 +236,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	public void ensureFolderPath(final String folderPath) {
-		main.backend_ensureFolderPath(_oid, folderPath);
+		main.backend_ensureFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
 	// Move support
@@ -220,7 +258,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFile
 	 */
 	public void moveFile(final String sourceFile, final String destinationFile) {
-		main.backend_moveFile(_oid, sourceFile, destinationFile);
+		main.backend_moveFile(_oid, normalizeFilePathString(sourceFile),
+			normalizeFilePathString(destinationFile));
 	}
 	
 	/**
@@ -240,7 +279,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFolder
 	 */
 	public void moveFolder(final String sourceFolder, final String destinationFolder) {
-		main.backend_moveFolder(_oid, sourceFolder, destinationFolder);
+		main.backend_moveFolder(_oid, normalizeFolderPathString(sourceFolder),
+			normalizeFolderPathString(destinationFolder));
 	}
 	
 	// Listing support
@@ -256,7 +296,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFilePathSet(final String folderPath, final int minRecursion,
 		final int maxRecursion) {
-		return main.backend_getFilePathSet(_oid, folderPath, minRecursion, maxRecursion);
+		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minRecursion,
+			maxRecursion);
 	}
 	
 	/**
@@ -269,7 +310,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFolderPathSet(final String folderPath, final int minRecursion,
 		final int maxRecursion) {
-		return main.backend_getFolderPathSet(_oid, folderPath, minRecursion, maxRecursion);
+		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath),
+			minRecursion, maxRecursion);
 	}
 	
 }

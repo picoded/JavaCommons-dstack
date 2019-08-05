@@ -46,6 +46,28 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// if workspace does not exist, set it up
+			if (fileContentMap.get(oid) == null) {
+				fileContentMap.put(oid, new ConcurrentHashMap<>());
+			}
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
 	 * Removes the FileWorkspace, used to nuke an entire workspace
@@ -170,26 +192,24 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Folder pathing support
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 * [Internal use, to be extended in future implementation]
 	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
+	 * Validate the given folder path exists.
 	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid) {
-		try {
-			accessLock.writeLock().lock();
-			
-			// if workspace does not exist, set it up
-			if (fileContentMap.get(oid) == null) {
-				fileContentMap.put(oid, new ConcurrentHashMap<>());
-			}
-		} finally {
-			accessLock.writeLock().unlock();
-		}
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
 	}
 	
 	//--------------------------------------------------------------------------
