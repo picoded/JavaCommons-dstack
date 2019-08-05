@@ -347,6 +347,124 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Move support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @return if the current configured implementation supports atomic move operations.
+	 */
+	public boolean atomicMoveSupported() {
+		// True due to StructSimple use of a globle write lock
+		return true;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if sourceFolder exist
+			if (workspace.get(sourceFile) == null) {
+				throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
+					+ sourceFile);
+			}
+			
+			// Initialize the destionation folder
+			noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
+			
+			// Copy the file
+			workspace.put(destinationFile, workspace.get(sourceFile));
+			
+			// And remove the old copy
+			workspace.remove(sourceFile);
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if sourceFolder exist
+			if (workspace.get(sourceFolder) == null) {
+				throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
+					+ sourceFolder);
+			}
+			
+			// Get the keyset - in a new hashset 
+			// (so it wouldnt crash when we do modification)
+			Set<String> allKeys = new HashSet<>(workspace.keySet());
+			for (String key : allKeys) {
+				// If folder path match - migrate it
+				if (key.startsWith(sourceFolder)) {
+					// Copy it over
+					workspace.put(destinationFolder + key.substring(sourceFolder.length()),
+						workspace.get(key));
+					// Remove it
+					workspace.remove(key);
+				}
+			}
+			
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------

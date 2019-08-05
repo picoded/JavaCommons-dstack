@@ -251,7 +251,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param  destinationFolder
 	 * 
 	 */
-	public void backend_moveFolder(final String oid, final String sourceFolder,
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
 		throw new RuntimeException("Missing backend implementation");
 	}

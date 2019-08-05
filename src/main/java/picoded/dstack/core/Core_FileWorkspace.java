@@ -283,8 +283,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param sourceFolder
 	 * @param destinationFolder
 	 */
-	public void moveFolder(final String sourceFolder, final String destinationFolder) {
-		main.backend_moveFolder(_oid, normalizeFolderPathString(sourceFolder),
+	public void moveFolderPath(final String sourceFolder, final String destinationFolder) {
+		main.backend_moveFolderPath(_oid, normalizeFolderPathString(sourceFolder),
 			normalizeFolderPathString(destinationFolder));
 	}
 	

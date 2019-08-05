@@ -163,6 +163,48 @@ public class StructSimple_FileWorkspaceMap_test {
 	
 	//-----------------------------------------------------------------------------------
 	//
+	// Move test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void fileWrite_andFileMove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.moveFile("test/folder/file.txt", "test/folder/moved.txt");
+		
+		// File moved
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.hasFile("test/folder/moved.txt"));
+	}
+	
+	@Test
+	public void fileWrite_andFolderMove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.moveFolderPath("test/folder/", "moved/folder/");
+		
+		// File moved
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.hasFile("moved/folder/file.txt"));
+	}
+	
+	//-----------------------------------------------------------------------------------
+	//
 	// @TODO : Refactor the test cases below to make more sense for file systems
 	//
 	//-----------------------------------------------------------------------------------

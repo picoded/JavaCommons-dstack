@@ -240,7 +240,7 @@ public interface FileWorkspace {
 	 * @param destinationFolder
 	 * 
 	 */
-	void moveFolder(final String sourceFolder, final String destinationFolder);
+	void moveFolderPath(final String sourceFolder, final String destinationFolder);
 	
 	//
 	// Listing support
