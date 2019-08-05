@@ -92,12 +92,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String folderPath) {
-		main.setupWorkspace(_oid(), folderPath);
+	public void setupWorkspace() {
+		main.setupWorkspace(_oid());
 	}
-	
-	// Utility functions
-	//--------------------------------------------------------------------------
 	
 	// File exists checks
 	//--------------------------------------------------------------------------
@@ -111,6 +108,15 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public boolean fileExist(final String filepath) {
 		return main.backend_fileExist(_oid, filepath);
+	}
+	
+	/**
+	 * Delete an existing file from the workspace
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	public void removeFile(final String filepath) {
+		main.backend_removeFile(_oid, filepath);
 	}
 	
 	// Read / write byteArray information
@@ -163,12 +169,107 @@ public class Core_FileWorkspace implements FileWorkspace {
 		writeByteArray(filepath, jointData);
 	}
 	
-	public void removeFile(final String filepath) {
-		main.backend_removeFile(_oid, filepath);
+	// Folder Pathing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 */
+	public void removeFolderPath(final String folderPath) {
+		main.backend_removeFolderPath(_oid, folderPath);
 	}
 	
-	public void removePath(final String filepath) {
-		main.backend_removePath(_oid, filepath);
+	/**
+	 * Validate the given folder path exists.
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return true if folderPath is valid
+	 */
+	public boolean hasFolderPath(final String folderPath) {
+		return main.backend_hasFolderPath(_oid, folderPath);
+	}
+	
+	/**
+	 * Automatically generate a given folder path if it does not exist
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 */
+	public void ensureFolderPath(final String folderPath) {
+		main.backend_ensureFolderPath(_oid, folderPath);
+	}
+	
+	// Move support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param sourceFile
+	 * @param destinationFile
+	 */
+	public void moveFile(final String sourceFile, final String destinationFile) {
+		main.backend_moveFile(_oid, sourceFile, destinationFile);
+	}
+	
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param sourceFolder
+	 * @param destinationFolder
+	 */
+	public void moveFolder(final String sourceFolder, final String destinationFolder) {
+		main.backend_moveFolder(_oid, sourceFolder, destinationFolder);
+	}
+	
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minRecursion minimum recursion count, before outputing the listing
+	 * @param maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
+	 * @return list of path strings
+	 */
+	public Set<String> getFilePathSet(final String folderPath, final int minRecursion,
+		final int maxRecursion) {
+		return main.backend_getFilePathSet(_oid, folderPath, minRecursion, maxRecursion);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minRecursion minimum recursion count, before outputing the listing
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	public Set<String> getFolderPathSet(final String folderPath, final int minRecursion,
+		final int maxRecursion) {
+		return main.backend_getFolderPathSet(_oid, folderPath, minRecursion, maxRecursion);
 	}
 	
 }

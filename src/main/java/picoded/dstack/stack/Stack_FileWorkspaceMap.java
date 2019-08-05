@@ -200,22 +200,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	}
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		// Remove the file starting from the lowest layer
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_removePath(oid, filepath);
-		}
-	}
-	
-	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,
@@ -224,18 +208,10 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
+	public void backend_setupWorkspace(String oid) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid, folderPath);
+			dataLayers[i].backend_setupWorkspace(oid);
 		}
-	}
-	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_moveFileInWorkspace(oid, source, destination);
-		}
-		return true;
 	}
 	
 	//--------------------------------------------------------------------------

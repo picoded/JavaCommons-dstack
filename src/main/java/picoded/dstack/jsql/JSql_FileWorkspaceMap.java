@@ -183,20 +183,6 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	}
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		throw new RuntimeException("NOT YET SUPPORTED");
-		// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid, filepath });
-	}
-	
-	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,
@@ -205,25 +191,19 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
+	public void backend_setupWorkspace(String oid) {
 		// Setup a blank folder path
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		sqlObj.upsert( //
 			fileWorkspaceTableName, //
 			new String[] { "oID", "path" }, //
-			new Object[] { oid, folderPath }, //
+			new Object[] { oid, "/" }, //
 			new String[] { "uTm" }, //
 			new Object[] { now }, //
 			new String[] { "cTm", "eTm", "data" }, //
 			new Object[] { now, 0, null }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
-	}
-	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		// @TODO: To be implemented for Jsql
-		return true;
 	}
 	
 	//--------------------------------------------------------------------------

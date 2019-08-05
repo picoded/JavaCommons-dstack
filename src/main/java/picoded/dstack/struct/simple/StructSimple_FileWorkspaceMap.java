@@ -179,33 +179,17 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
-		// do nothing for struct simple
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// WHAT IS THIS ???
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		throw new RuntimeException("Not yet implemented");
-	}
-	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		// do nothing for struct simple
-		throw new RuntimeException("Not yet implemented");
+	public void backend_setupWorkspace(String oid) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// if workspace does not exist, set it up
+			if (fileContentMap.get(oid) == null) {
+				fileContentMap.put(oid, new ConcurrentHashMap<>());
+			}
+		} finally {
+			accessLock.writeLock().unlock();
+		}
 	}
 	
 	//--------------------------------------------------------------------------

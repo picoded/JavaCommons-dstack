@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represent a file storage backend for a workspace
@@ -58,8 +59,7 @@ public interface FileWorkspace {
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	default void setupWorkspace(String folderPath) {
-	}
+	void setupWorkspace();
 	
 	// File exists / removal
 	//--------------------------------------------------------------------------
@@ -72,6 +72,17 @@ public interface FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
 	 */
 	boolean fileExist(final String filepath);
+	
+	/**
+	 * Checks if the filepath exists with a file.
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
+	 */
+	default boolean hasFile(final String filepath) {
+		return fileExist(filepath);
+	}
 	
 	/**
 	 * Delete an existing file from the workspace
@@ -195,13 +206,6 @@ public interface FileWorkspace {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * @return if the current configured implementation supports atomic move operations.
-	 */
-	default boolean atomicMoveSupported() {
-		return false;
-	}
-	
-	/**
 	 * Move a given file within the system
 	 * 
 	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
@@ -217,7 +221,7 @@ public interface FileWorkspace {
 	 * @param destinationFile
 	 * 
 	 */
-	boolean moveFile(String sourceFile, String destinationFile);
+	void moveFile(final String sourceFile, final String destinationFile);
 	
 	/**
 	 * Move a given file within the system
@@ -236,7 +240,7 @@ public interface FileWorkspace {
 	 * @param destinationFolder
 	 * 
 	 */
-	void moveFolder(String sourceFolder, String destinationFolder);
+	void moveFolder(final String sourceFolder, final String destinationFolder);
 	
 	//
 	// Listing support
@@ -250,41 +254,7 @@ public interface FileWorkspace {
 	 * @param maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
 	 * @return list of path strings
 	 */
-	List<String> listFilePath(final String folderPath, final int minRecursion, final int maxRecursion);
-	
-	/**
-	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
-	 * 
-	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
-	 */
-	default List<String> listFilePath(final String folderPath, final int maxRecursion) {
-		return listFilePath(folderPath, 0, maxRecursion);
-	}
-	
-	/**
-	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
-	 * - max recursion = 1
-	 * 
-	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @return list of path strings
-	 */
-	default List<String> listFilePath(final String folderPath) {
-		return listFilePath(folderPath, 0, 1);
-	}
-	
-	/**
-	 * List all the various files found in the given folderPath
-	 * 
-	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param minRecursion minimum recursion count, before outputing the listing
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
-	 */
-	List<String> listFolderPath(final String folderPath, final int minRecursion,
+	Set<String> getFilePathSet(final String folderPath, final int minRecursion,
 		final int maxRecursion);
 	
 	/**
@@ -295,8 +265,8 @@ public interface FileWorkspace {
 	 * @param maxRecursion maximum recursion count, to stop the listing
 	 * @return list of path strings
 	 */
-	default List<String> listFolderPath(final String folderPath, final int maxRecursion) {
-		return listFolderPath(folderPath, 0, maxRecursion);
+	default Set<String> getFilePathSet(final String folderPath, final int maxRecursion) {
+		return getFilePathSet(folderPath, 0, maxRecursion);
 	}
 	
 	/**
@@ -307,30 +277,43 @@ public interface FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 * @return list of path strings
 	 */
-	default List<String> listFolderPath(final String folderPath) {
-		return listFolderPath(folderPath, 0, 1);
+	default Set<String> getFilePathSet(final String folderPath) {
+		return getFilePathSet(folderPath, 0, 1);
 	}
 	
-	//--------------------------------------------------------------------------
-	// TO DROP SUPPORT
-	//--------------------------------------------------------------------------
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minRecursion minimum recursion count, before outputing the listing
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	Set<String> getFolderPathSet(final String folderPath, final int minRecursion,
+		final int maxRecursion);
 	
-	// /**
-	//  * Checks if the directory exists.
-	//  *
-	//  * @param  dirPath in the workspace to check
-	//  *
-	//  * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
-	//  */
-	// boolean dirExist(final String dirPath);
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxRecursion maximum recursion count, to stop the listing
+	 * @return list of path strings
+	 */
+	default Set<String> getFolderPathSet(final String folderPath, final int maxRecursion) {
+		return getFolderPathSet(folderPath, 0, maxRecursion);
+	}
 	
-	// boolean moveFile(String source, String destination);
-	
-	// @TODO - once this API is more stable
-	//
-	// + File copies within workspace
-	// + Folder deletion
-	// + Folder listing
-	//--------------------------------------------------------------------------
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min recursion = 0
+	 * - max recursion = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings
+	 */
+	default Set<String> getFolderPathSet(final String folderPath) {
+		return getFolderPathSet(folderPath, 0, 1);
+	}
 	
 }

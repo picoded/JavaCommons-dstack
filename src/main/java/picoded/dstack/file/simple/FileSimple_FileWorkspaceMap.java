@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.management.RuntimeErrorException;
+
 /**
  * Reference class for Core_FileWorkspaceMap
  * Provide Crud operation backed by actual files
@@ -99,7 +101,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Get the file directory
-		return new File(baseDir, oid + "/workspace");
+		return new File(baseDir, oid + "/workspace/");
 	}
 	
 	/**
@@ -147,14 +149,11 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
-		File file = null;
-		if (folderPath.isEmpty()) {
-			file = new File(baseDir + "/" + oid);
-		} else {
-			file = new File(baseDir + "/" + oid + "/" + folderPath);
+	public void backend_setupWorkspace(String oid) {
+		File file = workspaceDirObj(oid);
+		if (file == null) {
+			throw new RuntimeException("Invalid OID (unable to setup)");
 		}
-		
 		boolean mkdir = file.mkdirs();
 	}
 	
@@ -297,52 +296,30 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
-	/**
-	 * Remove a file from the workspace by its id
-	 *
-	 * @param oid      identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		// Get the file object
-		File fileObj = workspaceFileObj(oid, filepath);
-		
-		// Invalid file path?
-		if (fileObj == null) {
-			return;
-		}
-		
-		// Check if its a file exist, and delete it
-		if (fileObj.exists()) {
-			FileUtil.forceDelete(fileObj);
-		}
-	}
+	// @Override
+	// public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
 	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		
-		File srcToMove = workspaceFileObj(oid, source);
-		File moveToDest = workspaceFileObj(oid, destination);
-		
-		if (!srcToMove.exists()) {
-			throw new RuntimeException("`src` file not found");
-		}
-		
-		if (moveToDest.exists()) {
-			throw new RuntimeException(String.format("File already exists at `%s`", destination));
-		}
-		
-		if (srcToMove.isDirectory()) {
-			// By default, create destination if not exist (latest)
-			srcToMove.renameTo(moveToDest);
-		} else {
-			// By default, create destination if not exist (latest)
-			FileUtil.moveFile(srcToMove, moveToDest);
-		}
-		
-		return moveToDest.exists();
-	}
+	// 	File srcToMove = workspaceFileObj(oid, source);
+	// 	File moveToDest = workspaceFileObj(oid, destination);
+	
+	// 	if (!srcToMove.exists()) {
+	// 		throw new RuntimeException("`src` file not found");
+	// 	}
+	
+	// 	if (moveToDest.exists()) {
+	// 		throw new RuntimeException(String.format("File already exists at `%s`", destination));
+	// 	}
+	
+	// 	if (srcToMove.isDirectory()) {
+	// 		// By default, create destination if not exist (latest)
+	// 		srcToMove.renameTo(moveToDest);
+	// 	} else {
+	// 		// By default, create destination if not exist (latest)
+	// 		FileUtil.moveFile(srcToMove, moveToDest);
+	// 	}
+	
+	// 	return moveToDest.exists();
+	// }
 	
 	@Override
 	public void systemSetup() {

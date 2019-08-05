@@ -82,7 +82,17 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	void setupWorkspace(String oid, String folderPath);
+	void setupWorkspace(String oid);
+	
+	// FileWorkspaceMap atomic support validation
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @return if the current configured implementation supports atomic move operations.
+	 */
+	default boolean atomicMoveSupported() {
+		return false;
+	}
 	
 	// FileWorkspaceMap utility operations
 	//--------------------------------------------------------------------------

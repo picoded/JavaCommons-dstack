@@ -6,6 +6,7 @@ package picoded.dstack.core;
 import picoded.dstack.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -49,15 +50,18 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String oid, String folderPath) {
-		backend_setupWorkspace(oid, folderPath);
+	public void setupWorkspace(String oid) {
+		backend_setupWorkspace(oid);
 	}
 	
 	//--------------------------------------------------------------------------
 	//
-	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
+	// Functions, used by FileWorkspaceMap
 	// [Internal use, to be extended in future implementation]
 	//
+	//--------------------------------------------------------------------------
+	
+	// to get / valdiate workspaces
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -80,13 +84,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 **/
 	abstract public boolean backend_workspaceExist(String oid);
 	
-	abstract public boolean backend_moveFileInWorkspace(String oid, String source, String destination);
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	abstract public void backend_setupWorkspace(String oid);
 	
-	//--------------------------------------------------------------------------
-	//
-	// Functions, used by FileWorkspace
-	// [Internal use, to be extended in future implementation]
-	//
+	// File exists / removal
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -104,6 +112,19 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return  boolean true, if file eixst
 	 **/
 	abstract public boolean backend_fileExist(final String oid, final String filepath);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	abstract public void backend_removeFile(final String oid, final String filepath);
+	
+	// File read and write
+	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -128,43 +149,135 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
 	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	abstract public void backend_removeFile(final String oid, final String filepath);
-	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	abstract public void backend_setupWorkspace(String oid, String folderPath);
-	
-	//--------------------------------------------------------------------------
-	//
-	// PATH Functions, used by FileWorkspace
-	// [Internal use, to be extended in future implementation]
-	//
+	// Folder Pathing support
 	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Removes the specified file path from the workspace in the backend
-	 * Note that this aggressively removes all other files sharing this path
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	// Move support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
 	 */
-	abstract public void backend_removePath(final String oid, final String filepath);
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolder(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minRecursion minimum recursion count, before outputing the listing
+	 * @param  maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
+	 * 
+	 * @return list of path strings
+	 */
+	public Set<String> backend_getFilePathSet(final String oid, final String folderPath,
+		final int minRecursion, final int maxRecursion) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minRecursion minimum recursion count, before outputing the listing
+	 * @param  maxRecursion maximum recursion count, to stop the listing
+	 * 
+	 * @return list of path strings
+	 */
+	public Set<String> backend_getFolderPathSet(final String oid, final String folderPath,
+		final int minRecursion, final int maxRecursion) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
 	//--------------------------------------------------------------------------
 	//
