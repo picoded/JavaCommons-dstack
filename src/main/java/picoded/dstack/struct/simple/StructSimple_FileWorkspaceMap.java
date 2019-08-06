@@ -500,54 +500,8 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 					+ searchPath);
 			}
 			
-			// Return set
-			Set<String> ret = new HashSet<>();
-			
-			// Get the keyset - in a new hashset 
-			// (so it wouldnt crash when we do modification)
-			Set<String> allKeys = new HashSet<>(workspace.keySet());
-			for (String key : allKeys) {
-				
-				// If folder does not match - skip
-				if (searchPath.length() > 0 && !key.startsWith(searchPath)) {
-					continue;
-				}
-				
-				// If folder path match - store it - maybe?
-				String subPath = key.substring(searchPath.length());
-				
-				// No filtering is needed, store and continue
-				if (maxDepth <= -1 && minDepth <= 0) {
-					ret.add(subPath);
-					continue;
-				}
-				
-				// Lets filter out the ending "/" 
-				String filteredSubPath = subPath;
-				if (filteredSubPath.endsWith("/")) {
-					filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length());
-				}
-				
-				// Split and count
-				String[] splitSubPath = filteredSubPath.split("/");
-				int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
-				
-				// Check min depth - skip if check failed
-				if (subPathLength < minDepth) {
-					continue;
-				}
-				
-				// Check max depth - skip if check failed
-				if (subPathLength > maxDepth) {
-					continue;
-				}
-				
-				// All checks passed, store it
-				ret.add(subPath);
-			}
-			
-			// Return the result
-			return ret;
+			// Return a filtered set
+			return backend_filtterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
 		} finally {
 			accessLock.readLock().unlock();
 		}

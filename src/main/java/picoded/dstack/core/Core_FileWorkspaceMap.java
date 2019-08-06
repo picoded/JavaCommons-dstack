@@ -261,6 +261,93 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	//--------------------------------------------------------------------------
 	
 	/**
+	 * Internal utility function used to filter a path set, and remove items that does not match
+	 * 
+	 * - its folderPath prefix
+	 * - min/max depth
+	 * - any / file / folder
+	 * 
+	 * @param rawSet
+	 * @param folderPath
+	 * @param minDepth
+	 * @param maxDepth
+	 * @param pathType (0 = any, 1 = file, 2 = folder)
+	 * @return
+	 */
+	protected Set<String> backend_filtterPathSet(final Set<String> rawSet, final String folderPath,
+		final int minDepth, final int maxDepth, final int pathType) {
+		
+		// Normalize the folder path
+		String searchPath = folderPath;
+		if (searchPath.equals("/")) {
+			searchPath = "";
+		}
+		int searchPathLen = searchPath.length();
+		
+		// Return set
+		Set<String> ret = new HashSet<>();
+		
+		// Get the keyset, and iterate it
+		for (String key : rawSet) {
+			
+			// If folder does not match - skip
+			if (searchPathLen > 0 && !key.startsWith(searchPath)) {
+				continue;
+			}
+			
+			// If folder path match - store it - maybe?
+			String subPath = key.substring(searchPathLen);
+			
+			// No filtering is needed, store and continue
+			if (maxDepth <= 0 && minDepth <= 0) {
+				// Does nothing
+			} else {
+				// Lets perform path filtering
+				
+				// Lets filter out the ending "/" 
+				String filteredSubPath = subPath;
+				if (filteredSubPath.endsWith("/")) {
+					filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length());
+				}
+				
+				// Split and count
+				String[] splitSubPath = filteredSubPath.split("/");
+				int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
+				
+				// Check min depth - skip key if check failed
+				if (subPathLength < minDepth) {
+					continue;
+				}
+				
+				// Check max depth - skip key if check failed
+				if (subPathLength > maxDepth) {
+					continue;
+				}
+			}
+			
+			// Alrighto - lets check file / folder type - and add it in
+			if (pathType == 1) {
+				if (subPath.endsWith("/")) {
+					// Not a file - abort!
+					continue;
+				}
+			}
+			if (pathType == 2) {
+				if (!subPath.endsWith("/")) {
+					// Not a folder - abort!
+					continue;
+				}
+			}
+			
+			// Finally - all checks passed : add the path
+			ret.add(subPath);
+		}
+		
+		// Return the filtered set
+		return ret;
+	}
+	
+	/**
 	 * List all the various files and folders found in the given folderPath
 	 * 
 	 * @param  ObjectID of workspace
