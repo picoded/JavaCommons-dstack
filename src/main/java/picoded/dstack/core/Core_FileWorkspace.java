@@ -231,8 +231,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 * @return true if folderPath is valid
 	 */
-	public boolean hasFolderPath(final String folderPath) {
-		return main.backend_hasFolderPath(_oid, normalizeFolderPathString(folderPath));
+	public boolean folderPathExist(final String folderPath) {
+		return main.backend_folderPathExist(_oid, normalizeFolderPathString(folderPath));
 	}
 	
 	/**

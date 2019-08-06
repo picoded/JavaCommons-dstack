@@ -316,7 +316,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+	public boolean backend_folderPathExist(final String oid, final String folderPath) {
 		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "oID",
 			"oID = ? AND path = ? AND fTyp = ?", new Object[] { oid, folderPath, fTyp_folder }, null,
 			1, 0);

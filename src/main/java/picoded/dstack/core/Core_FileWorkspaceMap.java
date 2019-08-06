@@ -188,7 +188,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+	public boolean backend_folderPathExist(final String oid, final String folderPath) {
 		throw new RuntimeException("Missing backend implementation");
 	}
 	

@@ -74,17 +74,6 @@ public interface FileWorkspace {
 	boolean fileExist(final String filepath);
 	
 	/**
-	 * Checks if the filepath exists with a file.
-	 *
-	 * @param  filepath in the workspace to check
-	 *
-	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
-	 */
-	default boolean hasFile(final String filepath) {
-		return fileExist(filepath);
-	}
-	
-	/**
 	 * Delete an existing file from the workspace
 	 *
 	 * @param filepath in the workspace to delete
@@ -192,7 +181,7 @@ public interface FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 * @return true if folderPath is valid
 	 */
-	boolean hasFolderPath(final String folderPath);
+	boolean folderPathExist(final String folderPath);
 	
 	/**
 	 * Automatically generate a given folder path if it does not exist

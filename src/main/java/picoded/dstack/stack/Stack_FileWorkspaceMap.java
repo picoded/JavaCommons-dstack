@@ -248,9 +248,9 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+	public boolean backend_folderPathExist(final String oid, final String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			if (dataLayers[i].backend_hasFolderPath(oid, folderPath)) {
+			if (dataLayers[i].backend_folderPathExist(oid, folderPath)) {
 				return true;
 			}
 		}

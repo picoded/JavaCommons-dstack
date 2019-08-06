@@ -101,16 +101,16 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(fileWorkspace);
 		
 		// Folder does not exist first
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
 		
 		// Set it up and assert
 		fileWorkspace.ensureFolderPath("test/folder");
-		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("test/folder"));
 		
 		// Remove and assert
 		fileWorkspace.removeFolderPath("test/folder");
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
-		assertTrue(fileWorkspace.hasFolderPath("test"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("test"));
 		
 	}
 	
@@ -121,22 +121,22 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(fileWorkspace);
 		
 		// Folder does not exist first
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
-		assertFalse(fileWorkspace.hasFolderPath("test/folder/"));
-		assertFalse(fileWorkspace.hasFolderPath("/test/folder/"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder/"));
+		assertFalse(fileWorkspace.folderPathExist("/test/folder/"));
 		
 		// Set it up and assert
 		fileWorkspace.ensureFolderPath("test/folder");
-		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
-		assertTrue(fileWorkspace.hasFolderPath("test/folder/"));
-		assertTrue(fileWorkspace.hasFolderPath("/test/folder"));
-		assertTrue(fileWorkspace.hasFolderPath("/test/folder/"));
+		assertTrue(fileWorkspace.folderPathExist("test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("test/folder/"));
+		assertTrue(fileWorkspace.folderPathExist("/test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("/test/folder/"));
 		
 		// Remove and assert
 		fileWorkspace.removeFolderPath("test/folder");
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
-		assertTrue(fileWorkspace.hasFolderPath("/test"));
-		assertTrue(fileWorkspace.hasFolderPath("/test/"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("/test"));
+		assertTrue(fileWorkspace.folderPathExist("/test/"));
 		
 	}
 	
@@ -147,18 +147,18 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(fileWorkspace);
 		
 		// Folder does not exist first
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
 		
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
-		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
-		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.folderPathExist("test/folder"));
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
 		
 		// Remove and assert
 		fileWorkspace.removeFolderPath("test/folder");
-		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
-		assertTrue(fileWorkspace.hasFolderPath("test"));
-		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
+		assertTrue(fileWorkspace.folderPathExist("test"));
+		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
 	}
 	
 	//-----------------------------------------------------------------------------------
@@ -175,14 +175,14 @@ public class StructSimple_FileWorkspaceMap_test {
 		
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
-		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
 		
 		// Move it
 		fileWorkspace.moveFile("test/folder/file.txt", "test/folder/moved.txt");
 		
 		// File moved
-		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
-		assertTrue(fileWorkspace.hasFile("test/folder/moved.txt"));
+		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("test/folder/moved.txt"));
 	}
 	
 	@Test
@@ -193,14 +193,14 @@ public class StructSimple_FileWorkspaceMap_test {
 		
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
-		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
 		
 		// Move it
 		fileWorkspace.moveFolderPath("test/folder/", "moved/folder/");
 		
 		// File moved
-		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
-		assertTrue(fileWorkspace.hasFile("moved/folder/file.txt"));
+		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("moved/folder/file.txt"));
 	}
 	
 	//-----------------------------------------------------------------------------------

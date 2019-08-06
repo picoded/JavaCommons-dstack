@@ -355,7 +355,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+	public boolean backend_folderPathExist(final String oid, final String folderPath) {
 		File folderObj = workspaceFileObj(oid, folderPath);
 		return folderObj.isDirectory();
 	}
