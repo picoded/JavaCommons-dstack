@@ -465,6 +465,96 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Listing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		try {
+			accessLock.readLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if folderPath exist
+			String searchPath = folderPath;
+			if (searchPath.equals("/")) {
+				searchPath = "";
+			}
+			if (searchPath.length() > 0 && workspace.get(searchPath) == null) {
+				throw new RuntimeException("folderPath does not exist (oid=" + oid + ") : "
+					+ searchPath);
+			}
+			
+			// Return set
+			Set<String> ret = new HashSet<>();
+			
+			// Get the keyset - in a new hashset 
+			// (so it wouldnt crash when we do modification)
+			Set<String> allKeys = new HashSet<>(workspace.keySet());
+			for (String key : allKeys) {
+				
+				// If folder does not match - skip
+				if (searchPath.length() > 0 && !key.startsWith(searchPath)) {
+					continue;
+				}
+				
+				// If folder path match - store it - maybe?
+				String subPath = key.substring(searchPath.length());
+				
+				// No filtering is needed, store and continue
+				if (maxDepth <= -1 && minDepth <= 0) {
+					ret.add(subPath);
+					continue;
+				}
+				
+				// Lets filter out the ending "/" 
+				String filteredSubPath = subPath;
+				if (filteredSubPath.endsWith("/")) {
+					filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length());
+				}
+				
+				// Split and count
+				String[] splitSubPath = filteredSubPath.split("/");
+				int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
+				
+				// Check min depth - skip if check failed
+				if (subPathLength < minDepth) {
+					continue;
+				}
+				
+				// Check max depth - skip if check failed
+				if (subPathLength > maxDepth) {
+					continue;
+				}
+				
+				// All checks passed, store it
+				ret.add(subPath);
+			}
+			
+			// Return the result
+			return ret;
+		} finally {
+			accessLock.readLock().unlock();
+		}
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------

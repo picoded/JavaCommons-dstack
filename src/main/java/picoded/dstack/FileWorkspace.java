@@ -247,73 +247,106 @@ public interface FileWorkspace {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * List all the various files found in the given folderPath
+	 * List all the various files and folders found in the given folderPath
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param minRecursion minimum recursion count, before outputing the listing
-	 * @param maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
-	 * @return list of path strings
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	Set<String> getFilePathSet(final String folderPath, final int minRecursion,
-		final int maxRecursion);
+	Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth);
 	
 	/**
 	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
+	 * - min depth = 1
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	default Set<String> getFilePathSet(final String folderPath, final int maxRecursion) {
-		return getFilePathSet(folderPath, 0, maxRecursion);
+	default Set<String> getFileAndFolderPathSet(final String folderPath, final int maxDepth) {
+		return getFileAndFolderPathSet(folderPath, 1, maxDepth);
 	}
 	
 	/**
 	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
-	 * - max recursion = 1
+	 * - min depth = 1
+	 * - max depth = 1
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @return list of path strings
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	default Set<String> getFileAndFolderPathSet(final String folderPath) {
+		return getFileAndFolderPathSet(folderPath, 1, 1);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth);
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	default Set<String> getFilePathSet(final String folderPath, final int maxDepth) {
+		return getFilePathSet(folderPath, 1, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * - max depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings - relative to the given folderPath
 	 */
 	default Set<String> getFilePathSet(final String folderPath) {
-		return getFilePathSet(folderPath, 0, 1);
+		return getFilePathSet(folderPath, 1, 1);
 	}
 	
 	/**
 	 * List all the various files found in the given folderPath
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param minRecursion minimum recursion count, before outputing the listing
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	Set<String> getFolderPathSet(final String folderPath, final int minRecursion,
-		final int maxRecursion);
+	Set<String> getFolderPathSet(final String folderPath, final int minDepth, final int maxDepth);
 	
 	/**
 	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
+	 * - min depth = 1
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	default Set<String> getFolderPathSet(final String folderPath, final int maxRecursion) {
-		return getFolderPathSet(folderPath, 0, maxRecursion);
+	default Set<String> getFolderPathSet(final String folderPath, final int maxDepth) {
+		return getFolderPathSet(folderPath, 1, maxDepth);
 	}
 	
 	/**
 	 * List all the various files found in the given folderPath
-	 * - min recursion = 0
-	 * - max recursion = 1
+	 * - min depth = 1
+	 * - max depth = 1
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @return list of path strings
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
 	default Set<String> getFolderPathSet(final String folderPath) {
-		return getFolderPathSet(folderPath, 0, 1);
+		return getFolderPathSet(folderPath, 1, 1);
 	}
 	
 }

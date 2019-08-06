@@ -295,28 +295,41 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * List all the various files found in the given folderPath
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param minRecursion minimum recursion count, before outputing the listing
-	 * @param maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
-	 * @return list of path strings
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	public Set<String> getFilePathSet(final String folderPath, final int minRecursion,
-		final int maxRecursion) {
-		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minRecursion,
-			maxRecursion);
+	public Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth) {
+		return main.backend_getFileAndFolderPathSet(_oid, normalizeFolderPathString(folderPath),
+			minDepth, maxDepth);
 	}
 	
 	/**
 	 * List all the various files found in the given folderPath
 	 * 
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param minRecursion minimum recursion count, before outputing the listing
-	 * @param maxRecursion maximum recursion count, to stop the listing
-	 * @return list of path strings
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath
 	 */
-	public Set<String> getFolderPathSet(final String folderPath, final int minRecursion,
-		final int maxRecursion) {
-		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath),
-			minRecursion, maxRecursion);
+	public Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth) {
+		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
+			maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> getFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth) {
+		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
+			maxDepth);
 	}
 	
 }

@@ -5,6 +5,7 @@ package picoded.dstack.core;
 // Picoded imports
 import picoded.dstack.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -260,17 +261,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * List all the various files found in the given folderPath
+	 * List all the various files and folders found in the given folderPath
 	 * 
 	 * @param  ObjectID of workspace
 	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param  minRecursion minimum recursion count, before outputing the listing
-	 * @param  maxRecursion maximum recursion count, to stop the listing (-1 for infinite)
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
 	 * 
-	 * @return list of path strings
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
-	public Set<String> backend_getFilePathSet(final String oid, final String folderPath,
-		final int minRecursion, final int maxRecursion) {
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
 		throw new RuntimeException("Missing backend implementation");
 	}
 	
@@ -279,14 +280,53 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * 
 	 * @param  ObjectID of workspace
 	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	 * @param  minRecursion minimum recursion count, before outputing the listing
-	 * @param  maxRecursion maximum recursion count, to stop the listing
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
 	 * 
-	 * @return list of path strings
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> backend_getFilePathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		// Get the full set
+		Set<String> fullSet = backend_getFileAndFolderPathSet(oid, folderPath, minDepth, maxDepth);
+		Set<String> retSet = new HashSet<>();
+		
+		// Iterate and filter for files
+		for (String item : fullSet) {
+			if (!item.endsWith("/")) {
+				retSet.add(item);
+			}
+		}
+		
+		// Return the relevent set
+		return retSet;
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing
+	 * 
+	 * @return list of path strings - relative to the given folderPath
 	 */
 	public Set<String> backend_getFolderPathSet(final String oid, final String folderPath,
-		final int minRecursion, final int maxRecursion) {
-		throw new RuntimeException("Missing backend implementation");
+		final int minDepth, final int maxDepth) {
+		// Get the full set
+		Set<String> fullSet = backend_getFileAndFolderPathSet(oid, folderPath, minDepth, maxDepth);
+		Set<String> retSet = new HashSet<>();
+		
+		// Iterate and filter for files
+		for (String item : fullSet) {
+			if (item.endsWith("/")) {
+				retSet.add(item);
+			}
+		}
+		
+		// Return the relevent set
+		return retSet;
 	}
 	
 	//--------------------------------------------------------------------------

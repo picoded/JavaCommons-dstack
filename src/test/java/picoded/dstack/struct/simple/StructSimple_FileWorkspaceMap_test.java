@@ -205,6 +205,36 @@ public class StructSimple_FileWorkspaceMap_test {
 	
 	//-----------------------------------------------------------------------------------
 	//
+	// Path sets
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void getPathSetLookup() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		fileWorkspace.setupWorkspace();
+		
+		// List blank
+		assertEquals(0, fileWorkspace.getFilePathSet("").size());
+		assertEquals(0, fileWorkspace.getFolderPathSet("").size());
+		assertEquals(0, fileWorkspace.getFileAndFolderPathSet("").size());
+		
+		// Write stuff
+		fileWorkspace.writeString("test/one.txt", "anything");
+		fileWorkspace.writeString("test/two.txt", "anything");
+		fileWorkspace.writeString("test/d1/file.txt", "anything");
+		fileWorkspace.writeString("test/d2/file.txt", "anything");
+		
+		// List files and folders
+		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("test").size());
+		assertEquals(2, fileWorkspace.getFilePathSet("test").size());
+		assertEquals(2, fileWorkspace.getFolderPathSet("test").size());
+	}
+	
+	//-----------------------------------------------------------------------------------
+	//
 	// @TODO : Refactor the test cases below to make more sense for file systems
 	//
 	//-----------------------------------------------------------------------------------
