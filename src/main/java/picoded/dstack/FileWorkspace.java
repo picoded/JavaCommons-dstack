@@ -190,6 +190,16 @@ public interface FileWorkspace {
 	 */
 	void ensureFolderPath(final String folderPath);
 	
+	/**
+	 * Validate the given path exists (file or folder)
+	 * 
+	 * @param path in the workspace
+	 * @return true if path is valid
+	 */
+	default boolean pathExist(final String path) {
+		return fileExist(path) || folderPathExist(path);
+	}
+	
 	//
 	// Move support
 	//--------------------------------------------------------------------------
