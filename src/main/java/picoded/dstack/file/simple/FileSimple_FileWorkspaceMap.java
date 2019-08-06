@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,7 +60,6 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	//--------------------------------------------------------------------------
 	
 	protected void validateBaseDir() {
-		
 		if (!baseDir.exists() || !baseDir.isDirectory()) {
 			// Note I intentionally did not leak the configured storage path
 			// for security reasons. =/
@@ -296,31 +297,6 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
-	// @Override
-	// public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-	
-	// 	File srcToMove = workspaceFileObj(oid, source);
-	// 	File moveToDest = workspaceFileObj(oid, destination);
-	
-	// 	if (!srcToMove.exists()) {
-	// 		throw new RuntimeException("`src` file not found");
-	// 	}
-	
-	// 	if (moveToDest.exists()) {
-	// 		throw new RuntimeException(String.format("File already exists at `%s`", destination));
-	// 	}
-	
-	// 	if (srcToMove.isDirectory()) {
-	// 		// By default, create destination if not exist (latest)
-	// 		srcToMove.renameTo(moveToDest);
-	// 	} else {
-	// 		// By default, create destination if not exist (latest)
-	// 		FileUtil.moveFile(srcToMove, moveToDest);
-	// 	}
-	
-	// 	return moveToDest.exists();
-	// }
-	
 	@Override
 	public void systemSetup() {
 		if (!baseDir.exists()) {
@@ -346,4 +322,210 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			FileUtil.forceMkdir(baseDir);
 		}
 	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Folder handling
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		File folderObj = workspaceFileObj(oid, folderPath);
+		FileUtil.forceDelete(folderObj);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		File folderObj = workspaceFileObj(oid, folderPath);
+		return folderObj.isDirectory();
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		File folderObj = workspaceFileObj(oid, folderPath);
+		FileUtil.forceMkdir(folderObj);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Move support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		
+		// Check for source file
+		File sourceObj = workspaceFileObj(oid, sourceFile);
+		if (!sourceObj.isFile()) {
+			throw new RuntimeException("sourceFile does not exist / is not a file (oid=" + oid
+				+ ") : " + sourceFile);
+		}
+		
+		// Apply the move
+		FileUtil.moveFile(sourceObj, workspaceFileObj(oid, destinationFile));
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		// Check for source folder
+		File sourceObj = workspaceFileObj(oid, sourceFolder);
+		if (!sourceObj.isDirectory()) {
+			throw new RuntimeException("sourceFolder does not exist / is not a folder (oid=" + oid
+				+ ") : " + sourceFolder);
+		}
+		
+		// Apply the move
+		FileUtil.moveDirectory(sourceObj, workspaceFileObj(oid, destinationFolder));
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Listing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Recusrively iterate internally, a given directory and populate the result set of valid paths
+	 * 
+	 * @param result
+	 * @param currentDir
+	 * @param currentPath
+	 * @param maxDepth
+	 */
+	protected void recusively_populatePathSet(Set<String> result, File currentDir,
+		String currentPath, int maxDepth) {
+		// List all the files
+		File[] fileList = currentDir.listFiles();
+		
+		// For each one of it, process it!
+		for (File subFile : fileList) {
+			// Get subFile name
+			String subFileName = subFile.getName();
+			
+			// If its a file - add it, and move on
+			if (subFile.isFile()) {
+				result.add(currentPath + subFileName);
+				continue;
+			}
+			
+			// Not a file? huh - skip
+			if (!subFile.isDirectory()) {
+				continue;
+			}
+			
+			// Ok safely assume a directory
+			String subDirectoryPath = currentPath + subFileName + "/";
+			result.add(subDirectoryPath);
+			
+			// Lets recursively look into it (if needed)
+			if (maxDepth <= -1) {
+				// No max depth check - dive in
+				recusively_populatePathSet(result, subFile, subDirectoryPath, -1);
+			} else if (maxDepth == 0) {
+				// End of recursion - abort
+				continue;
+			} else {
+				// Time to loop and count it
+				recusively_populatePathSet(result, subFile, subDirectoryPath, maxDepth - 1);
+			}
+		}
+	}
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		// Check for source folder
+		File folderObj = workspaceFileObj(oid, folderPath);
+		if (!folderObj.isDirectory()) {
+			throw new RuntimeException("folderPath does not exist / is not a folder (oid=" + oid
+				+ ") : " + folderPath);
+		}
+		
+		// Prepare the return set
+		Set<String> retSet = new HashSet<>();
+		
+		// Lets recursively loop through the files
+		recusively_populatePathSet(retSet, folderObj, "", maxDepth);
+		
+		// Return with minDepth filtering
+		return backend_filtterPathSet(retSet, "", minDepth, maxDepth, 0);
+	}
+	
 }
