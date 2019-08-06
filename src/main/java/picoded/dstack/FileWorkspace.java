@@ -7,9 +7,19 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represent a file storage backend for a workspace
+ * 
+ * One of the major distinction between FileWorkspace, and "actual" file storage, is the intentional avoidence of most filesystem commands,
+ * specifically folder commands. As this is modeled to have intercompatibility with object based storage systems instead of true file systems (with folder, and permissions)
+ * 
+ * As many of the S3-like object storage system has no concept of "directory" or "folders",
+ * folder like features are emulated instead, to the minimum required in most use cases.
+ * 
+ * Another common functionality of these S3-like storage, is that if a file written / created for any path.
+ * The preceding "folders" are considered to be automatically generated.
  */
 public interface FileWorkspace {
 	
@@ -49,10 +59,9 @@ public interface FileWorkspace {
 	 *
 	 * Does not throw any error if workspace was previously setup
 	 */
-	default void setupWorkspace(String folderPath) {
-	}
+	void setupWorkspace();
 	
-	// File exists checks
+	// File exists / removal
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -63,6 +72,24 @@ public interface FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
 	 */
 	boolean fileExist(final String filepath);
+	
+	/**
+	 * Checks if the filepath exists with a file.
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return true, if file exists (and writable), false if it does not. (returns false if directory of the same name exists)
+	 */
+	default boolean hasFile(final String filepath) {
+		return fileExist(filepath);
+	}
+	
+	/**
+	 * Delete an existing file from the workspace
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	void removeFile(final String filepath);
 	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
@@ -85,13 +112,6 @@ public interface FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	void writeByteArray(final String filepath, final byte[] data);
-	
-	/**
-	 * Delete an existing file from the workspace
-	 *
-	 * @param filepath in the workspace to delete
-	 */
-	void removeFile(final String filepath);
 	
 	/**
 	 * Appends a byte array to a file creating the file if it does not exist.
@@ -155,55 +175,178 @@ public interface FileWorkspace {
 	}
 	
 	//
-	// Pathing support
+	// Folder Pathing support
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Delete an existing directory from the workspace.
-	 * This recursively removes all file content under the given path
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param filepath in the workspace to delete
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
-	void removePath(final String filepath);
-	
-	//--------------------------------------------------------------------------
-	// TO DROP SUPPORT
-	//--------------------------------------------------------------------------
+	void removeFolderPath(final String folderPath);
 	
 	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects in tree view
+	 * Validate the given folder path exists.
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return true if folderPath is valid
 	 */
-	FileNode listWorkspaceInTreeView(String folderPath, int depth);
+	boolean hasFolderPath(final String folderPath);
 	
 	/**
-	 * List the files and folder recursively depending on the folderPath that was passed in.
-	 *
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objectsin in list view
+	 * Automatically generate a given folder path if it does not exist
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
-	List<FileNode> listWorkspaceInListView(String folderPath, int depth);
+	void ensureFolderPath(final String folderPath);
 	
-	/**
-	 * Checks if the directory exists.
-	 *
-	 * @param  dirPath in the workspace to check
-	 *
-	 * @return true, if directory exists, false if it does not. (returns false if file of the same name exists)
-	 */
-	boolean dirExist(final String dirPath);
-	
-	boolean moveFile(String source, String destination);
-	
-	// @TODO - once this API is more stable
 	//
-	// + File copies within workspace
-	// + Folder deletion
-	// + Folder listing
+	// Move support
 	//--------------------------------------------------------------------------
+	
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param sourceFile
+	 * @param destinationFile
+	 * 
+	 */
+	void moveFile(final String sourceFile, final String destinationFile);
+	
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param sourceFolder
+	 * @param destinationFolder
+	 * 
+	 */
+	void moveFolderPath(final String sourceFolder, final String destinationFolder);
+	
+	//
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth);
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	default Set<String> getFileAndFolderPathSet(final String folderPath, final int maxDepth) {
+		return getFileAndFolderPathSet(folderPath, 1, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * - max depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	default Set<String> getFileAndFolderPathSet(final String folderPath) {
+		return getFileAndFolderPathSet(folderPath, 1, 1);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth);
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	default Set<String> getFilePathSet(final String folderPath, final int maxDepth) {
+		return getFilePathSet(folderPath, 1, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * - max depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	default Set<String> getFilePathSet(final String folderPath) {
+		return getFilePathSet(folderPath, 1, 1);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	Set<String> getFolderPathSet(final String folderPath, final int minDepth, final int maxDepth);
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	default Set<String> getFolderPathSet(final String folderPath, final int maxDepth) {
+		return getFolderPathSet(folderPath, 1, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * - min depth = 1
+	 * - max depth = 1
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	default Set<String> getFolderPathSet(final String folderPath) {
+		return getFolderPathSet(folderPath, 1, 1);
+	}
 	
 }

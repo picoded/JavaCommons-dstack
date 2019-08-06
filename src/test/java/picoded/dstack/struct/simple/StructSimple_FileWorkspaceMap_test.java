@@ -88,9 +88,156 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(testObj.get(oid));
 	}
 	
+	//-----------------------------------------------------------------------------------
+	//
+	// Folder pathing test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void folderSetupAndRemove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Set it up and assert
+		fileWorkspace.ensureFolderPath("test/folder");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test"));
+		
+	}
+	
+	@Test
+	public void folderSetupAndRemove_pathVarients() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertFalse(fileWorkspace.hasFolderPath("test/folder/"));
+		assertFalse(fileWorkspace.hasFolderPath("/test/folder/"));
+		
+		// Set it up and assert
+		fileWorkspace.ensureFolderPath("test/folder");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test/folder/"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/folder/"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("/test"));
+		assertTrue(fileWorkspace.hasFolderPath("/test/"));
+		
+	}
+	
+	@Test
+	public void fileWrite_andProperlySetupFolder() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Folder does not exist first
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Remove and assert
+		fileWorkspace.removeFolderPath("test/folder");
+		assertFalse(fileWorkspace.hasFolderPath("test/folder"));
+		assertTrue(fileWorkspace.hasFolderPath("test"));
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+	}
+	
+	//-----------------------------------------------------------------------------------
+	//
+	// Move test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void fileWrite_andFileMove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.moveFile("test/folder/file.txt", "test/folder/moved.txt");
+		
+		// File moved
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.hasFile("test/folder/moved.txt"));
+	}
+	
+	@Test
+	public void fileWrite_andFolderMove() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.hasFile("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.moveFolderPath("test/folder/", "moved/folder/");
+		
+		// File moved
+		assertFalse(fileWorkspace.hasFile("test/folder/file.txt"));
+		assertTrue(fileWorkspace.hasFile("moved/folder/file.txt"));
+	}
+	
+	//-----------------------------------------------------------------------------------
+	//
+	// Path sets
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void getPathSetLookup() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		fileWorkspace.setupWorkspace();
+		
+		// List blank
+		assertEquals(0, fileWorkspace.getFilePathSet("").size());
+		assertEquals(0, fileWorkspace.getFolderPathSet("").size());
+		assertEquals(0, fileWorkspace.getFileAndFolderPathSet("").size());
+		
+		// Write stuff
+		fileWorkspace.writeString("test/one.txt", "anything");
+		fileWorkspace.writeString("test/two.txt", "anything");
+		fileWorkspace.writeString("test/d1/file.txt", "anything");
+		fileWorkspace.writeString("test/d2/file.txt", "anything");
+		
+		// List files and folders
+		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("test").size());
+		assertEquals(2, fileWorkspace.getFilePathSet("test").size());
+		assertEquals(2, fileWorkspace.getFolderPathSet("test").size());
+	}
+	
+	//-----------------------------------------------------------------------------------
 	//
 	// @TODO : Refactor the test cases below to make more sense for file systems
 	//
+	//-----------------------------------------------------------------------------------
 	
 	@Test
 	public void checkFileExist() {

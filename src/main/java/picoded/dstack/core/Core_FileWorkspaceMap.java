@@ -5,7 +5,9 @@ package picoded.dstack.core;
 // Picoded imports
 import picoded.dstack.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -49,15 +51,18 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String oid, String folderPath) {
-		backend_setupWorkspace(oid, folderPath);
+	public void setupWorkspace(String oid) {
+		backend_setupWorkspace(oid);
 	}
 	
 	//--------------------------------------------------------------------------
 	//
-	// Functions, used by FileWorkspaceMap (to get / valdiate workspaces)
+	// Functions, used by FileWorkspaceMap
 	// [Internal use, to be extended in future implementation]
 	//
+	//--------------------------------------------------------------------------
+	
+	// to get / valdiate workspaces
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -81,34 +86,26 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	abstract public boolean backend_workspaceExist(String oid);
 	
 	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @return back a list of Objects (the subsequent implementations will determine what Object is returned)
-	 */
-	abstract public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth);
-	
-	/**
-	 * The actual implementation to be completed in the subsequent classes that extends from Core_FileWorkspaceMap.
-	 * List the files and folder recursively depending on the folderPath that was passed in.
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
 	 *
-	 * @param oid        of the workspace to search
-	 * @param folderPath start of the folderPath to retrieve from
-	 * @param depth      the level of recursion that this is going to go to, -1 will be listing all the way
-	 * @return back a list of Objects in list view
+	 * Does not throw any error if workspace was previously setup
 	 */
-	abstract public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath,
-		int depth);
-	
-	abstract public boolean backend_moveFileInWorkspace(String oid, String source, String destination);
+	abstract public void backend_setupWorkspace(String oid);
 	
 	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
+	// Note: It is safe to assume for all backend_* operations
+	// that their filepath has been normalized by Core_FileWorkspace
+	//
 	// [Internal use, to be extended in future implementation]
 	//
+	//--------------------------------------------------------------------------
+	
+	// File exists / removal
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -126,6 +123,19 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @return  boolean true, if file eixst
 	 **/
 	abstract public boolean backend_fileExist(final String oid, final String filepath);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the specified file path from the workspace in the backend
+	 *
+	 * @param oid identifier to the workspace
+	 * @param filepath the file to be removed
+	 */
+	abstract public void backend_removeFile(final String oid, final String filepath);
+	
+	// File read and write
+	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -150,43 +160,261 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
 	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	abstract public void backend_removeFile(final String oid, final String filepath);
-	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	abstract public void backend_setupWorkspace(String oid, String folderPath);
-	
-	//--------------------------------------------------------------------------
-	//
-	// PATH Functions, used by FileWorkspace
-	// [Internal use, to be extended in future implementation]
-	//
+	// Folder Pathing support
 	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Removes the specified file path from the workspace in the backend
-	 * Note that this aggressively removes all other files sharing this path
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	// Move support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
 	 */
-	abstract public void backend_removePath(final String oid, final String filepath);
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Internal utility function used to filter a path set, and remove items that does not match
+	 * 
+	 * - its folderPath prefix
+	 * - min/max depth
+	 * - any / file / folder
+	 * 
+	 * @param rawSet
+	 * @param folderPath
+	 * @param minDepth
+	 * @param maxDepth
+	 * @param pathType (0 = any, 1 = file, 2 = folder)
+	 * @return
+	 */
+	protected Set<String> backend_filtterPathSet(final Set<String> rawSet, final String folderPath,
+		final int minDepth, final int maxDepth, final int pathType) {
+		
+		// Normalize the folder path
+		String searchPath = folderPath;
+		if (searchPath.equals("/")) {
+			searchPath = "";
+		}
+		int searchPathLen = searchPath.length();
+		
+		// Return set
+		Set<String> ret = new HashSet<>();
+		
+		// Get the keyset, and iterate it
+		for (String key : rawSet) {
+			
+			// If folder does not match - skip
+			if (searchPathLen > 0 && !key.startsWith(searchPath)) {
+				continue;
+			}
+			
+			// If folder path match - store it - maybe?
+			String subPath = key.substring(searchPathLen);
+			
+			// No filtering is needed, store and continue
+			if (maxDepth <= 0 && minDepth <= 0) {
+				// Does nothing
+			} else {
+				// Lets perform path filtering
+				
+				// Lets filter out the ending "/" 
+				String filteredSubPath = subPath;
+				if (filteredSubPath.endsWith("/")) {
+					filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length());
+				}
+				
+				// Split and count
+				String[] splitSubPath = filteredSubPath.split("/");
+				int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
+				
+				// Check min depth - skip key if check failed
+				if (subPathLength < minDepth) {
+					continue;
+				}
+				
+				// Check max depth - skip key if check failed
+				if (subPathLength > maxDepth) {
+					continue;
+				}
+			}
+			
+			// Alrighto - lets check file / folder type - and add it in
+			if (pathType == 1) {
+				if (subPath.endsWith("/")) {
+					// Not a file - abort!
+					continue;
+				}
+			}
+			if (pathType == 2) {
+				if (!subPath.endsWith("/")) {
+					// Not a folder - abort!
+					continue;
+				}
+			}
+			
+			// Finally - all checks passed : add the path
+			ret.add(subPath);
+		}
+		
+		// Return the filtered set
+		return ret;
+	}
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> backend_getFilePathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		// Get the full set
+		Set<String> fullSet = backend_getFileAndFolderPathSet(oid, folderPath, minDepth, maxDepth);
+		Set<String> retSet = new HashSet<>();
+		
+		// Iterate and filter for files
+		for (String item : fullSet) {
+			if (!item.endsWith("/")) {
+				retSet.add(item);
+			}
+		}
+		
+		// Return the relevent set
+		return retSet;
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing
+	 * 
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> backend_getFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		// Get the full set
+		Set<String> fullSet = backend_getFileAndFolderPathSet(oid, folderPath, minDepth, maxDepth);
+		Set<String> retSet = new HashSet<>();
+		
+		// Iterate and filter for files
+		for (String item : fullSet) {
+			if (item.endsWith("/")) {
+				retSet.add(item);
+			}
+		}
+		
+		// Return the relevent set
+		return retSet;
+	}
 	
 	//--------------------------------------------------------------------------
 	//

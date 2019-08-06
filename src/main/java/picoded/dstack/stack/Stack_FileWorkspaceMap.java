@@ -1,10 +1,10 @@
 package picoded.dstack.stack;
 
 import picoded.dstack.CommonStructure;
-import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Stacked implementation of KeyValueMap data structure.
@@ -201,22 +201,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	}
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Removes the specified file path from the workspace in the backend
-	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		// Remove the file starting from the lowest layer
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_removePath(oid, filepath);
-		}
-	}
-	
-	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,
@@ -225,43 +209,177 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
+	public void backend_setupWorkspace(String oid) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid, folderPath);
+			dataLayers[i].backend_setupWorkspace(oid);
 		}
 	}
 	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
+	//--------------------------------------------------------------------------
+	//
+	// Folder Pathing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			FileNode fileNode = dataLayers[i].backend_listWorkspaceTreeView(oid, folderPath, depth);
-			if (fileNode != null) {
-				return fileNode;
+			dataLayers[i].backend_removeFolderPath(oid, folderPath);
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			if (dataLayers[i].backend_hasFolderPath(oid, folderPath)) {
+				return true;
 			}
 		}
-		
-		return null;
+		return false;
 	}
 	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			List<FileNode> fileNode = dataLayers[i].backend_listWorkspaceListView(oid, folderPath,
-				depth);
-			if (fileNode != null) {
-				return fileNode;
-			}
+			dataLayers[i].backend_ensureFolderPath(oid, folderPath);
 		}
-		
-		return null;
 	}
 	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
+	//--------------------------------------------------------------------------
+	//
+	// Move support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_moveFileInWorkspace(oid, source, destination);
+			dataLayers[i].backend_moveFile(oid, sourceFile, destinationFile);
 		}
-		return true;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_moveFolderPath(oid, sourceFolder, destinationFolder);
+		}
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Listing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		return queryLayer.backend_getFileAndFolderPathSet(oid, folderPath, minDepth, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> backend_getFilePathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		return queryLayer.backend_getFilePathSet(oid, folderPath, minDepth, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing
+	 * 
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> backend_getFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		return queryLayer.backend_getFolderPathSet(oid, folderPath, minDepth, maxDepth);
 	}
 	
 	//--------------------------------------------------------------------------

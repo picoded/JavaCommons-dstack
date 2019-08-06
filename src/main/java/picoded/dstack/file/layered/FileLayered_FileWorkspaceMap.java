@@ -51,26 +51,4 @@ public class FileLayered_FileWorkspaceMap extends FileSimple_FileWorkspaceMap {
 		return new File(baseDir, workspacePath);
 	}
 	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 * <p>
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 * <p>
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
-		File file = null;
-		String workspacePath = oid.substring(0, 2) + "/" + oid.substring(2, 4) + "/" + oid
-			+ "/workspace";
-		
-		if (folderPath.isEmpty()) {
-			file = new File(baseDir + "/" + workspacePath);
-		} else {
-			file = new File(baseDir + "/" + workspacePath + "/" + folderPath);
-		}
-		
-		boolean mkdir = file.mkdirs();
-	}
 }

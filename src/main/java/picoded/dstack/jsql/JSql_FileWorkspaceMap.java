@@ -1,11 +1,14 @@
 package picoded.dstack.jsql;
 
-import picoded.dstack.FileNode;
 import picoded.dstack.core.Core_FileWorkspaceMap;
+import picoded.core.file.FileUtil;
+import picoded.core.struct.GenericConvertList;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -65,16 +68,82 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	protected String pathColumnType = "VARCHAR(255)";
 	
 	/**
+	 * Interal flag used to indicate a file (1), or a folder (2)
+	 */
+	protected String fTypColumnType = "SMALLINT";
+	
+	/**
 	 * Raw datastorage type
 	 **/
 	protected String rawDataColumnType = "BLOB";
 	
+	// fTyp flags
+	private static int fTyp_file = 1;
+	private static int fTyp_folder = 2;
+	
 	//--------------------------------------------------------------------------
 	//
-	// Functions, used by FileWorkspace
-	// [Internal use, to be extended in future implementation]
+	// Constructor and maintenance
 	//
 	//--------------------------------------------------------------------------
+	
+	@Override
+	public void systemSetup() {
+		try {
+			sqlObj.createTable(fileWorkspaceTableName, new String[] { //
+				"pKy", // Primary key
+					// Time stamps
+					"cTm", //object created time
+					"uTm", //object updated time
+					"eTm", //object expire time (for future use)
+					"fTyp", //file type
+					// Object keys
+					"oID", //_oid
+					"path", // relative file path
+					"data" // actual file content
+				}, //
+				new String[] { //
+				pKeyColumnType, //Primary key
+					// Time stamps
+					tStampColumnType, //
+					tStampColumnType, //
+					tStampColumnType, //
+					fTypColumnType, //
+					// Object keys
+					keyColumnType, //
+					// Value storage
+					pathColumnType, //
+					rawDataColumnType } //
+				);
+			
+			// Unique index
+			//------------------------------------------------
+			sqlObj.createIndex( //
+				fileWorkspaceTableName, "oID, path", "UNIQUE", "unq" //
+			);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	@Override
+	public void systemDestroy() {
+		sqlObj.delete(fileWorkspaceTableName);
+	}
+	
+	@Override
+	public void clear() {
+		sqlObj.delete(fileWorkspaceTableName);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Workspace Setup
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -99,9 +168,39 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public boolean backend_workspaceExist(String oid) {
 		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "oID", "oID = ?",
-			new Object[] { oid });
+			new Object[] { oid }, null, 1, 0);
 		return jSqlResult.rowCount() > 0;
 	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		// Setup a blank folder path
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, "" }, //
+			new String[] {}, //
+			new Object[] {}, //
+			new String[] { "uTm", "cTm", "fTyp", "eTm", "data" }, //
+			new Object[] { now, now, fTyp_folder, 0, null }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// File read and write
+	//
+	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -115,9 +214,8 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public byte[] backend_fileRead(String oid, String filepath) {
-		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, null, "oID = ? AND path = ?",
-			new Object[] { oid, filepath });
-		
+		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "data",
+			"oID = ? AND path = ? AND fTyp = ?", new Object[] { oid, filepath, fTyp_file });
 		if (jSqlResult == null || jSqlResult.get("data") == null || jSqlResult.rowCount() <= 0) {
 			return null;
 		}
@@ -139,10 +237,8 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  boolean true, if file eixst
 	 **/
 	public boolean backend_fileExist(final String oid, final String filepath) {
-		
-		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, null, "oID = ? AND path = ?",
-			new Object[] { oid, filepath });
-		
+		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "pKy",
+			"oID = ? AND path = ? AND fTyp = ?", new Object[] { oid, filepath, fTyp_file });
 		return jSqlResult.rowCount() > 0;
 	}
 	
@@ -157,15 +253,19 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(filepath));
+		
+		// Write the file
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		sqlObj.upsert( //
 			fileWorkspaceTableName, //
 			new String[] { "oID", "path" }, //
 			new Object[] { oid, filepath }, //
-			new String[] { "uTm" }, //
-			new Object[] { now }, //
-			new String[] { "cTm", "eTm", "data" }, //
-			new Object[] { now, 0, data }, //
+			new String[] { "uTm", "data" }, //
+			new Object[] { now, data }, //
+			new String[] { "cTm", "eTm", "fTyp" }, //
+			new Object[] { now, 0, fTyp_file }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
 	}
@@ -183,117 +283,244 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid, filepath });
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Folder path handling
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Removes the specified file path from the workspace in the backend
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
-	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		throw new RuntimeException("NOT YET SUPPORTED");
-		// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid, filepath });
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		String formattedPath = folderPath.replaceAll("\\%", "\\%");
+		sqlObj.delete(fileWorkspaceTableName, "oID = ? AND (path = ? OR path LIKE ?)", new Object[] {
+			oid, folderPath, formattedPath + "%" });
 	}
 	
 	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 * [Internal use, to be extended in future implementation]
 	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
+	 * Validate the given folder path exists.
 	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
-		// Setup a blank folder path
-		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
-		sqlObj.upsert( //
-			fileWorkspaceTableName, //
-			new String[] { "oID", "path" }, //
-			new Object[] { oid, folderPath }, //
-			new String[] { "uTm" }, //
-			new Object[] { now }, //
-			new String[] { "cTm", "eTm", "data" }, //
-			new Object[] { now, 0, null }, //
-			null // The only misc col, is pKy, which is being handled by DB
-			);
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		JSqlResult jSqlResult = sqlObj.select(fileWorkspaceTableName, "oID",
+			"oID = ? AND path = ? AND fTyp = ?", new Object[] { oid, folderPath, fTyp_folder }, null,
+			1, 0);
+		return jSqlResult.rowCount() > 0;
 	}
 	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		// @TODO: To be implemented for Jsql
-		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
-		return null;
-	}
-	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		// @TODO: To be implemented for Jsql
-		//		JSqlResult sqlResult = sqlObj.select(fileWorkspaceTableName, "*","path LIKE ?", new Object[]{folderPath+"%"});
-		return null;
-	}
-	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		// @TODO: To be implemented for Jsql
-		return true;
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// Constructor and maintenance
-	//
-	//--------------------------------------------------------------------------
-	
-	@Override
-	public void systemSetup() {
-		try {
-			sqlObj.createTable(fileWorkspaceTableName, new String[] { //
-				"pKy", // Primary key
-					// Time stamps
-					"cTm", //object created time
-					"uTm", //object updated time
-					"eTm", //object expire time (for future use)
-					// Object keys
-					"oID", //_oid
-					"path", // relative file path
-					"data" // actual file content
-				}, //
-				new String[] { //
-				pKeyColumnType, //Primary key
-					// Time stamps
-					tStampColumnType, //
-					tStampColumnType, //
-					tStampColumnType, //
-					// Object keys
-					keyColumnType, //
-					// Value storage
-					pathColumnType, //
-					rawDataColumnType } //
-				);
-			
-			// Unique index
-			//------------------------------------------------
-			sqlObj.createIndex( //
-				fileWorkspaceTableName, "oID, path", "UNIQUE", "unq" //
-			);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		// Null folder path = no setup
+		if (folderPath == null) {
+			return;
 		}
 		
+		// Remove the starting and ending "/" in folderPath
+		String reducedFolderPath = folderPath;
+		if (reducedFolderPath.startsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(1);
+		}
+		if (reducedFolderPath.endsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(0, reducedFolderPath.length() - 1);
+		}
+		
+		// Skip setup if blank
+		if (reducedFolderPath.length() <= 0) {
+			return;
+		}
+		
+		// Alrighto, time to split up the folder path
+		String[] splitFolderPath = reducedFolderPath.split("/");
+		String dirPath = "";
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		
+		// and loop + initialize each one of them =x
+		for (int i = 0; i < splitFolderPath.length; ++i) {
+			// We store with ending "/"
+			dirPath = dirPath + splitFolderPath[i] + "/";
+			
+			// And upsert the folder setup
+			sqlObj.upsert( //
+				fileWorkspaceTableName, //
+				new String[] { "oID", "path" }, //
+				new Object[] { oid, dirPath }, //
+				new String[] {}, //
+				new Object[] {}, //
+				new String[] { "uTm", "cTm", "fTyp", "eTm", "data" }, //
+				new Object[] { now, now, fTyp_folder, 0, null }, //
+				null // The only misc col, is pKy, which is being handled by DB
+				);
+		}
 	}
 	
-	@Override
-	public void systemDestroy() {
-		sqlObj.delete(fileWorkspaceTableName);
+	//--------------------------------------------------------------------------
+	//
+	// Move support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		
+		// Abort if file does not exist
+		if (!backend_fileExist(oid, sourceFile)) {
+			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : " + sourceFile);
+		}
+		
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFile));
+		
+		// Remove the old file (if exist)
+		backend_removeFile(oid, destinationFile);
+		
+		// Apply the update statement
+		sqlObj.prepareStatement(
+			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+			destinationFile, oid, sourceFile).update();
 	}
 	
-	@Override
-	public void clear() {
-		sqlObj.delete(fileWorkspaceTableName);
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		// First lets get all the various paths
+		Set<String> affectedPaths = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+		
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFolder));
+		
+		// For each path, lets do the respective delete + update
+		for (String subPath : affectedPaths) {
+			// Delete destination path / file (if exists)
+			sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
+				destinationFolder + subPath });
+			
+			// Apply the update statement
+			sqlObj.prepareStatement(
+				"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+				destinationFolder + subPath, oid, sourceFolder + subPath).update();
+		}
+		
+		// Update the destination directory itself
+		sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
+			destinationFolder });
+		// Apply the update statement
+		sqlObj.prepareStatement(
+			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+			destinationFolder, oid, sourceFolder).update();
 	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Listing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		
+		// The full JSQL result
+		JSqlResult jSqlResult = null;
+		
+		// Search for all in a workspace
+		if (folderPath.equals("/") || folderPath.length() <= 0) {
+			jSqlResult = sqlObj
+				.select(fileWorkspaceTableName, "path", "oID = ?", new Object[] { oid });
+		} else {
+			// Prepare and execute the selection query
+			String formattedPath = folderPath.replaceAll("\\%", "\\%");
+			jSqlResult = sqlObj.select(fileWorkspaceTableName, "path",
+				"oID = ? AND (path = ? OR path LIKE ?)", new Object[] { oid, folderPath,
+					formattedPath + "%" });
+		}
+		
+		// Throw an error if no path was found
+		if (jSqlResult == null || jSqlResult.get("path") == null || jSqlResult.rowCount() <= 0) {
+			throw new RuntimeException("folderPath does not exist (oid=" + oid + ") : " + folderPath);
+		}
+		
+		// Lets prepare a raw set
+		GenericConvertList<Object> pathList = jSqlResult.get("path");
+		Set<String> rawSet = new HashSet<>();
+		int pathListLen = pathList.size();
+		
+		// For each item in the list, setup the set
+		for (int i = 0; i < pathListLen; ++i) {
+			rawSet.add(pathList.getString(i));
+		}
+		
+		// Filter and return it accordingly
+		return backend_filtterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
+	}
+	
 }

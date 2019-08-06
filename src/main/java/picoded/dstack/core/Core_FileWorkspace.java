@@ -9,7 +9,6 @@ import picoded.core.conv.ArrayConv;
 import picoded.core.file.FileUtil;
 import picoded.dstack.DataObject;
 import picoded.dstack.DataObjectMap;
-import picoded.dstack.FileNode;
 import picoded.dstack.FileWorkspace;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
@@ -93,12 +92,50 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Does not throw any error if workspace was previously setup
 	 */
 	@Override
-	public void setupWorkspace(String folderPath) {
-		main.setupWorkspace(_oid(), folderPath);
+	public void setupWorkspace() {
+		main.setupWorkspace(_oid());
 	}
 	
-	// Utility functions
+	// File / Folder string normalization
 	//--------------------------------------------------------------------------
+	
+	/**
+	 * @param filePath
+	 * @return filePath normalized to remove ending "/"
+	 */
+	private static String normalizeFilePathString(final String filePath) {
+		if (filePath == null) {
+			throw new IllegalArgumentException("Invalid null filePath");
+		}
+		
+		String res = FileUtil.normalize(filePath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (res.endsWith("/")) {
+			res = res.substring(0, res.length() - 1);
+		}
+		return res;
+	}
+	
+	/**
+	 * @param folderPath
+	 * @return folderPath normalized with ending "/"
+	 */
+	private static String normalizeFolderPathString(final String folderPath) {
+		if (folderPath == null || folderPath.length() <= 0) {
+			return "/";
+		}
+		
+		String res = FileUtil.normalize(folderPath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (!res.endsWith("/")) {
+			res = res + "/";
+		}
+		return res;
+	}
 	
 	// File exists checks
 	//--------------------------------------------------------------------------
@@ -111,12 +148,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	public boolean fileExist(final String filepath) {
-		return main.backend_fileExist(_oid, filepath);
+		return main.backend_fileExist(_oid, normalizeFilePathString(filepath));
 	}
 	
-	@Override
-	public boolean dirExist(String dirPath) {
-		return false;
+	/**
+	 * Delete an existing file from the workspace
+	 *
+	 * @param filepath in the workspace to delete
+	 */
+	public void removeFile(final String filepath) {
+		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
 	}
 	
 	// Read / write byteArray information
@@ -130,7 +171,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return the file contents, null if file does not exists
 	 */
 	public byte[] readByteArray(final String filepath) {
-		return main.backend_fileRead(_oid, filepath);
+		return main.backend_fileRead(_oid, normalizeFilePathString(filepath));
 	}
 	
 	/**
@@ -142,7 +183,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	public void writeByteArray(final String filepath, final byte[] data) {
-		main.backend_fileWrite(_oid, filepath, data);
+		main.backend_fileWrite(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	/**
@@ -155,40 +196,140 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data   the content to write to the file
 	 **/
 	public void appendByteArray(final String filepath, final byte[] data) {
+		// Normalize the file path
+		String path = normalizeFilePathString(filepath);
 		
 		// Get existing data
-		byte[] read = readByteArray(filepath);
+		byte[] read = readByteArray(path);
 		if (read == null) {
-			writeByteArray(filepath, data);
+			writeByteArray(path, data);
 		}
 		
 		// Append new data to existing data
 		byte[] jointData = ArrayConv.addAll(read, data);
 		
 		// Write the new joint data
-		writeByteArray(filepath, jointData);
+		writeByteArray(path, jointData);
 	}
 	
-	public void removeFile(final String filepath) {
-		main.backend_removeFile(_oid, filepath);
+	// Folder Pathing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 */
+	public void removeFolderPath(final String folderPath) {
+		main.backend_removeFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
-	public void removePath(final String filepath) {
-		main.backend_removePath(_oid, filepath);
+	/**
+	 * Validate the given folder path exists.
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @return true if folderPath is valid
+	 */
+	public boolean hasFolderPath(final String folderPath) {
+		return main.backend_hasFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
-	@Override
-	public FileNode listWorkspaceInTreeView(String folderPath, int depth) {
-		return main.backend_listWorkspaceTreeView(_oid(), folderPath, depth);
+	/**
+	 * Automatically generate a given folder path if it does not exist
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 */
+	public void ensureFolderPath(final String folderPath) {
+		main.backend_ensureFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
-	@Override
-	public List<FileNode> listWorkspaceInListView(String folderPath, int depth) {
-		return main.backend_listWorkspaceListView(_oid(), folderPath, depth);
+	// Move support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param sourceFile
+	 * @param destinationFile
+	 */
+	public void moveFile(final String sourceFile, final String destinationFile) {
+		main.backend_moveFile(_oid, normalizeFilePathString(sourceFile),
+			normalizeFilePathString(destinationFile));
 	}
 	
-	@Override
-	public boolean moveFile(String source, String destination) {
-		return main.backend_moveFileInWorkspace(_oid(), source, destination);
+	/**
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param sourceFolder
+	 * @param destinationFolder
+	 */
+	public void moveFolderPath(final String sourceFolder, final String destinationFolder) {
+		main.backend_moveFolderPath(_oid, normalizeFolderPathString(sourceFolder),
+			normalizeFolderPathString(destinationFolder));
 	}
+	
+	// Listing support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth) {
+		return main.backend_getFileAndFolderPathSet(_oid, normalizeFolderPathString(folderPath),
+			minDepth, maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * @return list of path strings - relative to the given folderPath
+	 */
+	public Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth) {
+		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
+			maxDepth);
+	}
+	
+	/**
+	 * List all the various files found in the given folderPath
+	 * 
+	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param maxDepth maximum depth count, to stop the listing
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> getFolderPathSet(final String folderPath, final int minDepth,
+		final int maxDepth) {
+		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
+			maxDepth);
+	}
+	
 }

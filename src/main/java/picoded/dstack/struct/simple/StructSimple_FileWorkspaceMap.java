@@ -1,25 +1,95 @@
 package picoded.dstack.struct.simple;
 
-import picoded.dstack.FileNode;
+import picoded.core.common.EmptyArray;
+import picoded.core.file.FileUtil;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
+	// Stores all the various data for structSimple
 	protected ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
 	
+	// Handles read / write locks
 	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
 	
 	//--------------------------------------------------------------------------
 	//
-	// Functions, used by FileWorkspace
+	// Internal functionality (StructSimple specific)
+	//
+	//--------------------------------------------------------------------------
+	
+	// internal blank byte[] used to represent a folder
+	protected static byte[] FOLDER_OBJ = new byte[] {};
+	
+	/**
+	 * Ensure the setup of folder, in the given workspace (initialized by OID)
+	 * The calling function, MUST ensure that the appropriate write lock is performed.
+	 * 
+	 * @param  ObjectId of the workspace to get
+	 * @param  folderPath to ensure (optional)
+	 * 
+	 * @return valid workspace map, with folderPath initialized
+	 */
+	protected ConcurrentHashMap<String, byte[]> noLock_setupWorkspaceFolderPath(final String oid,
+		final String folderPath) {
+		// Get the workspace map
+		ConcurrentHashMap<String, byte[]> workspaceMap = fileContentMap.get(oid);
+		
+		// if workspace does not exist, set it up
+		if (workspaceMap == null) {
+			workspaceMap = new ConcurrentHashMap<>();
+			fileContentMap.put(oid, workspaceMap);
+		}
+		
+		// Null folder path = no setup
+		if (folderPath == null) {
+			return workspaceMap;
+		}
+		
+		// Remove the starting and ending "/" in folderPath
+		String reducedFolderPath = folderPath;
+		if (reducedFolderPath.startsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(1);
+		}
+		if (reducedFolderPath.endsWith("/")) {
+			reducedFolderPath = reducedFolderPath.substring(0, reducedFolderPath.length() - 1);
+		}
+		
+		// Skip setup if blank
+		if (reducedFolderPath.length() <= 0) {
+			return workspaceMap;
+		}
+		
+		// Alrighto, time to split up the folder path
+		String[] splitFolderPath = reducedFolderPath.split("/");
+		String dirPath = "";
+		
+		// and loop + initialize each one of them =x
+		for (int i = 0; i < splitFolderPath.length; ++i) {
+			// We store with ending "/"
+			dirPath = dirPath + splitFolderPath[i] + "/";
+			
+			// And write a known blank byte[] (represents a folder)
+			workspaceMap.put(dirPath, FOLDER_OBJ);
+		}
+		
+		// Return the initialized workspaceMap
+		return workspaceMap;
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Workspace setup / exist funcitons
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
@@ -40,9 +110,28 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 			return workspace != null;
-			
 		} finally {
 			accessLock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// if workspace does not exist, set it up
+			noLock_setupWorkspaceFolderPath(oid, "");
+		} finally {
+			accessLock.writeLock().unlock();
 		}
 	}
 	
@@ -63,6 +152,13 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// File read / write
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -79,11 +175,9 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.readLock().lock();
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-			
 			if (workspace != null && filepath != null) {
 				return workspace.get(filepath);
 			}
-			
 			return null;
 		} finally {
 			accessLock.readLock().unlock();
@@ -110,7 +204,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.readLock().lock();
 			
 			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-			
 			if (workspace != null && filepath != null) {
 				return workspace.get(filepath) != null;
 			}
@@ -134,12 +227,12 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		try {
 			accessLock.writeLock().lock();
 			
-			ConcurrentHashMap<String, byte[]> workspace = (fileContentMap.get(oid) == null) ? new ConcurrentHashMap<>()
-				: fileContentMap.get(oid);
+			// Get workspace, with normalized parent path
+			ConcurrentHashMap<String, byte[]> workspace = noLock_setupWorkspaceFolderPath(oid,
+				FileUtil.getParentPath(filepath));
 			
+			// And put in the filepth data
 			workspace.put(filepath, data);
-			
-			fileContentMap.put(oid, workspace);
 			
 		} finally {
 			accessLock.writeLock().unlock();
@@ -171,54 +264,247 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid, String folderPath) {
-		// do nothing for struct simple
-	}
-	
 	//--------------------------------------------------------------------------
 	//
-	// WHAT IS THIS ???
+	// Folder pathing support
 	//
 	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Removes the specified file path from the workspace in the backend
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
 	 *
-	 * @param oid identifier to the workspace
-	 * @param filepath the file to be removed
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				return;
+			}
+			
+			// Get the keyset - in a new hashset 
+			// (so it wouldnt crash when we do modification)
+			Set<String> allKeys = new HashSet<>(workspace.keySet());
+			for (String key : allKeys) {
+				// If folder path match - remove it
+				if (key.startsWith(folderPath)) {
+					workspace.remove(key);
+				}
+			}
+			
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_hasFolderPath(final String oid, final String folderPath) {
+		try {
+			accessLock.readLock().lock();
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			return workspace != null && workspace.get(folderPath) != null;
+		} finally {
+			accessLock.readLock().unlock();
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		try {
+			accessLock.writeLock().lock();
+			noLock_setupWorkspaceFolderPath(oid, folderPath);
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Move support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @return if the current configured implementation supports atomic move operations.
 	 */
-	@Override
-	public void backend_removePath(String oid, String filepath) {
-		throw new RuntimeException("Not yet implemented");
+	public boolean atomicMoveSupported() {
+		// True due to StructSimple use of a globle write lock
+		return true;
 	}
 	
-	@Override
-	public FileNode backend_listWorkspaceTreeView(String oid, String folderPath, int depth) {
-		// do nothing for struct simple
-		throw new RuntimeException("Not yet implemented");
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if sourceFolder exist
+			if (workspace.get(sourceFile) == null) {
+				throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
+					+ sourceFile);
+			}
+			
+			// Initialize the destionation folder
+			noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
+			
+			// Copy the file
+			workspace.put(destinationFile, workspace.get(sourceFile));
+			
+			// And remove the old copy
+			workspace.remove(sourceFile);
+		} finally {
+			accessLock.writeLock().unlock();
+		}
 	}
 	
-	@Override
-	public List<FileNode> backend_listWorkspaceListView(String oid, String folderPath, int depth) {
-		// do nothing for struct simple
-		throw new RuntimeException("Not yet implemented");
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		try {
+			accessLock.writeLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if sourceFolder exist
+			if (workspace.get(sourceFolder) == null) {
+				throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
+					+ sourceFolder);
+			}
+			
+			// Get the keyset - in a new hashset 
+			// (so it wouldnt crash when we do modification)
+			Set<String> allKeys = new HashSet<>(workspace.keySet());
+			for (String key : allKeys) {
+				// If folder path match - migrate it
+				if (key.startsWith(sourceFolder)) {
+					// Copy it over
+					workspace.put(destinationFolder + key.substring(sourceFolder.length()),
+						workspace.get(key));
+					// Remove it
+					workspace.remove(key);
+				}
+			}
+			
+		} finally {
+			accessLock.writeLock().unlock();
+		}
 	}
 	
-	@Override
-	public boolean backend_moveFileInWorkspace(String oid, String source, String destination) {
-		// do nothing for struct simple
-		throw new RuntimeException("Not yet implemented");
+	//--------------------------------------------------------------------------
+	//
+	// Listing support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		try {
+			accessLock.readLock().lock();
+			
+			// Get the workspace, and abort if null
+			ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+			if (workspace == null) {
+				throw new RuntimeException("FileWorkspace does not exist : " + oid);
+			}
+			
+			// Check if folderPath exist
+			String searchPath = folderPath;
+			if (searchPath.equals("/")) {
+				searchPath = "";
+			}
+			if (searchPath.length() > 0 && workspace.get(searchPath) == null) {
+				throw new RuntimeException("folderPath does not exist (oid=" + oid + ") : "
+					+ searchPath);
+			}
+			
+			// Return a filtered set
+			return backend_filtterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
+		} finally {
+			accessLock.readLock().unlock();
+		}
 	}
 	
 	//--------------------------------------------------------------------------
