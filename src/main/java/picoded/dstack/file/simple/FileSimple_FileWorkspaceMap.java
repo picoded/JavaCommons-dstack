@@ -61,8 +61,6 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	protected void validateBaseDir() {
 		if (!baseDir.exists() || !baseDir.isDirectory()) {
-			// Note I intentionally did not leak the configured storage path
-			// for security reasons. =/
 			throw new RuntimeException("Missing storage directory for workspace. Path: "
 				+ baseDir.getAbsolutePath());
 		}
@@ -235,16 +233,8 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  boolean true, if file eixst
 	 **/
 	public boolean backend_fileExist(final String oid, final String filepath) {
-		
-		// Get the file object
 		File fileObj = workspaceFileObj(oid, filepath);
-		
-		// Check if it is file or directory
-		if (fileObj.exists()) {
-			return true;
-		}
-		
-		return false;
+		return fileObj.isFile();
 	}
 	
 	/**
@@ -317,7 +307,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void clear() {
 		if (baseDir.isDirectory()) {
 			// Delete the directory, and reinitialize it as empty
-			FileUtil.forceDelete(baseDir);
+			FileUtil.deleteDirectory(baseDir);
 			// Ensure the base directory is initialized
 			FileUtil.forceMkdir(baseDir);
 		}
@@ -342,7 +332,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	public void backend_removeFolderPath(final String oid, final String folderPath) {
 		File folderObj = workspaceFileObj(oid, folderPath);
-		FileUtil.forceDelete(folderObj);
+		FileUtil.deleteDirectory(folderObj);
 	}
 	
 	/**
