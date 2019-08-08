@@ -2,10 +2,10 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-echo "-----------------------------------"
-echo "java-formatter directory location: $DIR"
-echo "source code directory (to format): $1"
-echo "-----------------------------------"
+# echo "-----------------------------------"
+# echo "java-formatter directory location: $DIR"
+# echo "source code directory (to format): $1"
+# echo "-----------------------------------"
 
 
 # Given a java path, format it according to the defined format, in the background (fork)

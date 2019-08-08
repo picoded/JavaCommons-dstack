@@ -344,28 +344,32 @@ task incrementalTest(type: TestWatcher) {
 
 //----------------------------------------------------------------
 //
-//  Custom src-beautify
+//  Custom src-beautify / prettifier
+//  and compile aliases (with auto srcBeautify)
 //
 //----------------------------------------------------------------
 
-// Code beautifier
+// srcBeautify, with input file mapping (to skip srcBeautify steps if needed)
+def srcBeautify_inputFiles = project.fileTree(dir: "src", include: "**/*.java")
+def srcBeautify_outputDir = "${project.buildDir}/build-util/java-fromatter/output/"
 task srcBeautify(type:Exec) {
+	// Input file tracking, to skip command if its not needed
+	inputs.files(srcBeautify_inputFiles)
+	outputs.dir(srcBeautify_outputDir)
+
+	// The build formatter command
 	workingDir '.'
 	commandLine './build-util/java-formatter/parallel_format.sh','./src'
 }
-
-// Forcing srcBeautify on compile step
-compileJava.dependsOn srcBeautify
-
-//----------------------------------------------------------------
-//
-//  Compile aliases
-//
-//----------------------------------------------------------------
+task prettify(dependsOn: srcBeautify) 
 
 // Doing compile alias for java
 task src(dependsOn: compileJava) 
-task compile(dependsOn: compileJava) 
+task source(dependsOn: src) 
+task compile(dependsOn: src) 
+
+// Forcing srcBeautify on src step
+src.dependsOn srcBeautify
 
 //----------------------------------------------------------------
 //
