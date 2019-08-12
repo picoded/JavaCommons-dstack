@@ -102,8 +102,12 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 				new String[] { "kID" }, //unique cols
 				new Object[] { key }, //unique value
 				//
-				new String[] { "cTm", "eTm", "kVl" }, //insert cols
-				new Object[] { now, expire, value.longValue() } //insert values
+				new String[] { "uTm", "eTm", "kVl" }, //insert cols
+				new Object[] { now, expire, value.longValue() }, //insert values
+				// 
+				new String[] { "cTm" }, //default cols
+				new Object[] { now }, //default values
+				null // misc values
 				);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -182,11 +186,13 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	 * @return true if successful
 	 **/
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
+		// now timestamp
+		long now = System.currentTimeMillis();
+
 		// Potentially a new upsert, ensure there is something to "update" atleast
 		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
 			// Does a blank upsert, with default values (No actual insert)
-			long now = System.currentTimeMillis();
 			try {
 				sqlObj.upsert( //
 					keyLongMapName, // unique key
@@ -195,8 +201,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 					// insert (ignore)
 					null, null,
 					// default value
-					new String[] { "cTm", "eTm", "kVl" }, //insert cols
-					new Object[] { now, 0l, 0l }, //insert values
+					new String[] { "uTm", "cTm", "eTm", "kVl" }, //insert cols
+					new Object[] { now, now, 0l, 0l }, //insert values
 					// misc (ignore)
 					null);
 			} catch (JSqlException e) {
@@ -208,8 +214,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		}
 		
 		// Does the update from 0
-		return sqlObj.update("UPDATE " + keyLongMapName + " SET kVl= ? WHERE kID = ? AND kVl = ?",
-			update, key, expect) > 0;
+		return sqlObj.update("UPDATE " + keyLongMapName + " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ?",
+			update, now, key, expect) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
