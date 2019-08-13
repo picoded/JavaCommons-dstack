@@ -36,6 +36,17 @@ public class JSqlStack extends CoreStack {
 	}
 	
 	/**
+	 * Constructor with jsql object and configuration map
+	 */
+	public JSqlStack(JSql inConnection, GenericConvertMap<String, Object> inConfig) {
+		// Setup config object - without throwing for missing DB object
+		super(inConfig);
+		
+		// Get the JSql connection
+		conn = inConnection;
+	}
+	
+	/**
 	 * Initilize and return the requested data structure with the given name or type if its supported
 	 * 
 	 * @param  name  name of the datastructure to initialize

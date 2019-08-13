@@ -188,7 +188,7 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 	public boolean weakCompareAndSet(String key, Long expect, Long update) {
 		// now timestamp
 		long now = System.currentTimeMillis();
-
+		
 		// Potentially a new upsert, ensure there is something to "update" atleast
 		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
@@ -214,8 +214,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		}
 		
 		// Does the update from 0
-		return sqlObj.update("UPDATE " + keyLongMapName + " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ?",
-			update, now, key, expect) > 0;
+		return sqlObj.update("UPDATE " + keyLongMapName
+			+ " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ?", update, now, key, expect) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
