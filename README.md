@@ -35,3 +35,7 @@ Followed by `DStack` which faciltates the stacking of data backend provider for 
 | FileWorkspaceMap | development   | File workspace storage support                                             |
 | MessageQueue     | road-map      | Message queue                                                              |
 | JobQueue         | road-map      | Job request, response queue                                                |
+
+# Important known issues
+
+- MySQL connection / db seems to support only up to 16 digits of accuracy

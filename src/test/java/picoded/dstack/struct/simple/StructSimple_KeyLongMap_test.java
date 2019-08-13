@@ -3,10 +3,12 @@ package picoded.dstack.struct.simple;
 // Target test class
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -174,6 +176,75 @@ public class StructSimple_KeyLongMap_test {
 		assertNull(testObj.get("shortLife"));
 	}
 	
+	//-----------------------------------------------------------
+	//
+	//  Number accuracy issues
+	//
+	//-----------------------------------------------------------
+	
+	public void testWeakCompareAndSetAccuracy(long testValue) {
+		// Setup the params
+		String lockID = "file~lock~test";
+		long lockTimeout = 10000;
+
+		// Lets try to do a lock
+		assertTrue( testObj.weakCompareAndSet(lockID, 0l, testValue) );
+		testObj.setLifeSpan(lockID, lockTimeout);
+
+		// Validate the existing value, this guard against a narrow
+		// lock expriy window which occurs between
+		// a weakCompareAndSet, and the setLifeSpan command.
+		long registeredToken = testObj.getLong(lockID);
+		assertEquals(testValue, registeredToken);
+		
+		// Current lifespan fetching
+		long currentLifespan = testObj.getLifespan(lockID);
+		assertNotEquals(0l, currentLifespan);
+		assertTrue(currentLifespan > 0);
+
+		// Lets delete the value (we are done)
+		testObj.remove(lockID);
+	}
+
+	// NOTE : Large long values (such as randomLong)
+	//        is currently a known issue for mysql
+	//        as it seems to clamp its accuracy to 20 digits (somehow)
+	//        when its currently speced for 24 digits
+	@Test
+	public void weakCompareAndSet_randomLong() {
+		// Lets derive the "new" lock token - randomly!
+		long testValue = Math.abs((new SecureRandom()).nextLong());
+		testWeakCompareAndSetAccuracy(testValue);
+	}
+
+	@Test
+	public void weakCompareAndSet_randomInt() {
+		// Lets derive the "new" lock token - randomly!
+		long testValue = Math.abs((new SecureRandom()).nextInt());
+		testWeakCompareAndSetAccuracy(testValue);
+	}
+
+	@Test
+	public void weakCompareAndSet_randomInt_multipleTimes() {
+		for(int i=0; i<10; ++i) {
+			weakCompareAndSet_randomInt();
+		}
+	}
+
+	@Test
+	public void weakCompareAndSet_maxInt() {
+		// Max INT
+		long testValue = Integer.MAX_VALUE;
+		testWeakCompareAndSetAccuracy(testValue);
+	}
+
+	@Test
+	public void weakCompareAndSet_maxIntPlus() {
+		// Max INT +++
+		long testValue = ((long)Integer.MAX_VALUE)+1234l;
+		testWeakCompareAndSetAccuracy(testValue);
+	}
+
 	//-----------------------------------------------------------
 	//
 	//  TTL accuracy dependent tests
