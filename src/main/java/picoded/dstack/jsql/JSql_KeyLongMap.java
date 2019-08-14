@@ -189,6 +189,17 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		// now timestamp
 		long now = System.currentTimeMillis();
 		
+		//
+		// In general there are the following compare and set scenerios to handle
+		//
+		// 1) expecting value is 0
+		//   a) existing record is expired
+		//   b) existing record does not exist
+		//   c) existing record is NOT expired, and is 0
+		// 2) expecting value is non-zero
+		//   a) existing record is NOT expired, and is expected value.
+		//
+
 		// Potentially a new upsert, ensure there is something to "update" atleast
 		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
@@ -196,50 +207,41 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			expect = 0l;
 
 			//
-			// Attempt to do an update first if record already exist
+			// Attempt to do an update first if record an expired record exists.
 			//
-			// this is intentionally done, to guard against deletion of expired records
-			// between the "failed" insert command and the final update attempt, when 
-			// an existing record existed.
+			// this is intentionally done, before insert, to guard against deletion of expired records
+			// between the "failed" insert command and the final update attempt, when an existing record existed.
+			//
+			// This handles
+			// 1.a) expecting value is 0, existing record is expired
 			//
 			if( sqlObj.update("UPDATE " + keyLongMapName
-				+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (kVl = ? OR (eTm > ? AND eTm < ?))", update, now, 0l, key, expect, 0l, now) > 0 ) {
+				+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (eTm > ? AND eTm < ?)", update, now, 0l, key, 0l, now) > 0 ) {
 				return true;
 			}
 
-			// Does an insert (if record does not exist)
-			try {
-				// UPSERT EQUIVALENT
-				//--------------------------
-				// sqlObj.upsert( //
-				// 	keyLongMapName, // unique key
-				// 	new String[] { "kID" }, //unique cols
-				// 	new Object[] { key }, //unique value
-				// 	// insert (ignore)
-				// 	null, null,
-				// 	// default value
-				// 	new String[] { "uTm", "cTm", "eTm", "kVl" }, //insert cols
-				// 	new Object[] { now, now, 0l, 0l }, //insert values
-				// 	// misc (ignore)
-				// 	null);
+			//
+			// Insert command
+			// 
+			// This handles
+			// 1.b) expecting value is 0, existing record does not exist
+			// 
 
-				// INSERT EQUIVALENT
-				//--------------------------
-
-				// Immediately does an insert, this will intentionally fail if a record exists.
-				if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
-					return true;
-				}
-			} catch (JSqlException e) {
-				// silenced exception, if value already exists,
-				// the update call will work anyway
+			// Immediately does an insert, this will intentionally fail if a record exists.
+			if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
+				return true;
 			}
 		}
 		
-		// Does the update from an existing
-		// or on an expired record
+		//
+		// Does the update from an existing, that is not expired
+		//
+		// This handles
+		// 1.c) expecting value is 0, existing record is NOT expired, and is 0
+		// 2.a) expecting value is non-zero, existing record is NOT expired, and is expected value.
+		//
 		return sqlObj.update("UPDATE " + keyLongMapName
-			+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (kVl = ? OR (eTm > ? AND eTm < ?))", update, now, 0l, key, expect, 0l, now) > 0;
+			+ " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ? AND (eTm <= ? OR eTm > ?)", update, now, key, expect, 0l, now) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
