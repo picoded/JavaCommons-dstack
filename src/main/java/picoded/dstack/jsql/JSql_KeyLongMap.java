@@ -192,30 +192,54 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		// Potentially a new upsert, ensure there is something to "update" atleast
 		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
-			// Does a blank upsert, with default values (No actual insert)
+			// Expect is now atleast 0
+			expect = 0l;
+
+			//
+			// Attempt to do an update first if record already exist
+			//
+			// this is intentionally done, to guard against deletion of expired records
+			// between the "failed" insert command and the final update attempt, when 
+			// an existing record existed.
+			//
+			if( sqlObj.update("UPDATE " + keyLongMapName
+				+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (kVl = ? OR (eTm > ? AND eTm < ?))", update, now, 0l, key, expect, 0l, now) > 0 ) {
+				return true;
+			}
+
+			// Does an insert (if record does not exist)
 			try {
-				sqlObj.upsert( //
-					keyLongMapName, // unique key
-					new String[] { "kID" }, //unique cols
-					new Object[] { key }, //unique value
-					// insert (ignore)
-					null, null,
-					// default value
-					new String[] { "uTm", "cTm", "eTm", "kVl" }, //insert cols
-					new Object[] { now, now, 0l, 0l }, //insert values
-					// misc (ignore)
-					null);
+				// UPSERT EQUIVALENT
+				//--------------------------
+				// sqlObj.upsert( //
+				// 	keyLongMapName, // unique key
+				// 	new String[] { "kID" }, //unique cols
+				// 	new Object[] { key }, //unique value
+				// 	// insert (ignore)
+				// 	null, null,
+				// 	// default value
+				// 	new String[] { "uTm", "cTm", "eTm", "kVl" }, //insert cols
+				// 	new Object[] { now, now, 0l, 0l }, //insert values
+				// 	// misc (ignore)
+				// 	null);
+
+				// INSERT EQUIVALENT
+				//--------------------------
+
+				// Immediately does an insert, this will intentionally fail if a record exists.
+				if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
+					return true;
+				}
 			} catch (JSqlException e) {
 				// silenced exception, if value already exists,
 				// the update call will work anyway
 			}
-			// Expect is now atleast 0
-			expect = 0l;
 		}
 		
-		// Does the update from 0
+		// Does the update from an existing
+		// or on an expired record
 		return sqlObj.update("UPDATE " + keyLongMapName
-			+ " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ?", update, now, key, expect) > 0;
+			+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (kVl = ? OR (eTm > ? AND eTm < ?))", update, now, 0l, key, expect, 0l, now) > 0;
 	}
 	
 	//--------------------------------------------------------------------------
