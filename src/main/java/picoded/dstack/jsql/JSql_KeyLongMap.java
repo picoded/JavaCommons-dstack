@@ -228,8 +228,15 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			// 
 
 			// Immediately does an insert, this will intentionally fail if a record exists.
-			if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
-				return true;
+			try{
+				if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
+					return true;
+				}
+			} catch (Exception e) {
+				// intentionally ignored
+				// @TODO: be more specific of what exception is being thrown
+				// Currently this occurs when there are duplicate keys in the database and it 
+				// throws SQLIntegrityConstraintViolationException
 			}
 		}
 		
