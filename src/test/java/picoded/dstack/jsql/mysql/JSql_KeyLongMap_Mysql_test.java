@@ -35,5 +35,5 @@ public class JSql_KeyLongMap_Mysql_test extends JSql_KeyLongMap_test {
 		// long testValue = Math.abs((new SecureRandom()).nextLong());
 		// testWeakCompareAndSetAccuracy(testValue);
 	}
-
+	
 }

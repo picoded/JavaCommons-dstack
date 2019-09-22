@@ -199,13 +199,13 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		// 2) expecting value is non-zero
 		//   a) existing record is NOT expired, and is expected value.
 		//
-
+		
 		// Potentially a new upsert, ensure there is something to "update" atleast
 		// initializing an empty row if it does not exist
 		if (expect == null || expect == 0l) {
 			// Expect is now atleast 0
 			expect = 0l;
-
+			
 			//
 			// Attempt to do an update first if record an expired record exists.
 			//
@@ -215,21 +215,23 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 			// This handles
 			// 1.a) expecting value is 0, existing record is expired
 			//
-			if( sqlObj.update("UPDATE " + keyLongMapName
-				+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (eTm > ? AND eTm < ?)", update, now, 0l, key, 0l, now) > 0 ) {
+			if (sqlObj.update("UPDATE " + keyLongMapName
+				+ " SET kVl=?, uTm=?, eTm=? WHERE kID = ? AND (eTm > ? AND eTm < ?)", update, now, 0l,
+				key, 0l, now) > 0) {
 				return true;
 			}
-
+			
 			//
 			// Insert command
 			// 
 			// This handles
 			// 1.b) expecting value is 0, existing record does not exist
 			// 
-
+			
 			// Immediately does an insert, this will intentionally fail if a record exists.
-			try{
-				if (sqlObj.update("INSERT INTO "+keyLongMapName+" (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
+			try {
+				if (sqlObj.update("INSERT INTO " + keyLongMapName
+					+ " (kID, uTm, cTm, eTm, kVl) VALUES (?, ?, ?, ?, ?)", key, now, now, 0l, update) > 0) {
 					return true;
 				}
 			} catch (Exception e) {
@@ -248,7 +250,8 @@ public class JSql_KeyLongMap extends Core_KeyLongMap {
 		// 2.a) expecting value is non-zero, existing record is NOT expired, and is expected value.
 		//
 		return sqlObj.update("UPDATE " + keyLongMapName
-			+ " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ? AND (eTm <= ? OR eTm > ?)", update, now, key, expect, 0l, now) > 0;
+			+ " SET kVl=?, uTm=? WHERE kID = ? AND kVl = ? AND (eTm <= ? OR eTm > ?)", update, now,
+			key, expect, 0l, now) > 0;
 	}
 	
 	//--------------------------------------------------------------------------

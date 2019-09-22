@@ -186,11 +186,11 @@ public class StructSimple_KeyLongMap_test {
 		// Setup the params
 		String lockID = "file~lock~test";
 		long lockTimeout = 10000;
-
+		
 		// Lets try to do a lock
-		assertTrue( testObj.weakCompareAndSet(lockID, 0l, testValue) );
+		assertTrue(testObj.weakCompareAndSet(lockID, 0l, testValue));
 		testObj.setLifeSpan(lockID, lockTimeout);
-
+		
 		// Validate the existing value, this guard against a narrow
 		// lock expriy window which occurs between
 		// a weakCompareAndSet, and the setLifeSpan command.
@@ -201,11 +201,11 @@ public class StructSimple_KeyLongMap_test {
 		long currentLifespan = testObj.getLifespan(lockID);
 		assertNotEquals(0l, currentLifespan);
 		assertTrue(currentLifespan > 0);
-
+		
 		// Lets delete the value (we are done)
 		testObj.remove(lockID);
 	}
-
+	
 	// NOTE : Large long values (such as randomLong)
 	//        is currently a known issue for mysql
 	//        as it seems to clamp its accuracy to 20 digits (somehow)
@@ -216,35 +216,35 @@ public class StructSimple_KeyLongMap_test {
 		long testValue = Math.abs((new SecureRandom()).nextLong());
 		testWeakCompareAndSetAccuracy(testValue);
 	}
-
+	
 	@Test
 	public void weakCompareAndSet_randomInt() {
 		// Lets derive the "new" lock token - randomly!
 		long testValue = Math.abs((new SecureRandom()).nextInt());
 		testWeakCompareAndSetAccuracy(testValue);
 	}
-
+	
 	@Test
 	public void weakCompareAndSet_randomInt_multipleTimes() {
-		for(int i=0; i<10; ++i) {
+		for (int i = 0; i < 10; ++i) {
 			weakCompareAndSet_randomInt();
 		}
 	}
-
+	
 	@Test
 	public void weakCompareAndSet_maxInt() {
 		// Max INT
 		long testValue = Integer.MAX_VALUE;
 		testWeakCompareAndSetAccuracy(testValue);
 	}
-
+	
 	@Test
 	public void weakCompareAndSet_maxIntPlus() {
 		// Max INT +++
-		long testValue = ((long)Integer.MAX_VALUE)+1234l;
+		long testValue = ((long) Integer.MAX_VALUE) + 1234l;
 		testWeakCompareAndSetAccuracy(testValue);
 	}
-
+	
 	//-----------------------------------------------------------
 	//
 	//  TTL accuracy dependent tests
