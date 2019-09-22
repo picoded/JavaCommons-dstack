@@ -247,6 +247,57 @@ public class Core_DataObject implements DataObject {
 	}
 	
 	/**
+	 * Save and update the given keyset of fields,
+	 * optimizing for a full insert - if possible
+	 * 
+	 * It checks against the existing remoteDataMap,
+	 * for values who could be inserted.
+	 * 
+	 * Attempts to do so - and falls back to update
+	 * if insert commands failed
+	 * 
+	 * - This assumes remoteDataMap is initialized
+	 * - This should ONLY be used inside saveDelta / saveAll
+	 * 
+	 * @param  keySet containing the "delta" changes
+	 */
+	protected void insertOrUpdateChanges(Set<String> deltaKeySet) {
+		// Get the existing remote set
+		Set<String> remoteSet = remoteDataMap.keySet();
+		
+		// Derive the insert subset
+		Set<String> insertSet = new HashSet<>(deltaKeySet);
+		insertSet.removeAll(remoteSet);
+		
+		// Derive the update subset (if insert suceeds)
+		Set<String> updateSet = new HashSet<>(deltaKeySet);
+		updateSet.removeAll(insertSet);
+		
+		// Lets do insert optimization - only if there are valid insert values
+		boolean validInsert = false;
+		if (insertSet.size() > 1) {
+			try {
+				// Attempt to perform the insert
+				validInsert = mainTable.DataObjectRemoteDataMap_insert(_oid, this, insertSet);
+			} catch (Exception e) {
+				// insert failed
+				validInsert = false;
+			}
+		}
+		
+		// If valid insert happened - perform update with limited updateSet
+		if (validInsert) {
+			// Perform update, without insert records (if needed)
+			if (updateSet.size() > 0) {
+				mainTable.DataObjectRemoteDataMap_update(_oid, this, updateSet);
+			}
+		} else {
+			// Peform a full update - using the full deltaKeySet
+			mainTable.DataObjectRemoteDataMap_update(_oid, this, deltaKeySet);
+		}
+	}
+	
+	/**
 	 * Save the delta changes to storage. This only push the changes made to the server
 	 * as such on heavy usage, it may create write sequence errors
 	 **/
@@ -263,7 +314,7 @@ public class Core_DataObject implements DataObject {
 			
 			// Lets sync up all the data !
 			ensureCompleteRemoteDataMap();
-			mainTable.DataObjectRemoteDataMap_update(_oid, this, deltaKeySet);
+			insertOrUpdateChanges(deltaKeySet);
 			
 			// Clear up the delta object, after sync
 			collapseDeltaToRemoteMap();
@@ -286,7 +337,7 @@ public class Core_DataObject implements DataObject {
 		ensureCompleteRemoteDataMap();
 		Set<String> keySet = new HashSet<String>(deltaDataMap.keySet());
 		keySet.addAll(remoteDataMap.keySet());
-		mainTable.DataObjectRemoteDataMap_update(_oid, this, keySet);
+		insertOrUpdateChanges(keySet);
 		
 		// Clear up the delta object, after sync
 		collapseDeltaToRemoteMap();
