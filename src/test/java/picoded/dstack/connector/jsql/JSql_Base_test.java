@@ -481,9 +481,6 @@ public abstract class JSql_Base_test {
 		assertEquals("via get('<col_name>').get(<row_num>)", "has nothing", r.get("col2").get(0));
 	}
 	
-	/**
-	 * @TODO extend test coverage to include default, and misc columns
-	 */
 	@Test
 	public void upsertStatement() {
 		row1to7setup();
@@ -758,4 +755,22 @@ public abstract class JSql_Base_test {
 		assertTrue(res.getString("pKy").contains("NUMBER") || res.getString("pKy").contains("INT"));
 		assertTrue(res.getString("iVl").contains("NUMBER") || res.getString("iVl").contains("INT"));
 	}
+	
+	@Test
+	public void simpleInsertStatmentTest() {
+		// Table with int type
+		assertTrue(jsqlObj.createTable(testTableName, new String[] { "pKy", "iVl" }, new String[] {
+			"int PRIMARY KEY", "int" }));
+		
+		// Lets insert some simple data
+		assertTrue(jsqlObj
+			.insert(testTableName, new String[] { "pKy", "iVl" }, new Object[] { 1, 2 }));
+		
+		// Lets validate
+		JSqlResult res = null;
+		assertNotNull("query should return a JSql result",
+			res = jsqlObj.query("SELECT * FROM " + testTableName + ""));
+		assertEquals(res.size(), 1);
+	}
+	
 }
