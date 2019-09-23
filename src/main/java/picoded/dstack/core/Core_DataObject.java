@@ -283,6 +283,13 @@ public class Core_DataObject implements DataObject {
 				// insert failed
 				validInsert = false;
 			}
+			
+			// Try to fallback to smaller update
+			if (!validInsert) {
+				mainTable.DataObjectRemoteDataMap_update(_oid, this, insertSet);
+				validInsert = true;
+			}
+			return;
 		}
 		
 		// If valid insert happened - perform update with limited updateSet

@@ -352,12 +352,10 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	}
 	
 	/**
-	 * Updates the actual backend storage of DataObject
-	 * either partially (if supported / used), or completely
-	 **/
-	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
-		Set<String> keys) {
-		
+	 * Setup primary key
+	 * @param _oid
+	 */
+	protected void setupPrimaryKey(String _oid) {
 		// Curent timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		
@@ -372,6 +370,30 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			new Object[] { now, 0 }, //
 			null // The only misc col, is pKy, which is being handled by DB
 			);
+	}
+	
+	/**
+	 * Insert the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 **/
+	public boolean DataObjectRemoteDataMap_insert(String _oid, Map<String, Object> fullMap,
+		Set<String> keys) {
+		// Setup primary key
+		setupPrimaryKey(_oid);
+		
+		// Does the data append
+		return JSql_DataObjectMapUtil.jSqlObjectMapInsert(sqlObj, dataStorageTable, _oid, fullMap,
+			keys);
+	}
+	
+	/**
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 **/
+	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
+		Set<String> keys) {
+		// Setup primary key
+		setupPrimaryKey(_oid);
 		
 		// Does the data append
 		JSql_DataObjectMapUtil.jSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys,

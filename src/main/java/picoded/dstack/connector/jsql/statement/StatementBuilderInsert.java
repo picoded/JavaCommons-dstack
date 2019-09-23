@@ -120,7 +120,7 @@ public interface StatementBuilderInsert extends StatementBuilderBaseInterface {
 	 *
 	 * @return  true, if insert statement executed succesfuly
 	 **/
-	default boolean multiinsert( //
+	default boolean multiInsert( //
 		String tableName, // Table name to insert on
 		//
 		String[] insertColumns, // Columns names to update
