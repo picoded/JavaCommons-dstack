@@ -374,8 +374,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			);
 		
 		// Does the data append
-		JSql_DataObjectMapUtil.jSqlObjectMapAppend(sqlObj, dataStorageTable, _oid, fullMap, keys,
-			true);
+		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sqlObj, dataStorageTable, _oid, fullMap, keys);
 	}
 	
 	//--------------------------------------------------------------------------
