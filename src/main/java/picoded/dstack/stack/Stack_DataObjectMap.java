@@ -120,21 +120,6 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	}
 	
 	/**
-	 * Insert into the actual backend storage of DataObject
-	 * either partially (if supported / used), or completely
-	 **/
-	public boolean DataObjectRemoteDataMap_insert(String oid, Map<String, Object> fullMap,
-		Set<String> keys) {
-		// Insert result
-		boolean ret = true;
-		// Write data from the lowest layer upwards
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			ret = dataLayers[i].DataObjectRemoteDataMap_insert(oid, fullMap, keys) && ret;
-		}
-		return ret;
-	}
-	
-	/**
 	 * Updates the actual backend storage of DataObject
 	 * either partially (if supported / used), or completely
 	 **/

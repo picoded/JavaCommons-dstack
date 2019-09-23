@@ -69,28 +69,6 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	abstract public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys);
 	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
-	 * Insert the actual backend storage of DataObject
-	 * either partially (if supported / used), or completely.
-	 * 
-	 * Note that if the backend (like most documentDB) does not support partial update,
-	 * it is more efficent to return false on this command. And implement the insert/update
-	 * within `DataObjectRemoteDataMap_update`
-	 *
-	 * @param   Object ID to get
-	 * @param   The full map of data. This is required as not all backend implementations allow partial update
-	 * @param   Keys to update, this is used to optimize certain backends
-	 * 
-	 * @return true if update occured, else false (system will use DataObjectRemoteDataMap_update instead))
-	 **/
-	public boolean DataObjectRemoteDataMap_insert(String oid, Map<String, Object> fullMap,
-		Set<String> keys) {
-		// throw new UnsupportedOperationException("DataObjectRemoteDataMap_insert - is unsupported - system should fallback to DataObjectRemoteDataMap_update varient");
-		return false;
-	}
-	
 	//--------------------------------------------------------------------------
 	//
 	// Query functions
