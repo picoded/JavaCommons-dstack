@@ -532,8 +532,11 @@ public class JSql_DataObjectMapUtil {
 	/**
 	 * Internal batch size upper limit - for jsql object map updates
 	 * this is to work around known parameter limitations for certin SQL implementations
+	 * 
+	 * 2000 / 11 = 181
+	 * Rounded down to 175 to have a healthy buffer
 	 */
-	public static final int jSqlObjectBatchSize = 200;
+	public static final int jSqlObjectBatchSize = 175;
 	
 	/**
 	 * Iterates the relevent keyList, and appends its value from the objMap, into the sql colTypes database
