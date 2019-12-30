@@ -13,6 +13,8 @@ jobs:
         java-version: 1.8
     - name: Setup gradle binaries
       run: ./gradlew
+    - name: Pull dependencies libs, and perform initial compile
+      run: ./gradlew src
     - name: Run unit tests
       run: ./gradlew test
     - name: Build with Gradle
