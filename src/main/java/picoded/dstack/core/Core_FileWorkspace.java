@@ -244,6 +244,39 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_ensureFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long createdTimestamp(final String filepath) {
+		return main.backend_createdTimestamp(_oid, normalizeFilePathString(filepath));
+	}
+	
+	/**
+	 * The updated timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long updatedTimestamp(final String filepath) {
+		return main.backend_updatedTimestamp(_oid, normalizeFilePathString(filepath));
+	}
+	
 	// Move support
 	//--------------------------------------------------------------------------
 	

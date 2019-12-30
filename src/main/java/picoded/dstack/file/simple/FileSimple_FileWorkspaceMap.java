@@ -5,6 +5,7 @@ import picoded.dstack.core.Core_FileWorkspaceMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -363,6 +364,49 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_ensureFolderPath(final String oid, final String folderPath) {
 		File folderObj = workspaceFileObj(oid, folderPath);
 		FileUtil.forceMkdir(folderObj);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_createdTimestamp(final String oid, final String filepath) {
+		try {
+			File fileObj = workspaceFileObj(oid, filepath);
+			BasicFileAttributes attr = Files.readAttributes(fileObj.toPath(), BasicFileAttributes.class);
+			return attr.creationTime().toMillis();
+		} catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * The updated timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_updatedTimestamp(final String oid, final String filepath) {
+		File fileObj = workspaceFileObj(oid, filepath);
+		return fileObj.lastModified();
 	}
 	
 	//--------------------------------------------------------------------------

@@ -32,26 +32,6 @@ public interface FileWorkspace {
 	String _oid();
 	
 	/**
-	 * The created timestamp of the map in ms,
-	 * note that -1 means the current backend does not support this feature
-	 *
-	 * @return  DataObject created timestamp in ms
-	 */
-	default long createdTimestamp() {
-		return -1;
-	}
-	
-	/**
-	 * The updated timestamp of the map in ms,
-	 * note that -1 means the current backend does not support this feature
-	 *
-	 * @return  DataObject created timestamp in ms
-	 */
-	default long updatedTimestamp() {
-		return -1;
-	}
-	
-	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
 	 * This ensures the workspace _oid is registered within the map,
@@ -198,6 +178,39 @@ public interface FileWorkspace {
 	 */
 	default boolean pathExist(final String path) {
 		return fileExist(path) || folderPathExist(path);
+	}
+	
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	default long createdTimestamp(final String filepath) {
+		return -1;
+	}
+	
+	/**
+	 * The updated timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	default long updatedTimestamp(final String filepath) {
+		return -1;
 	}
 	
 	//

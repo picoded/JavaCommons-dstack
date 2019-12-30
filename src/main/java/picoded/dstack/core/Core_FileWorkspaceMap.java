@@ -257,6 +257,45 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		throw new RuntimeException("Missing backend implementation");
 	}
 	
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_createdTimestamp(final String oid, final String filepath) {
+		return -1;
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 
+	 * The updated timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_updatedTimestamp(final String oid, final String filepath) {
+		return -1;
+	}
+	
 	// Listing support
 	//--------------------------------------------------------------------------
 	
