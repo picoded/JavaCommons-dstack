@@ -209,7 +209,7 @@ public interface FileWorkspace {
 	 *
 	 * @return  DataObject created timestamp in ms
 	 */
-	default long updatedTimestamp(final String filepath) {
+	default long modifiedTimestamp(final String filepath) {
 		return -1;
 	}
 	

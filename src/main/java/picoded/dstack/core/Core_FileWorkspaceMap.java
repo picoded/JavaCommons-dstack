@@ -284,7 +284,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 
-	 * The updated timestamp of the map in ms,
+	 * The modified timestamp of the map in ms,
 	 * note that -1 means the current backend does not support this feature
 	 *
 	 * @param  ObjectID of workspace
@@ -292,7 +292,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * @return  DataObject created timestamp in ms
 	 */
-	public long backend_updatedTimestamp(final String oid, final String filepath) {
+	public long backend_modifiedTimestamp(final String oid, final String filepath) {
 		return -1;
 	}
 	
