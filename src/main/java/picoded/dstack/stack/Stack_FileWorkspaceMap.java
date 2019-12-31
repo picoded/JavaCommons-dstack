@@ -272,7 +272,59 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_ensureFolderPath(oid, folderPath);
 		}
 	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
 	
+	/**
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_createdTimestamp(final String oid, final String filepath) {
+		// Once a workspace is found in any layers
+		for (int i = 0; i < dataLayers.length; i++) {
+			long ts = dataLayers[i].backend_createdTimestamp(oid, filepath);
+			if (ts > 0) {
+				return ts;
+			}
+		}
+		// If all layers did not find the workspace
+		return -1;
+	}
+	
+	/**
+	 * The modified timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_modifiedTimestamp(final String oid, final String filepath) {
+		// Once a workspace is found in any layers
+		for (int i = 0; i < dataLayers.length; i++) {
+			long ts = dataLayers[i].backend_modifiedTimestamp(oid, filepath);
+			if (ts > 0) {
+				return ts;
+			}
+		}
+		// If all layers did not find the workspace
+		return -1;
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// Move support
