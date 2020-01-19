@@ -39,7 +39,7 @@ ADD hazelcast.xml /hazelcast.xml
 ENV GROUP_NAME "hazelcast"
 
 # minimum init cluster size and wait timing
-ENV CLUSTER_INIT_MIN_SIZE  2
+ENV CLUSTER_INIT_MIN_SIZE  1
 ENV CLUSTER_INIT_WAIT_TIME 10
 
 # Cluster discovery DNS srvice
