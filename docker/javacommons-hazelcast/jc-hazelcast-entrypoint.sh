@@ -16,14 +16,19 @@ echo "########################################"
 JAVA_OPTS="-Dhazelcast.initial.min.cluster.size=${CLUSTER_INIT_MIN_SIZE} -Dhazelcast.initial.wait.seconds=${CLUSTER_INIT_WAIT_TIME} ${JAVA_OPTS}"
 
 # Add the XML config path and rest api support
-JAVA_OPTS="-Dhazelcast.discovery.enabled=true -Dhazelcast.rest.enabled=true -Dhazelcast.config=/hazelcast.xml ${JAVA_OPTS}"
+JAVA_OPTS="-Dhazelcast.rest.enabled=true -Dhazelcast.config=/hazelcast.xml ${JAVA_OPTS}"
 
 # Add environment variable support (not needed in 3.12 onward? - need to confirm)
 JAVA_OPTS="-Denv.GROUP_NAME=${GROUP_NAME} ${JAVA_OPTS}"
 JAVA_OPTS="-Denv.CLUSTER_INIT_MIN_SIZE=${CLUSTER_INIT_MIN_SIZE} ${JAVA_OPTS}"
 JAVA_OPTS="-Denv.CLUSTER_INIT_WAIT_TIME=${CLUSTER_INIT_WAIT_TIME} ${JAVA_OPTS}"
+JAVA_OPTS="-Denv.CLUSTER_MULTICAST=${CLUSTER_MULTICAST} ${JAVA_OPTS}"
+JAVA_OPTS="-Denv.CLUSTER_KUBERNETES=${CLUSTER_KUBERNETES} ${JAVA_OPTS}"
 JAVA_OPTS="-Denv.CLUSTER_DNS_DISCOVERY_SERVICE=${CLUSTER_DNS_DISCOVERY_SERVICE} ${JAVA_OPTS}"
 JAVA_OPTS="-Denv.CLUSTER_DNS_DISCOVERY_TIMEOUT=${CLUSTER_DNS_DISCOVERY_TIMEOUT} ${JAVA_OPTS}"
+
+# Special discovery handling
+JAVA_OPTS="-Denv.CLUSTER_DISCOVERY=${CLUSTER_DISCOVERY} -Dhazelcast.discovery.enabled=${CLUSTER_DISCOVERY} ${JAVA_OPTS}"
 
 echo "########################################"
 echo "# Triggering hazelcast start script "
