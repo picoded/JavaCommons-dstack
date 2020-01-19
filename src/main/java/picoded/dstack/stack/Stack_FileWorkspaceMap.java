@@ -272,7 +272,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_ensureFolderPath(oid, folderPath);
 		}
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Create and updated timestamp support
@@ -324,7 +324,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		// If all layers did not find the workspace
 		return -1;
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Move support

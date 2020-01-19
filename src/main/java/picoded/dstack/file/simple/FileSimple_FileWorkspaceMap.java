@@ -388,9 +388,10 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public long backend_createdTimestamp(final String oid, final String filepath) {
 		try {
 			File fileObj = workspaceFileObj(oid, filepath);
-			BasicFileAttributes attr = Files.readAttributes(fileObj.toPath(), BasicFileAttributes.class);
+			BasicFileAttributes attr = Files.readAttributes(fileObj.toPath(),
+				BasicFileAttributes.class);
 			return attr.creationTime().toMillis();
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

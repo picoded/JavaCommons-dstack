@@ -43,28 +43,75 @@ public class DStack extends CoreStack {
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		// Initialize for the respective type
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			return new Stack_DataObjectMap(fetchCommonStructureImplementation(name, "DataObjectMap",
-				new Core_DataObjectMap[] {}));
+			return new Stack_DataObjectMap( //
+				fetchCommonStructureLayers(name, "DataObjectMap", new Core_DataObjectMap[] {}), //
+				fetchCommonStructureQueryLayer(name, "DataObjectMap", new Core_DataObjectMap[] {}) //
+			); //
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
-			return new Stack_KeyValueMap(fetchCommonStructureImplementation(name, "KeyValueMap",
-				new Core_KeyValueMap[] {}));
+			return new Stack_KeyValueMap( //
+				fetchCommonStructureLayers(name, "KeyValueMap", new Core_KeyValueMap[] {}), //
+				fetchCommonStructureQueryLayer(name, "KeyValueMap", new Core_KeyValueMap[] {}) //
+			); //
 		}
 		if (type.equalsIgnoreCase("KeyLongMap")) {
-			return new Stack_KeyLongMap(fetchCommonStructureImplementation(name, "KeyLongMap",
-				new Core_KeyLongMap[] {}));
+			return new Stack_KeyLongMap( //
+				fetchCommonStructureLayers(name, "KeyLongMap", new Core_KeyLongMap[] {}), //
+				fetchCommonStructureQueryLayer(name, "KeyLongMap", new Core_KeyLongMap[] {}) //
+			); //
 		}
 		if (type.equalsIgnoreCase("FileWorkspaceMap")) {
-			return new Stack_FileWorkspaceMap(fetchCommonStructureImplementation(name,
-				"FileWorkspaceMap", new Core_FileWorkspaceMap[] {}));
+			return new Stack_FileWorkspaceMap(
+				//
+				fetchCommonStructureLayers(name, "FileWorkspaceMap", new Core_FileWorkspaceMap[] {}), //
+				fetchCommonStructureQueryLayer(name, "FileWorkspaceMap", new Core_FileWorkspaceMap[] {}) //
+			); //
 		}
 		
 		// No valid type supported
 		return null;
 	}
 	
+	//------------------------------------------------------------------------------------
+	//
+	// Fetching of CommonStructure, which is the base class of all the various
+	// DataStructure implementation used within dstack.
+	//
+	// This is then used to form a combination data stack layer interface via Stack_*
+	//
+	//------------------------------------------------------------------------------------
+	
+	/**
+	 * Given the provider name, data structure name, and type, fetch the relevent CommonStructure
+	 *
+	 * @param providerName to fetch from
+	 * @param structureName to use
+	 * @param type of data structure to expect
+	 *
+	 * @return null if not found, else the data structure
+	 */
+	protected <V extends Core_DataStructure> V fetchCommonStructureFromProvider(String providerName,
+		String structureName, String type) {
+		// Get the relevent provider CoreStack
+		CoreStack providerStack = providerConfig.getProviderStack(providerName);
+		if (providerStack == null) {
+			return null;
+		}
+		
+		// Get the relevent data structure
+		Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(structureName,
+			type, null);
+		if (providerDataStructure == null) {
+			return null;
+		}
+		
+		// Return the valid data structure
+		return (V) providerDataStructure;
+	}
+	
 	/**
 	 * Given the data structure name, and string type. Get the relevent underlying data structure implmentation.
+	 * According to the given configuration in the layered stack
 	 *
 	 * @param name         of data structure to use
 	 * @param type         of data structure to implement
@@ -72,7 +119,7 @@ public class DStack extends CoreStack {
 	 *
 	 * @return array of data structures found applicable, which is the same as referenceType
 	 */
-	protected <V extends Core_DataStructure> V[] fetchCommonStructureImplementation(String name,
+	protected <V extends Core_DataStructure> V[] fetchCommonStructureLayers(String name,
 		String type, V[] refrenceType) {
 		// Get the relevent namespace config
 		GenericConvertMap<String, Object> namespaceConfig = resolveNamespaceConfig(name);
@@ -89,25 +136,12 @@ public class DStack extends CoreStack {
 		// return list to use, time to fill it up with objects from the providers
 		List<V> retList = new ArrayList<>();
 		
-		// Iterate the provider
+		// Iterate the provider for the data structures
 		for (Object provider : providerList) {
-			// Get the relevent provider CoreStack
-			// Skip if null
-			CoreStack providerStack = providerConfig.getProviderStack(provider.toString());
-			if (providerStack == null) {
-				continue;
+			V providerDataStructure = fetchCommonStructureFromProvider(provider.toString(), name, type);
+			if (providerDataStructure != null) {
+				retList.add(providerDataStructure);
 			}
-			
-			// Get the relevent data structure
-			// Skip if null
-			Core_DataStructure providerDataStructure = providerStack.cacheDataStructure(name, type,
-				null);
-			if (providerDataStructure == null) {
-				continue;
-			}
-			
-			// Add to response
-			retList.add((V) providerDataStructure);
 		}
 		
 		// Throw an exception if empty
@@ -119,9 +153,43 @@ public class DStack extends CoreStack {
 		return retList.toArray(refrenceType);
 	}
 	
+	/**
+	 * Given the data structure name, and string type. Get the relevent query layer (if configured)
+	 * According to the given configuration in the layered stack
+	 *
+	 * @param name         of data structure to use
+	 * @param type         of data structure to implement
+	 * @param refrenceType return array to use for type reference (not actually used)
+	 *
+	 * @return datastructure if configured, else null
+	 */
+	protected <V extends Core_DataStructure> V fetchCommonStructureQueryLayer(String name,
+		String type, V[] refrenceType) {
+		// Get the relevent namespace config
+		GenericConvertMap<String, Object> namespaceConfig = resolveNamespaceConfig(name);
+		if (namespaceConfig == null) {
+			throw new RuntimeException("No `namespace` configuration found for " + name);
+		}
+		
+		// Get the query provider (if configured)
+		String queryProvider = namespaceConfig.getString("queryProvider");
+		if (queryProvider == null) {
+			return null;
+		}
+		
+		// Fetch and return the provider data structure
+		V providerDataStructure = fetchCommonStructureFromProvider(queryProvider, name, type);
+		if (providerDataStructure == null) {
+			throw new RuntimeException("Missing `queryProvider` : " + queryProvider);
+		}
+		return providerDataStructure;
+	}
+	
+	//------------------------------------------------------------------------------------
 	//
-	// Helper Functions
+	// Regex Helper Functions
 	//
+	//------------------------------------------------------------------------------------
 	
 	/**
 	 * This function will find the first namespaceConfig that matches the requested name
