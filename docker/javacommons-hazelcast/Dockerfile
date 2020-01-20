@@ -29,7 +29,7 @@ RUN ls /workspace/built-jars/
 FROM hazelcast/hazelcast:3.11.4 as javacommons-hazelcast
 
 # Copy over the relevent classpath
-ENV CLASSPATH="/opt/hazelcast/CLASSPATH_EXT"
+ENV CLASSPATH="/opt/hazelcast/CLASSPATH_EXT:/opt/hazelcast/CLASSPATH_EXT/*"
 COPY --from=builder /workspace/built-jars/* /opt/hazelcast/CLASSPATH_EXT/
 
 # Adding custom hazelcast.xml
