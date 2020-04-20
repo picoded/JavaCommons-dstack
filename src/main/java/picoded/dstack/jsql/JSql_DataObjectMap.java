@@ -254,21 +254,9 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			dataStorageTable, "kID, nVl, sVl", null, "knsIdx" //
 		); //
 		
-		// Full text index, for textual data
-		// @TODO FULLTEXT index support
-		//------------------------------------------------
-		//if (sqlObj.sqlType != JSqlType.sqlite) {
-		//	sqlObj.createIndex( //
-		//		tName, "tVl", "FULLTEXT", "tVlT" //
-		//	);
-		//} else {
-		// sqlObj.createIndex( //
-		// 	dataStorageTable, "tVl", null, "tVlI" // Sqlite uses normal index
-		// ); //
-		//}
-		
+		//--------------------------------------------------------------------
 		//
-		// timestamp index, is this needed?
+		// test / timestamp index, is this needed?
 		//
 		// Currently commented out till a usage is found for them
 		// This can be easily recommented in.
@@ -281,8 +269,24 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// A good example is at times several fields in buisness logic is set
 		// to NOT want to update the updated time stamp of the object.
 		//
-		//------------------------------------------------
+		//--------------------------------------------------------------------
 		
+		// Full text index, for textual data
+		//------------------------------------------------
+
+		//if (sqlObj.sqlType != JSqlType.sqlite) {
+		//	sqlObj.createIndex( //
+		//		tName, "tVl", "FULLTEXT", "tVlT" //
+		//	);
+		//} else {
+		// sqlObj.createIndex( //
+		// 	dataStorageTable, "tVl", null, "tVlI" // Sqlite uses normal index
+		// ); //
+		//}
+		
+		// Create and updated timestamp index
+		//------------------------------------------------
+
 		// // By created time
 		// sqlObj.createIndex( //
 		// 	dataStorageTable, "cTm, kID, nVl, sVl", null, "cTm_valMap" //
