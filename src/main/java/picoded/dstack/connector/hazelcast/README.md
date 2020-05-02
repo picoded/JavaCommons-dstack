@@ -20,9 +20,6 @@ Server mode will use the following additional config settings
 
 Client mode will use the following additional config settings
 
-@TODO : Spec out and implement client mode
-
 | keyname           | type      | default    | description                                      |
 |-------------------|-----------|------------|--------------------------------------------------|
-|                   |           |            |                                                  |
-
+| memberTcpList     | array     | []         | Array of servers to connect to for hazelcast     |
