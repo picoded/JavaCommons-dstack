@@ -4,11 +4,13 @@ import static org.junit.Assert.*;
 import org.junit.*;
 
 import java.util.Map;
+import java.util.List;
 
 import picoded.core.conv.ConvertJSON;
 import picoded.dstack.jsql.*;
 
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertList;
 
 ///
 /// Common base JSql Test case which is applied to various implmentation
@@ -567,6 +569,7 @@ public abstract class JSql_Base_test {
 		assertEquals("Upsert value check failed", 404, ((Number) r.readRow(0).getInt("col1")));
 		assertEquals("Upsert value check failed", "not found", r.readRow(0).getString("col2"));
 		assertEquals("Upsert value check failed", "ABC", r.readRow(0).getString("col4"));
+		dropTableIfExist(testTableName + "_1");
 	}
 	
 	@Test
@@ -758,6 +761,8 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void simpleInsertStatmentTest() {
+
+		dropTableIfExist(testTableName);
 		// Table with int type
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "pKy", "iVl" }, new String[] {
 			"int PRIMARY KEY", "int" }));
@@ -770,7 +775,13 @@ public abstract class JSql_Base_test {
 		JSqlResult res = null;
 		assertNotNull("query should return a JSql result",
 			res = jsqlObj.query("SELECT * FROM " + testTableName + ""));
-		assertEquals(res.size(), 1);
+
+		// for (Map.Entry<String,GenericConvertList<Object>> entry : res.entrySet()){  
+		// 	System.out.println(entry.getKey() + ", " + ConvertJSON.fromList(entry.getValue()));			
+		// }
+
+		assertEquals(res.rowCount(), 1);
+		dropTableIfExist(testTableName);
 	}
 	
 }

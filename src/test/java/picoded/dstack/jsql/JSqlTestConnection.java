@@ -28,4 +28,10 @@ public class JSqlTestConnection {
 			JSqlTestConfig.POSTGRES_NAME(), JSqlTestConfig.POSTGRES_USER(),
 			JSqlTestConfig.POSTGRES_PASS());
 	}
+
+	/// ORACLE connection
+	public static JSql oracle() {
+		return new JSql_Oracle(JSqlTestConfig.ORACLE_PATH(), JSqlTestConfig.ORACLE_USER(),
+			JSqlTestConfig.ORACLE_PASS());
+	}
 }
