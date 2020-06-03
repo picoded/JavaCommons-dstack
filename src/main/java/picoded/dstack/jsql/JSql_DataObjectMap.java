@@ -273,7 +273,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		
 		// Full text index, for textual data
 		//------------------------------------------------
-
+		
 		//if (sqlObj.sqlType != JSqlType.sqlite) {
 		//	sqlObj.createIndex( //
 		//		tName, "tVl", "FULLTEXT", "tVlT" //
@@ -286,7 +286,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		
 		// Create and updated timestamp index
 		//------------------------------------------------
-
+		
 		// // By created time
 		// sqlObj.createIndex( //
 		// 	dataStorageTable, "cTm, kID, nVl, sVl", null, "cTm_valMap" //

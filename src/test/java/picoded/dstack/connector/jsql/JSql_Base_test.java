@@ -761,7 +761,7 @@ public abstract class JSql_Base_test {
 	
 	@Test
 	public void simpleInsertStatmentTest() {
-
+		
 		dropTableIfExist(testTableName);
 		// Table with int type
 		assertTrue(jsqlObj.createTable(testTableName, new String[] { "pKy", "iVl" }, new String[] {
@@ -775,11 +775,11 @@ public abstract class JSql_Base_test {
 		JSqlResult res = null;
 		assertNotNull("query should return a JSql result",
 			res = jsqlObj.query("SELECT * FROM " + testTableName + ""));
-
+		
 		// for (Map.Entry<String,GenericConvertList<Object>> entry : res.entrySet()){  
 		// 	System.out.println(entry.getKey() + ", " + ConvertJSON.fromList(entry.getValue()));			
 		// }
-
+		
 		assertEquals(res.rowCount(), 1);
 		dropTableIfExist(testTableName);
 	}

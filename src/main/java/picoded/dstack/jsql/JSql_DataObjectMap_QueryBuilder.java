@@ -103,10 +103,17 @@ public class JSql_DataObjectMap_QueryBuilder {
 			return new MutablePair<>(queryStr, queryArg);
 		}
 		
+		//
+		// TEMPORARY CHANGE TO LEFT JOIN
+		//
+		// While LEFT join technically works, its SUPER expensive,
+		// and should only be limited to "ORDER BY" or "!=" clauses.
+		//
+		
 		// For each collumn that is required, perform an inner join
 		for (int i = 0; i < collumns.size(); ++i) {
 			// Single collumn inner join
-			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
+			queryStr.append("LEFT JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
 				.append(" WHERE kID=? AND idx=?) AS D" + i + " ON (") //
 				.append("DP.oID = D" + i + ".oID) \n");
 			// With arguments
@@ -117,6 +124,123 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// The inner join query
 		return new MutablePair<>(queryStr, queryArg);
 	}
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Custom QueryStringOverwrite utility class
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Custom query string class, whose main (or sole) purpose,
+	 * is to overwrite the expected SQL toString() / toSqlString()
+	 * out put with a custom implementation.
+	 * 
+	 * This is used internally, to facilitate overwrites for certain,
+	 * SQL specific edge cases
+	 */
+	static class QueryStringOverwrite implements Query {
+		
+		/**
+		 * The original query used internally
+		 */
+		Query original = null;
+		
+		/**
+		 * Overwrite SQL string to expose
+		 */
+		String toStringOverwrite = null;
+		
+		/**
+		 * Constructor, with the respective query, and SQL string overwrite
+		 */
+		public QueryStringOverwrite(Query inOriginal, String inOverwrite) {
+			original = inOriginal;
+			toStringOverwrite = inOverwrite;
+		}
+		
+		//
+		// Proxy the respective compulsory command to the original query
+		//
+		@Override
+		public boolean test(Object t) {
+			return original.test(t);
+		}
+		
+		@Override
+		public boolean test(Object t, Map<String, Object> argMap) {
+			return original.test(t, argMap);
+		}
+		
+		@Override
+		public QueryType type() {
+			return original.type();
+		}
+		
+		@Override
+		public String operatorSymbol() {
+			return original.operatorSymbol();
+		}
+		
+		@Override
+		public Map<String, List<Object>> keyValuesMap(Map<String, List<Object>> mapToReturn) {
+			return original.keyValuesMap(mapToReturn);
+		}
+
+		//
+		// Operator type overwrites
+		//
+
+		@Override
+		public boolean isBasicOperator() {
+			return original.isBasicOperator();
+		}
+		
+		@Override
+		public boolean isCombinationOperator() {
+			return original.isCombinationOperator();
+		}
+			
+		//
+		// Non compulsory overwrites
+		//
+
+		public List<Query> childrenQuery() {
+			return original.childrenQuery();
+		}
+			
+		public String fieldName() {
+			return original.fieldName();
+		}
+		
+		public String argumentName() {
+			return original.argumentName();
+		}
+		
+		public Map<String, Object> defaultArgumentMap() {
+			return original.defaultArgumentMap();
+		}
+		
+		public Object defaultArgumentValue() {
+			return original.defaultArgumentValue();
+		}
+		
+		//
+		// toString() overwrite, this also effectively overwrites the toSqlString() equilavent
+		//
+
+		@Override
+		public String toString() {
+			return toStringOverwrite;
+		}
+		
+	}
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Build and execute the full complex query
+	//
+	//-----------------------------------------------------------------------------------------------
 	
 	/**
 	 * Performs a search query, and returns the respective result containing the DataObjects information
@@ -164,8 +288,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		//--------------------------------------------------------------------------
 		// Sadly looks like things must be done the hard way, 
-		// lets build the query and orderby clause objects
-		// and extract out the collumn names
+		// lets build the following generic struct
+		//
+		// - Query
+		// - OrderBy
+		//
+		// which is used to facilitate
+		//
+		// - SQL Injection protect
+		// - Extraction of collumn names needed
 		//--------------------------------------------------------------------------
 		
 		// The where clause query object, that is built, and actually used
@@ -294,12 +425,34 @@ public class JSql_DataObjectMap_QueryBuilder {
 					// Setup the replacement query
 					Query replacement = null;
 					
-					// Does special numeric handling
 					if (argObj == null) {
+						// Does special NULL handling
 						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
 							+ ".sVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 						);
+						
+						// 
+						// Lets do special SQL condition overwriting
+						// to properly support null equality checks
+						//
+						// This works around known limitations of SQL
+						// requiring NULL checks as the "IS NULL" or "IS NOT NULL"
+						// varient
+						//
+						// https://www.tutorialspoint.com/sql/sql-null-values.htm#:~:text=The%20SQL%20NULL%20is%20the,a%20field%20that%20contains%20spaces.
+						//
+						if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
+							replacement = new QueryStringOverwrite( //
+								replacement, // The replacement query, in case is still needed
+								"(" + collumnTableAlias + ".sVl IS NOT NULL OR " + replacement.toString()
+									+ ")");
+						} else if (toReplace.operatorSymbol().equalsIgnoreCase("=")) {
+							replacement = new QueryStringOverwrite( //
+								replacement, // The replacement query, in case is still needed
+								"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString() + ")");
+						}
 					} else if (argObj instanceof Number) {
+						// Does special numeric handling
 						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
 							+ ".nVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 						);
@@ -317,6 +470,20 @@ public class JSql_DataObjectMap_QueryBuilder {
 							// Update the argument with limits
 							queryArgMap.put(toReplace.argumentName(),
 								JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
+
+							// 
+							// Special handling of != once again
+							// due to SQL quirk with NULL values
+							//
+							// `col != "value"`, is remapped as
+							// `col != "value" OR col IS NULL`
+							//
+							if( toReplace.operatorSymbol().equalsIgnoreCase("!=") ) {
+								replacement = new QueryStringOverwrite( //
+									replacement, // The replacement query, in case is still needed
+									"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString()
+									+ ")");
+							}
 						}
 					}
 					
@@ -419,16 +586,23 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// And finally, the query
 		//----------------------------------------------------------------------
 		
-		// // In case you want to debug the query =(
-		// System.err.println(">>> " + fullQuery.toString());
-		// System.err.println(">>> " + ConvertJSON.fromList(fullQueryArgs));
+		// Original where calause and values
+		System.err.println(">>> " + whereClause);
+		System.err.println(">>> " + ConvertJSON.fromArray(whereValues));
+		
+		// In case you want to debug the query =(
+		System.err.println(">>> " + fullQuery.toString());
+		System.err.println(">>> " + ConvertJSON.fromList(fullQueryArgs));
 		
 		// // Dump and debug the table
 		// System.out.println(">>> TABLE DUMP");
 		// System.out.println( ConvertJSON.fromMap( sql.select(tablename).readRow(0) ) );
 		
 		// Execute and get the result
-		return sql.query(fullQuery.toString(), fullQueryArgs.toArray(EmptyArray.OBJECT));
+		JSqlResult res = sql.query(fullQuery.toString(), fullQueryArgs.toArray(EmptyArray.OBJECT));
+
+		// And return it
+		return res;
 	}
 	
 	//-----------------------------------------------------------------------------------------------

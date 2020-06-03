@@ -677,7 +677,7 @@ public class StructSimple_DataObjectMap_test {
 	
 	// Query unset parameters
 	//-----------------------------------------------
-
+	
 	public void testWithUnserParameters_setup() {
 		// Meta Object to manipulate around with
 		DataObject mObj = null;
@@ -700,19 +700,36 @@ public class StructSimple_DataObjectMap_test {
 		mObj.put("be", "ok");
 		mObj.saveDelta();
 	}
-
+	
+	@Test
+	public void testWithUnsetParameters_queryNull() {
+		// Setup 
+		this.testWithUnserParameters_setup();
+		
+		// Meta Object to manipulate around with
+		DataObject[] queryRes = null;
+		
+		// Query for objects, with exsiting properties
+		queryRes = mtObj.query("what = ?", new Object[] { null });
+		assertEquals(3, queryRes.length);
+		
+		// Query for objects, with missing property
+		queryRes = mtObj.query("dun != ?", new Object[] { null });
+		assertEquals(2, queryRes.length);
+	}
+	
 	@Test
 	public void testWithUnsetParameters_query() {
 		// Setup 
 		this.testWithUnserParameters_setup();
-
+		
 		// Meta Object to manipulate around with
 		DataObject[] queryRes = null;
 		
 		// Query for objects, with exsiting properties
 		queryRes = mtObj.query("be != ?", new Object[] { "evil" });
 		assertEquals(3, queryRes.length);
-
+		
 		// Query for objects, with missing property
 		queryRes = mtObj.query("dun != ?", new Object[] { "evil" });
 		assertEquals(3, queryRes.length);
@@ -722,20 +739,20 @@ public class StructSimple_DataObjectMap_test {
 	public void testWithUnsetParameters_orderBy() {
 		// Setup 
 		this.testWithUnserParameters_setup();
-
+		
 		// Meta Object to manipulate around with
 		DataObject[] queryRes = null;
 		
 		// Query for objects, with exsiting properties
 		queryRes = mtObj.query("be != ?", new Object[] { "evil" }, "be ASC");
 		assertEquals(3, queryRes.length);
-
+		
 		// Query for objects, with missing property
 		queryRes = mtObj.query("be != ?", new Object[] { "evil" }, "dun ASC");
 		assertEquals(3, queryRes.length);
-
+		
 	}
-
+	
 	// Random object, and iteration support
 	//-----------------------------------------------
 	
