@@ -675,6 +675,67 @@ public class StructSimple_DataObjectMap_test {
 		assertEquals(ref._oid(), qRes[0]._oid());
 	}
 	
+	// Query unset parameters
+	//-----------------------------------------------
+
+	public void testWithUnserParameters_setup() {
+		// Meta Object to manipulate around with
+		DataObject mObj = null;
+		
+		// Lets set the result that should be there
+		assertNotNull(mObj = mtObj.newEntry());
+		mObj.put("dun", "worry");
+		mObj.put("be", "happy");
+		mObj.saveDelta();
+		
+		// lets setup a partial
+		assertNotNull(mObj = mtObj.newEntry());
+		// mObj.put("dun", "have");
+		mObj.put("be", "missing");
+		mObj.saveDelta();
+		
+		// Lets set the result that should be there
+		assertNotNull(mObj = mtObj.newEntry());
+		mObj.put("dun", "be");
+		mObj.put("be", "ok");
+		mObj.saveDelta();
+	}
+
+	@Test
+	public void testWithUnsetParameters_query() {
+		// Setup 
+		this.testWithUnserParameters_setup();
+
+		// Meta Object to manipulate around with
+		DataObject[] queryRes = null;
+		
+		// Query for objects, with exsiting properties
+		queryRes = mtObj.query("be != ?", new Object[] { "evil" });
+		assertEquals(3, queryRes.length);
+
+		// Query for objects, with missing property
+		queryRes = mtObj.query("dun != ?", new Object[] { "evil" });
+		assertEquals(3, queryRes.length);
+	}
+	
+	@Test
+	public void testWithUnsetParameters_orderBy() {
+		// Setup 
+		this.testWithUnserParameters_setup();
+
+		// Meta Object to manipulate around with
+		DataObject[] queryRes = null;
+		
+		// Query for objects, with exsiting properties
+		queryRes = mtObj.query("be != ?", new Object[] { "evil" }, "be ASC");
+		assertEquals(3, queryRes.length);
+
+		// Query for objects, with missing property
+		queryRes = mtObj.query("be != ?", new Object[] { "evil" }, "dun ASC");
+		assertEquals(3, queryRes.length);
+
+	}
+
 	// Random object, and iteration support
 	//-----------------------------------------------
 	
