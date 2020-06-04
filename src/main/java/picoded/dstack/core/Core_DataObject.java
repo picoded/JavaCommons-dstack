@@ -331,6 +331,7 @@ public class Core_DataObject implements DataObject {
 		}
 		
 		// Returns valid value
+		// deep copy is done to ensure changes are detected on PUT
 		return Core_DataObjectMap.deepCopy(ret);
 	}
 	
@@ -371,7 +372,12 @@ public class Core_DataObject implements DataObject {
 		}
 		
 		// If no values are changed, ignore and return
-		if (value != null && value.equals(ret)) {
+		// == instead of .equal was intentionally done
+		//
+		// so that nested object / values will not be skipped
+		// or optimized out - even if they are unchanged.
+		// as currently detecting such changes are not reliable
+		if (value != null && value == ret) {
 			return ret;
 		}
 		

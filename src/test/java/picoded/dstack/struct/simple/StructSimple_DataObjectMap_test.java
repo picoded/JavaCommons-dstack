@@ -13,6 +13,7 @@ import org.apache.commons.lang3.RandomUtils;
 // Test depends
 import picoded.core.conv.GUID;
 import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.*;
 import picoded.dstack.struct.simple.*;
 
@@ -750,6 +751,88 @@ public class StructSimple_DataObjectMap_test {
 		// Query for objects, with missing property
 		queryRes = mtObj.query("be != ?", new Object[] { "evil" }, "dun ASC");
 		assertEquals(3, queryRes.length);
+		
+	}
+	
+	// Nested data test
+	//-----------------------------------------------
+	
+	@Test
+	public void nestedDataTest() {
+		//
+		// Initial object setup
+		//
+		
+		// Lets setup the test object
+		DataObject testObj = mtObj.newEntry();
+		testObj.put("hello", "world");
+		testObj.saveDelta();
+		String _id = testObj.getString("_oid");
+		
+		// Lets get the object back
+		testObj = mtObj.get(_id);
+		assertNotNull(testObj);
+		
+		// Lets get the inner map
+		GenericConvertMap<String, Object> innerMap = testObj.getGenericConvertStringMap("innerMap",
+			"{ 'the':1 }");
+		assertNotNull(innerMap);
+		
+		// Setup sublist
+		List<String> subList = new ArrayList<String>();
+		subList.add("only");
+		innerMap.put("and", subList);
+		
+		// Save the innermap
+		testObj.put("innerMap", innerMap);
+		testObj.saveDelta();
+		
+		//
+		// Get, and modify
+		//
+		
+		// Lets get the object again
+		testObj = null;
+		testObj = mtObj.get(_id);
+		assertNotNull(testObj);
+		
+		// Lets get the innerMap again
+		innerMap = testObj.getGenericConvertStringMap("innerMap", "{}");
+		assertEquals(1, innerMap.getInt("the"));
+		
+		// Lets get the nested list
+		subList = innerMap.getList("and", null);
+		assertNotNull(subList);
+		
+		// Lets get the nested list string
+		assertEquals("only", subList.get(0));
+		
+		// Lets modify it
+		subList.add("no more");
+		innerMap.put("and", subList);
+		testObj.put("innerMap", innerMap);
+		testObj.saveDelta();
+		
+		//
+		// Get again
+		//
+		
+		// Lets get the object again
+		testObj = null;
+		testObj = mtObj.get(_id);
+		assertNotNull(testObj);
+		
+		// Lets get the innerMap again
+		innerMap = testObj.getGenericConvertStringMap("innerMap", "{}");
+		assertEquals(1, innerMap.getInt("the"));
+		
+		// Lets get the nested list
+		subList = innerMap.getList("and", null);
+		assertNotNull(subList);
+		
+		// and assert
+		assertEquals("only", subList.get(0));
+		assertEquals("no more", subList.get(1));
 		
 	}
 	
