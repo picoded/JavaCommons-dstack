@@ -344,11 +344,6 @@ class HikaricpUtil {
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		
-		// "type" : "oracle",
-		// "path" : "@//salesbox-db-oracle.cvbukxarewjf.ap-southeast-1.rds.amazonaws.com:1521/ORCL",
-		// "user" : "root",
-		// "pass" : "Rv-W54ytUmMyWy9k_gg7dL",
-		
 		// Perform simple validation of mysql params
 		if (host == null || host.length() == 0) {
 			throw new RuntimeException("Missing host configuration for Oracle connection");
@@ -365,12 +360,12 @@ class HikaricpUtil {
 		
 		// Load the DB library
 		// This is only imported on demand, avoid preloading until needed
-		// try {
-		// 	Class.forName("com.mysql.cj.jdbc.Driver");
-		// } catch (ClassNotFoundException e) {
-		// 	throw new RuntimeException(
-		// 		"Failed to load MySQL JDBC driver - please ensure 'com.mysql.JDBC' jar is included");
-		// }
+		try {
+			Class.forName("oracle.jdbc.pool.OracleDataSource");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"Failed to load ORACLE JDBC driver - please ensure the required jar is included");
+		}
 		
 		// Setup the configured connection URL + DB
 		hconfig.setDriverClassName("oracle.jdbc.pool.OracleDataSource");
