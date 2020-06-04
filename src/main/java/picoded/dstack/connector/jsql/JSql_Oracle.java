@@ -22,8 +22,6 @@ import picoded.dstack.connector.jsql.JSqlResult;
 import picoded.dstack.connector.jsql.JSqlType;
 import picoded.core.struct.MutablePair;
 
-import oracle.jdbc.pool.OracleDataSource;
-
 /// Pure ORACLE-SQL implentation of JSql
 public class JSql_Oracle extends JSql_Base {
 	
@@ -72,14 +70,7 @@ public class JSql_Oracle extends JSql_Base {
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.ORACLE;
-
-		// !!! Unfortunately due to known stability issues with oracleDB and hikariCP
-		//     the connection pool is now drop in favour of a more stable direct connection
-		//     even if its at the cost of overall performance
-
 		datasource = HikaricpUtil.oracle(config);
-
-		// datasource = new OracleDataSource();
 	}
 	
 	// public JSql_Oracle(java.sql.Connection inSqlConn) {
