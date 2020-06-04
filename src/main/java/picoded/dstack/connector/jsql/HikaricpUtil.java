@@ -420,6 +420,10 @@ class HikaricpUtil {
 		
 		// and leak detection
 		hconfig.setLeakDetectionThreshold(2000);
+
+		// Putting a HARD CAP on connection pool size
+		// to always be 16 OR less.
+		hconfig.setMaximumPoolSize( Math.min(16, hconfig.getMaximumPoolSize()) );
 		
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
