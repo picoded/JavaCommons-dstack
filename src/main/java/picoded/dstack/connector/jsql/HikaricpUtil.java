@@ -372,34 +372,36 @@ class HikaricpUtil {
 		// We have to remap the "@//serverhost:port/name"
 		// into the respective server host, port and name
 		//
-
+		
 		// Get the server host
 		int strIndex_1 = rawHost.indexOf("@//");
-		int strIndex_2 = rawHost.indexOf(":", strIndex_1+3);
-		if( strIndex_1 < 0 || strIndex_2 < 0 ) {
-			throw new RuntimeException("Unable to extract server host from oracle connection path : "+rawHost);
+		int strIndex_2 = rawHost.indexOf(":", strIndex_1 + 3);
+		if (strIndex_1 < 0 || strIndex_2 < 0) {
+			throw new RuntimeException("Unable to extract server host from oracle connection path : "
+				+ rawHost);
 		}
-		String serverHost = rawHost.substring( strIndex_1+3, strIndex_2 );
-
+		String serverHost = rawHost.substring(strIndex_1 + 3, strIndex_2);
+		
 		// Get the ending slash after port, and before name
 		// and get both the port and name
 		strIndex_1 = rawHost.indexOf("/", strIndex_2);
-		if( strIndex_1 < 0 || strIndex_2 < 0 ) {
-			throw new RuntimeException("Unable to extract server port/name from oracle connection path : "+rawHost);
+		if (strIndex_1 < 0 || strIndex_2 < 0) {
+			throw new RuntimeException(
+				"Unable to extract server port/name from oracle connection path : " + rawHost);
 		}
-		int serverPort = Integer.parseInt( rawHost.substring(strIndex_2+1, strIndex_1) );
-		String serverName = rawHost.substring(strIndex_1+1);
-
+		int serverPort = Integer.parseInt(rawHost.substring(strIndex_2 + 1, strIndex_1));
+		String serverName = rawHost.substring(strIndex_1 + 1);
+		
 		// // Setup the configured connection URL + DB
 		// hconfig.setDriverClassName("oracle.jdbc.pool.OracleDataSource");
-
+		
 		// // Configure the data source property
 		// hconfig.addDataSourceProperty("serverName", serverHost);
 		// hconfig.addDataSourceProperty("port", ""+serverPort );
 		// hconfig.addDataSourceProperty("databaseName", serverName);
 		// hconfig.addDataSourceProperty("user", user);
 		// hconfig.addDataSourceProperty("password", pass);
-
+		
 		// // Setup JDBC URL path (old version format)
 		// hconfig.setJdbcUrl("jdbc:oracle:thin:" + rawHost);
 		// hconfig.setUsername(user);
@@ -408,7 +410,7 @@ class HikaricpUtil {
 		//
 		// Setup JDBC URL path (new version format)
 		//
-		hconfig.setDriverClassName("oracle.jdbc.driver.OracleDriver"); 
+		hconfig.setDriverClassName("oracle.jdbc.driver.OracleDriver");
 		hconfig.setJdbcUrl("jdbc:oracle:thin:@" + serverHost + ":" + serverPort + ":" + serverName);
 		hconfig.setUsername(user);
 		hconfig.setPassword(pass);
@@ -420,10 +422,10 @@ class HikaricpUtil {
 		
 		// and leak detection
 		hconfig.setLeakDetectionThreshold(2000);
-
+		
 		// Putting a HARD CAP on connection pool size
 		// to always be 16 OR less.
-		hconfig.setMaximumPoolSize( Math.min(16, hconfig.getMaximumPoolSize()) );
+		hconfig.setMaximumPoolSize(Math.min(16, hconfig.getMaximumPoolSize()));
 		
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
