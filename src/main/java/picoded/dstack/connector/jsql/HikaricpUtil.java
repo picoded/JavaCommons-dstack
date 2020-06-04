@@ -339,13 +339,12 @@ class HikaricpUtil {
 	 */
 	public static HikariDataSource oracle(GenericConvertMap config) {
 		// Lets get the mysql required parameters
-		String host = config.getString("host", "localhost");
-		int port = config.getInt("port", 1521);
+		String rawHost = config.getString("host", "@//localhost:1521/xe");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		
 		// Perform simple validation of mysql params
-		if (host == null || host.length() == 0) {
+		if (rawHost == null || rawHost.length() == 0) {
 			throw new RuntimeException("Missing host configuration for Oracle connection");
 		}
 		if (user == null || user.length() == 0) {
@@ -358,67 +357,69 @@ class HikaricpUtil {
 		// Load the common config
 		HikariConfig hconfig = commonConfigLoading(config);
 		
-		// Load the DB library
-		// This is only imported on demand, avoid preloading until needed
-		try {
-			Class.forName("oracle.jdbc.pool.OracleDataSource");
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(
-				"Failed to load ORACLE JDBC driver - please ensure the required jar is included");
+		// // Load the DB library
+		// // This is only imported on demand, avoid preloading until needed
+		// try {
+		// 	Class.forName("oracle.jdbc.driver.OracleDataSource");
+		// } catch (ClassNotFoundException e) {
+		// 	throw new RuntimeException(
+		// 		"Failed to load ORACLE JDBC driver - please ensure the required jar is included");
+		// }
+		
+		//
+		// Setup using ONLY datasource configurations
+		//
+		// We have to remap the "@//serverhost:port/name"
+		// into the respective server host, port and name
+		//
+
+		// Get the server host
+		int strIndex_1 = rawHost.indexOf("@//");
+		int strIndex_2 = rawHost.indexOf(":", strIndex_1+3);
+		if( strIndex_1 < 0 || strIndex_2 < 0 ) {
+			throw new RuntimeException("Unable to extract server host from oracle connection path : "+rawHost);
 		}
+		String serverHost = rawHost.substring( strIndex_1+3, strIndex_2 );
+
+		// Get the ending slash after port, and before name
+		// and get both the port and name
+		strIndex_1 = rawHost.indexOf("/", strIndex_2);
+		if( strIndex_1 < 0 || strIndex_2 < 0 ) {
+			throw new RuntimeException("Unable to extract server port/name from oracle connection path : "+rawHost);
+		}
+		int serverPort = Integer.parseInt( rawHost.substring(strIndex_2+1, strIndex_1) );
+		String serverName = rawHost.substring(strIndex_1+1);
+
+		// // Setup the configured connection URL + DB
+		// hconfig.setDriverClassName("oracle.jdbc.pool.OracleDataSource");
+
+		// // Configure the data source property
+		// hconfig.addDataSourceProperty("serverName", serverHost);
+		// hconfig.addDataSourceProperty("port", ""+serverPort );
+		// hconfig.addDataSourceProperty("databaseName", serverName);
+		// hconfig.addDataSourceProperty("user", user);
+		// hconfig.addDataSourceProperty("password", pass);
+
+		// // Setup JDBC URL path (old version format)
+		// hconfig.setJdbcUrl("jdbc:oracle:thin:" + rawHost);
+		// hconfig.setUsername(user);
+		// hconfig.setPassword(pass);
 		
-		// Setup the configured connection URL + DB
-		hconfig.setDriverClassName("oracle.jdbc.pool.OracleDataSource");
-		
-		// hconfig.setJdbcUrl("jdbc:oracle:thin:" + host + ":" + port + "/" + name);
-		hconfig.setJdbcUrl("jdbc:oracle:thin:" + host);
-		
-		//System.out.println("HIKARI JDBC URL:: jdbc:oracle:thin:" + host);
-		
-		// Setup the username and password
+		//
+		// Setup JDBC URL path (new version format)
+		//
+		hconfig.setDriverClassName("oracle.jdbc.driver.OracleDriver"); 
+		hconfig.setJdbcUrl("jdbc:oracle:thin:@" + serverHost + ":" + serverPort + ":" + serverName);
 		hconfig.setUsername(user);
 		hconfig.setPassword(pass);
 		
-		hconfig.setConnectionTimeout(10000);
-		hconfig.setIdleTimeout(60000);
-		hconfig.setMaxLifetime(60000);
+		// Set oracle specific timeouts
+		hconfig.setConnectionTimeout(10000); // 10 seconds
+		hconfig.setIdleTimeout(60000); // 1 minute
+		hconfig.setMaxLifetime(60000); // 1 minute
 		
-		// hconfig.setLeakDetectionThreshold(30000);
-		
-		//
-		// Setup the datasource config
-		// See: https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
-		//
-		// hconfig.addDataSourceProperty("cachePrepStmts", //
-		// 	config.getBoolean("cachePrepStmts", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("prepStmtCacheSize", //
-		// 	config.getInt("prepStmtCacheSize", 250) //
-		// 	);
-		// hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", //
-		// 	config.getInt("prepStmtCacheSqlLimit", 2048) //
-		// 	);
-		// hconfig.addDataSourceProperty("useServerPrepStmts", //
-		// 	config.getBoolean("useServerPrepStmts", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("useLocalSessionState", //
-		// 	config.getBoolean("useLocalSessionState", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("rewriteBatchedStatements", //
-		// 	config.getBoolean("rewriteBatchedStatements", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("cacheResultSetMetadata", //
-		// 	config.getBoolean("cacheResultSetMetadata", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("cacheServerConfiguration", //
-		// 	config.getBoolean("cacheServerConfiguration", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("elideSetAutoCommits", //
-		// 	config.getBoolean("elideSetAutoCommits", true) //
-		// 	);
-		// hconfig.addDataSourceProperty("maintainTimeStats", //
-		// 	config.getBoolean("maintainTimeStats", false) //
-		// 	);
+		// and leak detection
+		hconfig.setLeakDetectionThreshold(2000);
 		
 		// Initialize the data source and return
 		return new HikariDataSource(hconfig);
