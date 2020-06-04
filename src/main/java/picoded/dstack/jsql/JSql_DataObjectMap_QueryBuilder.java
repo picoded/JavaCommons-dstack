@@ -111,12 +111,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 		for (int i = 0; i < collumns.size(); ++i) {
 			// Get the collumn name
 			String collumnName = collumns.get(i);
-
+			
 			// Skip the "LEFT JOIN" collumn
-			if( collumnWhichMustHandleNullValues.contains(collumnName) ) {
+			if (collumnWhichMustHandleNullValues.contains(collumnName)) {
 				continue;
 			}
-
+			
 			// Single collumn "INNER JOIN"
 			queryStr.append("INNER JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
 				.append(" WHERE kID=? AND idx=?) AS D" + i + " ON (") //
@@ -125,17 +125,17 @@ public class JSql_DataObjectMap_QueryBuilder {
 			queryArg.add(collumnName);
 			queryArg.add(0);
 		}
-
+		
 		// Perform the much slower (expensive) inner join
 		for (int i = 0; i < collumns.size(); ++i) {
 			// Get the collumn name
 			String collumnName = collumns.get(i);
-
+			
 			// Skip the "INNER JOIN" collumn
-			if( !collumnWhichMustHandleNullValues.contains(collumnName) ) {
+			if (!collumnWhichMustHandleNullValues.contains(collumnName)) {
 				continue;
 			}
-
+			
 			// Single collumn "LEFT JOIN"
 			queryStr.append("LEFT JOIN (SELECT oID, nVl, sVl, tVl FROM ").append(dataStorageTable) //
 				.append(" WHERE kID=? AND idx=?) AS D" + i + " ON (") //
@@ -144,7 +144,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 			queryArg.add(collumnName);
 			queryArg.add(0);
 		}
-
 		
 		// The inner join query
 		return new MutablePair<>(queryStr, queryArg);
@@ -211,11 +210,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 		public Map<String, List<Object>> keyValuesMap(Map<String, List<Object>> mapToReturn) {
 			return original.keyValuesMap(mapToReturn);
 		}
-
+		
 		//
 		// Operator type overwrites
 		//
-
+		
 		@Override
 		public boolean isBasicOperator() {
 			return original.isBasicOperator();
@@ -225,15 +224,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 		public boolean isCombinationOperator() {
 			return original.isCombinationOperator();
 		}
-			
+		
 		//
 		// Non compulsory overwrites
 		//
-
+		
 		public List<Query> childrenQuery() {
 			return original.childrenQuery();
 		}
-			
+		
 		public String fieldName() {
 			return original.fieldName();
 		}
@@ -253,7 +252,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//
 		// toString() overwrite, this also effectively overwrites the toSqlString() equilavent
 		//
-
+		
 		@Override
 		public String toString() {
 			return toStringOverwrite;
@@ -355,7 +354,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			// Get the collumn keynames
 			rawWhereClauseCollumns = queryObj.keyValuesMap().keySet();
 			rawCollumnNameSet.addAll(rawWhereClauseCollumns);
-
+			
 			// Build the field, and arg map
 			fieldQueryMap = queryObj.fieldQueryMap();
 			queryArgMap = queryObj.queryArgumentsMap();
@@ -403,49 +402,50 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//--------------------------------------------------------------------------
 		
 		// Process the order by string
-		if(orderByStr != null) {
-			for(String collumn : rawOrderByClauseCollumns) {
+		if (orderByStr != null) {
+			for (String collumn : rawOrderByClauseCollumns) {
 				// Collumn names to skip setup (reseved keywords?)
 				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
 					continue;
 				}
-
+				
 				// There is no query / query map, so NULL must be supported
-				if( fieldQueryMap == null ) {
+				if (fieldQueryMap == null) {
 					collumnsWhichMustHandleNullValues.add(collumn);
 					continue;
 				}
-
+				
 				// Check if any query is used with order by clause
 				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
-			
+				
 				// No query filtering was done, therefor, NULL must be suported
 				if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
 					collumnsWhichMustHandleNullValues.add(collumn);
 					continue;
 				}
 				
-				for(Query subQuery : toReplaceQueries) {
+				for (Query subQuery : toReplaceQueries) {
 					// Check for inequality condition, where NULL must be supported
-					if( subQuery.operatorSymbol().equalsIgnoreCase("!=") ) {
+					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
 						collumnsWhichMustHandleNullValues.add(collumn);
 						break;
-					} 
-					 
+					}
+					
 					// Check for equality condition, with NULL values
-					if( subQuery.operatorSymbol().equalsIgnoreCase("=") && subQuery.defaultArgumentValue() == null ) {
+					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
+						&& subQuery.defaultArgumentValue() == null) {
 						collumnsWhichMustHandleNullValues.add(collumn);
 						break;
 					}
 				}
-
+				
 				// There are equality checks, which would filter out NULL values
 				// therefor order by collumn is not added to the NULL support list
 			}
 		}
-
+		
 		// For each collumnName in the collumnNameSet, set it up if applicable
-		if( rawWhereClauseCollumns != null ) {
+		if (rawWhereClauseCollumns != null) {
 			for (String collumn : rawWhereClauseCollumns) {
 				// Collumn names to skip setup (reseved keywords?)
 				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
@@ -461,22 +461,23 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 				
 				// Check for inequality condition, where NULL must be supported
-				for(Query subQuery : toReplaceQueries) {
+				for (Query subQuery : toReplaceQueries) {
 					// Check for inequality condition, where NULL must be supported
-					if( subQuery.operatorSymbol().equalsIgnoreCase("!=") ) {
+					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
 						collumnsWhichMustHandleNullValues.add(collumn);
 						break;
 					}
-
+					
 					// Check for equality condition, with NULL values
-					if( subQuery.operatorSymbol().equalsIgnoreCase("=") && subQuery.defaultArgumentValue() == null ) {
+					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
+						&& subQuery.defaultArgumentValue() == null) {
 						collumnsWhichMustHandleNullValues.add(collumn);
 						break;
 					}
 				}
 			}
 		}
-
+		
 		//--------------------------------------------------------------------------
 		// Build the complex inner join table
 		//--------------------------------------------------------------------------
@@ -585,7 +586,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 							// Update the argument with limits
 							queryArgMap.put(toReplace.argumentName(),
 								JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
-
+							
 							// 
 							// Special handling of != once again
 							// due to SQL quirk with NULL values
@@ -593,11 +594,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 							// `col != "value"`, is remapped as
 							// `col != "value" OR col IS NULL`
 							//
-							if( toReplace.operatorSymbol().equalsIgnoreCase("!=") ) {
+							if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
 								replacement = new QueryStringOverwrite( //
 									replacement, // The replacement query, in case is still needed
 									"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString()
-									+ ")");
+										+ ")");
 							}
 						}
 					}
@@ -715,7 +716,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// Execute and get the result
 		JSqlResult res = sql.query(fullQuery.toString(), fullQueryArgs.toArray(EmptyArray.OBJECT));
-
+		
 		// And return it
 		return res;
 	}
