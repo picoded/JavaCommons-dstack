@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.zaxxer.hikari.*;
 import picoded.core.struct.*;
+import javax.sql.DataSource;
 
 /**
  * HikariCP utility class
@@ -331,7 +332,81 @@ class HikaricpUtil {
 	//----------------------------------------------------------------------------------
 	
 	/**
-	 * Loads a HikariDataSource for Mysql given the config
+	 * Loads a native oracle datasource given the config,
+	 * This skips hikariCP, and uses the driver natively
+	 *
+	 * @param  config map used
+	 *
+	 * @return DataSource with the appropriate config loaded and initialized
+	 */
+	public static DataSource nativeOracle(GenericConvertMap config) {
+		// Lets get the mysql required parameters
+		String rawHost = config.getString("host", "@//localhost:1521/xe");
+		String user = config.getString("user", null);
+		String pass = config.getString("pass", null);
+		
+		// Perform simple validation of mysql params
+		if (rawHost == null || rawHost.length() == 0) {
+			throw new RuntimeException("Missing host configuration for Oracle connection");
+		}
+		if (user == null || user.length() == 0) {
+			throw new RuntimeException("Missing user configuration for Oracle connection");
+		}
+		if (pass == null || pass.length() == 0) {
+			throw new RuntimeException("Missing pass configuration for Oracle connection");
+		}
+		
+		//
+		// Setup using ONLY datasource configurations
+		//
+		// We have to remap the "@//serverhost:port/name"
+		// into the respective server host, port and name
+		//
+		
+		// Get the server host
+		int strIndex_1 = rawHost.indexOf("@//");
+		int strIndex_2 = rawHost.indexOf(":", strIndex_1 + 3);
+		if (strIndex_1 < 0 || strIndex_2 < 0) {
+			throw new RuntimeException("Unable to extract server host from oracle connection path : "
+				+ rawHost);
+		}
+		String serverHost = rawHost.substring(strIndex_1 + 3, strIndex_2);
+		
+		// Get the ending slash after port, and before name
+		// and get both the port and name
+		strIndex_1 = rawHost.indexOf("/", strIndex_2);
+		if (strIndex_1 < 0 || strIndex_2 < 0) {
+			throw new RuntimeException(
+				"Unable to extract server port/name from oracle connection path : " + rawHost);
+		}
+		int serverPort = Integer.parseInt(rawHost.substring(strIndex_2 + 1, strIndex_1));
+		String serverName = rawHost.substring(strIndex_1 + 1);
+		
+		//
+		// Setup the actual datasource
+		//
+		oracle.jdbc.pool.OracleDataSource ds = null;
+		try {
+			ds = new oracle.jdbc.pool.OracleDataSource();
+			ds.setDriverType("thin");
+			ds.setServerName(serverHost);
+			ds.setPortNumber(serverPort);
+			ds.setDatabaseName(serverName);
+			ds.setUser(user);
+			ds.setPassword(pass);
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		//
+		// And return it
+		//
+		return ds;
+	}
+
+
+	/**
+	 * Loads a HikariDataSource for oracle given the config
 	 *
 	 * @param  config map used
 	 *
