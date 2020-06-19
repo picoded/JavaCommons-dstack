@@ -145,6 +145,48 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Overwrite update behaviour, to do a "clean clone" of data to be stored
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 * 
+	 * @param  ObjectID to update
+	 * @param  fullMap of values to apply update
+	 * @param  keys of parameters to update (for partial update if supported)
+	 **/
+	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
+		Set<String> keys) {
+		
+		// Clone the fullMap, to ensure data is "cleaned" for hazelcast
+		// this helps work around known execptions with custom maps
+		//
+		// @TODO - consider finding a more "optimal" or performant conversion
+		Map<String, Object> clonedMap = new HashMap<String,Object>();
+
+		// Get and store the required values
+		for (String key : fullMap.keySet()) {
+			// Get the full map value
+			Object val = fullMap.get(key);
+			
+			// Check for Map / List like objects
+			if( val instanceof Map || val instanceof List ) {
+				// Clone it - by JSON serializing back and forth
+				clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)) );
+			} else {
+				// Store it directly, this should be a primative, or byte[]
+				clonedMap.put(key, val);
+			}
+		}
+		
+		// call the default implementation
+		super.DataObjectRemoteDataMap_update(oid, clonedMap, keys);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Backend system setup / teardown / maintenance (DStackCommon)
 	//
 	//--------------------------------------------------------------------------
