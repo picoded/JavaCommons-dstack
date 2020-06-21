@@ -761,10 +761,10 @@ public class StructSimple_DataObjectMap_test {
 	 */
 	@Test
 	public void nestedObjectArrayBug() {
-
+		
 		// Create the object
 		DataObject dObj = mtObj.newEntry();
-
+		
 		// Prepare the known problematic payload
 		//
 		// ```
@@ -781,48 +781,48 @@ public class StructSimple_DataObjectMap_test {
 		// }
 		// ```
 		List<Object> fullList = new ArrayList<>();
-		Map<String,Object> innerMap = new HashMap<>();
+		Map<String, Object> innerMap = new HashMap<>();
 		List<Object> innerList = new ArrayList<>();
-
+		
 		// Set up the fullList
 		innerList.add("test@mail.com");
-		innerMap.put("mode","email");
-		innerMap.put("condition","error");
-		innerMap.put("email",innerList);
+		innerMap.put("mode", "email");
+		innerMap.put("condition", "error");
+		innerMap.put("email", innerList);
 		fullList.add(innerMap);
-
+		
 		// And save the entry
 		dObj.put("notice", fullList);
 		dObj.saveDelta();
-
+		
 		// Get the OID
 		String oid = dObj._oid();
-
+		
 		// Lets get the object back
 		dObj = mtObj.get(oid);
 		assertNotNull(dObj);
-
+		
 		// And get each object layer
 		fullList = dObj.getList("notice");
 		assertNotNull(fullList);
-		innerMap = (Map)(Object)fullList.get(0);
+		innerMap = (Map) (Object) fullList.get(0);
 		assertNotNull(innerMap);
-		innerList = (List)(Object)innerMap.get("email");
+		innerList = (List) (Object) innerMap.get("email");
 		assertNotNull(innerList);
-
+		
 		// And assert its value
 		assertEquals("test@mail.com", innerList.get(0));
 	}
-
+	
 	/**
 	 * The following deal with a nested object bug that seems to be occuring with hazelcast
 	 */
 	@Test
 	public void nestedObjectArrayBug_proxyObject() {
-
+		
 		// Create the object
 		DataObject dObj = mtObj.newEntry();
-
+		
 		// Prepare the known problematic payload
 		//
 		// ```
@@ -839,39 +839,39 @@ public class StructSimple_DataObjectMap_test {
 		// }
 		// ```
 		List<Object> fullList = new ArrayList<>();
-		Map<String,Object> innerMap = new ProxyGenericConvertMap<>(new HashMap<>());
+		Map<String, Object> innerMap = new ProxyGenericConvertMap<>(new HashMap<>());
 		List<Object> innerList = new ArrayList<>();
-
+		
 		// Set up the fullList
 		innerList.add("test@mail.com");
-		innerMap.put("mode","email");
-		innerMap.put("condition","error");
-		innerMap.put("email",innerList);
+		innerMap.put("mode", "email");
+		innerMap.put("condition", "error");
+		innerMap.put("email", innerList);
 		fullList.add(innerMap);
-
+		
 		// And save the entry
 		dObj.put("notice", fullList);
 		dObj.saveDelta();
-
+		
 		// Get the OID
 		String oid = dObj._oid();
-
+		
 		// Lets get the object back
 		dObj = mtObj.get(oid);
 		assertNotNull(dObj);
-
+		
 		// And get each object layer
 		fullList = dObj.getList("notice");
 		assertNotNull(fullList);
-		innerMap = (Map)(Object)fullList.get(0);
+		innerMap = (Map) (Object) fullList.get(0);
 		assertNotNull(innerMap);
-		innerList = (List)(Object)innerMap.get("email");
+		innerList = (List) (Object) innerMap.get("email");
 		assertNotNull(innerList);
-
+		
 		// And assert its value
 		assertEquals("test@mail.com", innerList.get(0));
 	}
-
+	
 	// Nested data test
 	//-----------------------------------------------
 	

@@ -70,7 +70,7 @@ public class JSql_Oracle extends JSql_Base {
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.ORACLE;
-
+		
 		//
 		// Due to known stability issues in JBOSS for hikariCP
 		// this is initialized WITHOUT the connection pool as of now

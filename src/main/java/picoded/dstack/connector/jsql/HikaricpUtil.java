@@ -394,17 +394,16 @@ class HikaricpUtil {
 			ds.setDatabaseName(serverName);
 			ds.setUser(user);
 			ds.setPassword(pass);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		//
 		// And return it
 		//
 		return ds;
 	}
-
-
+	
 	/**
 	 * Loads a HikariDataSource for oracle given the config
 	 *

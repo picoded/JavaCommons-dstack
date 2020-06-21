@@ -164,17 +164,17 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		// this helps work around known execptions with custom maps
 		//
 		// @TODO - consider finding a more "optimal" or performant conversion
-		Map<String, Object> clonedMap = new HashMap<String,Object>();
-
+		Map<String, Object> clonedMap = new HashMap<String, Object>();
+		
 		// Get and store the required values
 		for (String key : fullMap.keySet()) {
 			// Get the full map value
 			Object val = fullMap.get(key);
 			
 			// Check for Map / List like objects
-			if( val instanceof Map || val instanceof List ) {
+			if (val instanceof Map || val instanceof List) {
 				// Clone it - by JSON serializing back and forth
-				clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)) );
+				clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)));
 			} else {
 				// Store it directly, this should be a primative, or byte[]
 				clonedMap.put(key, val);
