@@ -40,7 +40,7 @@ public class JSql_Oracle extends JSql_Base {
 		
 		// // call internal method to create the connection
 		// setupConnection();
-		
+
 		GenericConvertMap<String, Object> config = new GenericConvertHashMap<>();
 		
 		// Basic path, dbname, user, pass configuration
@@ -70,12 +70,16 @@ public class JSql_Oracle extends JSql_Base {
 	 */
 	public void constructor_setup(GenericConvertMap<String, Object> config) {
 		sqlType = JSqlType.ORACLE;
-		
+
+		System.out.println("[ORACLE SETUP] DStack version : 20200622_1");
+		datasource = HikaricpUtil.oracle(config);
 		//
 		// Due to known stability issues in JBOSS for hikariCP
 		// this is initialized WITHOUT the connection pool as of now
 		//
-		datasource = HikaricpUtil.nativeOracle(config);
+		// datasource = HikaricpUtil.nativeOracle(config);
+
+
 	}
 	
 	// public JSql_Oracle(java.sql.Connection inSqlConn) {
