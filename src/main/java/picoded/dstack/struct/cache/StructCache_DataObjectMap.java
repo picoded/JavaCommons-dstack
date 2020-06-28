@@ -167,9 +167,9 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 		//
 		// # The Math
 		//
-		// 	36 bytes : 32+4 bytes - HashMap space on primary cache map
-		// 108 bytes : 3 x overhead for cache mapping
-		// 	62 bytes : 40 overhead + 22 oid string key
+		//   36 bytes : 32+4 bytes - HashMap space on primary cache map
+		//  108 bytes : 3 x overhead for cache mapping
+		//   62 bytes : 40 overhead + 22 oid string key
 		// 1080 bytes : 30 x (32+4)  HashMap overhead
 		// 1860 bytes : 30 x (40+22) ObjectMap key strings
 		// 1860 bytes : 30 x (40+22) ObjectMap value strings
