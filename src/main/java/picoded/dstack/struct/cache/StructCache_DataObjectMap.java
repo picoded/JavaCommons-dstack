@@ -144,11 +144,45 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 			return;
 		}
 		
+		//
 		// Alright, time to build a new cache
 		// We are in the era of GB ram computing, 100k cache would
 		// be a good sane default in server environment.
 		//
 		// to consider : auto detect RAM size in KB - and use that?
+		// a good rough guideline would be 1/4 of free ram space divided by 6kb
+		// as a capcity size auto detction
+		//
+		// # DataObjectMap caching napkin math assumptions
+		// - Assume a hashmap object with 30 parameters (including system keys)
+		// - Because its hard to predict the capacity/size ratio it is assumed to be 1:1
+		// - Keys and value storage are assumed to be a 22 character string
+		//
+		// > The above assumptions was designed to somewhat be the upper limit of 
+		// > ram storage cost for a data object map. Rather then an average.
+		//
+		// # References
+		// - http://java-performance.info/memory-consumption-of-java-data-types-2/
+		// - https://www.javamex.com/tutorials/memory/string_memory_usage.shtml
+		//
+		// # The Math
+		//
+		// 	36 bytes : 32+4 bytes - HashMap space on primary cache map
+		// 108 bytes : 3 x overhead for cache mapping
+		// 	62 bytes : 40 overhead + 22 oid string key
+		// 1080 bytes : 30 x (32+4)  HashMap overhead
+		// 1860 bytes : 30 x (40+22) ObjectMap key strings
+		// 1860 bytes : 30 x (40+22) ObjectMap value strings
+		// ----------
+		// 5006 bytes : Total bytes per object map
+		// ~ 6 kilo bytes : Rounded up
+		//
+		// # RAM cost for 100k objects
+		//
+		// 100,000 * 6 KB = 600 MB
+		//
+		// > So yea, we are ok to assume a 100k objects for most parts
+		//
 		int capicity = configMap().getInt("capacity", 100000);
 		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
 		} //
