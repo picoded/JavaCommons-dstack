@@ -55,10 +55,132 @@ public class JSql_DataObjectMap_QueryBuilder {
 
 	//-----------------------------------------------------------------------------------------------
 	//
+	//  Fixed table configuration utilities
+	//
+	//  Note that special care was made such that all "memoizer" commands are "thread safe"
+	//  without the need for locks.
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * @return the fixedTable config map if it exists, else returns null
+	 */
+	private GenericConvertMap<String,Object> getFixedTableFullConfigMap() {
+		return dataMap.configMap.getGenericConvertStringMap("fixedTable", null);
+	} 
+
+	/**
+	 * @return Set of fixed table names if avaliable, else null
+	 */
+	private Set<String> getFixedTableNameSet() {
+		// Get the table map
+		GenericConvertMap<String,Object> tableMap = getFixedTableFullConfigMap();
+		if( tableMap != null ) {
+			Set<String> res = tableMap.keySet();
+			if( res.size() <= 0 ) {
+				return null;
+			}
+			return res;
+		}
+		return null;
+	}
+
+	/**
+	 * @param Fixed table name
+	 * @return the fixed table name config
+	 */
+	private GenericConvertMap<String,Object> getFixedTableConfig(String tableName) {
+		return getFixedTableFullConfigMap().getGenericConvertStringMap(tableName, "{}");
+	}
+
+	/// Internal memoizer for `getFixedTableNamePrimaryKeyJoinSet`
+	private Set<String> _getFixedTableNamePrimaryKeyJoinSet = null;
+
+	/**
+	 * @return Set of fixed table that requires primary key joins
+	 */
+	private Set<String> getFixedTableNamePrimaryKeyJoinSet() {
+		// Get from memoizer
+		if( _getFixedTableNamePrimaryKeyJoinSet != null ) {
+			return _getFixedTableNamePrimaryKeyJoinSet;
+		}
+
+		// Boolean result if primary key joins is needed
+		Set<String> pkJoinSet = new HashSet<String>();
+
+		// Get the table names
+		Set<String> tableNameSet = getFixedTableNameSet();
+		// And iterate it
+		if( tableNameSet != null ) {
+			for( String tableName : tableNameSet ) {
+				// Get table specific config
+				GenericConvertMap<String,Object> tableConfig = getFixedTableConfig(tableName);
+	
+				// Get the "_oid" config
+				GenericConvertMap<String,Object> oidConfig = tableConfig.getGenericConvertStringMap("_oid", null);
+				if( oidConfig == null ) {
+					throw new RuntimeException("Missing valid _oid config for fixed table setup : "+tableName);
+				}
+	
+				// Skip if primary key join is configured to be skipped
+				if( oidConfig.getBoolean("skipPrimaryKeyJoin", false) ) {
+					continue;
+				}
+	
+				// Build the result set
+				pkJoinSet.add(tableName);
+			}
+		}
+
+		// Return the result
+		_getFixedTableNamePrimaryKeyJoinSet = pkJoinSet;
+		return pkJoinSet;
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
 	//  _oid handling
 	//
 	//-----------------------------------------------------------------------------------------------
 	
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 */
+	public Set<String> getOidKeySet() {
+		// Get fixed table set
+		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
+
+		// If no fixed tablenames, return the simple oID mapping
+		if( fixedTableNames.size() <= 0 ) {
+			JSqlResult r = dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
+			if (r == null || r.get("oID") == null) {
+				return new HashSet<String>();
+			}
+			return ListValueConv.toStringSet(r.getObjectList("oID"));
+		}
+
+		// Ok - a union here is needed
+		// The query string to build
+		StringBuilder queryStr = new StringBuilder();
+		List<Object> queryArg = new ArrayList<>();
+
+		// oID collumn first
+		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append(" \n");
+
+		// Join the oid collumn for the resepctive tables
+		for( String tableName : fixedTableNames ) {
+			queryStr.append("UNION \n");
+			// WIP
+		}
+
+		return null;
+
+	}
+
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  OrderBy string processing

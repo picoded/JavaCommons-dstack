@@ -467,11 +467,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public Set<String> keySet() {
-		JSqlResult r = sqlObj.select(primaryKeyTable, "oID");
-		if (r == null || r.get("oID") == null) {
-			return new HashSet<String>();
-		}
-		return ListValueConv.toStringSet(r.getObjectList("oID"));
+		return queryBuilder.getOidKeySet();
 	}
 	
 	//--------------------------------------------------------------------------
@@ -533,6 +529,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * This is used mainly in adminstration interface, etc.
 	 *
 	 * The seekDepth parameter is ignored in JSql mode, as its optimized.
+	 * 
+	 * @TODO - Fixed table hybrid support for JSql
 	 *
 	 * @param  seekDepth, which detirmines the upper limit for iterating
 	 *         objects for the key names, use -1 to search all
