@@ -47,16 +47,34 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	protected String primaryKeyTable = null;
 	
 	/**
+	 * Internal query builder 
+	 */
+	protected JSql_DataObjectMap_QueryBuilder queryBuilder = null;
+
+	/**
 	 * JSql setup
 	 *
 	 * @param   JSQL connection
 	 * @param   Table name to use
 	 **/
 	public JSql_DataObjectMap(JSql inJSql, String tablename) {
+		this(inJSql, tablename, null);
+	}
+	
+	/**
+	 * JSql setup
+	 *
+	 * @param   JSQL connection
+	 * @param   Table name to use
+	 **/
+	public JSql_DataObjectMap(JSql inJSql, String tablename, GenericConvertMap<String,Object> configMap) {
 		super();
+		
 		sqlObj = inJSql;
 		primaryKeyTable = "DP_" + tablename;
 		dataStorageTable = "DD_" + tablename;
+
+		queryBuilder = new JSql_DataObjectMap_QueryBuilder(configMap);
 	}
 	
 	//--------------------------------------------------------------------------

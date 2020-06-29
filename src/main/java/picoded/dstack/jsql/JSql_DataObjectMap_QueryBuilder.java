@@ -37,6 +37,24 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 	//-----------------------------------------------------------------------------------------------
 	//
+	//  Constructor with config
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Internal config map specific to this DataObjectMap
+	 */
+	protected GenericConvertMap<String,Object> config;
+
+	/**
+	 * Constructor with the config map
+	 */
+	public JSql_DataObjectMap_QueryBuilder(GenericConvertMap<String,Object> configMap) {
+		this.config = configMap;
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
 	//  Utility functions
 	//
 	//-----------------------------------------------------------------------------------------------
