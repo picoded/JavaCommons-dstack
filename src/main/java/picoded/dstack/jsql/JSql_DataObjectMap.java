@@ -29,7 +29,7 @@ import picoded.core.conv.ListValueConv;
  * 
  * ```
  * {
- *    "fixedTable": {
+ *    "fixedTableMap": {
  *       "SQL_TABLE_NAME": {
  *          // An _oid collumn is required for every fixed table
  *          // as this will glue the various tables together

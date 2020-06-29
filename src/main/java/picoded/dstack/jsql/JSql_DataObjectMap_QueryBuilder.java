@@ -66,7 +66,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @return the fixedTable config map if it exists, else returns null
 	 */
 	private GenericConvertMap<String, Object> getFixedTableFullConfigMap() {
-		return dataMap.configMap.getGenericConvertStringMap("fixedTable", null);
+		return dataMap.configMap.getGenericConvertStringMap("fixedTableMap", null);
 	}
 	
 	/**
@@ -93,6 +93,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 		return getFixedTableFullConfigMap().getGenericConvertStringMap(tableName, "{}");
 	}
 	
+	/**
+	 * @param Fixed table name
+	 * 
+	 * @return the object key set that the collumns support
+	 */
+	private Set<String> getFixedTableObjectKeySet(String tableName) {
+		return getFixedTableConfig(tableName).keySet();
+	}
+
 	/**
 	 * @param Fixed table name
 	 * @param the object key name
@@ -219,6 +228,79 @@ public class JSql_DataObjectMap_QueryBuilder {
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
+	 * Query builder used to build the oID query, without where clause.
+	 * 
+	 * Can be used either to return a collumn of oID, or a single row/collumn of "rcount",
+	 * representing the number of rows.
+	 * 
+	 * This take advantage of UNION for the fixed table, without joins.@interface
+	 * This is not to be used together with the much larger complex joins
+	 */
+	private StringBuilder oidKeyQueryBuilder(boolean isRcount) {
+		
+		// The query string to build
+		StringBuilder queryStr = new StringBuilder();
+		
+		// Get fixed table set
+		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
+		
+		//------------------------------------------------------------------
+		// If no fixed tablenames, return the heavily simplified query
+		// with only the primary table map
+		//------------------------------------------------------------------
+
+		// Perform simple primary key query if possible
+		if (fixedTableNames.size() <= 0) {
+			// Select clause
+			queryStr.append("SELECT ");
+
+			// Handle rcount mode
+			if( isRcount ) {
+				queryStr.append("COUNT(*) AS rcount ");
+			} else {
+				queryStr.append("oID ");
+			}
+
+			// Primary table to query
+			queryStr.append(dataMap.primaryKeyTable);
+
+			// Return query string
+			return queryStr;
+		}
+		
+		//------------------------------------------------------------------
+		// Complex fixed and dynamic query required here
+		//------------------------------------------------------------------
+
+		// oID collumn first
+		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append("\n");
+		
+		// Join the oid collumn for the resepctive tables
+		for (String tableName : fixedTableNames) {
+			queryStr.append("UNION \n");
+			queryStr.append("SELECT '").append(getFixedTableCollumnName(tableName, "oID"));
+			queryStr.append("' AS oID FROM ").append(tableName).append(" \n");
+		}
+		
+		
+		// Row count would require a nested query of the oID,
+		// to be wrapped with the row count clause
+		if( isRcount ) {
+			// lets build the wrapped query
+			StringBuilder queryWrap = new StringBuilder();
+			queryWrap.append("SELECT COUNT(*) AS rcount FROM (");
+			queryWrap.append( queryStr );
+			queryWrap.append(")");
+
+			// And return it wrapped
+			return queryWrap;
+		}
+
+		// Return the query string with oID
+		return queryStr;
+	}
+
+	/**
 	 * Get and returns all the GUID's, note that due to its
 	 * potential of returning a large data set, production use
 	 * should be avoided.
@@ -238,7 +320,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Ok - a union here is needed
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
-		List<Object> queryArg = new ArrayList<>();
 		
 		// oID collumn first
 		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append(" \n");
@@ -251,7 +332,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		}
 		
 		// Perform the query for the larger more complex result
-		return dataMap.sqlObj.query(queryStr.toString(), queryArg.toArray(EmptyArray.OBJECT));
+		return dataMap.sqlObj.query(queryStr.toString(), EmptyArray.OBJECT);
 	}
 
 	/**
@@ -294,6 +375,22 @@ public class JSql_DataObjectMap_QueryBuilder {
 		return new OrderBy<DataObject>(rawString);
 	}
 	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Fixed and dynamic table collumn splitting
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Scan the given list of collumns and split the query plan between both
+	 * 
+	 * @param List of collumns to be queries
+	 */
+	private MutablePair<List<String>, List<String>> splitCollumnListForDynamicAndFixedQuery(List<String> collumns) {
+		// Scan and split
+		return null;
+	}
+
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Internal query builder
@@ -397,10 +494,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * Performs a search query, and returns the respective result containing the DataObjects information
 	 * This works by taking the query and its args, building its complex inner view, then querying that view.
 	 *
-	 * @param   JSql connection to use
-	 * @param   primaryKeyTable to build the query using
-	 * @param   dataStorageTable to build the query using
-	 * @param   The selected columns to query
+	 * @param   The selected oid columns to query
 	 * @param   where query statement
 	 * @param   where clause values array
 	 * @param   query string to sort the order by, use null to ignore
@@ -410,7 +504,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @return  The JSql query result
 	 **/
 	protected JSqlResult runComplexQuery( //
-		String selectedCols, String whereClause, Object[] whereValues, //
+		String oidCollumns, String whereClause, Object[] whereValues, //
 		String orderByStr, int offset, int limit //
 	) { //
 	
@@ -431,15 +525,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// current use case, its always "true"
 		// ---
 		// && (
-		// 	selectedCols.equalsIgnoreCase("DISTINCT DP.oID") || 
-		// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT DP.oID) AS rcount")
-		// 	selectedCols.equalsIgnoreCase("oID") || 
-		// 	selectedCols.equalsIgnoreCase("DISTINCT oID") || 
-		// 	selectedCols.equalsIgnoreCase("COUNT(DISTINCT oID) AS rcount")
+		// 	oidCollumns.equalsIgnoreCase("DISTINCT DP.oID") || 
+		// 	oidCollumns.equalsIgnoreCase("COUNT(DISTINCT DP.oID) AS rcount")
+		// 	oidCollumns.equalsIgnoreCase("oID") || 
+		// 	oidCollumns.equalsIgnoreCase("DISTINCT oID") || 
+		// 	oidCollumns.equalsIgnoreCase("COUNT(DISTINCT oID) AS rcount")
 		// )
 		) {
 			// Blank query search, quick and easy
-			return sql.select(primaryKeyTable, selectedCols.replaceAll("DP.oID", "oID"));
+			return sql.select(primaryKeyTable, oidCollumns.replaceAll("DP.oID", "oID"));
 		}
 		
 		//--------------------------------------------------------------------------
@@ -619,7 +713,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		List<Object> fullQueryArgs = new ArrayList<>();
 		
 		// The select clause
-		fullQuery.append("SELECT ").append(selectedCols).append(" FROM \n");
+		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
 		
 		// the inner join 
 		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(collumnNames, collumnsWhichMustHandleNullValues);
