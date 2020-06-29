@@ -45,14 +45,14 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * Main internal dataobject map to fetch config / etc
 	 */
 	protected JSql_DataObjectMap dataMap = null;
-
+	
 	/**
 	 * Constructor with the config map
 	 */
 	public JSql_DataObjectMap_QueryBuilder(JSql_DataObjectMap inMap) {
 		dataMap = inMap;
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Fixed table configuration utilities
@@ -65,78 +65,159 @@ public class JSql_DataObjectMap_QueryBuilder {
 	/**
 	 * @return the fixedTable config map if it exists, else returns null
 	 */
-	private GenericConvertMap<String,Object> getFixedTableFullConfigMap() {
+	private GenericConvertMap<String, Object> getFixedTableFullConfigMap() {
 		return dataMap.configMap.getGenericConvertStringMap("fixedTable", null);
-	} 
-
+	}
+	
 	/**
 	 * @return Set of fixed table names if avaliable, else null
 	 */
 	private Set<String> getFixedTableNameSet() {
 		// Get the table map
-		GenericConvertMap<String,Object> tableMap = getFixedTableFullConfigMap();
-		if( tableMap != null ) {
+		GenericConvertMap<String, Object> tableMap = getFixedTableFullConfigMap();
+		if (tableMap != null) {
 			Set<String> res = tableMap.keySet();
-			if( res.size() <= 0 ) {
+			if (res.size() <= 0) {
 				return null;
 			}
 			return res;
 		}
 		return null;
 	}
-
+	
 	/**
 	 * @param Fixed table name
 	 * @return the fixed table name config
 	 */
-	private GenericConvertMap<String,Object> getFixedTableConfig(String tableName) {
+	private GenericConvertMap<String, Object> getFixedTableConfig(String tableName) {
 		return getFixedTableFullConfigMap().getGenericConvertStringMap(tableName, "{}");
 	}
-
+	
+	/**
+	 * @param Fixed table name
+	 * @param the object key name
+	 * 
+	 * @return the collumn config used, normalized as a map - throws exception if config does not exist
+	 */
+	private GenericConvertMap<String, Object> getFixedTableCollumnConfig(String tableName,
+		String objectKey) {
+		// Get table specific config
+		GenericConvertMap<String, Object> tableConfig = getFixedTableConfig(tableName);
+		
+		// Check for collumn setting
+		if (tableConfig.get(objectKey) == null) {
+			throw new RuntimeException("Missing valid '" + objectKey
+				+ "' config for fixed table setup with '" + tableName + "'");
+		}
+		
+		// Lets try get it as a map first
+		GenericConvertMap<String, Object> res = tableConfig.getGenericConvertStringMap(objectKey,
+			null);
+		
+		// Return it if not null
+		if (res != null) {
+			return res;
+		}
+		
+		// Not stored as a map, assume a string instead, and remap it
+		res = new GenericConvertHashMap<>();
+		res.put("name", objectKey);
+		res.put("type", tableConfig.getString(objectKey));
+		
+		// Return remapped config
+		return res;
+	}
+	
+	/**
+	 * @param Fixed table name
+	 * @param the object key name
+	 * 
+	 * @return the collumn name used
+	 */
+	private String getFixedTableCollumnName(String tableName, String objectKey) {
+		// Get collumn specific config - throws exception if config does not exist
+		GenericConvertMap<String, Object> collumnConfig = getFixedTableCollumnConfig(tableName,
+			objectKey);
+		
+		// Ge the collumn name
+		String name = collumnConfig.getString("name");
+		
+		// Validate, and return
+		if (name == null || name.length() <= 0) {
+			throw new RuntimeException("Missing valid collumn name config for '" + objectKey
+				+ "' within fixed table setup of '" + tableName + "'");
+		}
+		return name;
+	}
+	
+	/**
+	 * @param Fixed table name
+	 * @param the object key name
+	 * 
+	 * @return the collumn type used
+	 */
+	private String getFixedTableCollumnType(String tableName, String objectKey) {
+		// Get collumn specific config - throws exception if config does not exist
+		GenericConvertMap<String, Object> collumnConfig = getFixedTableCollumnConfig(tableName,
+			objectKey);
+		
+		// Ge the collumn name
+		String type = collumnConfig.getString("type");
+		
+		// Validate, and return
+		if (type == null || type.length() <= 0) {
+			throw new RuntimeException("Missing valid collumn type config for '" + objectKey
+				+ "' within fixed table setup of '" + tableName + "'");
+		}
+		return type;
+	}
+	
 	/// Internal memoizer for `getFixedTableNamePrimaryKeyJoinSet`
 	private Set<String> _getFixedTableNamePrimaryKeyJoinSet = null;
-
+	
 	/**
 	 * @return Set of fixed table that requires primary key joins
 	 */
 	private Set<String> getFixedTableNamePrimaryKeyJoinSet() {
 		// Get from memoizer
-		if( _getFixedTableNamePrimaryKeyJoinSet != null ) {
+		if (_getFixedTableNamePrimaryKeyJoinSet != null) {
 			return _getFixedTableNamePrimaryKeyJoinSet;
 		}
-
+		
 		// Boolean result if primary key joins is needed
 		Set<String> pkJoinSet = new HashSet<String>();
-
+		
 		// Get the table names
 		Set<String> tableNameSet = getFixedTableNameSet();
 		// And iterate it
-		if( tableNameSet != null ) {
-			for( String tableName : tableNameSet ) {
+		if (tableNameSet != null) {
+			for (String tableName : tableNameSet) {
 				// Get table specific config
-				GenericConvertMap<String,Object> tableConfig = getFixedTableConfig(tableName);
-	
+				GenericConvertMap<String, Object> tableConfig = getFixedTableConfig(tableName);
+				
 				// Get the "_oid" config
-				GenericConvertMap<String,Object> oidConfig = tableConfig.getGenericConvertStringMap("_oid", null);
-				if( oidConfig == null ) {
-					throw new RuntimeException("Missing valid _oid config for fixed table setup : "+tableName);
+				GenericConvertMap<String, Object> oidConfig = tableConfig.getGenericConvertStringMap(
+					"_oid", null);
+				if (oidConfig == null) {
+					throw new RuntimeException("Missing valid _oid config for fixed table setup : "
+						+ tableName);
 				}
-	
+				
 				// Skip if primary key join is configured to be skipped
-				if( oidConfig.getBoolean("skipPrimaryKeyJoin", false) ) {
+				if (oidConfig.getBoolean("skipPrimaryKeyJoin", false)) {
 					continue;
 				}
-	
+				
 				// Build the result set
 				pkJoinSet.add(tableName);
 			}
 		}
-
+		
 		// Return the result
 		_getFixedTableNamePrimaryKeyJoinSet = pkJoinSet;
 		return pkJoinSet;
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  _oid handling
@@ -153,34 +234,34 @@ public class JSql_DataObjectMap_QueryBuilder {
 	public Set<String> getOidKeySet() {
 		// Get fixed table set
 		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
-
+		
 		// If no fixed tablenames, return the simple oID mapping
-		if( fixedTableNames.size() <= 0 ) {
+		if (fixedTableNames.size() <= 0) {
 			JSqlResult r = dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
 			if (r == null || r.get("oID") == null) {
 				return new HashSet<String>();
 			}
 			return ListValueConv.toStringSet(r.getObjectList("oID"));
 		}
-
+		
 		// Ok - a union here is needed
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
-
+		
 		// oID collumn first
 		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append(" \n");
-
+		
 		// Join the oid collumn for the resepctive tables
-		for( String tableName : fixedTableNames ) {
+		for (String tableName : fixedTableNames) {
 			queryStr.append("UNION \n");
 			// WIP
 		}
-
+		
 		return null;
-
+		
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  OrderBy string processing

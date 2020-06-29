@@ -90,15 +90,15 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * Internal query builder 
 	 */
 	protected JSql_DataObjectMap_QueryBuilder queryBuilder = null;
-
+	
 	/**
 	 * Internal config map specific to this DataObjectMap.
 	 * 
 	 * This is used primarily to configured fixed tables to be used
 	 * with the cored data object map
 	 */
-	protected GenericConvertMap<String,Object> configMap;
-
+	protected GenericConvertMap<String, Object> configMap;
+	
 	/**
 	 * JSql setup
 	 *
@@ -115,18 +115,19 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * @param   JSQL connection
 	 * @param   Table name to use
 	 **/
-	public JSql_DataObjectMap(JSql inJSql, String tablename, GenericConvertMap<String,Object> inConfig) {
+	public JSql_DataObjectMap(JSql inJSql, String tablename,
+		GenericConvertMap<String, Object> inConfig) {
 		super();
 		
 		sqlObj = inJSql;
 		primaryKeyTable = "DP_" + tablename;
 		dataStorageTable = "DD_" + tablename;
-
+		
 		configMap = inConfig;
-		if( configMap == null ) {
+		if (configMap == null) {
 			configMap = new GenericConvertHashMap<>();
 		}
-
+		
 		queryBuilder = new JSql_DataObjectMap_QueryBuilder(this);
 	}
 	
@@ -514,8 +515,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return queryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable,
-			dataStorageTable, whereClause, whereValues, null, -1, -1);
+		return queryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable, dataStorageTable,
+			whereClause, whereValues, null, -1, -1);
 	}
 	
 	//--------------------------------------------------------------------------
