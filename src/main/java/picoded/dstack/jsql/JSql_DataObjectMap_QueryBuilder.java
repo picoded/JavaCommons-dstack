@@ -51,8 +51,18 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 */
 	public JSql_DataObjectMap_QueryBuilder(JSql_DataObjectMap inMap) {
 		dataMap = inMap;
+		preloadMemoizers();
 	}
 	
+	/**
+	 * Preloading of memoizer functions, this is done to ensure race conditions
+	 * in multi threaded setup is avoided
+	 */
+	private void preloadMemoizers() {
+		getFixedTableNameSet();
+		getFixedTableNamePrimaryKeyJoinSet();
+	}
+
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Fixed table configuration utilities
@@ -256,7 +266,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		
-		// Get fixed table set
+		// Get fixed table name set
 		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
 		
 		//------------------------------------------------------------------
@@ -368,18 +378,60 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 	//-----------------------------------------------------------------------------------------------
 	//
-	//  Fixed and dynamic table collumn splitting
+	//  Query Builder Utils
 	//
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
-	 * Scan the given list of collumns and split the query plan between both
+	 * Scan the given list of object key names and split the query plan between both
 	 * 
-	 * @param List of collumns to be queries
+	 * @param List of object keys to be queries
+	 * 
+	 * @return Split keyname set, with the first (left) used for dynamic keys, and right used for fixed tables
 	 */
-	private MutablePair<List<String>, List<String>> splitCollumnListForDynamicAndFixedQuery(List<String> collumns) {
-		// Scan and split
-		return null;
+	private MutablePair<List<String>, List<String>> splitCollumnListForDynamicAndFixedQuery(Collection<String> queryKeyNames) {
+		// List of object keys for fixed and dynamic tables respectively
+		Set<String> fixedKeyNames = new HashSet<String>();
+		Set<String> dynamicKeyNames = new HashSet<String>();
+		
+		// Get fixed table name set
+		Set<String> fixedTableNameSet = getFixedTableNamePrimaryKeyJoinSet();
+		
+		// Lets process all the fixed table key names
+		//-----------------------------------------------
+		for(String tableName : fixedTableNameSet) {
+			// Get the keynames of the table
+			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
+			
+			// Lets iterate each table key name
+			for(String tableKeyName : tableKeyNameSet) {
+				// if table key name is in the query, register it
+				if( queryKeyNames.contains(tableKeyName) ) {
+					fixedKeyNames.add( tableKeyName );
+				}
+			}
+		}
+
+		// Lets process all the dynamic table key names
+		//-----------------------------------------------
+		for(String queryKey : queryKeyNames) {
+			// Check if its already handled in fixed tables
+			if( fixedKeyNames.contains(queryKey) ) {
+				continue;
+			}
+
+			// Set it up as a dynamic key
+			dynamicKeyNames.add( queryKey );
+		}
+
+		// Coonvert set into list
+		List<String> fixedKeyNamesList = new ArrayList<String>();
+		List<String> dynamicKeyNamesList = new ArrayList<String>();
+		fixedKeyNamesList.addAll(fixedKeyNames);
+		dynamicKeyNamesList.addAll(dynamicKeyNames);
+
+		// Return result as mutable pair
+		return new MutablePair<>(dynamicKeyNamesList, fixedKeyNamesList);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -485,7 +537,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * Performs a search query, and returns the respective result containing the DataObjects information
 	 * This works by taking the query and its args, building its complex inner view, then querying that view.
 	 * 
-	 * This function is arguably the hart of the JSQL DataObjectMap query builder
+	 * This function is arguably the heart of the JSQL DataObjectMap query builder
 	 *
 	 * @param   The selected oid columns to query
 	 * @param   where query statement
@@ -686,11 +738,22 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		//==========================================================================
 		//
-		// Prepare the various collumn mapping
-		// and build the complex inner query
+		// Prepare the various collumn alias mapping which is used internally
+		// and build the complex inner query.
+		//
+		// Alias mapping is required to map the respective object key to the
+		// joint key value of the query
 		// 
 		//==========================================================================
 		
+		//--------------------------------------------------------------------------
+		// Split the key set between dynamic and fixed table collumns
+		//--------------------------------------------------------------------------
+		
+		MutablePair<List<String>,List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(rawCollumnNameSet);
+		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
+		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
+
 		//--------------------------------------------------------------------------
 		// Sort out and filter the required collumnNameSet
 		//--------------------------------------------------------------------------
@@ -710,7 +773,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 				continue;
 			}
 			
-			// collumn nmaes that requires setup
+			// collumn names that requires setup
 			collumnAliasMap.put(collumn, "D" + collumnNames.size());
 			// note: registering alias map, before adding to list is intentional
 			collumnNames.add(collumn);

@@ -128,6 +128,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			configMap = new GenericConvertHashMap<>();
 		}
 		
+		// Note as this depends on the config and the above to be
+		// initialized first - this is done last
 		queryBuilder = new JSql_DataObjectMap_QueryBuilder(this);
 	}
 	
