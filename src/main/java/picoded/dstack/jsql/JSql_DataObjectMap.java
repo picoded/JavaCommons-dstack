@@ -33,9 +33,9 @@ import picoded.core.conv.ListValueConv;
  *       "SQL_TABLE_NAME": {
  *          // An _oid collumn is required for every fixed table
  *          // as this will glue the various tables together
- *          "_oID": {
+ *          "oID": {
  *              // Collumn name for oid is to be provided
- * 				"name": "_OID",
+ * 				"name": "oID",
  *              // Disable primary key join for this table.
  *              // 
  *              // This should only be enabeld if the child
@@ -492,13 +492,11 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 		if (queryClause == null) {
 			return queryBuilder.dataObjectMapQuery_id( //
-				sqlObj, primaryKeyTable, dataStorageTable, //
 				null, null, //
 				orderByStr, offset, limit //
 				);
 		}
 		return queryBuilder.dataObjectMapQuery_id( //
-			sqlObj, primaryKeyTable, dataStorageTable, //
 			queryClause.toSqlString(), //
 			queryClause.queryArgumentsArray(), //
 			orderByStr, offset, limit //
@@ -515,8 +513,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return queryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable, dataStorageTable,
-			whereClause, whereValues, null, -1, -1);
+		return queryBuilder.dataObjectMapCount(whereClause, whereValues, null, -1, -1);
 	}
 	
 	//--------------------------------------------------------------------------

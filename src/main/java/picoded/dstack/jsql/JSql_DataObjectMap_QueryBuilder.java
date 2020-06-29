@@ -214,7 +214,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 	//-----------------------------------------------------------------------------------------------
 	//
-	//  _oid handling
+	//  _oid key set
 	//
 	//-----------------------------------------------------------------------------------------------
 	
@@ -223,22 +223,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * potential of returning a large data set, production use
 	 * should be avoided.
 	 *
-	 * @return set of keys
+	 * @return JSqlResult, with the oID collumn filled with result
 	 */
-	public Set<String> getOidKeySet() {
+	public JSqlResult getOidKeyJSqlResult() {
 		// Get fixed table set
 		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
 		
 		// If no fixed tablenames, return the simple oID mapping
 		if (fixedTableNames.size() <= 0) {
-			// Query the primary table only
-			JSqlResult r = dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
-			
-			// Convert it into a set
-			if (r == null || r.get("oID") == null) {
-				return new HashSet<String>();
-			}
-			return ListValueConv.toStringSet(r.getObjectList("oID"));
+			// Query the primary table only - and return its result
+			return dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
 		}
 		
 		// Ok - a union here is needed
@@ -256,10 +250,21 @@ public class JSql_DataObjectMap_QueryBuilder {
 				+ tableName + " \n");
 		}
 		
-		// Build the full result
-		JSqlResult r = dataMap.sqlObj.query(queryStr.toString(), queryArg.toArray(EmptyArray.OBJECT));
-		;
-		
+		// Perform the query for the larger more complex result
+		return dataMap.sqlObj.query(queryStr.toString(), queryArg.toArray(EmptyArray.OBJECT));
+	}
+
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 */
+	public Set<String> getOidKeySet() {
+		// Get raw jsql result
+		JSqlResult r = getOidKeyJSqlResult();
+
 		// Convert it into a set
 		if (r == null || r.get("oID") == null) {
 			return new HashSet<String>();
@@ -314,15 +319,17 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="sourceOfLead") AS D1 ON (DP.oID = D1.oID)
 	 * ```
 	 * 
-	 * @param  primaryKeyTable to build the query using
-	 * @param  dataStorageTable to build the query using
 	 * @param  collumns that is needed, in the given order
 	 * @param  collumnWhichMustHandleNullValues to perform left join, instead of inner join, to support NULL values
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private static MutablePair<StringBuilder, List<Object>> innerJoinBuilder(String primaryKeyTable,
-		String dataStorageTable, List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
+	private MutablePair<StringBuilder, List<Object>> innerJoinBuilder(List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
+
+		// Settings needed from main DataObjectMap
+		String primaryKeyTable  = dataMap.primaryKeyTable;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
@@ -402,11 +409,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 *
 	 * @return  The JSql query result
 	 **/
-	protected static JSqlResult runComplexQuery( //
-		JSql sql, String primaryKeyTable, String dataStorageTable, String selectedCols, //
-		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
+	protected JSqlResult runComplexQuery( //
+		String selectedCols, String whereClause, Object[] whereValues, //
+		String orderByStr, int offset, int limit //
 	) { //
 	
+		// Settings needed from main DataObjectMap
+		JSql   sql              = dataMap.sqlObj;
+		String primaryKeyTable  = dataMap.primaryKeyTable;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
 		//--------------------------------------------------------------------------
 		// Quick optimal lookup : to the parent oID table.
 		// Does not do any complex building of clauses
@@ -610,8 +622,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQuery.append("SELECT ").append(selectedCols).append(" FROM \n");
 		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(primaryKeyTable,
-			dataStorageTable, collumnNames, collumnsWhichMustHandleNullValues);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(collumnNames, collumnsWhichMustHandleNullValues);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
@@ -864,13 +875,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 *
 	 * @return  The String[] array
 	 **/
-	public static String[] dataObjectMapQuery_id( //
-		// The meta table / sql configs
-		JSql sql, String primaryKeyTable, String dataStorageTable, //
-		// The actual query
+	public String[] dataObjectMapQuery_id( //
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable, "DP.oID", whereClause,
+		// Get the complex query
+		JSqlResult r = runComplexQuery("DP.oID", whereClause,
 			whereValues, orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
@@ -898,14 +907,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 *
 	 * @return  The DataObject[] array
 	 **/
-	public static long dataObjectMapCount( //
-		// The meta table / sql configs
-		JSql sql, String primaryKeyTable, String dataStorageTable, //
-		// The actual query
+	public long dataObjectMapCount( //
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery(sql, primaryKeyTable, dataStorageTable,
-			"COUNT(DP.oID) AS rcount", whereClause, whereValues, orderByStr, offset, limit);
+		JSqlResult r = runComplexQuery("COUNT(DP.oID) AS rcount", whereClause, whereValues, orderByStr, offset, limit);
 		// Get rcount result
 		GenericConvertList<Object> rcountArr = r.get("rcount");
 		// Generate the object list
