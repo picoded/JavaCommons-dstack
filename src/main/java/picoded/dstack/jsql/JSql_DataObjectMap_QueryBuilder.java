@@ -69,20 +69,35 @@ public class JSql_DataObjectMap_QueryBuilder {
 		return dataMap.configMap.getGenericConvertStringMap("fixedTableMap", null);
 	}
 	
+	/// Internal memoizer for the getFixedTableNameSet
+	private List<String> _getFixedTableNameSet = null;
+
 	/**
-	 * @return Set of fixed table names if avaliable, else null
+	 * @return Set of fixed table names if avaliable
 	 */
-	private Set<String> getFixedTableNameSet() {
+	private List<String> getFixedTableNameSet() {
+		// Fetch Cache result 
+		if( _getFixedTableNameSet != null ) {
+			return _getFixedTableNameSet;
+		}
+
+		// Result list to build
+		List<String> resList = new ArrayList<String>();
+		
 		// Get the table map
 		GenericConvertMap<String, Object> tableMap = getFixedTableFullConfigMap();
 		if (tableMap != null) {
-			Set<String> res = tableMap.keySet();
-			if (res.size() <= 0) {
-				return null;
-			}
-			return res;
-		}
-		return null;
+			// Get the key set
+			resList.addAll(tableMap.keySet());
+
+			// Register memoizer, and return
+			_getFixedTableNameSet = resList;
+			return resList;
+		} 
+
+		// memoizer blank result and return it
+		_getFixedTableNameSet = resList;
+		return resList;
 	}
 	
 	/**
@@ -197,7 +212,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Set<String> pkJoinSet = new HashSet<String>();
 		
 		// Get the table names
-		Set<String> tableNameSet = getFixedTableNameSet();
+		List<String> tableNameSet = getFixedTableNameSet();
 		// And iterate it
 		if (tableNameSet != null) {
 			for (String tableName : tableNameSet) {
@@ -469,6 +484,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	/**
 	 * Performs a search query, and returns the respective result containing the DataObjects information
 	 * This works by taking the query and its args, building its complex inner view, then querying that view.
+	 * 
+	 * This function is arguably the hart of the JSQL DataObjectMap query builder
 	 *
 	 * @param   The selected oid columns to query
 	 * @param   where query statement
@@ -666,6 +683,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 			}
 		}
+		
+		//==========================================================================
+		//
+		// Prepare the various collumn mapping
+		// and build the complex inner query
+		// 
+		//==========================================================================
 		
 		//--------------------------------------------------------------------------
 		// Sort out and filter the required collumnNameSet
