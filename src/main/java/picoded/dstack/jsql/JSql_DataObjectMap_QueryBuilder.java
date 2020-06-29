@@ -236,7 +236,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * This take advantage of UNION for the fixed table, without joins.@interface
 	 * This is not to be used together with the much larger complex joins
 	 */
-	private StringBuilder oidKeyQueryBuilder(boolean isRcount) {
+	private StringBuilder primaryKeyQueryBuilder(boolean isRcount) {
 		
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
@@ -256,9 +256,9 @@ public class JSql_DataObjectMap_QueryBuilder {
 
 			// Handle rcount mode
 			if( isRcount ) {
-				queryStr.append("COUNT(*) AS rcount ");
+				queryStr.append("COUNT(*) AS rcount FROM ");
 			} else {
-				queryStr.append("oID ");
+				queryStr.append("oID FROM ");
 			}
 
 			// Primary table to query
@@ -288,7 +288,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		if( isRcount ) {
 			// lets build the wrapped query
 			StringBuilder queryWrap = new StringBuilder();
-			queryWrap.append("SELECT COUNT(*) AS rcount FROM (");
+			queryWrap.append("SELECT COUNT(*) AS rcount FROM (\n");
 			queryWrap.append( queryStr );
 			queryWrap.append(")");
 
@@ -308,31 +308,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @return JSqlResult, with the oID collumn filled with result
 	 */
 	public JSqlResult getOidKeyJSqlResult() {
-		// Get fixed table set
-		Set<String> fixedTableNames = getFixedTableNamePrimaryKeyJoinSet();
-		
-		// If no fixed tablenames, return the simple oID mapping
-		if (fixedTableNames.size() <= 0) {
-			// Query the primary table only - and return its result
-			return dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
-		}
-		
-		// Ok - a union here is needed
-		// The query string to build
-		StringBuilder queryStr = new StringBuilder();
-		
-		// oID collumn first
-		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append(" \n");
-		
-		// Join the oid collumn for the resepctive tables
-		for (String tableName : fixedTableNames) {
-			queryStr.append("UNION \n");
-			queryStr.append("SELECT '" + getFixedTableCollumnName(tableName, "oID") + "' AS oID FROM "
-				+ tableName + " \n");
-		}
-		
-		// Perform the query for the larger more complex result
-		return dataMap.sqlObj.query(queryStr.toString(), EmptyArray.OBJECT);
+		return dataMap.sqlObj.query(primaryKeyQueryBuilder(false).toString(), EmptyArray.OBJECT);
 	}
 
 	/**
@@ -513,11 +489,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 		String primaryKeyTable  = dataMap.primaryKeyTable;
 		String dataStorageTable = dataMap.dataStorageTable; 
 
-		//--------------------------------------------------------------------------
+		//==========================================================================
+		//
 		// Quick optimal lookup : to the parent oID table.
 		// Does not do any complex building of clauses
 		// Runs the query and exit immediately
-		//--------------------------------------------------------------------------
+		//
+		//==========================================================================
 		
 		if (whereClause == null && orderByStr == null && offset <= 0 && limit <= 0
 		// ---
@@ -532,11 +510,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// 	oidCollumns.equalsIgnoreCase("COUNT(DISTINCT oID) AS rcount")
 		// )
 		) {
-			// Blank query search, quick and easy
-			return sql.select(primaryKeyTable, oidCollumns.replaceAll("DP.oID", "oID"));
+			// Blank where clause query search, quick and easy
+			boolean containsRcount = (oidCollumns.indexOf("COUNT") >= 0);
+			return sql.query(primaryKeyQueryBuilder(containsRcount).toString(), EmptyArray.OBJECT);
 		}
 		
-		//--------------------------------------------------------------------------
+		//==========================================================================
+		//
 		// Sadly looks like things must be done the hard way, 
 		// lets build the following generic struct
 		//
@@ -547,7 +527,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//
 		// - SQL Injection protect
 		// - Extraction of collumn names needed
-		//--------------------------------------------------------------------------
+		//
+		// At this point the code is just analysing the query to help
+		// build the larger much more complex query.
+		//
+		//==========================================================================
 		
 		// The where clause query object, that is built, and actually used
 		Query queryObj = null;
@@ -597,34 +581,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 		}
 		
 		//--------------------------------------------------------------------------
-		// Sort out and filter the required collumnNameSet
-		//--------------------------------------------------------------------------
-		
-		// List of collumn names for the inner query builder
-		// with the respective index numbering
-		List<String> collumnNames = new ArrayList<>();
-		
-		// alias mapping of the collumn names
-		Map<String, String> collumnAliasMap = new HashMap<>();
-		
-		// For each collumnName in the collumnNameSet, set it up if applicable
-		for (String collumn : rawCollumnNameSet) {
-			
-			// Collumn names to skip setup (reseved keywords?)
-			if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
-				continue;
-			}
-			
-			// collumn nmaes that requires setup
-			collumnAliasMap.put(collumn, "D" + collumnNames.size());
-			// note: registering alias map, before adding to list is intentional
-			collumnNames.add(collumn);
-		}
-		
-		//--------------------------------------------------------------------------
 		// Scan for collumns to use for "inner join"
 		// either from the "orderBy" clause, without an equality check
-		// OR an inequality check
+		// OR an inequality check.
+		//
+		// This helps find all the collumns requried for 
+		// collumnsWhichMustHandleNullValues
 		//--------------------------------------------------------------------------
 		
 		// Process the order by string
@@ -670,7 +632,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 			}
 		}
 		
-		// For each collumnName in the collumnNameSet, set it up if applicable
+		// For each collumnName in the collumnNameSet, scan for inequality check
+		// or equality with null check - to map its use case for "collumnsWhichMustHandleNullValues"
 		if (rawWhereClauseCollumns != null) {
 			for (String collumn : rawWhereClauseCollumns) {
 				// Collumn names to skip setup (reseved keywords?)
@@ -702,6 +665,31 @@ public class JSql_DataObjectMap_QueryBuilder {
 					}
 				}
 			}
+		}
+		
+		//--------------------------------------------------------------------------
+		// Sort out and filter the required collumnNameSet
+		//--------------------------------------------------------------------------
+		
+		// List of collumn names for the inner query builder
+		// with the respective index numbering
+		List<String> collumnNames = new ArrayList<>();
+		
+		// alias mapping of the collumn names
+		Map<String, String> collumnAliasMap = new HashMap<>();
+		
+		// For each collumnName in the collumnNameSet, set it up if applicable
+		for (String collumn : rawCollumnNameSet) {
+			
+			// Collumn names to skip setup (reseved keywords?)
+			if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
+				continue;
+			}
+			
+			// collumn nmaes that requires setup
+			collumnAliasMap.put(collumn, "D" + collumnNames.size());
+			// note: registering alias map, before adding to list is intentional
+			collumnNames.add(collumn);
 		}
 		
 		//--------------------------------------------------------------------------
