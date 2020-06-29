@@ -22,6 +22,46 @@ import picoded.core.conv.ListValueConv;
  * JSql implmentation of DataObjectMap
  *
  * Due to how complex this class is, it has been split apart into multiple sub classes
+ * With this core class, forming the glue code for all the various sub classes.
+ * 
+ * In addition the optional configMap, is used to provide fixed table functionality,
+ * while being configured in the following format.
+ * 
+ * ```
+ * {
+ *    "fixedTable": {
+ *       "SQL_TABLE_NAME": {
+ *          // An _oid collumn is required for every fixed table
+ *          // as this will glue the various tables together
+ *          "_oid": {
+ *              // Collumn name for oid is to be provided
+ * 				"name": "_OID",
+ *              // Disable primary key join for this table.
+ *              // 
+ *              // This should only be enabeld if the child
+ *              // table is guaranteed to have its oid key
+ *              // in the primary key table.
+ *              // 
+ *              // This should only be used for 
+ *              // performance optimization
+ *              "skipPrimaryKeyJoin": true
+ *          },
+ *          // When object key name and collumn name is identical
+ *          // you can simply pass in the collumn type string
+ *          "OBJECT_KEY" : "COLLUMN_TYPE",
+ *          ...
+ *          // If there is a name mismatch, a map can be used instead
+ *          // to provide more fine grain controls
+ *          "OBJECT_KEY": {
+ * 				"name": "COLLUMN_NAME",
+ * 	            "type": "COLLUMN_TYPE"
+ *          },
+ *          ...
+ *       },
+ *       ...
+ *    }
+ * }
+ * ```
  **/
 public class JSql_DataObjectMap extends Core_DataObjectMap {
 	
@@ -52,6 +92,14 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	protected JSql_DataObjectMap_QueryBuilder queryBuilder = null;
 
 	/**
+	 * Internal config map specific to this DataObjectMap.
+	 * 
+	 * This is used primarily to configured fixed tables to be used
+	 * with the cored data object map
+	 */
+	protected GenericConvertMap<String,Object> configMap;
+
+	/**
 	 * JSql setup
 	 *
 	 * @param   JSQL connection
@@ -67,14 +115,19 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 * @param   JSQL connection
 	 * @param   Table name to use
 	 **/
-	public JSql_DataObjectMap(JSql inJSql, String tablename, GenericConvertMap<String,Object> configMap) {
+	public JSql_DataObjectMap(JSql inJSql, String tablename, GenericConvertMap<String,Object> inConfig) {
 		super();
 		
 		sqlObj = inJSql;
 		primaryKeyTable = "DP_" + tablename;
 		dataStorageTable = "DD_" + tablename;
 
-		queryBuilder = new JSql_DataObjectMap_QueryBuilder(configMap);
+		configMap = inConfig;
+		if( configMap == null ) {
+			configMap = new GenericConvertHashMap<>();
+		}
+
+		queryBuilder = new JSql_DataObjectMap_QueryBuilder(this);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -500,9 +553,15 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	//
 	// Special iteration support
 	//
+	// NOTE: Fixed table hybrid support is not implemented for this function
+	//       this is partially intentional to limit the performance impact
+	//       and maybe reviewed overtime
+	//
 	//--------------------------------------------------------------------------
 	
 	/**
+	 * [NOTE: Fixed table hybrid support is not implemented for this function]
+	 * 
 	 * Gets and return a random object ID
 	 *
 	 * @return  Random object ID
@@ -521,6 +580,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	}
 	
 	/**
+	 * [NOTE: Fixed table hybrid support is not implemented for this function]
+	 * 
 	 * Gets and return the next object ID key for iteration given the current ID,
 	 * null gets the first object in iteration.
 	 *

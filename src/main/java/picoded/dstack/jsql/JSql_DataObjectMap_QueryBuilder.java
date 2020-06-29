@@ -42,20 +42,26 @@ public class JSql_DataObjectMap_QueryBuilder {
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
-	 * Internal config map specific to this DataObjectMap
+	 * Main internal dataobject map to fetch config / etc
 	 */
-	protected GenericConvertMap<String,Object> config;
+	protected JSql_DataObjectMap dataMap = null;
 
 	/**
 	 * Constructor with the config map
 	 */
-	public JSql_DataObjectMap_QueryBuilder(GenericConvertMap<String,Object> configMap) {
-		this.config = configMap;
+	public JSql_DataObjectMap_QueryBuilder(JSql_DataObjectMap inMap) {
+		dataMap = inMap;
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	//
-	//  Utility functions
+	//  _oid handling
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  OrderBy string processing
 	//
 	//-----------------------------------------------------------------------------------------------
 	
@@ -72,7 +78,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 		if (rawString.length() <= 0) {
 			throw new RuntimeException("Unexpected blank found in OrderBy query : " + rawString);
 		}
-		
 		return new OrderBy<DataObject>(rawString);
 	}
 	
