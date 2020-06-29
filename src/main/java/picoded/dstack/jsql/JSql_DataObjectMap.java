@@ -441,13 +441,13 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 		if (queryClause == null) {
-			return JSql_DataObjectMap_QueryBuilder.dataObjectMapQuery_id( //
+			return queryBuilder.dataObjectMapQuery_id( //
 				sqlObj, primaryKeyTable, dataStorageTable, //
 				null, null, //
 				orderByStr, offset, limit //
 				);
 		}
-		return JSql_DataObjectMap_QueryBuilder.dataObjectMapQuery_id( //
+		return queryBuilder.dataObjectMapQuery_id( //
 			sqlObj, primaryKeyTable, dataStorageTable, //
 			queryClause.toSqlString(), //
 			queryClause.queryArgumentsArray(), //
@@ -465,7 +465,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 */
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
-		return JSql_DataObjectMap_QueryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable,
+		return queryBuilder.dataObjectMapCount(sqlObj, primaryKeyTable,
 			dataStorageTable, whereClause, whereValues, null, -1, -1);
 	}
 	
