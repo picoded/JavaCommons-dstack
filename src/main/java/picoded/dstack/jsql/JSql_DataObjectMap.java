@@ -33,7 +33,7 @@ import picoded.core.conv.ListValueConv;
  *       "SQL_TABLE_NAME": {
  *          // An _oid collumn is required for every fixed table
  *          // as this will glue the various tables together
- *          "_oid": {
+ *          "_oID": {
  *              // Collumn name for oid is to be provided
  * 				"name": "_OID",
  *              // Disable primary key join for this table.

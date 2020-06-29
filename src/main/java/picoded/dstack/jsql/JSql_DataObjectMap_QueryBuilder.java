@@ -192,16 +192,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// And iterate it
 		if (tableNameSet != null) {
 			for (String tableName : tableNameSet) {
-				// Get table specific config
-				GenericConvertMap<String, Object> tableConfig = getFixedTableConfig(tableName);
 				
-				// Get the "_oid" config
-				GenericConvertMap<String, Object> oidConfig = tableConfig.getGenericConvertStringMap(
-					"_oid", null);
-				if (oidConfig == null) {
-					throw new RuntimeException("Missing valid _oid config for fixed table setup : "
-						+ tableName);
-				}
+				// Get the "_oid" collumn config, this also function as a quick config check
+				GenericConvertMap<String, Object> oidConfig = getFixedTableCollumnConfig(tableName,
+					"_oid");
 				
 				// Skip if primary key join is configured to be skipped
 				if (oidConfig.getBoolean("skipPrimaryKeyJoin", false)) {
@@ -237,7 +231,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// If no fixed tablenames, return the simple oID mapping
 		if (fixedTableNames.size() <= 0) {
+			// Query the primary table only
 			JSqlResult r = dataMap.sqlObj.select(dataMap.primaryKeyTable, "oID");
+			
+			// Convert it into a set
 			if (r == null || r.get("oID") == null) {
 				return new HashSet<String>();
 			}
@@ -255,11 +252,19 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Join the oid collumn for the resepctive tables
 		for (String tableName : fixedTableNames) {
 			queryStr.append("UNION \n");
-			// WIP
+			queryStr.append("SELECT '" + getFixedTableCollumnName(tableName, "oID") + "' AS oID FROM "
+				+ tableName + " \n");
 		}
 		
-		return null;
+		// Build the full result
+		JSqlResult r = dataMap.sqlObj.query(queryStr.toString(), queryArg.toArray(EmptyArray.OBJECT));
+		;
 		
+		// Convert it into a set
+		if (r == null || r.get("oID") == null) {
+			return new HashSet<String>();
+		}
+		return ListValueConv.toStringSet(r.getObjectList("oID"));
 	}
 	
 	//-----------------------------------------------------------------------------------------------
