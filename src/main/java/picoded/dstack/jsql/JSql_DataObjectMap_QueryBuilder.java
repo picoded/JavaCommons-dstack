@@ -51,6 +51,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 */
 	public JSql_DataObjectMap_QueryBuilder(JSql_DataObjectMap inMap) {
 		dataMap = inMap;
+
+		// Preloading memoizers in constructor,
+		// as its the only lock-free segment that is 
+		// guranteed to be thread safe
 		preloadMemoizers();
 	}
 	
@@ -441,6 +445,111 @@ public class JSql_DataObjectMap_QueryBuilder {
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
+	 * Scan the given query keys, to deduce which collumn should have "NULL" support.
+	 * Generating this set is important to ensure proper query support with NULL values.
+	 * 
+	 * This works by scanning orderby clause, that does not have a corresponding equality check
+	 * Or where clauses with inequality check / null equality check
+	 * 
+	 * @param fieldQueryMap used to get the object key to sub query condition mapping
+	 * @param set of raw order keys to scan
+	 * @param set of raw where keys to scan
+	 * 
+	 * @return key set where NULL support is needed
+	 */
+	private Set<String> extractCollumnsWhichMustSupportNullValues( //
+		Map<String, List<Query>> fieldQueryMap, //
+		Collection<String> rawOrderByClauseCollumns, //
+		Collection<String> rawWhereClauseCollumns //
+	) { //
+
+		// Prepare the return result
+		Set<String> keysWhichMustHandleNullValues = new HashSet<>();
+
+		// Process the order by string
+		if (rawOrderByClauseCollumns != null) {
+			for (String collumn : rawOrderByClauseCollumns) {
+				// Collumn names to skip setup (reseved keywords?)
+				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
+					continue;
+				}
+				
+				// There is no query / query map, so NULL must be supported
+				if (fieldQueryMap == null) {
+					keysWhichMustHandleNullValues.add(collumn);
+					continue;
+				}
+				
+				// Check if any query is used with order by clause
+				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
+				
+				// No query filtering was done, therefor, NULL must be suported
+				if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
+					keysWhichMustHandleNullValues.add(collumn);
+					continue;
+				}
+				
+				for (Query subQuery : toReplaceQueries) {
+					// Check for inequality condition, where NULL must be supported
+					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
+						keysWhichMustHandleNullValues.add(collumn);
+						break;
+					}
+					
+					// Check for equality condition, with NULL values
+					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
+						&& subQuery.defaultArgumentValue() == null) {
+						keysWhichMustHandleNullValues.add(collumn);
+						break;
+					}
+				}
+				
+				// There are equality checks, which would filter out NULL values
+				// therefor order by collumn is not added to the NULL support list
+			}
+		}
+		
+		// For each collumnName in the collumnNameSet, scan for inequality check
+		// or equality with null check - to map its use case for "keysWhichMustHandleNullValues"
+		if (rawWhereClauseCollumns != null) {
+			for (String collumn : rawWhereClauseCollumns) {
+				// Collumn names to skip setup (reseved keywords?)
+				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
+					continue;
+				}
+				
+				// The query list to do processing on
+				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
+				
+				// Skip if no query was found needed processing
+				if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
+					continue;
+				}
+				
+				// Check for inequality condition, where NULL must be supported
+				for (Query subQuery : toReplaceQueries) {
+					// Check for inequality condition, where NULL must be supported
+					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
+						keysWhichMustHandleNullValues.add(collumn);
+						break;
+					}
+					
+					// Check for equality condition, with NULL values
+					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
+						&& subQuery.defaultArgumentValue() == null) {
+						keysWhichMustHandleNullValues.add(collumn);
+						break;
+					}
+				}
+			}
+
+		}
+		
+		// The keys to support
+		return keysWhichMustHandleNullValues;
+	}
+
+	/**
 	 * Lets build the core inner join query string, 
 	 * given the required filtered collumn names.
 	 * 
@@ -615,10 +724,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// List of collumns that is needed for both where / order by
 		Set<String> rawCollumnNameSet = new HashSet<>();
 		
-		// List of collumns which must take into account possible NULL
-		// values, which has its own set of quirks in SQL
-		Set<String> collumnsWhichMustHandleNullValues = new HashSet<>();
-		
 		// Gets the original field to "raw query" maps
 		// of keys, to do subtitution on,
 		// and their respective argument map.
@@ -655,86 +760,14 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// OR an inequality check.
 		//
 		// This helps find all the collumns requried for 
-		// collumnsWhichMustHandleNullValues
+		// keysWhichMustHandleNullValues
 		//--------------------------------------------------------------------------
 		
-		// Process the order by string
-		if (orderByStr != null) {
-			for (String collumn : rawOrderByClauseCollumns) {
-				// Collumn names to skip setup (reseved keywords?)
-				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
-					continue;
-				}
-				
-				// There is no query / query map, so NULL must be supported
-				if (fieldQueryMap == null) {
-					collumnsWhichMustHandleNullValues.add(collumn);
-					continue;
-				}
-				
-				// Check if any query is used with order by clause
-				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
-				
-				// No query filtering was done, therefor, NULL must be suported
-				if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
-					collumnsWhichMustHandleNullValues.add(collumn);
-					continue;
-				}
-				
-				for (Query subQuery : toReplaceQueries) {
-					// Check for inequality condition, where NULL must be supported
-					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
-						collumnsWhichMustHandleNullValues.add(collumn);
-						break;
-					}
-					
-					// Check for equality condition, with NULL values
-					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
-						&& subQuery.defaultArgumentValue() == null) {
-						collumnsWhichMustHandleNullValues.add(collumn);
-						break;
-					}
-				}
-				
-				// There are equality checks, which would filter out NULL values
-				// therefor order by collumn is not added to the NULL support list
-			}
-		}
-		
-		// For each collumnName in the collumnNameSet, scan for inequality check
-		// or equality with null check - to map its use case for "collumnsWhichMustHandleNullValues"
-		if (rawWhereClauseCollumns != null) {
-			for (String collumn : rawWhereClauseCollumns) {
-				// Collumn names to skip setup (reseved keywords?)
-				if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
-					continue;
-				}
-				
-				// The query list to do processing on
-				List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
-				
-				// Skip if no query was found needed processing
-				if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
-					continue;
-				}
-				
-				// Check for inequality condition, where NULL must be supported
-				for (Query subQuery : toReplaceQueries) {
-					// Check for inequality condition, where NULL must be supported
-					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
-						collumnsWhichMustHandleNullValues.add(collumn);
-						break;
-					}
-					
-					// Check for equality condition, with NULL values
-					if (subQuery.operatorSymbol().equalsIgnoreCase("=")
-						&& subQuery.defaultArgumentValue() == null) {
-						collumnsWhichMustHandleNullValues.add(collumn);
-						break;
-					}
-				}
-			}
-		}
+		// List of collumns which must take into account possible NULL
+		// values, which has its own set of quirks in SQL
+		Set<String> keysWhichMustHandleNullValues = extractCollumnsWhichMustSupportNullValues( //
+			fieldQueryMap, rawOrderByClauseCollumns, rawWhereClauseCollumns //
+		); //
 		
 		//==========================================================================
 		//
@@ -746,10 +779,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// 
 		//==========================================================================
 		
-		//--------------------------------------------------------------------------
 		// Split the key set between dynamic and fixed table collumns
-		//--------------------------------------------------------------------------
-		
 		MutablePair<List<String>,List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(rawCollumnNameSet);
 		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
 		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
@@ -791,7 +821,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
 		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(collumnNames, collumnsWhichMustHandleNullValues);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(collumnNames, keysWhichMustHandleNullValues);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
