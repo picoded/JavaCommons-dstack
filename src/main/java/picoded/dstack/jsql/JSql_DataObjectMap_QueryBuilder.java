@@ -1533,7 +1533,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
-	 * Extracts and build the map stored under an _oid
+	 * Update the various fixed tables
 	 *
 	 * @param {String} _oid               - object id to store the key value pairs into
 	 * @param {Map<String,Object>} objMap - map to extract values to store from
@@ -1541,7 +1541,79 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @returns null/ret object if not exists, else a map (ret) with the data
 	 **/
-	public boolean jSqlObjectMapUpdate( //
+	public void fixedTableUpdate( //
+		String _oid, //
+		Map<String, Object> objMap, //
+		Collection<String> keyList //
+	) {
+		// Get fixed table name set
+		List<String> fixedTableNameSet = getFixedTableNameList();
+		
+		// Lets process all the fixed table names
+		for(String tableName : fixedTableNameSet) {
+			// Get the oid collumn
+			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+
+			// Insert key, and values
+			List<String> uniqueColumns = new ArrayList<>();
+			List<Object> uniqueValues = new ArrayList<>();
+
+			// Misc collumns (to avoid writting into)
+			List<String> miscColumns = new ArrayList<>();
+
+			// Get the keynames of the table
+			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
+			
+			// Lets iterate each table key name
+			// and build the uniqueColumn/values
+			for(String tableKeyName : tableKeyNameSet) {
+				// Get the collumn name
+				String collumnName = getFixedTableCollumnName(tableName, tableKeyName);
+
+				// Check if the key is to be skipped (misc)
+				if( !keyList.contains(tableKeyName) ) {
+					miscColumns.add(collumnName);
+					continue;
+				}
+
+				// Key name is inside key list, this value needs to be set
+				uniqueColumns.add(collumnName);
+				uniqueValues.add(objMap.get(tableKeyName));
+			}
+
+			// Lets skip the upsert if no data needs to be added
+			if( uniqueColumns.size() <= 0 ) {
+				continue;
+			}
+
+			// Perform the upsert
+			dataMap.sqlObj.upsert(
+				// Table name to upsert on
+				tableName, 
+				// The unique column names and value
+				new String[] { oidCollumn },
+				new Object[] { _oid },
+				// Upsert collumn and values
+				uniqueColumns.toArray(EmptyArray.STRING),
+				uniqueValues.toArray(EmptyArray.OBJECT),
+				// Default collumn and values
+				null, null,
+				// Misc collumns
+				miscColumns.toArray(EmptyArray.STRING)
+			);
+		}
+	}
+
+	/**
+	 * Update the dynamic data storage table
+	 *
+	 * @param {String} _oid               - object id to store the key value pairs into
+	 * @param {Map<String,Object>} objMap - map to extract values to store from
+	 * @param {Set<String>} keyList       - keylist to limit insert load
+	 * 
+	 * @returns null/ret object if not exists, else a map (ret) with the data
+	 **/
+	public void jSqlObjectMapUpdate( //
 		String _oid, //
 		Map<String, Object> objMap, //
 		Collection<String> keyList //
@@ -1550,11 +1622,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 		JSql   sql              = dataMap.sqlObj;
 		String dataStorageTable = dataMap.dataStorageTable; 
 
-		// Update data on the dynamic table
-		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sql, dataStorageTable, _oid, objMap, keyList);
+		// Split the key set between dynamic and fixed table collumns
+		MutablePair<List<String>,List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(keyList);
+		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
+		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
 
-		// Return final map
-		return true;
+		// Update data on the dynamic table
+		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sql, dataStorageTable, _oid, objMap, dynamicKeyNames);
+
+		// Update data on the fixed table
+		fixedTableUpdate(_oid, objMap, fixedKeyNames);
 	}
 	
 }
