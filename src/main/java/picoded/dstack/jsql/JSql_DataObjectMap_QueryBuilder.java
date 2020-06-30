@@ -1371,7 +1371,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 	//-----------------------------------------------------------------------------------------------
 	//
-	//  Query builder
+	//  Query builder for ID and count
 	//
 	//-----------------------------------------------------------------------------------------------
 	
@@ -1436,6 +1436,125 @@ public class JSql_DataObjectMap_QueryBuilder {
 		}
 		// Blank as fallback
 		return 0;
+	}
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Get command support
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Extracts and build the map stored under an _oid for fixed tables
+	 *
+	 * @param {String} _oid               - object id to store the key value pairs into
+	 * @param {Map<String,Object>} ret    - map to populate, and return, created if null if there is data
+	 * 
+	 * @returns null/ret object if not exists, else a map (ret) with the data
+	 **/
+	private Map<String, Object> fixedTableFetch( //
+		String _oid, //
+		Map<String, Object> ret //
+	) {
+		// Settings needed from main DataObjectMap
+		JSql   sql              = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
+		// Get fixed table name set
+		List<String> fixedTableNameSet = getFixedTableNameList();
+		
+		// Lets process all the fixed table key names
+		//
+		// @TODO - optimize this down to a single SQL join query?
+		for(String tableName : fixedTableNameSet) {
+			// Get the oid collumn
+			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+
+			// Query the fixed table
+			JSqlResult r = sql.select(tableName, "*", oidCollumn+"=?", new Object[] { _oid });
+
+			// No result means no data to extract
+			if (r == null || r.get(oidCollumn) == null || r.get(oidCollumn).size() <= 0) {
+				continue;
+			}
+
+			// OK - looks like there is a data, lets initialize the return map if its null
+			if( ret == null ) {
+				ret = new HashMap<>();
+			}
+
+			// Get the keynames of the table
+			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
+			
+			// Lets iterate each table key name
+			for(String tableKeyName : tableKeyNameSet) {
+				// Get the collumn name
+				String collumnName = getFixedTableCollumnName(tableName, tableKeyName);
+
+				// and copy its value over
+				ret.put( tableKeyName, r.get(collumnName).get(0) );
+			}
+		}
+
+		// Return final map
+		return ret;
+	}
+
+	/**
+	 * Extracts and build the map stored under an _oid
+	 *
+	 * @param {String} _oid               - object id to store the key value pairs into
+	 * @param {Map<String,Object>} ret    - map to populate, and return, created if null if there is data
+	 * 
+	 * @returns null/ret object if not exists, else a map (ret) with the data
+	 **/
+	public Map<String, Object> jSqlObjectMapFetch( //
+		String _oid, //
+		Map<String, Object> ret //
+	) {
+		// Settings needed from main DataObjectMap
+		JSql   sql              = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
+		// Grab data from dynamic tables
+		ret = JSql_DataObjectMapUtil.jSqlObjectMapFetch(sql, dataStorageTable, _oid, ret);
+
+		// Grab data from fixed tables
+		ret = fixedTableFetch(_oid, ret);
+
+		// Return final map
+		return ret;
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Update command support
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Extracts and build the map stored under an _oid
+	 *
+	 * @param {String} _oid               - object id to store the key value pairs into
+	 * @param {Map<String,Object>} objMap - map to extract values to store from
+	 * @param {Set<String>} keyList       - keylist to limit insert load
+	 * 
+	 * @returns null/ret object if not exists, else a map (ret) with the data
+	 **/
+	public boolean jSqlObjectMapUpdate( //
+		String _oid, //
+		Map<String, Object> objMap, //
+		Collection<String> keyList //
+	) {
+		// Settings needed from main DataObjectMap
+		JSql   sql              = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
+		// Update data on the dynamic table
+		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sql, dataStorageTable, _oid, objMap, keyList);
+
+		// Return final map
+		return true;
 	}
 	
 }

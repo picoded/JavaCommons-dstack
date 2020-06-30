@@ -4,6 +4,7 @@ import java.util.logging.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -423,10 +424,10 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	
 	/**
 	 * Gets the complete remote data map, for DataObject.
-	 * Returns null if not exists
+	 * @returns null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		return JSql_DataObjectMapUtil.jSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
+		return queryBuilder.jSqlObjectMapFetch(_oid, null);
 	}
 	
 	/**

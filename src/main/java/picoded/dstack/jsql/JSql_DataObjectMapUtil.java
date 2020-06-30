@@ -349,7 +349,7 @@ public class JSql_DataObjectMapUtil {
 	 * @return
 	 */
 	protected static boolean jSql_insert(JSql sql, String tName, String _oid, //
-		Map<String, Object> objMap, Set<String> keyList, //
+		Map<String, Object> objMap, Collection<String> keyList, //
 		long now //
 	) {
 		// Nothing to update, nothing to do
@@ -443,7 +443,7 @@ public class JSql_DataObjectMapUtil {
 	 **/
 	public static boolean jSql_upsert( //
 		JSql sql, String tName, String _oid, //
-		Map<String, Object> objMap, Set<String> keyList, //
+		Map<String, Object> objMap, Collection<String> keyList, //
 		long now //
 	) {
 		
@@ -549,7 +549,7 @@ public class JSql_DataObjectMapUtil {
 	 **/
 	public static boolean jSqlObjectMapUpdate( //
 		JSql sql, String tName, String _oid, //
-		Map<String, Object> objMap, Set<String> keyList //
+		Map<String, Object> objMap, Collection<String> keyList //
 	) {
 		// Skip if keylist size is 0
 		if (keyList == null || keyList.size() <= 0) {
@@ -694,7 +694,7 @@ public class JSql_DataObjectMapUtil {
 				ret = new HashMap<String, Object>();
 			}
 			
-			// Add in vallue
+			// Add in value
 			ret.put(rowData[0].toString(), rowData[1]);
 		}
 		
