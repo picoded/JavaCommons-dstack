@@ -63,7 +63,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * in multi threaded setup is avoided
 	 */
 	private void preloadMemoizers() {
-		getFixedTableNameSet();
+		getFixedTableNameList();
 		getFixedTableNamePrimaryKeyJoinSet();
 	}
 
@@ -83,16 +83,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 		return dataMap.configMap.getGenericConvertStringMap("fixedTableMap", null);
 	}
 	
-	/// Internal memoizer for the getFixedTableNameSet
-	private List<String> _getFixedTableNameSet = null;
+	/// Internal memoizer for the getFixedTableNameList
+	private List<String> _getFixedTableNameList = null;
 
 	/**
 	 * @return Set of fixed table names if avaliable
 	 */
-	private List<String> getFixedTableNameSet() {
+	private List<String> getFixedTableNameList() {
 		// Fetch Cache result 
-		if( _getFixedTableNameSet != null ) {
-			return _getFixedTableNameSet;
+		if( _getFixedTableNameList != null ) {
+			return _getFixedTableNameList;
 		}
 
 		// Result list to build
@@ -105,12 +105,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 			resList.addAll(tableMap.keySet());
 
 			// Register memoizer, and return
-			_getFixedTableNameSet = resList;
+			_getFixedTableNameList = resList;
 			return resList;
 		} 
 
 		// memoizer blank result and return it
-		_getFixedTableNameSet = resList;
+		_getFixedTableNameList = resList;
 		return resList;
 	}
 	
@@ -226,23 +226,22 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Set<String> pkJoinSet = new HashSet<String>();
 		
 		// Get the table names
-		List<String> tableNameSet = getFixedTableNameSet();
+		List<String> tableNameSet = getFixedTableNameList();
+
 		// And iterate it
-		if (tableNameSet != null) {
-			for (String tableName : tableNameSet) {
-				
-				// Get the "_oid" collumn config, this also function as a quick config check
-				GenericConvertMap<String, Object> oidConfig = getFixedTableCollumnConfig(tableName,
-					"_oid");
-				
-				// Skip if primary key join is configured to be skipped
-				if (oidConfig.getBoolean("skipPrimaryKeyJoin", false)) {
-					continue;
-				}
-				
-				// Build the result set
-				pkJoinSet.add(tableName);
+		for (String tableName : tableNameSet) {
+			
+			// Get the "_oid" collumn config, this also function as a quick config check
+			GenericConvertMap<String, Object> oidConfig = getFixedTableCollumnConfig(tableName,
+				"_oid");
+			
+			// Skip if primary key join is configured to be skipped
+			if (oidConfig.getBoolean("skipPrimaryKeyJoin", false)) {
+				continue;
 			}
+			
+			// Build the result set
+			pkJoinSet.add(tableName);
 		}
 		
 		// Return the result
@@ -399,7 +398,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Set<String> dynamicKeyNames = new HashSet<String>();
 		
 		// Get fixed table name set
-		Set<String> fixedTableNameSet = getFixedTableNamePrimaryKeyJoinSet();
+		List<String> fixedTableNameSet = getFixedTableNameList();
 		
 		// Lets process all the fixed table key names
 		//-----------------------------------------------
@@ -547,6 +546,61 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// The keys to support
 		return keysWhichMustHandleNullValues;
+	}
+
+	/**
+	 * Given the dynamic/fixed object keys, and it sequence -
+	 * generate out the table alias map.
+	 */
+	private Map<String,String> generateCollumnTableAliasMap( //
+		List<String> dynamicTableKeys, //
+		List<String> fixedTableKeys //
+	) { //
+
+		// alias mapping of the collumn names (the result)
+		Map<String, String> objectKeyTableAliasMap = new HashMap<>();
+		
+		// Dynamic table keys handling
+		//-------------------------------------------------------------------
+		for (int i=0; i<dynamicTableKeys.size(); ++i) {
+			// Get the keyname
+			String keyName = dynamicTableKeys.get(i);
+
+			// Collumn names to skip setup (reseved keywords?)
+			if (keyName.equalsIgnoreCase("_oid") || keyName.equalsIgnoreCase("oID")) {
+				continue;
+			}
+			
+			// collumn names that requires setup
+			objectKeyTableAliasMap.put(keyName, "D" + i);
+		}
+		
+		// Fixed table keys handling
+		//-------------------------------------------------------------------
+
+		// Get fixed table name set
+		List<String> fixedTableNameList = getFixedTableNameList();
+		
+		// And iterate all the fixed tables in sequence
+		for (int i=0; i<fixedTableNameList.size(); ++i) {
+			// Get the table name
+			String tableName = fixedTableNameList.get(i);
+
+			// Get the keynames of the table
+			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
+			
+			// Lets iterate each table key name
+			for(String tableKeyName : tableKeyNameSet) {
+				// if table key name is in the query, register it
+				if( fixedTableKeys.indexOf(tableKeyName) >= 0 ) {
+					// collumn names that requires setup
+					objectKeyTableAliasMap.put(tableKeyName, "F" + i);
+				}
+			}
+		}
+
+		// Return result
+		return objectKeyTableAliasMap;
 	}
 
 	/**
@@ -784,30 +838,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
 		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
 
-		//--------------------------------------------------------------------------
-		// Sort out and filter the required collumnNameSet
-		//--------------------------------------------------------------------------
-		
-		// List of collumn names for the inner query builder
-		// with the respective index numbering
-		List<String> collumnNames = new ArrayList<>();
-		
-		// alias mapping of the collumn names
-		Map<String, String> collumnAliasMap = new HashMap<>();
-		
-		// For each collumnName in the collumnNameSet, set it up if applicable
-		for (String collumn : rawCollumnNameSet) {
-			
-			// Collumn names to skip setup (reseved keywords?)
-			if (collumn.equalsIgnoreCase("_oid") || collumn.equalsIgnoreCase("oID")) {
-				continue;
-			}
-			
-			// collumn names that requires setup
-			collumnAliasMap.put(collumn, "D" + collumnNames.size());
-			// note: registering alias map, before adding to list is intentional
-			collumnNames.add(collumn);
-		}
+		// Generate alias mapping of the various object keys
+		Map<String, String> objectKeyTableAliasMap = generateCollumnTableAliasMap(dynamicKeyNames, fixedKeyNames);
 		
 		//--------------------------------------------------------------------------
 		// Build the complex inner join table
@@ -821,7 +853,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
 		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(collumnNames, keysWhichMustHandleNullValues);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(dynamicKeyNames, keysWhichMustHandleNullValues);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
@@ -861,7 +893,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 				
 				// Get the replacment table alias
-				String collumnTableAlias = collumnAliasMap.get(collumn);
+				String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
 				
 				// Scan for the query to perform replacements
 				for (Query toReplace : toReplaceQueries) {
@@ -989,7 +1021,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 					}
 					
 					// Get the replacment table alias
-					String collumnTableAlias = collumnAliasMap.get(collumn);
+					String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
 					
 					// Lets update the numeric, and string order by settings
 					numericOrderBy.replaceKeyName(collumn, collumnTableAlias + ".nVl");
