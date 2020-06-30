@@ -113,6 +113,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 		_getFixedTableNameList = resList;
 		return resList;
 	}
+
+	/**
+	 * @param table alias name
+	 * @return the fixed table name
+	 */
+	private String getFixedTableNameFromAlias(String aliasName) {
+		int idx = Integer.parseInt( aliasName.substring(1) );
+		return getFixedTableNameList().get(idx);
+	}
 	
 	/**
 	 * @param Fixed table name
@@ -810,7 +819,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			
 			// Get the replacment table alias
 			String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
-			
+
 			// Scan for the query to perform replacements
 			for (Query toReplace : toReplaceQueries) {
 				// Get the argument
@@ -883,7 +892,142 @@ public class JSql_DataObjectMap_QueryBuilder {
 				
 				// Unprocessed arg type
 				if (replacement == null) {
-					throw new RuntimeException("Unexpeced query argument (unkown type) : " + argObj);
+					throw new RuntimeException("Unexpeced query argument (unknown type) : " + argObj);
+				}
+				
+				// Replaces old query with new rewritten query
+				queryObj = queryObj.replaceQuery(toReplace, replacement);
+			}
+		}
+
+		return queryObj;
+	}
+
+	/**
+	 * Given the where clause query object, rewrite it to query against the joint fixed table used internally.
+	 * 
+	 * This replaces the respective "object key" with the "TABLE_ALIAS.collumn_name" respectively.
+	 * 
+	 * @param  query object to rewrite (and return)
+	 * @param  field to query mapping
+	 * @param  arg name to arg value mapping
+	 * @param  object key to table alias name mapping
+	 * @param  list of dynamic keys to handle
+	 * 
+	 * @return rewritten queryObj 
+	 */
+	private Query fixedTableQueryRewrite( //
+		Query queryObj, Map<String, List<Query>> fieldQueryMap, //
+		Map<String, Object> queryArgMap, //
+		Map<String, String> objectKeyTableAliasMap, //
+		List<String> fixedKeyNames //
+	) {
+		
+		// Lets iterate the fixed table key names
+		// and rewrite each object key
+		for (String collumn : fixedKeyNames) {
+
+			// The query list to do processing on
+			List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
+			
+			// Skip if no query was found needed processing
+			if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
+				continue;
+			}
+			
+			// Special handling for _oid
+			if (collumn.equalsIgnoreCase("_oid") || collumn.equals("oID")) {
+				// Scan for the query to remap to DP.oID
+				for (Query toReplace : toReplaceQueries) {
+					Query replacement = QueryFilter.basicQueryFromTokens(
+						//
+						queryArgMap, "DP.oID", toReplace.operatorSymbol(),
+						":" + toReplace.argumentName() //
+					);
+					// Replaces old query with new query
+					queryObj = queryObj.replaceQuery(toReplace, replacement);
+				}
+				continue;
+			}
+			
+			// Get the replacment table alias
+			String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
+			String fixedTableName = getFixedTableNameFromAlias(collumnTableAlias);
+			String fixedTableCollumnName = getFixedTableCollumnName(fixedTableName, collumn);
+			
+			// Scan for the query to perform replacements
+			for (Query toReplace : toReplaceQueries) {
+				// Get the argument
+				Object argObj = queryArgMap.get(toReplace.argumentName());
+				
+				// Setup the replacement query
+				Query replacement = null;
+				
+				if (argObj == null) {
+					// Does special NULL handling
+					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+						+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+					);
+					
+					// 
+					// Lets do special SQL condition overwriting
+					// to properly support null equality checks
+					//
+					// This works around known limitations of SQL
+					// requiring NULL checks as the "IS NULL" or "IS NOT NULL"
+					// varient
+					//
+					// https://www.tutorialspoint.com/sql/sql-null-values.htm#:~:text=The%20SQL%20NULL%20is%20the,a%20field%20that%20contains%20spaces.
+					//
+					if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
+						replacement = new JSql_QueryStringOverwrite( //
+							replacement, // The replacement query, in case is still needed
+							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NOT NULL OR " + replacement.toString()
+								+ ")");
+					} else if (toReplace.operatorSymbol().equalsIgnoreCase("=")) {
+						replacement = new JSql_QueryStringOverwrite( //
+							replacement, // The replacement query, in case is still needed
+							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR " + replacement.toString() + ")");
+					}
+				} else if (argObj instanceof Number) {
+					// Does special numeric handling
+					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+						+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+					);
+				} else if (argObj instanceof String) {
+					if (toReplace.operatorSymbol().equalsIgnoreCase("LIKE")) {
+						// Like operator maps to tVl
+						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+						);
+					} else {
+						// Else it maps to sVl, with applied limits
+						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+						);
+						// Update the argument with limits
+						queryArgMap.put(toReplace.argumentName(),
+							JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
+						
+						// 
+						// Special handling of != once again
+						// due to SQL quirk with NULL values
+						//
+						// `col != "value"`, is remapped as
+						// `col != "value" OR col IS NULL`
+						//
+						if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
+							replacement = new JSql_QueryStringOverwrite( //
+								replacement, // The replacement query, in case is still needed
+								"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR " + replacement.toString()
+									+ ")");
+						}
+					}
+				}
+				
+				// Unprocessed arg type
+				if (replacement == null) {
+					throw new RuntimeException("Unexpeced query argument (unknown type) : " + argObj);
 				}
 				
 				// Replaces old query with new rewritten query
@@ -1084,13 +1228,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 			
 			// Rewrite the query for dynamic table collumns
 			queryObj = dynamicTableQueryRewrite( //
-				queryObj, fieldQueryMap, queryArgMap,
-				objectKeyTableAliasMap, dynamicKeyNames
-			);
+				queryObj, fieldQueryMap, queryArgMap, //
+				objectKeyTableAliasMap, dynamicKeyNames //
+			); //
 
 			// Rewrite the query for fixed table collumns
-			for (String collumn : fixedKeyNames) {
-
+			if( fixedKeyNames.size() > 0 ) {
+				queryObj = fixedTableQueryRewrite( //
+					queryObj, fieldQueryMap, queryArgMap, //
+					objectKeyTableAliasMap, fixedKeyNames //
+				); //
 			}
 
 			//--------------------------------------------------------------------------
@@ -1103,9 +1250,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 			fullQueryArgs.addAll(queryObj.queryArgumentsList());
 		}
 		
-		//--------------------------------------------------------------------------
-		// Update the order by clauses collumn linkage
-		//--------------------------------------------------------------------------
+		//==========================================================================
+		//
+		// Rebuild the order clause, to use the respective
+		// joined views in place of the object key
+		//
+		//==========================================================================
 		if (orderByObj != null) {
 			// Rebuilt orderByStr
 			List<String> rebuiltOrderByList = new ArrayList<>();
@@ -1137,17 +1287,35 @@ public class JSql_DataObjectMap_QueryBuilder {
 						rebuiltOrderByList.add(stringOrderBy.toString());
 						continue;
 					}
-					
+
 					// Get the replacment table alias
 					String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
 					
-					// Lets update the numeric, and string order by settings
-					numericOrderBy.replaceKeyName(collumn, collumnTableAlias + ".nVl");
-					stringOrderBy.replaceKeyName(collumn, collumnTableAlias + ".sVl");
-					
-					// Lets append the order by clauses
-					rebuiltOrderByList.add(numericOrderBy.toString());
-					rebuiltOrderByList.add(stringOrderBy.toString());
+					if ( fixedKeyNames.contains(collumn) ) {
+
+						// Fixed table order by remapping and rewrite
+						//------------------------------------------------
+
+						// Get the fixed collumn name
+						String fixedTableName = getFixedTableNameFromAlias(collumnTableAlias);
+						String fixedTableCollumnName = getFixedTableCollumnName(fixedTableName, collumn);
+
+						stringOrderBy.replaceKeyName(collumn, collumnTableAlias + "." + fixedTableCollumnName);
+						rebuiltOrderByList.add(stringOrderBy.toString());
+
+					} else {
+
+						// Dynamic table order by remapping and rewrite
+						//------------------------------------------------
+
+						// Lets update the numeric, and string order by settings
+						numericOrderBy.replaceKeyName(collumn, collumnTableAlias + ".nVl");
+						stringOrderBy.replaceKeyName(collumn, collumnTableAlias + ".sVl");
+						
+						// Lets append the order by clauses
+						rebuiltOrderByList.add(numericOrderBy.toString());
+						rebuiltOrderByList.add(stringOrderBy.toString());
+					}
 				}
 			}
 			
