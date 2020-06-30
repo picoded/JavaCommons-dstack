@@ -627,7 +627,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private MutablePair<StringBuilder, List<Object>> innerJoinBuilder(List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
+	private MutablePair<StringBuilder, List<Object>> dynamicTableJoinBuilder(List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
 
 		// Settings needed from main DataObjectMap
 		String primaryKeyTable  = dataMap.primaryKeyTable;
@@ -841,9 +841,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Generate alias mapping of the various object keys
 		Map<String, String> objectKeyTableAliasMap = generateCollumnTableAliasMap(dynamicKeyNames, fixedKeyNames);
 		
-		//--------------------------------------------------------------------------
+		//==========================================================================
+		//
 		// Build the complex inner join table
-		//--------------------------------------------------------------------------
+		//
+		//==========================================================================
 		
 		// Final query string builder and arguments
 		StringBuilder fullQuery = new StringBuilder();
@@ -853,7 +855,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
 		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = innerJoinBuilder(dynamicKeyNames, keysWhichMustHandleNullValues);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = dynamicTableJoinBuilder(dynamicKeyNames, keysWhichMustHandleNullValues);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
@@ -863,9 +865,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Rebuild the query clauses collumn linkage
 		//--------------------------------------------------------------------------
 		if (queryObj != null) {
-			
-			// [old dead code] Gets the new index position to add new arguments if needed
-			// int newQueryArgsPos = queryArgMap.size() + 1;
 			
 			// Lets iterate through the collumn names
 			for (String collumn : rawWhereClauseCollumns) {
