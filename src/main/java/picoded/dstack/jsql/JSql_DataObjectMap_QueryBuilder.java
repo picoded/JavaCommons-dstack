@@ -499,6 +499,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 				
 				for (Query subQuery : toReplaceQueries) {
 					// Check for inequality condition, where NULL must be supported
+					// @TODO consider optimizing != null handling
 					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
 						keysWhichMustHandleNullValues.add(collumn);
 						break;
@@ -537,6 +538,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 				// Check for inequality condition, where NULL must be supported
 				for (Query subQuery : toReplaceQueries) {
 					// Check for inequality condition, where NULL must be supported
+					// @TODO consider optimizing != null handling
 					if (subQuery.operatorSymbol().equalsIgnoreCase("!=")) {
 						keysWhichMustHandleNullValues.add(collumn);
 						break;
@@ -616,17 +618,19 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * Lets build the core inner join query string, 
 	 * given the required filtered collumn names.
 	 * 
+	 * This is appended to the "SELECT DP.oID FROM" statement
+	 * 
 	 * Its expected result without any collumns provided would be
 	 * 
 	 * ```
-	 * (SELECT oID FROM DP_TABLENAME) AS DP
+	 * DP_TABLENAME AS DP
 	 * ```
 	 * 
 	 * Alternatively, if collumn names are provided (as part of the WHERE / ORDER BY clause),
 	 * it will generate an additional inner join line
 	 * 
 	 * ```
-	 * (SELECT oID FROM DP_TABLENAME) AS DP
+	 * DP_TABLENAME AS DP
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="softDelete") AS D0 ON (DP.oID = D0.oID)
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="sourceOfLead") AS D1 ON (DP.oID = D1.oID)
 	 * ```
@@ -646,8 +650,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
 		
-		// oID collumn first
-		queryStr.append("(SELECT oID FROM ").append(primaryKeyTable).append(") AS DP \n");
+		// Add table name to join from first
+		queryStr.append(primaryKeyTable).append(" AS DP \n");
 		
 		// No collumns required (fast ending)
 		if (collumns == null || collumns.size() <= 0) {
