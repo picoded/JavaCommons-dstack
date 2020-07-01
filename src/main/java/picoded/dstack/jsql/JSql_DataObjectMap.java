@@ -414,7 +414,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * @return  nothing
 	 **/
-	public void DataObjectRemoteDataMap_remove(String oid) {
+	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
 		queryBuilder.jSqlObjectMapRemove(_oid);
 	}
