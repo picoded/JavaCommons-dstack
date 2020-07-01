@@ -315,8 +315,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Join the oid collumn for the resepctive tables
 		for (String tableName : fixedTableNames) {
 			queryStr.append("UNION \n");
-			queryStr.append("SELECT '").append(getFixedTableCollumnName(tableName, "_oid"));
-			queryStr.append("' AS oID FROM ").append(tableName).append(" \n");
+			queryStr.append("SELECT ").append(getFixedTableCollumnName(tableName, "_oid"));
+			queryStr.append(" AS oID FROM ").append(tableName).append(" \n");
 		}
 		
 		// Row count would require a nested query of the oID,
@@ -763,7 +763,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 
 			// OK - assume the current table needs to be include, build the query
 			queryStr.append("LEFT JOIN ").append(tableName); //
-			queryStr.append(" AS F"+i+" ON DP.oID = F0."+getFixedTableCollumnName(tableName, "oID") ); //
+			queryStr.append(" AS F"+i+" ON DP.oID = F0."+getFixedTableCollumnName(tableName, "_oid") ); //
 			queryStr.append("\n");
 		}
 
@@ -1008,7 +1008,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 						);
 						// Update the argument with limits
 						queryArgMap.put(toReplace.argumentName(),
-							JSql_DataObjectMapUtil.shortenStringValue(argObj.toString()));
+							argObj.toString());
 						
 						// 
 						// Special handling of != once again
