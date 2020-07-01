@@ -315,7 +315,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Join the oid collumn for the resepctive tables
 		for (String tableName : fixedTableNames) {
 			queryStr.append("UNION \n");
-			queryStr.append("SELECT '").append(getFixedTableCollumnName(tableName, "oID"));
+			queryStr.append("SELECT '").append(getFixedTableCollumnName(tableName, "_oid"));
 			queryStr.append("' AS oID FROM ").append(tableName).append(" \n");
 		}
 		
@@ -1468,7 +1468,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// @TODO - optimize this down to a single SQL join query?
 		for(String tableName : fixedTableNameSet) {
 			// Get the oid collumn
-			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
 
 			// Query the fixed table
 			JSqlResult r = sql.select(tableName, "*", oidCollumn+"=?", new Object[] { _oid });
@@ -1552,11 +1552,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Lets process all the fixed table names
 		for(String tableName : fixedTableNameSet) {
 			// Get the oid collumn
-			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
 
 			// Insert key, and values
-			List<String> uniqueColumns = new ArrayList<>();
-			List<Object> uniqueValues = new ArrayList<>();
+			List<String> upsertColumns = new ArrayList<>();
+			List<Object> upsertValues = new ArrayList<>();
 
 			// Misc collumns (to avoid writting into)
 			List<String> miscColumns = new ArrayList<>();
@@ -1567,6 +1567,11 @@ public class JSql_DataObjectMap_QueryBuilder {
 			// Lets iterate each table key name
 			// and build the uniqueColumn/values
 			for(String tableKeyName : tableKeyNameSet) {
+				// Skip _oid or oID here
+				if( tableKeyName.equalsIgnoreCase("_oid") || tableKeyName.equalsIgnoreCase("oid") ) {
+					continue;
+				}
+
 				// Get the collumn name
 				String collumnName = getFixedTableCollumnName(tableName, tableKeyName);
 
@@ -1577,12 +1582,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 				}
 
 				// Key name is inside key list, this value needs to be set
-				uniqueColumns.add(collumnName);
-				uniqueValues.add(objMap.get(tableKeyName));
+				upsertColumns.add(collumnName);
+				upsertValues.add(objMap.get(tableKeyName));
 			}
 
 			// Lets skip the upsert if no data needs to be added
-			if( uniqueColumns.size() <= 0 ) {
+			if( upsertColumns.size() <= 0 ) {
 				continue;
 			}
 
@@ -1594,8 +1599,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 				new String[] { oidCollumn },
 				new Object[] { _oid },
 				// Upsert collumn and values
-				uniqueColumns.toArray(EmptyArray.STRING),
-				uniqueValues.toArray(EmptyArray.OBJECT),
+				upsertColumns.toArray(EmptyArray.STRING),
+				upsertValues.toArray(EmptyArray.OBJECT),
 				// Default collumn and values
 				null, null,
 				// Misc collumns

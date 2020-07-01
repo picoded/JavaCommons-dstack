@@ -34,7 +34,7 @@ import picoded.core.conv.ListValueConv;
  *       "SQL_TABLE_NAME": {
  *          // An _oid collumn is required for every fixed table
  *          // as this will glue the various tables together
- *          "oID": {
+ *          "_oid": {
  *              // Collumn name for oid is to be provided
  * 				"name": "oID",
  *              // Disable primary key join for this table.
@@ -420,6 +420,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		
 		// Delete the parent key
 		sqlObj.delete(primaryKeyTable, "oID = ?", new Object[] { oid });
+
+		// @TODO - remove from fixed table
 	}
 	
 	/**
