@@ -1468,7 +1468,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// @TODO - optimize this down to a single SQL join query?
 		for(String tableName : fixedTableNameSet) {
 			// Get the oid collumn
-			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
 
 			// Query the fixed table
 			JSqlResult r = sql.select(tableName, "*", oidCollumn+"=?", new Object[] { _oid });
@@ -1552,7 +1552,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Lets process all the fixed table names
 		for(String tableName : fixedTableNameSet) {
 			// Get the oid collumn
-			String oidCollumn = getFixedTableCollumnName(tableName, "oID");
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
 
 			// Insert key, and values
 			List<String> uniqueColumns = new ArrayList<>();
