@@ -319,7 +319,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 			queryStr.append("' AS oID FROM ").append(tableName).append(" \n");
 		}
 		
-		
 		// Row count would require a nested query of the oID,
 		// to be wrapped with the row count clause
 		if( isRcount ) {
@@ -623,14 +622,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * Its expected result without any collumns provided would be
 	 * 
 	 * ```
-	 * DP_TABLENAME AS DP
 	 * ```
 	 * 
 	 * Alternatively, if collumn names are provided (as part of the WHERE / ORDER BY clause),
 	 * it will generate an additional inner join line
 	 * 
 	 * ```
-	 * DP_TABLENAME AS DP
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="softDelete") AS D0 ON (DP.oID = D0.oID)
 	 * INNER JOIN (SELECT oID, nVl, sVl, tVl FROM DD_TABLENAME WHERE kID="sourceOfLead") AS D1 ON (DP.oID = D1.oID)
 	 * ```
@@ -651,7 +648,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		List<Object> queryArg = new ArrayList<>();
 		
 		// Add table name to join from first
-		queryStr.append(primaryKeyTable).append(" AS DP \n");
+		// queryStr.append(primaryKeyTable).append(" AS DP \n");
 		
 		// No collumns required (fast ending)
 		if (collumns == null || collumns.size() <= 0) {
@@ -719,8 +716,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * it will generate an additional outer join line
 	 * 
 	 * ```
-	 * OUTER JOIN FIXED_TABLE_A AS F0 ON DP.oID = F0.oID
-	 * OUTER JOIN FIXED_TABLE_B AS F1 ON DP.oID = F1.oID
+	 * LEFT JOIN FIXED_TABLE_A AS F0 ON DP.oID = F0.oID
+	 * LEFT JOIN FIXED_TABLE_B AS F1 ON DP.oID = F1.oID
 	 * ```
 	 * 
 	 * @param  collumns that is needed, in the given order
@@ -765,7 +762,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			}
 
 			// OK - assume the current table needs to be include, build the query
-			queryStr.append("OUTER JOIN ").append(tableName); //
+			queryStr.append("LEFT JOIN ").append(tableName); //
 			queryStr.append(" AS F"+i+" ON DP.oID = F0."+getFixedTableCollumnName(tableName, "oID") ); //
 			queryStr.append("\n");
 		}
@@ -1205,7 +1202,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// The select clause
 		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
-		
+		fullQuery.append("(").append(primaryKeyQueryBuilder(false)).append(") AS DP \n");
+
 		// the inner join 
 		MutablePair<StringBuilder, List<Object>> innerJoinPair = dynamicTableJoinBuilder(dynamicKeyNames, keysWhichMustHandleNullValues);
 		
