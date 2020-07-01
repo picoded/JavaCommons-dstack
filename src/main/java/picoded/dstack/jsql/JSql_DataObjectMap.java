@@ -416,12 +416,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
 		// Delete the data
-		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { oid });
-		
-		// Delete the parent key
-		sqlObj.delete(primaryKeyTable, "oID = ?", new Object[] { oid });
-
-		// @TODO - remove from fixed table
+		queryBuilder.jSqlObjectMapRemove(_oid);
 	}
 	
 	/**

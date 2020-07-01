@@ -1641,4 +1641,44 @@ public class JSql_DataObjectMap_QueryBuilder {
 		fixedTableUpdate(_oid, objMap, fixedKeyNames);
 	}
 	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Remove/Delete command support
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Delete/Remove configured
+	 *
+	 * @param {String} _oid - object id to delete
+	 **/
+	public void jSqlObjectMapRemove( String _oid ) {
+		// Settings needed from main DataObjectMap
+		JSql   sql              = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable; 
+
+		// Delete the data from dynamic table
+		//--------------------------------------------------------------------
+		sql.delete(dataMap.dataStorageTable, "oID = ?", new Object[] { _oid });
+		
+		// Delete the data from the fixed table
+		//--------------------------------------------------------------------
+
+		// Get fixed table name set
+		List<String> fixedTableNameSet = getFixedTableNameList();
+		
+		// Lets process all the fixed table names
+		for(String tableName : fixedTableNameSet) {
+			// Get the oid collumn
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
+
+			// And call the delete
+			sql.delete(tableName, oidCollumn+" = ?", new Object[] { _oid });
+		}
+
+		// Delete the parent key
+		//--------------------------------------------------------------------
+		sql.delete(dataMap.primaryKeyTable, "oID = ?", new Object[] { _oid });
+	}
+	
 }
