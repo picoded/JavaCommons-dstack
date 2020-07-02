@@ -1,99 +1,171 @@
 package picoded.dstack.jsql;
 
-import org.junit.Test;
 // Target test class
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 // Test Case include
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import picoded.core.conv.ConvertJSON;
+import picoded.core.conv.GUID;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertMap;
 // Test depends
-import picoded.dstack.*;
-import picoded.dstack.jsql.*;
-import picoded.dstack.connector.jsql.*;
-import picoded.dstack.struct.simple.*;
+import picoded.dstack.DataObject;
+import picoded.dstack.DataObjectMap;
+import picoded.dstack.connector.jsql.JSql;
 
 public class JSql_DataObjectMapHybrid_test {
-	
+
 	// To override for implementation
-	//-----------------------------------------------------
-	
+	// -----------------------------------------------------
+	JSql jsql;
+
 	/// Note that this SQL connector constructor
 	/// is to be overriden for the various backend
 	/// specific test cases
 	public JSql jsqlConnection() {
-		return JSqlTestConnection.mysql();
+		if (jsql != null) {
+			return jsql;
+		}
+		jsql = JSqlTestConnection.sqlite();
+		return jsql;
 	}
-    
-    private DataObjectMap mtObj;
-	
+
+	private DataObjectMap mtObj;
+	String fixedTableName;
+
 	/// Impomentation constructor for SQL
 	public DataObjectMap implementationConstructor() {
-        
-		GenericConvertMap<String, Object> kycForm = new GenericConvertHashMap<>();
+		GenericConvertMap<String, Object> dataObjectMap = new GenericConvertHashMap<>();
 		GenericConvertMap<String, Object> fixedTableMap = new GenericConvertHashMap<>();
-		Map<String, Object> relPep = new HashMap<>();
+		Map<String, Object> fixedTable = new HashMap<>();
 		Map<String, Object> oid = new HashMap<>();
-		oid.put("name", "_OID");
-		relPep.put("_oid", oid);
-		relPep.put("KYC_PDF_OID", "VARCHAR(24)");
-		relPep.put("FULL_NAME", "VARCHAR(256)");
-		relPep.put("NRIC", "VARCHAR(32)");
-		relPep.put("OCCUPATION", "VARCHAR(256)");
-		relPep.put("NAME_OF_EMPLOYER", "VARCHAR(256)");
-		fixedTableMap.put("REL_PEP", relPep);
-		kycForm.put("fixedTableMap", fixedTableMap);
-		return new JSql_DataObjectMap(jsqlConnection(), JSqlTestConfig.randomTablePrefix(), kycForm);
-    }
-    
-    public void populateDatabase() {
-        
-    }
-    
-    @Before
-    public void setup(){
+		oid.put("name", "OID");
+		fixedTable.put("_oid", oid);
+		fixedTable.put("FULL_NAME", "VARCHAR(256)");
+		fixedTable.put("NRIC", "VARCHAR(32)");
+		fixedTable.put("OCCUPATION", "VARCHAR(256)");
+		fixedTableMap.put(fixedTableName, fixedTable);
+		dataObjectMap.put("fixedTableMap", fixedTableMap);
+		return new JSql_DataObjectMap(jsqlConnection(), JSqlTestConfig.randomTablePrefix(), dataObjectMap);
+	}
+
+	public void createDatabase() {
+		jsqlConnection().createTable( //
+				fixedTableName, //
+				new String[] { //
+						// Primary key, as classic int, this is used to lower SQL
+						// fragmentation level, and index memory usage. And is not accessible.
+						// Sharding and uniqueness of system is still maintained by GUID's
+						"pKy", //
+						// Time stamps
+						"cTm", // value created time
+						"uTm", // value updated time
+						"eTm", // value expire time (for future use)
+						// Object keys
+						"oID", // _oid
+						"full_name", // key storage
+						"nric", // index collumn
+						"occupation" // type collumn
+				}, //
+				new String[] { //
+						"BIGINT PRIMARY KEY AUTOINCREMENT", // Primary key
+						// Time stamps
+						"BIGINT", //
+						"BIGINT", //
+						"BIGINT", //
+						// Object keys
+						"VARCHAR(64)", //
+						"VARCHAR(256)", //
+						"VARCHAR(32)", //
+						"VARCHAR(256)", //
+				} //
+		);
+	}
+
+	public List<String> populatedOID;
+
+	public void populateDatabase() {
+		populatedOID = new ArrayList<>();
+
+		// Prepare the large multiUpsert values
+		List<Object[]> uniqueValuesList = new ArrayList<Object[]>();
+		List<Object[]> insertValuesList = new ArrayList<Object[]>();
+		List<Object[]> defaultValuesList = new ArrayList<Object[]>();
+
+		for (int i = 0; i < 5; i++) {
+			String oid = GUID.base58();
+			// Setup the multiUpsert
+			uniqueValuesList.add(new Object[] { oid });
+			insertValuesList.add(new Object[] { "Testing " + i, RandomStringUtils.randomAlphanumeric(32),
+					RandomStringUtils.randomAlphanumeric(60) });
+			defaultValuesList.add(new Object[] { System.currentTimeMillis() });
+			populatedOID.add(oid);
+		}
+
+		// Insert into tables
+		jsqlConnection().multiUpsert(fixedTableName, // Table name to upsert on
+				// "pKy" is auto generated by SQL db
+				new String[] { "oID" }, // The unique column names
+				uniqueValuesList, // The row unique identifier values
+				// Value / Text / Raw storage + Updated / Expire time stamp
+				new String[] { "full_name", "nric", "occupation" }, //
+				insertValuesList, //
+				// Created timestamp setup
+				new String[] { "cTm" }, //
+				defaultValuesList, //
+				null // The only misc col, is pKy, which is being handled by DB
+		);
+	}
+
+	@Before
+	public void setup() {
+		fixedTableName = JSqlTestConfig.randomTablePrefix();
+		createDatabase();
+		populateDatabase();
 		mtObj = implementationConstructor();
 		mtObj.systemSetup();
-    }
-    
-    @After
-    public void destroy() {
+	}
+
+	@After
+	public void destroy() {
 		if (mtObj != null) {
 			mtObj.systemDestroy();
 		}
-        mtObj = null;
-    }
-    
-    @Test
-    public void retrieveValidObjectShouldPass() {
-        
-		DataObject obj = mtObj.get("T27hNr92dzCcZWgw9pXBva");
+		mtObj = null;
+
+		if (jsql != null) {
+			jsql.close();
+		}
+	}
+
+	@Test
+	public void retrieveValidObjectShouldPass() {
+		String oid = populatedOID.get(RandomUtils.nextInt(0, populatedOID.size()));
+		DataObject obj = mtObj.get(oid);
 		assertNotNull(obj);
-		System.out.println(ConvertJSON.fromObject(obj));
-    }
-    
-    @Test
-    public void hybridTest() {
-        
-		DataObject[] objs= mtObj.query("FULL_NAME = ? ", new Object[]{"New Test Client"});
-		
-		System.out.println(ConvertJSON.fromObject(objs));
+		assertEquals(oid, obj._oid());
+	}
+
+	@Test
+	public void hybridTest() {
+		int number = RandomUtils.nextInt(0, populatedOID.size());
+		DataObject[] objs = mtObj.query("FULL_NAME = ? ", new Object[] { "Testing " + number });
+
 		assertNotNull(objs);
-    }
-    
-    // @TODO: Delete, Put, Update, List
+		assertEquals(1, objs.length);
+		assertEquals("Testing " + number, objs[0].get("FULL_NAME"));
+	}
+
+	// @TODO: Delete, Put, Update, List
 }
