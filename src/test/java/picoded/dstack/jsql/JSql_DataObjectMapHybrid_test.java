@@ -2,7 +2,10 @@ package picoded.dstack.jsql;
 
 // Target test class
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GUID;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertMap;
@@ -112,6 +116,13 @@ public class JSql_DataObjectMapHybrid_test {
 			defaultValuesList.add(new Object[] { System.currentTimeMillis() });
 			populatedOID.add(oid);
 		}
+		
+		// Insert a row that is not Testing
+		String random_name = RandomStringUtils.randomAlphanumeric(32);
+		uniqueValuesList.add(new Object[] { GUID.base58() });
+		insertValuesList.add(new Object[] { random_name, RandomStringUtils.randomAlphanumeric(32),
+				RandomStringUtils.randomAlphanumeric(60) });
+		defaultValuesList.add(new Object[] { System.currentTimeMillis() });
 
 		// Insert into tables
 		jsqlConnection().multiUpsert(fixedTableName, // Table name to upsert on
@@ -156,9 +167,15 @@ public class JSql_DataObjectMapHybrid_test {
 		assertNotNull(obj);
 		assertEquals(oid, obj._oid());
 	}
+	
+	@Test
+	public void retrieveInvalidObjectShouldReturnNull() {
+		DataObject obj = mtObj.get(RandomStringUtils.randomAlphanumeric(32));
+		assertNull(obj);
+	}
 
 	@Test
-	public void hybridTest() {
+	public void queryValidObjectShouldReturnResult() {
 		int number = RandomUtils.nextInt(0, populatedOID.size());
 		DataObject[] objs = mtObj.query("FULL_NAME = ? ", new Object[] { "Testing " + number });
 
@@ -166,6 +183,90 @@ public class JSql_DataObjectMapHybrid_test {
 		assertEquals(1, objs.length);
 		assertEquals("Testing " + number, objs[0].get("FULL_NAME"));
 	}
+	
+	@Test
+	public void queryInvalidObjectShouldReturnNothing() {
+		DataObject[] objs = mtObj.query("FULL_NAME = ? ", new Object[] { RandomStringUtils.randomAlphanumeric(32) });
 
-	// @TODO: Delete, Put, Update, List
+		assertNotNull(objs);
+		assertEquals(0, objs.length);
+	}
+	
+	@Test
+	public void deleteValidObjectShouldPass() {
+		String oid = populatedOID.get(RandomUtils.nextInt(0, populatedOID.size()));
+		
+		DataObject beforeDelete = mtObj.get(oid);
+		assertNotNull(beforeDelete);
+		assertEquals(oid, beforeDelete._oid());
+		
+		// Remove
+		mtObj.remove(oid);
+		
+		// Check that it is gone
+		DataObject nonExistence = mtObj.get(oid);
+		assertNull(nonExistence);
+	}
+	
+	@Test
+	public void createNewObjectInHybridShouldPass() {
+		GenericConvertMap<String, Object> properties = new GenericConvertHashMap<>();
+		properties.put("full_name", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("nric", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("occupation", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("random_attribute", RandomStringUtils.randomAlphanumeric(32));
+		DataObject newObj = mtObj.newEntry(properties);
+		newObj.saveAll();
+		
+		// grab and verify
+		DataObject created = mtObj.get(newObj._oid());
+		assertEquals(newObj._oid(), created._oid());
+		assertEquals(properties.getString("full_name"), created.getString("full_name"));
+		assertEquals(properties.getString("nric"), created.getString("nric"));
+		assertEquals(properties.getString("occupation"), created.getString("occupation"));
+		assertEquals(properties.getString("random_attribute"), created.getString("random_attribute"));
+	}
+	
+	@Test
+	public void updateExistingObjectShouldBeSuccessful() {
+		GenericConvertMap<String, Object> properties = new GenericConvertHashMap<>();
+		properties.put("full_name", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("nric", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("occupation", RandomStringUtils.randomAlphanumeric(32));
+		properties.put("random_attribute", RandomStringUtils.randomAlphanumeric(32));
+		
+		
+		String oid = populatedOID.get(RandomUtils.nextInt(0, populatedOID.size()));
+		
+		DataObject currentObj = mtObj.get(oid);
+		
+		assertEquals(oid, currentObj._oid());
+		assertNotEquals(properties.getString("full_name"), currentObj.getString("full_name"));
+		assertNotEquals(properties.getString("nric"), currentObj.getString("nric"));
+		assertNotEquals(properties.getString("occupation"), currentObj.getString("occupation"));
+		assertNotEquals(properties.getString("random_attribute"), currentObj.getString("random_attribute"));
+		
+		// Update it and save it
+		currentObj.putAll(properties);
+		currentObj.saveDelta();
+		
+		// grab and verify
+		DataObject updatedObj = mtObj.get(oid);
+		assertEquals(currentObj._oid(), updatedObj._oid());
+		assertEquals(properties.getString("full_name"), updatedObj.getString("full_name"));
+		assertEquals(properties.getString("nric"), updatedObj.getString("nric"));
+		assertEquals(properties.getString("occupation"), updatedObj.getString("occupation"));
+		assertEquals(properties.getString("random_attribute"), updatedObj.getString("random_attribute"));
+	}
+	
+	@Test
+	public void listingDataObjectWithSimilarShouldReturn() {
+		DataObject[] objs = mtObj.query("FULL_NAME LIKE ? ", new Object[] { "%Testing%" });
+
+		assertNotNull(objs);
+		assertEquals(5, objs.length);
+		for (DataObject obj : objs) {
+			assertTrue(obj.getString("FULL_NAME").startsWith("Testing "));
+		}
+	}
 }
