@@ -4,6 +4,7 @@ import java.util.logging.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -33,7 +34,7 @@ import picoded.core.conv.ListValueConv;
  *       "SQL_TABLE_NAME": {
  *          // An _oid collumn is required for every fixed table
  *          // as this will glue the various tables together
- *          "oID": {
+ *          "_oid": {
  *              // Collumn name for oid is to be provided
  * 				"name": "oID",
  *              // Disable primary key join for this table.
@@ -128,6 +129,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			configMap = new GenericConvertHashMap<>();
 		}
 		
+		// Note as this depends on the config and the above to be
+		// initialized first - this is done last
 		queryBuilder = new JSql_DataObjectMap_QueryBuilder(this);
 	}
 	
@@ -411,20 +414,17 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	 *
 	 * @return  nothing
 	 **/
-	public void DataObjectRemoteDataMap_remove(String oid) {
+	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
-		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { oid });
-		
-		// Delete the parent key
-		sqlObj.delete(primaryKeyTable, "oID = ?", new Object[] { oid });
+		queryBuilder.jSqlObjectMapRemove(_oid);
 	}
 	
 	/**
 	 * Gets the complete remote data map, for DataObject.
-	 * Returns null if not exists
+	 * @returns null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		return JSql_DataObjectMapUtil.jSqlObjectMapFetch(sqlObj, dataStorageTable, _oid, null);
+		return queryBuilder.jSqlObjectMapFetch(_oid, null);
 	}
 	
 	/**
@@ -450,7 +450,7 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 			);
 		
 		// Does the data append
-		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sqlObj, dataStorageTable, _oid, fullMap, keys);
+		queryBuilder.jSqlObjectMapUpdate(_oid, fullMap, keys);
 	}
 	
 	//--------------------------------------------------------------------------

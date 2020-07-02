@@ -57,7 +57,12 @@ public class JSqlStack extends CoreStack {
 	protected Core_DataStructure initDataStructure(String name, String type) {
 		// Initialize for the respective type
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			return new JSql_DataObjectMap(conn, name);
+			// Get the respective config
+			GenericConvertMap<String, Object> dataObjectMapConfig = config.fetchGenericConvertStringMap("dataObjectMap", "{}");
+			GenericConvertMap<String, Object> tableConfig = dataObjectMapConfig.fetchGenericConvertStringMap( name );
+
+			// Initialize with (or without) config
+			return new JSql_DataObjectMap(conn, name, tableConfig);
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
 			return new JSql_KeyValueMap(conn, name);
