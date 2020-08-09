@@ -3,7 +3,7 @@ package picoded.dstack.connector.hazelcast;
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
 import com.hazelcast.client.config.*;
-import com.hazelcast.client.HazelcastClient;
+// import com.hazelcast.client.HazelcastClient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -190,39 +190,43 @@ public class HazelcastConnector {
 	 */
 	protected static HazelcastInstance initializeServerInstanceFromConfig(String groupName,
 		GenericConvertMap<String, Object> configMap) {
-		// Initialize the config 
-		Config cfg = new Config();
 		
-		// Initialize the common group config 
-		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
+		// WIP 4.0 rewrite
+		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// Get network settings
-		NetworkConfig network = cfg.getNetworkConfig();
-		JoinConfig join = network.getJoin();
+		// // Initialize the config 
+		// Config cfg = new Config();
 		
-		// Get the port, and auto increment settings
-		network.setPort(configMap.getInt("port", 5701));
-		network.setPortAutoIncrement(configMap.getBoolean("portAutoIncrement", true));
+		// // Initialize the common group config 
+		// setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
 		
-		// Member TCP list, to setup
-		List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
-		if (memberTcpList != null && memberTcpList.size() > 0) {
-			join.getTcpIpConfig().setMembers(memberTcpList).setEnabled(true);
-			join.getMulticastConfig().setEnabled(false); // Disables multicast, cannot be used with TCP
-		} else {
-			// Falls back to multicast mode
-			join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
-		}
+		// // Get network settings
+		// NetworkConfig network = cfg.getNetworkConfig();
+		// JoinConfig join = network.getJoin();
 		
-		// @TODO - consider configuring the network binding addresses
-		// //this sets the allowed connections to the cluster? necessary for multicast, too?
-		// network.getInterfaces().setEnabled(true).addInterface("192.168.0.*");
+		// // Get the port, and auto increment settings
+		// network.setPort(configMap.getInt("port", 5701));
+		// network.setPortAutoIncrement(configMap.getBoolean("portAutoIncrement", true));
 		
-		// @TODO - consider minimum cluster size support
-		// config.setProperty("hazelcast.initial.min.cluster.size","3");
+		// // Member TCP list, to setup
+		// List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
+		// if (memberTcpList != null && memberTcpList.size() > 0) {
+		// 	join.getTcpIpConfig().setMembers(memberTcpList).setEnabled(true);
+		// 	join.getMulticastConfig().setEnabled(false); // Disables multicast, cannot be used with TCP
+		// } else {
+		// 	// Falls back to multicast mode
+		// 	join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
+		// }
 		
-		// Intialize the server instance and return 
-		return Hazelcast.newHazelcastInstance(cfg);
+		// // @TODO - consider configuring the network binding addresses
+		// // //this sets the allowed connections to the cluster? necessary for multicast, too?
+		// // network.getInterfaces().setEnabled(true).addInterface("192.168.0.*");
+		
+		// // @TODO - consider minimum cluster size support
+		// // config.setProperty("hazelcast.initial.min.cluster.size","3");
+		
+		// // Intialize the server instance and return 
+		// return Hazelcast.newHazelcastInstance(cfg);
 	}
 	
 	/**
@@ -235,44 +239,48 @@ public class HazelcastConnector {
 	 */
 	protected static HazelcastInstance initializeClientInstanceFromConfig(String groupName,
 		GenericConvertMap<String, Object> configMap) {
-		// Initialize the config 
-		ClientConfig cfg = new ClientConfig();
 		
-		// Initialize the common group config 
-		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
+		// WIP 4.0 rewrite
+		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// Get network settings
-		ClientNetworkConfig network = cfg.getNetworkConfig();
+		// // Initialize the config 
+		// ClientConfig cfg = new ClientConfig();
 		
-		// Member TCP list, to setup
-		List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
-		if (memberTcpList != null && memberTcpList.size() > 0) {
-			network.setAddresses(memberTcpList);
-		} else {
-			throw new IllegalArgumentException(
-				"Missing `memberTcpList` config for hazelcast client : " + groupName);
-		}
+		// // Initialize the common group config 
+		// setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
 		
-		// Intialize the server instance and return 
-		return HazelcastClient.newHazelcastClient(cfg);
+		// // Get network settings
+		// ClientNetworkConfig network = cfg.getNetworkConfig();
+		
+		// // Member TCP list, to setup
+		// List<String> memberTcpList = Arrays.asList(configMap.getStringArray("memberTcpList", "[]"));
+		// if (memberTcpList != null && memberTcpList.size() > 0) {
+		// 	network.setAddresses(memberTcpList);
+		// } else {
+		// 	throw new IllegalArgumentException(
+		// 		"Missing `memberTcpList` config for hazelcast client : " + groupName);
+		// }
+		
+		// // Intialize the server instance and return 
+		// return HazelcastClient.newHazelcastClient(cfg);
 	}
 	
-	/**
-	 * Setup the shared group config across both server / client mode
-	 * 
-	 * @param grpConfig configuration to setup
-	 * @param groupName group name for the cluster 
-	 * @param configMap configuration map to initialize the cluster with
-	 */
-	protected static void setupGroupConfig(GroupConfig grpConfig, String groupName,
-		GenericConvertMap<String, Object> configMap) {
-		// Setup grpConfig name
-		grpConfig.setName(groupName);
-		
-		// Configuring password if provided
-		String password = configMap.getString("password", null);
-		if (password != null && password.length() > 0) {
-			grpConfig.setPassword(password);
-		}
-	}
+	// /**
+	//  * Setup the shared group config across both server / client mode
+	//  * 
+	//  * @param grpConfig configuration to setup
+	//  * @param groupName group name for the cluster 
+	//  * @param configMap configuration map to initialize the cluster with
+	//  */
+	// protected static void setupGroupConfig(GroupConfig grpConfig, String groupName,
+	// 	GenericConvertMap<String, Object> configMap) {
+	// 	// Setup grpConfig name
+	// 	grpConfig.setName(groupName);
+	
+	// 	// Configuring password if provided
+	// 	String password = configMap.getString("password", null);
+	// 	if (password != null && password.length() > 0) {
+	// 		grpConfig.setPassword(password);
+	// 	}
+	// }
 }

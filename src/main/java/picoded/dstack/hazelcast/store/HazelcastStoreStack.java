@@ -13,7 +13,8 @@ import picoded.dstack.hazelcast.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
-import com.hazelcast.map.merge.LatestUpdateMapMergePolicy;
+
+// import com.hazelcast.map.merge.LatestUpdateMapMergePolicy;
 
 /**
  * In memory persistent storage for hazelcast, used this for data structures when caching in memory eviction is not desirec
@@ -42,32 +43,32 @@ public class HazelcastStoreStack extends HazelcastStack {
 	 */
 	protected void setupHazelcastMapConfig(MapConfig mConfig,
 		GenericConvertMap<String, Object> dataStructureConfig) {
-		//
-		// Lets tune storage for safe redundent stores
-		//
+		// //
+		// // Lets tune storage for safe redundent stores
+		// //
 		
-		// Lets configure the merge policy (latest update is default)
-		MergePolicyConfig mergePolicyConfig = new MergePolicyConfig()
-			.setPolicy("com.hazelcast.map.merge.LatestUpdateMapMergePolicy");
-		mConfig.setMergePolicyConfig(mergePolicyConfig);
+		// // Lets configure the merge policy (latest update is default)
+		// MergePolicyConfig mergePolicyConfig = new MergePolicyConfig()
+		// 	.setPolicy("com.hazelcast.map.merge.LatestUpdateMapMergePolicy");
+		// mConfig.setMergePolicyConfig(mergePolicyConfig);
 		
-		// Backup count
-		int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 2));
-		int asyncBackupCount = dataStructureConfig.getInt("asyncBackupCount",
-			config.getInt("asyncBackupCount", 0));
+		// // Backup count
+		// int backupCount = dataStructureConfig.getInt("backupCount", config.getInt("backupCount", 2));
+		// int asyncBackupCount = dataStructureConfig.getInt("asyncBackupCount",
+		// 	config.getInt("asyncBackupCount", 0));
 		
-		// Enable or disable readBackupData, default is true IF asyncBackupCount == 0
-		boolean readBackupData = dataStructureConfig.getBoolean("readBackupData",
-			config.getBoolean("readBackupData", asyncBackupCount == 0));
+		// // Enable or disable readBackupData, default is true IF asyncBackupCount == 0
+		// boolean readBackupData = dataStructureConfig.getBoolean("readBackupData",
+		// 	config.getBoolean("readBackupData", asyncBackupCount == 0));
 		
-		// Setup the respective configurations
-		mConfig.setBackupCount(backupCount);
-		mConfig.setAsyncBackupCount(asyncBackupCount);
-		mConfig.setReadBackupData(readBackupData);
+		// // Setup the respective configurations
+		// mConfig.setBackupCount(backupCount);
+		// mConfig.setAsyncBackupCount(asyncBackupCount);
+		// mConfig.setReadBackupData(readBackupData);
 		
-		//------------------------------------------------------------------------------------
-		// NOTE: Map eviction policy is NONE by default, so nothing needs to be done
-		// see: https://docs.hazelcast.org/docs/3.3-RC3/manual/html/map-eviction.html
-		//------------------------------------------------------------------------------------
+		// //------------------------------------------------------------------------------------
+		// // NOTE: Map eviction policy is NONE by default, so nothing needs to be done
+		// // see: https://docs.hazelcast.org/docs/3.3-RC3/manual/html/map-eviction.html
+		// //------------------------------------------------------------------------------------
 	}
 }

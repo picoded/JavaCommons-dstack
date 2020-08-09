@@ -23,10 +23,10 @@ import picoded.dstack.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
-import com.hazelcast.map.eviction.LRUEvictionPolicy;
-import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.query.extractor.ValueCollector;
-import com.hazelcast.query.extractor.ValueExtractor;
+import com.hazelcast.map.*;
+// import com.hazelcast.query.SqlPredicate;
+// import com.hazelcast.query.extractor.ValueCollector;
+// import com.hazelcast.query.extractor.ValueExtractor;
 
 /**
  * Hazelcast implementation of DataObjectMap data structure.
@@ -196,39 +196,42 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	 **/
 	@Override
 	public void systemSetup() {
-		// Setup the map config
-		MapConfig mConfig = new MapConfig(name());
+		// WIP 4.0 rewrite
+		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// Setup name, backup and async backup count
-		mConfig.setName(name());
+		// // Setup the map config
+		// MapConfig mConfig = new MapConfig(name());
 		
-		// Setup the config based on the shared stack settings
-		if (hazelcastStack != null) {
-			hazelcastStack.setupHazelcastMapConfig(mConfig, configMap());
-		}
+		// // Setup name, backup and async backup count
+		// mConfig.setName(name());
 		
-		// Add in the default _oid
-		mConfig.addMapIndexConfig(new MapIndexConfig("self[_oid]", true));
+		// // Setup the config based on the shared stack settings
+		// if (hazelcastStack != null) {
+		// 	hazelcastStack.setupHazelcastMapConfig(mConfig, configMap());
+		// }
 		
-		// Enable query index for specific fields
-		String[] indexArray = configMap().getStringArray("index", "[]");
-		for (String indexName : indexArray) {
-			// Skip _oid index, as its always defined
-			if (indexName.equals("_oid")) {
-				continue;
-			}
-			// Various collumn specific indexes
-			mConfig.addMapIndexConfig(new MapIndexConfig("self[" + StringEscape.encodeURI(indexName)
-				+ "]", true));
-		}
+		// // Add in the default _oid
+		// mConfig.addMapIndexConfig(new MapIndexConfig("self[_oid]", true));
 		
-		// Setup value extractor for `self` attribute
-		mConfig.addMapAttributeConfig(new MapAttributeConfig("self",
-			"picoded.dstack.hazelcast.core.HazelcastStorageExtractor"));
+		// // Enable query index for specific fields
+		// String[] indexArray = configMap().getStringArray("index", "[]");
+		// for (String indexName : indexArray) {
+		// 	// Skip _oid index, as its always defined
+		// 	if (indexName.equals("_oid")) {
+		// 		continue;
+		// 	}
+		// 	// Various collumn specific indexes
+		// 	mConfig.addMapIndexConfig(new MapIndexConfig("self[" + StringEscape.encodeURI(indexName)
+		// 		+ "]", true));
+		// }
 		
-		// and apply it to the instance
-		// see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
-		hazelcast.getConfig().addMapConfig(mConfig);
+		// // Setup value extractor for `self` attribute
+		// mConfig.addMapAttributeConfig(new MapAttributeConfig("self",
+		// 	"picoded.dstack.hazelcast.core.HazelcastStorageExtractor"));
+		
+		// // and apply it to the instance
+		// // see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
+		// hazelcast.getConfig().addMapConfig(mConfig);
 	}
 	
 	/**
@@ -311,40 +314,43 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return  The String[] array
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
-		// The return list of DataObjects
-		List<DataObject> retList = null;
+		// WIP 4.0 rewrite
+		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// Setup the query, if needed
-		if (queryClause == null) {
-			// Null gets all
-			retList = new ArrayList<DataObject>(this.values());
-		} else {
-			// Converts query to sqlPredicate query
-			SqlPredicate sqlQuery = new SqlPredicate(queryStringify(queryClause));
-			
-			// Get the list of _oid that passes the query
-			Set<String> idSet = backendIMap().keySet(sqlQuery);
-			String[] idArr = idSet.toArray(new String[0]);
-			
-			// DataObject[] from idArr
-			DataObject[] doArr = getArrayFromID(idArr, true);
-			
-			// Converts to a list
-			retList = new ArrayList(Arrays.asList(doArr));
-		}
+		// // The return list of DataObjects
+		// List<DataObject> retList = null;
 		
-		// Sort, offset, convert to array, and return
-		retList = sortAndOffsetList(retList, orderByStr, offset, limit);
+		// // Setup the query, if needed
+		// if (queryClause == null) {
+		// 	// Null gets all
+		// 	retList = new ArrayList<DataObject>(this.values());
+		// } else {
+		// 	// Converts query to sqlPredicate query
+		// 	SqlPredicate sqlQuery = new SqlPredicate(queryStringify(queryClause));
 		
-		// Prepare the actual return string array
-		int retLength = retList.size();
-		String[] ret = new String[retLength];
-		for (int a = 0; a < retLength; ++a) {
-			ret[a] = retList.get(a)._oid();
-		}
+		// 	// Get the list of _oid that passes the query
+		// 	Set<String> idSet = backendIMap().keySet(sqlQuery);
+		// 	String[] idArr = idSet.toArray(new String[0]);
 		
-		// Returns sorted array of strings
-		return ret;
+		// 	// DataObject[] from idArr
+		// 	DataObject[] doArr = getArrayFromID(idArr, true);
+		
+		// 	// Converts to a list
+		// 	retList = new ArrayList(Arrays.asList(doArr));
+		// }
+		
+		// // Sort, offset, convert to array, and return
+		// retList = sortAndOffsetList(retList, orderByStr, offset, limit);
+		
+		// // Prepare the actual return string array
+		// int retLength = retList.size();
+		// String[] ret = new String[retLength];
+		// for (int a = 0; a < retLength; ++a) {
+		// 	ret[a] = retList.get(a)._oid();
+		// }
+		
+		// // Returns sorted array of strings
+		// return ret;
 	}
 	
 }
