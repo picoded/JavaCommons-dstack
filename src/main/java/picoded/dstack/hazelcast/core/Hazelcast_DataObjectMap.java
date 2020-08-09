@@ -24,9 +24,6 @@ import picoded.dstack.core.*;
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
 import com.hazelcast.map.*;
-// import com.hazelcast.query.SqlPredicate;
-// import com.hazelcast.query.extractor.ValueCollector;
-// import com.hazelcast.query.extractor.ValueExtractor;
 
 /**
  * Hazelcast implementation of DataObjectMap data structure.
@@ -196,42 +193,40 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	 **/
 	@Override
 	public void systemSetup() {
-		// WIP 4.0 rewrite
-		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// // Setup the map config
-		// MapConfig mConfig = new MapConfig(name());
+		// Setup the map config
+		MapConfig mConfig = new MapConfig(name());
 		
-		// // Setup name, backup and async backup count
-		// mConfig.setName(name());
+		// Setup name, backup and async backup count
+		mConfig.setName(name());
 		
-		// // Setup the config based on the shared stack settings
-		// if (hazelcastStack != null) {
-		// 	hazelcastStack.setupHazelcastMapConfig(mConfig, configMap());
-		// }
+		// Setup the config based on the shared stack settings
+		if (hazelcastStack != null) {
+			hazelcastStack.setupHazelcastMapConfig(mConfig, configMap());
+		}
 		
-		// // Add in the default _oid
-		// mConfig.addMapIndexConfig(new MapIndexConfig("self[_oid]", true));
+		// Add in the default _oid
+		mConfig.addIndexConfig(new IndexConfig(IndexType.SORTED, "self[_oid]"));
 		
-		// // Enable query index for specific fields
-		// String[] indexArray = configMap().getStringArray("index", "[]");
-		// for (String indexName : indexArray) {
-		// 	// Skip _oid index, as its always defined
-		// 	if (indexName.equals("_oid")) {
-		// 		continue;
-		// 	}
-		// 	// Various collumn specific indexes
-		// 	mConfig.addMapIndexConfig(new MapIndexConfig("self[" + StringEscape.encodeURI(indexName)
-		// 		+ "]", true));
-		// }
+		// Enable query index for specific fields
+		String[] indexArray = configMap().getStringArray("index", "[]");
+		for (String indexName : indexArray) {
+			// Skip _oid index, as its always defined
+			if (indexName.equals("_oid")) {
+				continue;
+			}
+			// Various collumn specific indexes
+			mConfig.addIndexConfig(new IndexConfig(IndexType.SORTED, "self[" + StringEscape.encodeURI(indexName)
+				+ "]"));
+		}
 		
-		// // Setup value extractor for `self` attribute
-		// mConfig.addMapAttributeConfig(new MapAttributeConfig("self",
-		// 	"picoded.dstack.hazelcast.core.HazelcastStorageExtractor"));
+		// Setup value extractor for `self` attribute
+		mConfig.addAttributeConfig(new AttributeConfig("self",
+			"picoded.dstack.hazelcast.core.HazelcastStorageExtractor"));
 		
-		// // and apply it to the instance
-		// // see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
-		// hazelcast.getConfig().addMapConfig(mConfig);
+		// and apply it to the instance
+		// see : https://docs.hazelcast.org/docs/latest-development/manual/html/Understanding_Configuration/Dynamically_Adding_Configuration_on_a_Cluster.html
+		hazelcast.getConfig().addMapConfig(mConfig);
 	}
 	
 	/**
@@ -257,7 +252,6 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		// Converts into SQL string with ? value clause, and its arguments value
 		String sqlString = queryClause.toSqlString();
-		Object[] sqlArgs = queryClause.queryArgumentsArray();
 		
 		// Get the query argument map, to perform search and replace
 		Map<String, List<Query>> fieldQueryMap = queryClause.fieldQueryMap();
@@ -275,7 +269,9 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 		// 	throw new RuntimeException(sqlString);
 		// }
 		
-		// Iterate each sql argument
+		// Iterate each sql argument, and inject it
+		// Note: This is now dropped as 4.0, with proper args support?
+		Object[] sqlArgs = queryClause.queryArgumentsArray();
 		for (int i = 0; i < sqlArgs.length; ++i) {
 			// sql argument
 			Object arg = sqlArgs[i];
@@ -314,43 +310,42 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return  The String[] array
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
-		// WIP 4.0 rewrite
-		throw new RuntimeException("WIP hazelcast 4.0 implementation");
 		
-		// // The return list of DataObjects
-		// List<DataObject> retList = null;
+		// The return list of DataObjects
+		List<DataObject> retList = null;
 		
-		// // Setup the query, if needed
-		// if (queryClause == null) {
-		// 	// Null gets all
-		// 	retList = new ArrayList<DataObject>(this.values());
-		// } else {
-		// 	// Converts query to sqlPredicate query
-		// 	SqlPredicate sqlQuery = new SqlPredicate(queryStringify(queryClause));
+		// Setup the query, if needed
+		if (queryClause == null) {
+			// Null gets all
+			retList = new ArrayList<DataObject>(this.values());
+		} else {
+			// Converts query to sqlPredicate query
+			// SqlQuery sqlQuery = new SqlQuery(queryStringify(queryClause));
 		
-		// 	// Get the list of _oid that passes the query
-		// 	Set<String> idSet = backendIMap().keySet(sqlQuery);
-		// 	String[] idArr = idSet.toArray(new String[0]);
+			// Get the list of _oid that passes the query
+			// Set<String> idSet = backendIMap().keySet(sqlQuery);
+			Set<String> idSet = backendIMap().keySet(new Hazelcast_SqlPredicate(queryClause));
+			String[] idArr = idSet.toArray(new String[0]);
 		
-		// 	// DataObject[] from idArr
-		// 	DataObject[] doArr = getArrayFromID(idArr, true);
+			// DataObject[] from idArr
+			DataObject[] doArr = getArrayFromID(idArr, true);
 		
-		// 	// Converts to a list
-		// 	retList = new ArrayList(Arrays.asList(doArr));
-		// }
+			// Converts to a list
+			retList = new ArrayList(Arrays.asList(doArr));
+		}
 		
-		// // Sort, offset, convert to array, and return
-		// retList = sortAndOffsetList(retList, orderByStr, offset, limit);
+		// Sort, offset, convert to array, and return
+		retList = sortAndOffsetList(retList, orderByStr, offset, limit);
 		
-		// // Prepare the actual return string array
-		// int retLength = retList.size();
-		// String[] ret = new String[retLength];
-		// for (int a = 0; a < retLength; ++a) {
-		// 	ret[a] = retList.get(a)._oid();
-		// }
+		// Prepare the actual return string array
+		int retLength = retList.size();
+		String[] ret = new String[retLength];
+		for (int a = 0; a < retLength; ++a) {
+			ret[a] = retList.get(a)._oid();
+		}
 		
-		// // Returns sorted array of strings
-		// return ret;
+		// Returns sorted array of strings
+		return ret;
 	}
 	
 }

@@ -3,7 +3,7 @@ package picoded.dstack.connector.hazelcast;
 import java.util.*;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
+import com.hazelcast.cluster.Member;
 
 // junit include
 import org.junit.*;
