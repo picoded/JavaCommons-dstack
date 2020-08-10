@@ -51,6 +51,13 @@ ENV CLUSTER_DISCOVERY "false"
 ENV CLUSTER_DNS_DISCOVERY_SERVICE "localhost"
 ENV CLUSTER_DNS_DISCOVERY_TIMEOUT 10
 
+# Configurable Minimum / Maximum heap size to use
+#
+# Note that if this is not configured, its automatically infered
+# to be about 80% of the container ram limits.
+ENV MIN_HEAP_SIZE=""
+ENV MAX_HEAP_SIZE=""
+
 # Custom entrypoint
 COPY jc-hazelcast-entrypoint.sh /jc-hazelcast-entrypoint.sh
 RUN chmod +x /jc-hazelcast-entrypoint.sh
