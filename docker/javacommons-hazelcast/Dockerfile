@@ -26,7 +26,7 @@ RUN ls /workspace/built-jars/
 #
 # Now we got JAR's - time to setup hazelcast
 #
-FROM hazelcast/hazelcast:3.11.4 as javacommons-hazelcast
+FROM hazelcast/hazelcast:4.0.2 as javacommons-hazelcast
 
 # Copy over the relevent classpath
 ENV CLASSPATH="/opt/hazelcast/CLASSPATH_EXT:/opt/hazelcast/CLASSPATH_EXT/*"
@@ -35,8 +35,8 @@ COPY --from=builder /workspace/built-jars/* /opt/hazelcast/CLASSPATH_EXT/
 # Adding custom hazelcast.xml
 ADD hazelcast.xml /hazelcast.xml
 
-# group name support (also known as cluster name)
-ENV GROUP_NAME "hazelcast"
+# cluster name support (also known as cluster name)
+ENV CLUSTER_NAME "hazelcast"
 
 # minimum init cluster size and wait timing
 ENV CLUSTER_INIT_MIN_SIZE  2
