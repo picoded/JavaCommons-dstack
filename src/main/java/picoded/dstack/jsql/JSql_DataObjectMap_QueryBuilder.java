@@ -51,7 +51,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 */
 	public JSql_DataObjectMap_QueryBuilder(JSql_DataObjectMap inMap) {
 		dataMap = inMap;
-
+		
 		// Preloading memoizers in constructor,
 		// as its the only lock-free segment that is 
 		// guranteed to be thread safe
@@ -66,7 +66,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		getFixedTableNameList();
 		getFixedTableNamePrimaryKeyJoinSet();
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Fixed table configuration utilities
@@ -85,16 +85,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 	/// Internal memoizer for the getFixedTableNameList
 	private List<String> _getFixedTableNameList = null;
-
+	
 	/**
 	 * @return Set of fixed table names if avaliable
 	 */
 	private List<String> getFixedTableNameList() {
 		// Fetch Cache result 
-		if( _getFixedTableNameList != null ) {
+		if (_getFixedTableNameList != null) {
 			return _getFixedTableNameList;
 		}
-
+		
 		// Result list to build
 		List<String> resList = new ArrayList<String>();
 		
@@ -103,23 +103,23 @@ public class JSql_DataObjectMap_QueryBuilder {
 		if (tableMap != null) {
 			// Get the key set
 			resList.addAll(tableMap.keySet());
-
+			
 			// Register memoizer, and return
 			_getFixedTableNameList = resList;
 			return resList;
-		} 
-
+		}
+		
 		// memoizer blank result and return it
 		_getFixedTableNameList = resList;
 		return resList;
 	}
-
+	
 	/**
 	 * @param table alias name
 	 * @return the fixed table name
 	 */
 	private String getFixedTableNameFromAlias(String aliasName) {
-		int idx = Integer.parseInt( aliasName.substring(1) );
+		int idx = Integer.parseInt(aliasName.substring(1));
 		return getFixedTableNameList().get(idx);
 	}
 	
@@ -139,7 +139,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	private Set<String> getFixedTableObjectKeySet(String tableName) {
 		return getFixedTableConfig(tableName).keySet();
 	}
-
+	
 	/**
 	 * @param Fixed table name
 	 * @param the object key name
@@ -236,13 +236,12 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// Get the table names
 		List<String> tableNameSet = getFixedTableNameList();
-
+		
 		// And iterate it
 		for (String tableName : tableNameSet) {
 			
 			// Get the "_oid" collumn config, this also function as a quick config check
-			GenericConvertMap<String, Object> oidConfig = getFixedTableCollumnConfig(tableName,
-				"_oid");
+			GenericConvertMap<String, Object> oidConfig = getFixedTableCollumnConfig(tableName, "_oid");
 			
 			// Skip if primary key join is configured to be skipped
 			if (oidConfig.getBoolean("skipPrimaryKeyJoin", false)) {
@@ -285,22 +284,22 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// If no fixed tablenames, return the heavily simplified query
 		// with only the primary table map
 		//------------------------------------------------------------------
-
+		
 		// Perform simple primary key query if possible
 		if (fixedTableNames.size() <= 0) {
 			// Select clause
 			queryStr.append("SELECT ");
-
+			
 			// Handle rcount mode
-			if( isRcount ) {
+			if (isRcount) {
 				queryStr.append("COUNT(*) AS rcount FROM ");
 			} else {
 				queryStr.append("oID FROM ");
 			}
-
+			
 			// Primary table to query
 			queryStr.append(dataMap.primaryKeyTable);
-
+			
 			// Return query string
 			return queryStr;
 		}
@@ -308,7 +307,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//------------------------------------------------------------------
 		// Complex fixed and dynamic query required here
 		//------------------------------------------------------------------
-
+		
 		// oID collumn first
 		queryStr.append("SELECT oID FROM ").append(dataMap.primaryKeyTable).append("\n");
 		
@@ -321,21 +320,21 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// Row count would require a nested query of the oID,
 		// to be wrapped with the row count clause
-		if( isRcount ) {
+		if (isRcount) {
 			// lets build the wrapped query
 			StringBuilder queryWrap = new StringBuilder();
 			queryWrap.append("SELECT COUNT(*) AS rcount FROM (\n");
-			queryWrap.append( queryStr );
+			queryWrap.append(queryStr);
 			queryWrap.append(")");
-
+			
 			// And return it wrapped
 			return queryWrap;
 		}
-
+		
 		// Return the query string with oID
 		return queryStr;
 	}
-
+	
 	/**
 	 * Get and returns all the GUID's, note that due to its
 	 * potential of returning a large data set, production use
@@ -346,7 +345,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	public JSqlResult getOidKeyJSqlResult() {
 		return dataMap.sqlObj.query(primaryKeyQueryBuilder(false).toString(), EmptyArray.OBJECT);
 	}
-
+	
 	/**
 	 * Get and returns all the GUID's, note that due to its
 	 * potential of returning a large data set, production use
@@ -357,7 +356,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	public Set<String> getOidKeySet() {
 		// Get raw jsql result
 		JSqlResult r = getOidKeyJSqlResult();
-
+		
 		// Convert it into a set
 		if (r == null || r.get("oID") == null) {
 			return new HashSet<String>();
@@ -400,7 +399,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @return Split keyname set, with the first (left) used for dynamic keys, and right used for fixed tables
 	 */
-	private MutablePair<List<String>, List<String>> splitCollumnListForDynamicAndFixedQuery(Collection<String> queryKeyNames) {
+	private MutablePair<List<String>, List<String>> splitCollumnListForDynamicAndFixedQuery(
+		Collection<String> queryKeyNames) {
 		// List of object keys for fixed and dynamic tables respectively
 		Set<String> fixedKeyNames = new HashSet<String>();
 		Set<String> dynamicKeyNames = new HashSet<String>();
@@ -410,41 +410,41 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// Lets process all the fixed table key names
 		//-----------------------------------------------
-		for(String tableName : fixedTableNameSet) {
+		for (String tableName : fixedTableNameSet) {
 			// Get the keynames of the table
 			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
 			
 			// Lets iterate each table key name
-			for(String tableKeyName : tableKeyNameSet) {
+			for (String tableKeyName : tableKeyNameSet) {
 				// if table key name is in the query, register it
-				if( queryKeyNames.contains(tableKeyName) ) {
-					fixedKeyNames.add( tableKeyName );
+				if (queryKeyNames.contains(tableKeyName)) {
+					fixedKeyNames.add(tableKeyName);
 				}
 			}
 		}
-
+		
 		// Lets process all the dynamic table key names
 		//-----------------------------------------------
-		for(String queryKey : queryKeyNames) {
+		for (String queryKey : queryKeyNames) {
 			// Check if its already handled in fixed tables
-			if( fixedKeyNames.contains(queryKey) ) {
+			if (fixedKeyNames.contains(queryKey)) {
 				continue;
 			}
-
+			
 			// Set it up as a dynamic key
-			dynamicKeyNames.add( queryKey );
+			dynamicKeyNames.add(queryKey);
 		}
-
+		
 		// Coonvert set into list
 		List<String> fixedKeyNamesList = new ArrayList<String>();
 		List<String> dynamicKeyNamesList = new ArrayList<String>();
 		fixedKeyNamesList.addAll(fixedKeyNames);
 		dynamicKeyNamesList.addAll(dynamicKeyNames);
-
+		
 		// Return result as mutable pair
 		return new MutablePair<>(dynamicKeyNamesList, fixedKeyNamesList);
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Internal query builder
@@ -469,10 +469,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Collection<String> rawOrderByClauseCollumns, //
 		Collection<String> rawWhereClauseCollumns //
 	) { //
-
+	
 		// Prepare the return result
 		Set<String> keysWhichMustHandleNullValues = new HashSet<>();
-
+		
 		// Process the order by string
 		if (rawOrderByClauseCollumns != null) {
 			for (String collumn : rawOrderByClauseCollumns) {
@@ -551,31 +551,31 @@ public class JSql_DataObjectMap_QueryBuilder {
 					}
 				}
 			}
-
+			
 		}
 		
 		// The keys to support
 		return keysWhichMustHandleNullValues;
 	}
-
+	
 	/**
 	 * Given the dynamic/fixed object keys, and it sequence -
 	 * generate out the table alias map.
 	 */
-	private Map<String,String> generateCollumnTableAliasMap( //
+	private Map<String, String> generateCollumnTableAliasMap( //
 		List<String> dynamicTableKeys, //
 		List<String> fixedTableKeys //
 	) { //
-
+	
 		// alias mapping of the collumn names (the result)
 		Map<String, String> objectKeyTableAliasMap = new HashMap<>();
 		
 		// Dynamic table keys handling
 		//-------------------------------------------------------------------
-		for (int i=0; i<dynamicTableKeys.size(); ++i) {
+		for (int i = 0; i < dynamicTableKeys.size(); ++i) {
 			// Get the keyname
 			String keyName = dynamicTableKeys.get(i);
-
+			
 			// Collumn names to skip setup (reseved keywords?)
 			if (keyName.equalsIgnoreCase("_oid") || keyName.equalsIgnoreCase("oID")) {
 				continue;
@@ -587,32 +587,32 @@ public class JSql_DataObjectMap_QueryBuilder {
 		
 		// Fixed table keys handling
 		//-------------------------------------------------------------------
-
+		
 		// Get fixed table name set
 		List<String> fixedTableNameList = getFixedTableNameList();
 		
 		// And iterate all the fixed tables in sequence
-		for (int i=0; i<fixedTableNameList.size(); ++i) {
+		for (int i = 0; i < fixedTableNameList.size(); ++i) {
 			// Get the table name
 			String tableName = fixedTableNameList.get(i);
-
+			
 			// Get the keynames of the table
 			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
 			
 			// Lets iterate each table key name
-			for(String tableKeyName : tableKeyNameSet) {
+			for (String tableKeyName : tableKeyNameSet) {
 				// if table key name is in the query, register it
-				if( fixedTableKeys.indexOf(tableKeyName) >= 0 ) {
+				if (fixedTableKeys.indexOf(tableKeyName) >= 0) {
 					// collumn names that requires setup
 					objectKeyTableAliasMap.put(tableKeyName, "F" + i);
 				}
 			}
 		}
-
+		
 		// Return result
 		return objectKeyTableAliasMap;
 	}
-
+	
 	/**
 	 * Lets build the core inner join query string, 
 	 * given the required filtered collumn names.
@@ -637,12 +637,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private MutablePair<StringBuilder, List<Object>> dynamicTableJoinBuilder(List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
-
+	private MutablePair<StringBuilder, List<Object>> dynamicTableJoinBuilder(List<String> collumns,
+		Set<String> collumnWhichMustHandleNullValues) {
+		
 		// Settings needed from main DataObjectMap
-		String primaryKeyTable  = dataMap.primaryKeyTable;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		String primaryKeyTable = dataMap.primaryKeyTable;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
@@ -725,52 +726,54 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * 
 	 * @return pair of query string, with query args
 	 */
-	private MutablePair<StringBuilder, List<Object>> fixedTableJoinBuilder(List<String> collumns, Set<String> collumnWhichMustHandleNullValues) {
-
+	private MutablePair<StringBuilder, List<Object>> fixedTableJoinBuilder(List<String> collumns,
+		Set<String> collumnWhichMustHandleNullValues) {
+		
 		// The query string to build
 		StringBuilder queryStr = new StringBuilder();
 		List<Object> queryArg = new ArrayList<>();
 		
 		// Fixed table keys handling
 		//-------------------------------------------------------------------
-
+		
 		// Get fixed table name set
 		List<String> fixedTableNameList = getFixedTableNameList();
 		
 		// And iterate all the fixed tables in sequence
-		for (int i=0; i<fixedTableNameList.size(); ++i) {
+		for (int i = 0; i < fixedTableNameList.size(); ++i) {
 			// Get the table name
 			String tableName = fixedTableNameList.get(i);
-
+			
 			// Get the keynames of the table
 			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
 			
 			// Indicate if the fixed table is the be queried
 			boolean includeFixedTable = false;
-
+			
 			// Lets iterate the collumn names
-			for(String objKey : collumns) {
-				if( tableKeyNameSet.contains(objKey) ) {
+			for (String objKey : collumns) {
+				if (tableKeyNameSet.contains(objKey)) {
 					includeFixedTable = true;
 					break;
 				}
 			}
-
+			
 			// Skip current table if tis not needed
-			if( !includeFixedTable ) {
+			if (!includeFixedTable) {
 				break;
 			}
-
+			
 			// OK - assume the current table needs to be include, build the query
 			queryStr.append("LEFT JOIN ").append(tableName); //
-			queryStr.append(" AS F"+i+" ON DP.oID = F0."+getFixedTableCollumnName(tableName, "_oid") ); //
+			queryStr.append(" AS F" + i + " ON DP.oID = F0."
+				+ getFixedTableCollumnName(tableName, "_oid")); //
 			queryStr.append("\n");
 		}
-
+		
 		// Return the full query
 		return new MutablePair<>(queryStr, queryArg);
 	}
-
+	
 	/**
 	 * Given the where clause query object, rewrite it to query against the joint dynamic table used internally.
 	 * 
@@ -794,7 +797,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Lets iterate the dynamic key names
 		// and rewrite each ddynamic key
 		for (String collumn : dynamicKeyNames) {
-
+			
 			// The query list to do processing on
 			List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
 			
@@ -808,9 +811,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 				// Scan for the query to remap to DP.oID
 				for (Query toReplace : toReplaceQueries) {
 					Query replacement = QueryFilter.basicQueryFromTokens(
-						//
-						queryArgMap, "DP.oID", toReplace.operatorSymbol(),
-						":" + toReplace.argumentName() //
+					//
+						queryArgMap, "DP.oID", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 					);
 					// Replaces old query with new query
 					queryObj = queryObj.replaceQuery(toReplace, replacement);
@@ -820,7 +822,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 			
 			// Get the replacment table alias
 			String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
-
+			
 			// Scan for the query to perform replacements
 			for (Query toReplace : toReplaceQueries) {
 				// Get the argument
@@ -885,8 +887,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 						if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
 							replacement = new JSql_QueryStringOverwrite( //
 								replacement, // The replacement query, in case is still needed
-								"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString()
-									+ ")");
+								"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString() + ")");
 						}
 					}
 				}
@@ -900,10 +901,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 				queryObj = queryObj.replaceQuery(toReplace, replacement);
 			}
 		}
-
+		
 		return queryObj;
 	}
-
+	
 	/**
 	 * Given the where clause query object, rewrite it to query against the joint fixed table used internally.
 	 * 
@@ -927,7 +928,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// Lets iterate the fixed table key names
 		// and rewrite each object key
 		for (String collumn : fixedKeyNames) {
-
+			
 			// The query list to do processing on
 			List<Query> toReplaceQueries = fieldQueryMap.get(collumn);
 			
@@ -941,9 +942,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 				// Scan for the query to remap to DP.oID
 				for (Query toReplace : toReplaceQueries) {
 					Query replacement = QueryFilter.basicQueryFromTokens(
-						//
-						queryArgMap, "DP.oID", toReplace.operatorSymbol(),
-						":" + toReplace.argumentName() //
+					//
+						queryArgMap, "DP.oID", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 					);
 					// Replaces old query with new query
 					queryObj = queryObj.replaceQuery(toReplace, replacement);
@@ -966,8 +966,9 @@ public class JSql_DataObjectMap_QueryBuilder {
 				
 				if (argObj == null) {
 					// Does special NULL handling
-					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
-						+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias + "."
+						+ fixedTableCollumnName, toReplace.operatorSymbol(),
+						":" + toReplace.argumentName() //
 					);
 					
 					// 
@@ -983,32 +984,35 @@ public class JSql_DataObjectMap_QueryBuilder {
 					if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
 						replacement = new JSql_QueryStringOverwrite( //
 							replacement, // The replacement query, in case is still needed
-							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NOT NULL OR " + replacement.toString()
-								+ ")");
+							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NOT NULL OR "
+								+ replacement.toString() + ")");
 					} else if (toReplace.operatorSymbol().equalsIgnoreCase("=")) {
 						replacement = new JSql_QueryStringOverwrite( //
 							replacement, // The replacement query, in case is still needed
-							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR " + replacement.toString() + ")");
+							"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR "
+								+ replacement.toString() + ")");
 					}
 				} else if (argObj instanceof Number) {
 					// Does special numeric handling
-					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
-						+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias + "."
+						+ fixedTableCollumnName, toReplace.operatorSymbol(),
+						":" + toReplace.argumentName() //
 					);
 				} else if (argObj instanceof String) {
 					if (toReplace.operatorSymbol().equalsIgnoreCase("LIKE")) {
 						// Like operator maps to tVl
 						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
-							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(),
+							":" + toReplace.argumentName() //
 						);
 					} else {
 						// Else it maps to sVl, with applied limits
 						replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
-							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+							+ "." + fixedTableCollumnName, toReplace.operatorSymbol(),
+							":" + toReplace.argumentName() //
 						);
 						// Update the argument with limits
-						queryArgMap.put(toReplace.argumentName(),
-							argObj.toString());
+						queryArgMap.put(toReplace.argumentName(), argObj.toString());
 						
 						// 
 						// Special handling of != once again
@@ -1020,8 +1024,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 						if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
 							replacement = new JSql_QueryStringOverwrite( //
 								replacement, // The replacement query, in case is still needed
-								"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR " + replacement.toString()
-									+ ")");
+								"(" + collumnTableAlias + "." + fixedTableCollumnName + " IS NULL OR "
+									+ replacement.toString() + ")");
 						}
 					}
 				}
@@ -1035,10 +1039,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 				queryObj = queryObj.replaceQuery(toReplace, replacement);
 			}
 		}
-
+		
 		return queryObj;
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Build and execute the full complex query
@@ -1066,10 +1070,10 @@ public class JSql_DataObjectMap_QueryBuilder {
 	) { //
 	
 		// Settings needed from main DataObjectMap
-		JSql   sql              = dataMap.sqlObj;
-		String primaryKeyTable  = dataMap.primaryKeyTable;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		JSql sql = dataMap.sqlObj;
+		String primaryKeyTable = dataMap.primaryKeyTable;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		//==========================================================================
 		//
 		// Quick optimal lookup : to the parent oID table.
@@ -1183,12 +1187,13 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//==========================================================================
 		
 		// Split the key set between dynamic and fixed table collumns
-		MutablePair<List<String>,List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(rawCollumnNameSet);
+		MutablePair<List<String>, List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(rawCollumnNameSet);
 		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
-		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
-
+		List<String> fixedKeyNames = dynamicAndFixedKeyPairs.right;
+		
 		// Generate alias mapping of the various object keys
-		Map<String, String> objectKeyTableAliasMap = generateCollumnTableAliasMap(dynamicKeyNames, fixedKeyNames);
+		Map<String, String> objectKeyTableAliasMap = generateCollumnTableAliasMap(dynamicKeyNames,
+			fixedKeyNames);
 		
 		//==========================================================================
 		//
@@ -1203,18 +1208,20 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// The select clause
 		fullQuery.append("SELECT ").append(oidCollumns).append(" FROM \n");
 		fullQuery.append("(").append(primaryKeyQueryBuilder(false)).append(") AS DP \n");
-
+		
 		// the inner join 
-		MutablePair<StringBuilder, List<Object>> innerJoinPair = dynamicTableJoinBuilder(dynamicKeyNames, keysWhichMustHandleNullValues);
+		MutablePair<StringBuilder, List<Object>> innerJoinPair = dynamicTableJoinBuilder(
+			dynamicKeyNames, keysWhichMustHandleNullValues);
 		
 		// Merged together with full query, with the inner join clauses
 		fullQuery.append(innerJoinPair.left);
 		fullQueryArgs.addAll(innerJoinPair.right);
-
+		
 		// Merge together fixed table query if needed
-		if( fixedKeyNames.size() > 0 ) {
-			MutablePair<StringBuilder, List<Object>> outerJoinPair = fixedTableJoinBuilder(fixedKeyNames, keysWhichMustHandleNullValues);
-
+		if (fixedKeyNames.size() > 0) {
+			MutablePair<StringBuilder, List<Object>> outerJoinPair = fixedTableJoinBuilder(
+				fixedKeyNames, keysWhichMustHandleNullValues);
+			
 			// Merged together with full query, with the outer join clauses
 			fullQuery.append(outerJoinPair.left);
 			fullQueryArgs.addAll(outerJoinPair.right);
@@ -1233,15 +1240,15 @@ public class JSql_DataObjectMap_QueryBuilder {
 				queryObj, fieldQueryMap, queryArgMap, //
 				objectKeyTableAliasMap, dynamicKeyNames //
 			); //
-
+			
 			// Rewrite the query for fixed table collumns
-			if( fixedKeyNames.size() > 0 ) {
+			if (fixedKeyNames.size() > 0) {
 				queryObj = fixedTableQueryRewrite( //
 					queryObj, fieldQueryMap, queryArgMap, //
 					objectKeyTableAliasMap, fixedKeyNames //
 				); //
 			}
-
+			
 			//--------------------------------------------------------------------------
 			// Update the query clauses collumn linkage, and apply to fullQuery
 			//--------------------------------------------------------------------------
@@ -1289,27 +1296,28 @@ public class JSql_DataObjectMap_QueryBuilder {
 						rebuiltOrderByList.add(stringOrderBy.toString());
 						continue;
 					}
-
+					
 					// Get the replacment table alias
 					String collumnTableAlias = objectKeyTableAliasMap.get(collumn);
 					
-					if ( fixedKeyNames.contains(collumn) ) {
-
+					if (fixedKeyNames.contains(collumn)) {
+						
 						// Fixed table order by remapping and rewrite
 						//------------------------------------------------
-
+						
 						// Get the fixed collumn name
 						String fixedTableName = getFixedTableNameFromAlias(collumnTableAlias);
 						String fixedTableCollumnName = getFixedTableCollumnName(fixedTableName, collumn);
-
-						stringOrderBy.replaceKeyName(collumn, collumnTableAlias + "." + fixedTableCollumnName);
+						
+						stringOrderBy.replaceKeyName(collumn, collumnTableAlias + "."
+							+ fixedTableCollumnName);
 						rebuiltOrderByList.add(stringOrderBy.toString());
-
+						
 					} else {
-
+						
 						// Dynamic table order by remapping and rewrite
 						//------------------------------------------------
-
+						
 						// Lets update the numeric, and string order by settings
 						numericOrderBy.replaceKeyName(collumn, collumnTableAlias + ".nVl");
 						stringOrderBy.replaceKeyName(collumn, collumnTableAlias + ".sVl");
@@ -1397,9 +1405,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	public String[] dataObjectMapQuery_id( //
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		// Get the complex query
-		JSqlResult r = runComplexQuery("DP.oID", whereClause,
-			whereValues, orderByStr, offset, limit);
+		 // Get the complex query
+		JSqlResult r = runComplexQuery("DP.oID", whereClause, whereValues, orderByStr, offset, limit);
 		List<Object> oID_list = r.getObjectList("oID");
 		// Generate the object list
 		if (oID_list != null) {
@@ -1429,7 +1436,8 @@ public class JSql_DataObjectMap_QueryBuilder {
 	public long dataObjectMapCount( //
 		String whereClause, Object[] whereValues, String orderByStr, int offset, int limit //
 	) { //
-		JSqlResult r = runComplexQuery("COUNT(*) AS rcount", whereClause, whereValues, orderByStr, offset, limit);
+		JSqlResult r = runComplexQuery("COUNT(*) AS rcount", whereClause, whereValues, orderByStr,
+			offset, limit);
 		// Get rcount result
 		GenericConvertList<Object> rcountArr = r.get("rcount");
 		// Generate the object list
@@ -1459,49 +1467,49 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Map<String, Object> ret //
 	) {
 		// Settings needed from main DataObjectMap
-		JSql   sql              = dataMap.sqlObj;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		JSql sql = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		// Get fixed table name set
 		List<String> fixedTableNameSet = getFixedTableNameList();
 		
 		// Lets process all the fixed table key names
 		//
 		// @TODO - optimize this down to a single SQL join query?
-		for(String tableName : fixedTableNameSet) {
+		for (String tableName : fixedTableNameSet) {
 			// Get the oid collumn
 			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
-
+			
 			// Query the fixed table
-			JSqlResult r = sql.select(tableName, "*", oidCollumn+"=?", new Object[] { _oid });
-
+			JSqlResult r = sql.select(tableName, "*", oidCollumn + "=?", new Object[] { _oid });
+			
 			// No result means no data to extract
 			if (r == null || r.get(oidCollumn) == null || r.get(oidCollumn).size() <= 0) {
 				continue;
 			}
-
+			
 			// OK - looks like there is a data, lets initialize the return map if its null
-			if( ret == null ) {
+			if (ret == null) {
 				ret = new HashMap<>();
 			}
-
+			
 			// Get the keynames of the table
 			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
 			
 			// Lets iterate each table key name
-			for(String tableKeyName : tableKeyNameSet) {
+			for (String tableKeyName : tableKeyNameSet) {
 				// Get the collumn name
 				String collumnName = getFixedTableCollumnName(tableName, tableKeyName);
-
+				
 				// and copy its value over
-				ret.put( tableKeyName, r.get(collumnName).get(0) );
+				ret.put(tableKeyName, r.get(collumnName).get(0));
 			}
 		}
-
+		
 		// Return final map
 		return ret;
 	}
-
+	
 	/**
 	 * Extracts and build the map stored under an _oid
 	 *
@@ -1515,19 +1523,19 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Map<String, Object> ret //
 	) {
 		// Settings needed from main DataObjectMap
-		JSql   sql              = dataMap.sqlObj;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		JSql sql = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		// Grab data from dynamic tables
 		ret = JSql_DataObjectMapUtil.jSqlObjectMapFetch(sql, dataStorageTable, _oid, ret);
-
+		
 		// Grab data from fixed tables
 		ret = fixedTableFetch(_oid, ret);
-
+		
 		// Return final map
 		return ret;
 	}
-
+	
 	//-----------------------------------------------------------------------------------------------
 	//
 	//  Update command support
@@ -1552,65 +1560,62 @@ public class JSql_DataObjectMap_QueryBuilder {
 		List<String> fixedTableNameSet = getFixedTableNameList();
 		
 		// Lets process all the fixed table names
-		for(String tableName : fixedTableNameSet) {
+		for (String tableName : fixedTableNameSet) {
 			// Get the oid collumn
 			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
-
+			
 			// Insert key, and values
 			List<String> upsertColumns = new ArrayList<>();
 			List<Object> upsertValues = new ArrayList<>();
-
+			
 			// Misc collumns (to avoid writting into)
 			List<String> miscColumns = new ArrayList<>();
-
+			
 			// Get the keynames of the table
 			Set<String> tableKeyNameSet = getFixedTableObjectKeySet(tableName);
 			
 			// Lets iterate each table key name
 			// and build the uniqueColumn/values
-			for(String tableKeyName : tableKeyNameSet) {
+			for (String tableKeyName : tableKeyNameSet) {
 				// Skip _oid or oID here
-				if( tableKeyName.equalsIgnoreCase("_oid") || tableKeyName.equalsIgnoreCase("oid") ) {
+				if (tableKeyName.equalsIgnoreCase("_oid") || tableKeyName.equalsIgnoreCase("oid")) {
 					continue;
 				}
-
+				
 				// Get the collumn name
 				String collumnName = getFixedTableCollumnName(tableName, tableKeyName);
-
+				
 				// Check if the key is to be skipped (misc)
-				if( !keyList.contains(tableKeyName) ) {
+				if (!keyList.contains(tableKeyName)) {
 					miscColumns.add(collumnName);
 					continue;
 				}
-
+				
 				// Key name is inside key list, this value needs to be set
 				upsertColumns.add(collumnName);
 				upsertValues.add(objMap.get(tableKeyName));
 			}
-
+			
 			// Lets skip the upsert if no data needs to be added
-			if( upsertColumns.size() <= 0 ) {
+			if (upsertColumns.size() <= 0) {
 				continue;
 			}
-
+			
 			// Perform the upsert
 			dataMap.sqlObj.upsert(
-				// Table name to upsert on
-				tableName, 
+			// Table name to upsert on
+				tableName,
 				// The unique column names and value
-				new String[] { oidCollumn },
-				new Object[] { _oid },
+				new String[] { oidCollumn }, new Object[] { _oid },
 				// Upsert collumn and values
-				upsertColumns.toArray(EmptyArray.STRING),
-				upsertValues.toArray(EmptyArray.OBJECT),
+				upsertColumns.toArray(EmptyArray.STRING), upsertValues.toArray(EmptyArray.OBJECT),
 				// Default collumn and values
 				null, null,
 				// Misc collumns
-				miscColumns.toArray(EmptyArray.STRING)
-			);
+				miscColumns.toArray(EmptyArray.STRING));
 		}
 	}
-
+	
 	/**
 	 * Update the dynamic data storage table
 	 *
@@ -1626,17 +1631,18 @@ public class JSql_DataObjectMap_QueryBuilder {
 		Collection<String> keyList //
 	) {
 		// Settings needed from main DataObjectMap
-		JSql   sql              = dataMap.sqlObj;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		JSql sql = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		// Split the key set between dynamic and fixed table collumns
-		MutablePair<List<String>,List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(keyList);
+		MutablePair<List<String>, List<String>> dynamicAndFixedKeyPairs = splitCollumnListForDynamicAndFixedQuery(keyList);
 		List<String> dynamicKeyNames = dynamicAndFixedKeyPairs.left;
-		List<String> fixedKeyNames   = dynamicAndFixedKeyPairs.right;
-
+		List<String> fixedKeyNames = dynamicAndFixedKeyPairs.right;
+		
 		// Update data on the dynamic table
-		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sql, dataStorageTable, _oid, objMap, dynamicKeyNames);
-
+		JSql_DataObjectMapUtil.jSqlObjectMapUpdate(sql, dataStorageTable, _oid, objMap,
+			dynamicKeyNames);
+		
 		// Update data on the fixed table
 		fixedTableUpdate(_oid, objMap, fixedKeyNames);
 	}
@@ -1652,30 +1658,30 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 *
 	 * @param {String} _oid - object id to delete
 	 **/
-	public void jSqlObjectMapRemove( String _oid ) {
+	public void jSqlObjectMapRemove(String _oid) {
 		// Settings needed from main DataObjectMap
-		JSql   sql              = dataMap.sqlObj;
-		String dataStorageTable = dataMap.dataStorageTable; 
-
+		JSql sql = dataMap.sqlObj;
+		String dataStorageTable = dataMap.dataStorageTable;
+		
 		// Delete the data from dynamic table
 		//--------------------------------------------------------------------
 		sql.delete(dataMap.dataStorageTable, "oID = ?", new Object[] { _oid });
 		
 		// Delete the data from the fixed table
 		//--------------------------------------------------------------------
-
+		
 		// Get fixed table name set
 		List<String> fixedTableNameSet = getFixedTableNameList();
 		
 		// Lets process all the fixed table names
-		for(String tableName : fixedTableNameSet) {
+		for (String tableName : fixedTableNameSet) {
 			// Get the oid collumn
 			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
-
+			
 			// And call the delete
-			sql.delete(tableName, oidCollumn+" = ?", new Object[] { _oid });
+			sql.delete(tableName, oidCollumn + " = ?", new Object[] { _oid });
 		}
-
+		
 		// Delete the parent key
 		//--------------------------------------------------------------------
 		sql.delete(dataMap.primaryKeyTable, "oID = ?", new Object[] { _oid });

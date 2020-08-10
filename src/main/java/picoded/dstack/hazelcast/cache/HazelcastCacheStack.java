@@ -13,7 +13,8 @@ import picoded.dstack.hazelcast.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
-import com.hazelcast.map.eviction.*;
+
+// import com.hazelcast.map.eviction.*;
 
 /**
  * In memory persistent storage for hazelcast, used this for data structures when caching in memory eviction is not desirec
@@ -42,10 +43,13 @@ public class HazelcastCacheStack extends HazelcastStack {
 	 */
 	protected void setupHazelcastMapConfig(MapConfig mConfig,
 		GenericConvertMap<String, Object> dataStructureConfig) {
+		//
+		// Lets tune storage for safe redundent stores
+		//
 		
 		// Lets configure the merge policy (latest update is default)
 		MergePolicyConfig mergePolicyConfig = new MergePolicyConfig()
-			.setPolicy("com.hazelcast.map.merge.LatestUpdateMapMergePolicy");
+			.setPolicy("com.hazelcast.spi.merge.LatestUpdateMergePolicy");
 		mConfig.setMergePolicyConfig(mergePolicyConfig);
 		
 		//---------------------------------------------------------------
@@ -74,18 +78,26 @@ public class HazelcastCacheStack extends HazelcastStack {
 		// Eviction policy controls 
 		//---------------------------------------------------------------
 		
+		// Eviction config to setup
+		EvictionConfig eConfig = new EvictionConfig();
+
 		// Get required settings
 		int freeHeapPercentage = dataStructureConfig.getInt("freeHeapPercentage",
 			config.getInt("freeHeapPercentage", 20));
 		
 		// Configure max size policy percentage to JVM heap
-		MaxSizeConfig maxSize = new MaxSizeConfig( //
-			freeHeapPercentage, //
-			MaxSizeConfig.MaxSizePolicy.FREE_HEAP_PERCENTAGE //
-		); //
-		mConfig.setMaxSizeConfig(maxSize);
+		eConfig.setEvictionPolicy(EvictionPolicy.LRU);
+		eConfig.setMaxSizePolicy(MaxSizePolicy.FREE_HEAP_PERCENTAGE);
+		eConfig.setSize(freeHeapPercentage);
+
+		// Set the eviction config
+		mConfig.setEvictionConfig(eConfig);
+
+		// Configure default max idle seconds
+		// Note, 3600s -> 1 hour
+		int maxIdleSeconds = dataStructureConfig.getInt("maxIdleSeconds",
+			config.getInt("maxIdleSeconds", 0));
+		mConfig.setMaxIdleSeconds(maxIdleSeconds);
 		
-		// Set LRU eviction policy
-		mConfig.setMapEvictionPolicy(new LRUEvictionPolicy());
 	}
 }

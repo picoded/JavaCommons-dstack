@@ -1,10 +1,10 @@
 package picoded.dstack.hazelcast.core;
 
-import com.hazelcast.query.extractor.ValueCollector;
-import com.hazelcast.query.extractor.ValueExtractor;
-
 import picoded.core.conv.NestedObjectFetch;
 import picoded.core.conv.StringEscape;
+
+import com.hazelcast.query.extractor.ValueCollector;
+import com.hazelcast.query.extractor.ValueExtractor;
 
 /**
  * Hazelcast custom map attribute extractor, this is one major work around the lack of 
@@ -21,7 +21,7 @@ import picoded.core.conv.StringEscape;
  * Subsequently then, when one would do a query for `hello = ?`, it would then be transformed into `self[hello] = ?`
  * This applies to query indexes as well.
  */
-public class HazelcastStorageExtractor extends ValueExtractor<HazelcastStorageMap, String> {
+public class HazelcastStorageExtractor implements ValueExtractor<HazelcastStorageMap, String> {
 	/**
 	 * Extractor which recieves the storage map, and the parameter string 
 	 */

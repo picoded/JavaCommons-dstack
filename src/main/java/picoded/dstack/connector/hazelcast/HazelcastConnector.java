@@ -38,10 +38,12 @@ public class HazelcastConnector {
 			throw new IllegalArgumentException(ExceptionMessage.unexpectedNullArgument);
 		}
 		
-		// Get group name parameter, from config map if needed
-		String groupName = configMap.getString("groupName");
-		if (groupName == null) {
-			throw new IllegalArgumentException("Missing groupName parameter");
+		// Get the clusterName config 
+		// - fallbacks to groupName for legacy support
+		String clusterName = configMap.getString("clusterName", configMap.getString("groupName"));
+		if (clusterName == null) {
+			throw new IllegalArgumentException(
+				"Missing clusterName parameter (previously known as groupName)");
 		}
 		
 		// Get caching configuration
@@ -49,23 +51,23 @@ public class HazelcastConnector {
 		
 		// Lets initialize and return - without caching!
 		if (ignoreInstanceCache) {
-			return initializeInstanceFromConfig(groupName, configMap);
+			return initializeInstanceFromConfig(clusterName, configMap);
 		}
 		
 		// Lets handle this with caching, without locking
-		HazelcastInstance ret = tryToGetFromCache(groupName);
+		HazelcastInstance ret = tryToGetFromCache(clusterName);
 		if (ret != null) {
 			return ret;
 		}
 		
 		// Ok that failed, lets do this with locking
-		return initializeCachedInstanceFromConfig(groupName, configMap);
+		return initializeCachedInstanceFromConfig(clusterName, configMap);
 	}
 	
 	/**
 	 * Close an existing connection (if it exists)
 	 * 
-	 * @param  groupName used for the cluster
+	 * @param  clusterName used for the cluster
 	 */
 	public static void closeConnection(HazelcastInstance connection) {
 		// Mandatory null argument check
@@ -92,11 +94,11 @@ public class HazelcastConnector {
 	/**
 	 * Varient of `initializeInstanceFromConfig` with class locking and caching
 	 * 
-	 * @param groupName used as cache key
+	 * @param clusterName used as cache key
 	 * @param configMap configuration for the instance
 	 * @return the instance
 	 */
-	protected static HazelcastInstance initializeCachedInstanceFromConfig(String groupName,
+	protected static HazelcastInstance initializeCachedInstanceFromConfig(String clusterName,
 		GenericConvertMap<String, Object> configMap) {
 		synchronized (HazelcastConnector.class) {
 			// Initialize cache if needed
@@ -105,14 +107,14 @@ public class HazelcastConnector {
 			}
 			
 			// Race condition handling, get from cache if present
-			HazelcastInstance ret = cacheMap.get(groupName);
+			HazelcastInstance ret = cacheMap.get(clusterName);
 			if (ret != null) {
 				return ret;
 			}
 			
 			// Time to initialize!
-			ret = initializeInstanceFromConfig(groupName, configMap);
-			cacheMap.put(groupName, ret);
+			ret = initializeInstanceFromConfig(clusterName, configMap);
+			cacheMap.put(clusterName, ret);
 			
 			// and return it
 			return ret;
@@ -123,17 +125,17 @@ public class HazelcastConnector {
 	 * Get and return a previously initialized connection from the cache
 	 * This is done quickly without concurrency locking
 	 * 
-	 * @param groupName used as cache key
+	 * @param clusterName used as cache key
 	 * @return instance if found, else null
 	 */
-	protected static HazelcastInstance tryToGetFromCache(String groupName) {
+	protected static HazelcastInstance tryToGetFromCache(String clusterName) {
 		// Skip if cache is not initialized
 		if (cacheMap == null) {
 			return null;
 		}
 		
 		// Fetch from cache
-		return cacheMap.get(groupName);
+		return cacheMap.get(clusterName);
 	}
 	
 	/**
@@ -163,7 +165,7 @@ public class HazelcastConnector {
 	//
 	//----------------------------------------------------
 	
-	protected static HazelcastInstance initializeInstanceFromConfig(String groupName,
+	protected static HazelcastInstance initializeInstanceFromConfig(String clusterName,
 		GenericConvertMap<String, Object> configMap) {
 		// Get server/client mode
 		String mode = configMap.getString("mode", "server");
@@ -171,9 +173,9 @@ public class HazelcastConnector {
 		// Initialize the instance with the config
 		HazelcastInstance ret = null;
 		if (mode.equalsIgnoreCase("client")) {
-			ret = initializeClientInstanceFromConfig(groupName, configMap);
+			ret = initializeClientInstanceFromConfig(clusterName, configMap);
 		} else if (mode.equalsIgnoreCase("server")) {
-			ret = initializeServerInstanceFromConfig(groupName, configMap);
+			ret = initializeServerInstanceFromConfig(clusterName, configMap);
 		} else {
 			throw new IllegalArgumentException("Unknown hazelcast instance mode configured : " + mode);
 		}
@@ -183,18 +185,20 @@ public class HazelcastConnector {
 	/**
 	 * Initialize the hazel cast server instance with the config map
 	 * 
-	 * @param groupName group name for the cluster 
+	 * @param clusterName group name for the cluster 
 	 * @param configMap configuration map to initialize the cluster with
 	 * 
 	 * @return initialized hazelcast instance
 	 */
-	protected static HazelcastInstance initializeServerInstanceFromConfig(String groupName,
+	protected static HazelcastInstance initializeServerInstanceFromConfig(String clusterName,
 		GenericConvertMap<String, Object> configMap) {
+		
 		// Initialize the config 
 		Config cfg = new Config();
 		
-		// Initialize the common group config 
-		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
+		// Initialize the common group name config 
+		// note that password support has been dropped from 4.0 onwards
+		cfg.setClusterName(clusterName);
 		
 		// Get network settings
 		NetworkConfig network = cfg.getNetworkConfig();
@@ -214,12 +218,12 @@ public class HazelcastConnector {
 			join.getMulticastConfig().setEnabled(configMap.getBoolean("multicast", true));
 		}
 		
-		// @TODO - consider configuring the network binding addresses
-		// //this sets the allowed connections to the cluster? necessary for multicast, too?
-		// network.getInterfaces().setEnabled(true).addInterface("192.168.0.*");
+		// // @TODO - consider configuring the network binding addresses
+		// // //this sets the allowed connections to the cluster? necessary for multicast, too?
+		// // network.getInterfaces().setEnabled(true).addInterface("192.168.0.*");
 		
-		// @TODO - consider minimum cluster size support
-		// config.setProperty("hazelcast.initial.min.cluster.size","3");
+		// // @TODO - consider minimum cluster size support
+		// // config.setProperty("hazelcast.initial.min.cluster.size","3");
 		
 		// Intialize the server instance and return 
 		return Hazelcast.newHazelcastInstance(cfg);
@@ -228,18 +232,20 @@ public class HazelcastConnector {
 	/**
 	 * Initialize the hazel cast client instance with the config map
 	 * 
-	 * @param groupName group name for the cluster 
+	 * @param clusterName group name for the cluster 
 	 * @param configMap configuration map to initialize the cluster with
 	 * 
 	 * @return initialized hazelcast instance
 	 */
-	protected static HazelcastInstance initializeClientInstanceFromConfig(String groupName,
+	protected static HazelcastInstance initializeClientInstanceFromConfig(String clusterName,
 		GenericConvertMap<String, Object> configMap) {
+		
 		// Initialize the config 
 		ClientConfig cfg = new ClientConfig();
 		
-		// Initialize the common group config 
-		setupGroupConfig(cfg.getGroupConfig(), groupName, configMap);
+		// Initialize the common group name config 
+		// note that password support has been dropped from 4.0 onwards
+		cfg.setClusterName(clusterName);
 		
 		// Get network settings
 		ClientNetworkConfig network = cfg.getNetworkConfig();
@@ -250,29 +256,11 @@ public class HazelcastConnector {
 			network.setAddresses(memberTcpList);
 		} else {
 			throw new IllegalArgumentException(
-				"Missing `memberTcpList` config for hazelcast client : " + groupName);
+				"Missing `memberTcpList` config for hazelcast client : " + clusterName);
 		}
 		
 		// Intialize the server instance and return 
 		return HazelcastClient.newHazelcastClient(cfg);
 	}
 	
-	/**
-	 * Setup the shared group config across both server / client mode
-	 * 
-	 * @param grpConfig configuration to setup
-	 * @param groupName group name for the cluster 
-	 * @param configMap configuration map to initialize the cluster with
-	 */
-	protected static void setupGroupConfig(GroupConfig grpConfig, String groupName,
-		GenericConvertMap<String, Object> configMap) {
-		// Setup grpConfig name
-		grpConfig.setName(groupName);
-		
-		// Configuring password if provided
-		String password = configMap.getString("password", null);
-		if (password != null && password.length() > 0) {
-			grpConfig.setPassword(password);
-		}
-	}
 }

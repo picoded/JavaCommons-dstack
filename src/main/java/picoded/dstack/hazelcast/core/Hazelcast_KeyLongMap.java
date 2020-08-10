@@ -18,7 +18,7 @@ import picoded.dstack.core.*;
 // Hazelcast implementation
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
-import com.hazelcast.map.eviction.LRUEvictionPolicy;
+import com.hazelcast.map.*;
 import com.hazelcast.query.Predicates;
 
 /**
