@@ -7,8 +7,8 @@ This works by providing the following specific envrionment variable to ease conf
 # Configuration environment varaible options
 
 ```
-# group name support (also known as cluster name)
-ENV GROUP_NAME "hazelcast"
+# hazelcast cluster name to use
+ENV CLUSTER_NAME "hazelcast"
 
 # minimum init cluster size and wait timing
 ENV CLUSTER_INIT_MIN_SIZE  2
