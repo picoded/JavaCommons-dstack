@@ -24,6 +24,7 @@ import picoded.dstack.core.*;
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
 import com.hazelcast.map.*;
+import com.hazelcast.query.*;
 
 /**
  * Hazelcast implementation of DataObjectMap data structure.
@@ -246,58 +247,6 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Converts a conv.Query into a full SQL string
-	 **/
-	protected String queryStringify(Query queryClause) {
-		
-		// Converts into SQL string with ? value clause, and its arguments value
-		String sqlString = queryClause.toSqlString();
-		
-		// Get the query argument map, to perform search and replace
-		Map<String, List<Query>> fieldQueryMap = queryClause.fieldQueryMap();
-		Set<String> fieldKeySet = fieldQueryMap.keySet();
-		
-		// Lets iterate each field string, and remap the sqlString
-		//sqlString = sqlString.replaceAll("\"(.+)\" (.+) \\?", "self[\\\'$1\\\'] $2 ?");
-		for (String field : fieldKeySet) {
-			// Fix up sql string, to be hazelcast compatible instead
-			sqlString = sqlString.replace("\"" + field + "\" ",
-				"self[" + StringEscape.encodeURI(field) + "] ");
-		}
-		
-		// if (sqlString != null) {
-		// 	throw new RuntimeException(sqlString);
-		// }
-		
-		// Iterate each sql argument, and inject it
-		// Note: This is now dropped as 4.0, with proper args support?
-		Object[] sqlArgs = queryClause.queryArgumentsArray();
-		for (int i = 0; i < sqlArgs.length; ++i) {
-			// sql argument
-			Object arg = sqlArgs[i];
-			
-			// Support ONLY either null, string, or number types as of now
-			if (arg == null) {
-				sqlString = sqlString.replaceFirst("\\?", "null");
-			} else if (arg instanceof Number) {
-				sqlString = sqlString.replaceFirst("\\?", arg.toString());
-			} else if (arg instanceof String) {
-				sqlString = sqlString.replaceFirst("\\?", "'" + arg.toString().replaceAll("\'", "\\'")
-					+ "'");
-			} else {
-				throw new IllegalArgumentException("Unsupported query argument type : "
-					+ arg.getClass().getName());
-			}
-		}
-		
-		// Debugging log
-		// System.out.println(sqlString);
-		
-		// The processed SQL string
-		return sqlString;
-	}
-	
-	/**
 	 * Performs a search query, and returns the respective DataObject keys.
 	 *
 	 * This is the GUID key varient of query, this is critical for stack lookup
@@ -319,12 +268,11 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 			// Null gets all
 			retList = new ArrayList<DataObject>(this.values());
 		} else {
-			// Converts query to sqlPredicate query
-			// SqlQuery sqlQuery = new SqlQuery(queryStringify(queryClause));
+			// Converts query to query predicate
+			Predicate<String,Map<String,Object>> queryPredicate = Hazelcast_SqlPredicate.build(queryClause);
 		
 			// Get the list of _oid that passes the query
-			// Set<String> idSet = backendIMap().keySet(sqlQuery);
-			Set<String> idSet = backendIMap().keySet(new Hazelcast_SqlPredicate(queryClause));
+			Set<String> idSet = backendIMap().keySet( queryPredicate );
 			String[] idArr = idSet.toArray(new String[0]);
 		
 			// DataObject[] from idArr

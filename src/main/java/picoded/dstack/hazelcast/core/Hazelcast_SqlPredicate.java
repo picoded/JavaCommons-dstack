@@ -45,7 +45,6 @@ public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Objec
 	 * Apply the predicate against the internal hazlecast store
 	 */
 	public boolean apply(Map.Entry<String,Map<String,Object>> mapEntry) {
-		
 		// Initialize the local query if needed
 		if( _localQuery == null ) {
 			_localQuery = Query.build(_queryString, _queryArgs);
@@ -53,5 +52,24 @@ public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Objec
 
 		// Apply the query against the value
 		return _localQuery.test( mapEntry.getValue() );
+	}
+
+	//------------------------------------------------------------------
+	//
+	//  Predicate builder
+	//
+	//------------------------------------------------------------------
+
+	/**
+	 * Build the Hazelcast compatible predicate using the javacommons predicate
+	 * 
+	 * @param  originalQuery  javacommons query to remap for hazelcast
+	 */
+	public static Predicate<String,Map<String,Object>> build(Query originalQuery) {
+
+		// @TODO - optimize simple query to the respective hazelcast predicate
+
+		// Full fallback
+		return new Hazelcast_SqlPredicate(originalQuery);
 	}
 }
