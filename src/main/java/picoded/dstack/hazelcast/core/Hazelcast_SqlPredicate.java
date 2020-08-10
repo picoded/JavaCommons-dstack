@@ -12,13 +12,8 @@ import picoded.core.conv.StringEscape;
 import com.hazelcast.query.*;
 
 /**
- * This replaces the previous SqlPredicate that was present in 3.11
- * which was dropped on 4.0 onwards
- * 
- * This reimplements a serializable Query, that is compliant with hazelcast.
- * 
- * Note that ideally we should rebuild the query using the hazelcast predicateBuilder
- * instead, so that it would be able to optimize for any index used in the map.
+ * Build the predicate using the hazelcast SQL if possible
+ * Fallsback to JC query predicate otherwise.
  */
 public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Object>>,Serializable {
 	
@@ -71,7 +66,7 @@ public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Objec
 		try {
 			return Predicates.sql( queryStringify(originalQuery) );
 		} catch(Exception e) {
-			// does nothing - fallback
+			// does nothing - use the full fallback
 		}
 
 		// Full fallback
