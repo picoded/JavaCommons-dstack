@@ -719,6 +719,19 @@ public class StructSimple_DataObjectMap_test {
 	}
 	
 	@Test
+	public void testWithUnsetParameters_nullSupportOrClause() {
+		// Setup 
+		this.testWithUnserParameters_setup();
+		
+		// Meta Object to manipulate around with
+		DataObject[] queryRes = null;
+		
+		// Query for objects, with exsiting properties
+		queryRes = mtObj.query("dun = ? OR be = ?", new Object[] { "worry", "missing" });
+		assertEquals(2, queryRes.length);
+	}
+	
+	@Test
 	public void testWithUnsetParameters_query() {
 		// Setup 
 		this.testWithUnserParameters_setup();

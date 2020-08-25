@@ -452,12 +452,40 @@ public class JSql_DataObjectMap_QueryBuilder {
 	//-----------------------------------------------------------------------------------------------
 	
 	/**
+	 * Scan the query, for any OR/NOT clauses, which would need NULL values support.
+	 * And populate its respective result `Set<String>` which is passed as the first param.
+	 *
+	 * This function operates recursively
+	 */
+	private void scanQueryForWhereClauseFields(Set<String> resSet, Query baseQuery) {
+		// Skip non combination query objects (they are handled elsewhere)
+		if( baseQuery == null || !baseQuery.isCombinationOperator() ) {
+			return;
+		}
+
+		// Lets process the OR/NOT clause
+		QueryType type = baseQuery.type();
+		if( type == QueryType.OR || type == QueryType.NOT ) {
+			// Get the field map, and add all the relevent fields
+			Map<String, List<Query>> fieldMap = baseQuery.fieldQueryMap();
+			resSet.addAll( fieldMap.keySet() );
+		}
+
+		// Lets do a recursion scan
+		List<Query> childList = baseQuery.childrenQuery();
+		for(Query subQuery : childList) {
+			scanQueryForWhereClauseFields(resSet, subQuery);
+		}
+	}
+
+	/**
 	 * Scan the given query keys, to deduce which collumn should have "NULL" support.
 	 * Generating this set is important to ensure proper query support with NULL values.
 	 * 
 	 * This works by scanning orderby clause, that does not have a corresponding equality check
 	 * Or where clauses with inequality check / null equality check
 	 * 
+	 * @param baseQuery being evaluated, to be scanned for OR clauses
 	 * @param fieldQueryMap used to get the object key to sub query condition mapping
 	 * @param set of raw order keys to scan
 	 * @param set of raw where keys to scan
@@ -465,6 +493,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @return key set where NULL support is needed
 	 */
 	private Set<String> extractCollumnsWhichMustSupportNullValues( //
+		Query baseQuery, //
 		Map<String, List<Query>> fieldQueryMap, //
 		Collection<String> rawOrderByClauseCollumns, //
 		Collection<String> rawWhereClauseCollumns //
@@ -472,6 +501,9 @@ public class JSql_DataObjectMap_QueryBuilder {
 	
 		// Prepare the return result
 		Set<String> keysWhichMustHandleNullValues = new HashSet<>();
+
+		// Scan for collumns within OR clauses
+		scanQueryForWhereClauseFields(keysWhichMustHandleNullValues, baseQuery);
 		
 		// Process the order by string
 		if (rawOrderByClauseCollumns != null) {
@@ -551,7 +583,6 @@ public class JSql_DataObjectMap_QueryBuilder {
 					}
 				}
 			}
-			
 		}
 		
 		// The keys to support
@@ -1173,7 +1204,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 		// List of collumns which must take into account possible NULL
 		// values, which has its own set of quirks in SQL
 		Set<String> keysWhichMustHandleNullValues = extractCollumnsWhichMustSupportNullValues( //
-			fieldQueryMap, rawOrderByClauseCollumns, rawWhereClauseCollumns //
+			queryObj, fieldQueryMap, rawOrderByClauseCollumns, rawWhereClauseCollumns //
 		); //
 		
 		//==========================================================================
