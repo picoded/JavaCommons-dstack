@@ -15,14 +15,14 @@ import com.hazelcast.query.*;
  * Build the predicate using the hazelcast SQL if possible
  * Fallsback to JC query predicate otherwise.
  */
-public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Object>>,Serializable {
+public class Hazelcast_SqlPredicate implements Predicate<String, Map<String, Object>>, Serializable {
 	
 	// Sqerializable Query string to use 
 	public String _queryString = null;
-
+	
 	// Sqerializable Query arguments list
 	public Object[] _queryArgs = null;
-
+	
 	/**
 	 * Build the Hazelcast_SqlPredicate using the javacommons predicate
 	 * 
@@ -32,47 +32,47 @@ public class Hazelcast_SqlPredicate implements Predicate<String,Map<String,Objec
 		_queryString = originalQuery.toSqlString();
 		_queryArgs = originalQuery.queryArgumentsArray();
 	}
-
+	
 	// The underlying Query class is not serialize intentionally
 	// to help reduce overall serializable size
 	private transient Query _localQuery = null;
-
+	
 	/**
 	 * Apply the predicate against the internal hazlecast store
 	 */
-	public boolean apply(Map.Entry<String,Map<String,Object>> mapEntry) {
+	public boolean apply(Map.Entry<String, Map<String, Object>> mapEntry) {
 		// Initialize the local query if needed
-		if( _localQuery == null ) {
+		if (_localQuery == null) {
 			_localQuery = Query.build(_queryString, _queryArgs);
 		}
-
+		
 		// Apply the query against the value
-		return _localQuery.test( mapEntry.getValue() );
+		return _localQuery.test(mapEntry.getValue());
 	}
-
+	
 	//------------------------------------------------------------------
 	//
 	//  Predicate builder
 	//
 	//------------------------------------------------------------------
-
+	
 	/**
 	 * Build the Hazelcast compatible predicate using the javacommons predicate
 	 * 
 	 * @param  originalQuery  javacommons query to remap for hazelcast
 	 */
-	public static Predicate<String,Map<String,Object>> build(Query originalQuery) {
+	public static Predicate<String, Map<String, Object>> build(Query originalQuery) {
 		// Use the hazelcast predicatre if possible
 		try {
-			return Predicates.sql( queryStringify(originalQuery) );
-		} catch(Exception e) {
+			return Predicates.sql(queryStringify(originalQuery));
+		} catch (Exception e) {
 			// does nothing - use the full fallback
 		}
-
+		
 		// Full fallback
 		return new Hazelcast_SqlPredicate(originalQuery);
 	}
-
+	
 	/**
 	 * Converts a conv.Query into a full SQL string
 	 **/

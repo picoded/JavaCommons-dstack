@@ -217,8 +217,8 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 				continue;
 			}
 			// Various collumn specific indexes
-			mConfig.addIndexConfig(new IndexConfig(IndexType.SORTED, "self[" + StringEscape.encodeURI(indexName)
-				+ "]"));
+			mConfig.addIndexConfig(new IndexConfig(IndexType.SORTED, "self["
+				+ StringEscape.encodeURI(indexName) + "]"));
 		}
 		
 		// Setup value extractor for `self` attribute
@@ -269,15 +269,16 @@ public class Hazelcast_DataObjectMap extends Core_DataObjectMap_struct {
 			retList = new ArrayList<DataObject>(this.values());
 		} else {
 			// Converts query to query predicate
-			Predicate<String,Map<String,Object>> queryPredicate = Hazelcast_SqlPredicate.build(queryClause);
-		
+			Predicate<String, Map<String, Object>> queryPredicate = Hazelcast_SqlPredicate
+				.build(queryClause);
+			
 			// Get the list of _oid that passes the query
-			Set<String> idSet = backendIMap().keySet( queryPredicate );
+			Set<String> idSet = backendIMap().keySet(queryPredicate);
 			String[] idArr = idSet.toArray(new String[0]);
-		
+			
 			// DataObject[] from idArr
 			DataObject[] doArr = getArrayFromID(idArr, true);
-		
+			
 			// Converts to a list
 			retList = new ArrayList(Arrays.asList(doArr));
 		}

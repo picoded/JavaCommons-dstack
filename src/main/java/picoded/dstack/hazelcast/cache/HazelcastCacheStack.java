@@ -80,7 +80,7 @@ public class HazelcastCacheStack extends HazelcastStack {
 		
 		// Eviction config to setup
 		EvictionConfig eConfig = new EvictionConfig();
-
+		
 		// Get required settings
 		int freeHeapPercentage = dataStructureConfig.getInt("freeHeapPercentage",
 			config.getInt("freeHeapPercentage", 20));
@@ -89,10 +89,10 @@ public class HazelcastCacheStack extends HazelcastStack {
 		eConfig.setEvictionPolicy(EvictionPolicy.LRU);
 		eConfig.setMaxSizePolicy(MaxSizePolicy.FREE_HEAP_PERCENTAGE);
 		eConfig.setSize(freeHeapPercentage);
-
+		
 		// Set the eviction config
 		mConfig.setEvictionConfig(eConfig);
-
+		
 		// Configure default max idle seconds
 		// Note, 3600s -> 1 hour
 		int maxIdleSeconds = dataStructureConfig.getInt("maxIdleSeconds",
