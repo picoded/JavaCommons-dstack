@@ -202,6 +202,48 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
 		assertTrue(fileWorkspace.fileExist("moved/folder/file.txt"));
 	}
+
+	//-----------------------------------------------------------------------------------
+	//
+	// Copy test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void fileWrite_andFileCopy() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.copyFile("test/folder/file.txt", "test/folder/moved.txt");
+		
+		// File moved
+		// assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("test/folder/moved.txt"));
+	}
+	
+	@Test
+	public void fileWrite_andFolderCopy() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Move it
+		fileWorkspace.copyFolderPath("test/folder/", "moved/folder/");
+		
+		// File moved
+		// assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertTrue(fileWorkspace.fileExist("moved/folder/file.txt"));
+	}
 	
 	//-----------------------------------------------------------------------------------
 	//

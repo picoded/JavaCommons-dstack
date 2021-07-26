@@ -469,6 +469,99 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
 			destinationFolder, oid, sourceFolder).update();
 	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Copy support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_copyFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		
+		// Abort if file does not exist
+		if (!backend_fileExist(oid, sourceFile)) {
+			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : " + sourceFile);
+		}
+		
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFile));
+		
+		// Remove the old file (if exist)
+		// backend_removeFile(oid, destinationFile);
+		
+		// Apply the update statement
+		sqlObj.prepareStatement(
+			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+			destinationFile, oid, sourceFile).update();
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		// First lets get all the various paths
+		Set<String> affectedPaths = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+		
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFolder));
+		
+		// For each path, lets do the respective delete + update
+		for (String subPath : affectedPaths) {
+			// Delete destination path / file (if exists)
+			// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
+			// 	destinationFolder + subPath });
+			
+			// Apply the update statement
+			sqlObj.prepareStatement(
+				"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+				destinationFolder + subPath, oid, sourceFolder + subPath).update();
+		}
+		
+		// Update the destination directory itself
+		// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
+		// 	destinationFolder });
+		// Apply the update statement
+		sqlObj.prepareStatement(
+			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
+			destinationFolder, oid, sourceFolder).update();
+	}
 	
 	//--------------------------------------------------------------------------
 	//

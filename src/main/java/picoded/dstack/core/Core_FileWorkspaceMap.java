@@ -256,6 +256,57 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		final String destinationFolder) {
 		throw new RuntimeException("Missing backend implementation");
 	}
+
+	// Copy support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_copyFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		throw new RuntimeException("Missing backend implementation");
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
 	//
 	// Create and updated timestamp support
