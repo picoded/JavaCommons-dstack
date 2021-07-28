@@ -253,7 +253,7 @@ public interface FileWorkspace {
 	 * 
 	 */
 	void moveFolderPath(final String sourceFolder, final String destinationFolder);
-
+	
 	//
 	// Copy support
 	//--------------------------------------------------------------------------
@@ -264,7 +264,7 @@ public interface FileWorkspace {
 	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
 	 *          missing files / corrupted data can occur when executed concurrently with other operations.
 	 * 
-	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
 	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
 	 * 
 	 * This operation may in effect function as a rename
@@ -277,12 +277,12 @@ public interface FileWorkspace {
 	void copyFile(final String sourceFile, final String destinationFile);
 	
 	/**
-	 * Move a given file within the system
+	 * Copy a given file within the system
 	 * 
-	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
 	 *          missing files / corrupted data can occur when executed concurrently with other operations.
 	 * 
-	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
 	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
 	 * 
 	 * Note that both source, and destionation folder will be normalized to include the "/" path.

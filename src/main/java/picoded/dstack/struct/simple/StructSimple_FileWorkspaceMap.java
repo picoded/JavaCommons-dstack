@@ -390,7 +390,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Check if sourceFolder exist
 			if (workspace.get(sourceFile) == null) {
-				throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
+				throw new RuntimeException("AAAsourceFile does not exist (oid=" + oid + ") : "
 					+ sourceFile);
 			}
 			
@@ -462,8 +462,8 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			accessLock.writeLock().unlock();
 		}
 	}
-
-		//--------------------------------------------------------------------------
+	
+	//--------------------------------------------------------------------------
 	//
 	// Copy support
 	//
@@ -517,9 +517,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Copy the file
 			workspace.put(destinationFile, workspace.get(sourceFile));
-			
-			// And remove the old copy
-			// workspace.remove(sourceFile);
 		} finally {
 			accessLock.writeLock().unlock();
 		}
@@ -571,8 +568,6 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 					// Copy it over
 					workspace.put(destinationFolder + key.substring(sourceFolder.length()),
 						workspace.get(key));
-					// Remove it
-					workspace.remove(key);
 				}
 			}
 			

@@ -320,7 +320,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_moveFolderPath(_oid, normalizeFolderPathString(sourceFolder),
 			normalizeFolderPathString(destinationFolder));
 	}
-
+	
 	// Copy support
 	//--------------------------------------------------------------------------
 	

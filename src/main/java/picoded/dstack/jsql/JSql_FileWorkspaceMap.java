@@ -6,11 +6,18 @@ import picoded.core.struct.GenericConvertList;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.management.RuntimeErrorException;
+
+import org.apache.commons.io.FileUtils;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
@@ -469,7 +476,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
 			destinationFolder, oid, sourceFolder).update();
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Copy support
@@ -505,13 +512,26 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Setup parent folders
 		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFile));
 		
-		// Remove the old file (if exist)
-		// backend_removeFile(oid, destinationFile);
-		
-		// Apply the update statement
-		sqlObj.prepareStatement(
-			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
-			destinationFile, oid, sourceFile).update();
+		// Read the file content
+		byte[] data = backend_fileRead(oid, sourceFile);
+		// Get current timestamp
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		// Upsert into database
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			// Unique values to "INSERT" or "UPDATE" on
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, destinationFile }, //
+			// Values that require updating 
+			new String[] { "uTm", "data" }, //
+			new Object[] { now, data }, //
+			// Values if exists, do NOT update them (aka ignored in UPDATE)
+			new String[] { "cTm", "eTm", "fTyp" }, //
+			new Object[] { now, 0, fTyp_file }, //
+			// Additional collumns that exist in the database table
+			// to provide special handling.
+			null // The only misc col, is pKy, which is being handled by DB
+			);
 	}
 	
 	/**
@@ -542,25 +562,67 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Setup parent folders
 		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFolder));
 		
-		// For each path, lets do the respective delete + update
+		// Get current timestamp
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		
+		// For each path, lets do the respective upsert
 		for (String subPath : affectedPaths) {
-			// Delete destination path / file (if exists)
-			// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
-			// 	destinationFolder + subPath });
-			
-			// Apply the update statement
-			sqlObj.prepareStatement(
-				"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
-				destinationFolder + subPath, oid, sourceFolder + subPath).update();
+			// Upsert into database
+			if (subPath.endsWith("/")) {
+				// Upsert statement for folder
+				sqlObj.upsert( //
+					fileWorkspaceTableName, //
+					// Unique values to "INSERT" or "UPDATE" on
+					new String[] { "oID", "path" }, //
+					new Object[] { oid, destinationFolder + subPath }, //
+					// Values that require updating 
+					new String[] { "uTm", "data" }, //
+					new Object[] { now, null }, //
+					// Values if exists, do NOT update them (aka ignored in UPDATE)
+					new String[] { "cTm", "eTm", "fTyp" }, //
+					new Object[] { now, 0, fTyp_folder }, //
+					// Additional collumns that exist in the database table
+					// to provide special handling.
+					null // The only misc col, is pKy, which is being handled by DB
+					);
+			} else {
+				// Read the file content
+				byte[] data = backend_fileRead(oid, sourceFolder + subPath);
+				// Upsert statement for file
+				sqlObj.upsert( //
+					fileWorkspaceTableName, //
+					// Unique values to "INSERT" or "UPDATE" on
+					new String[] { "oID", "path" }, //
+					new Object[] { oid, destinationFolder + subPath }, //
+					// Values that require updating 
+					new String[] { "uTm", "data" }, //
+					new Object[] { now, data }, //
+					// Values if exists, do NOT update them (aka ignored in UPDATE)
+					new String[] { "cTm", "eTm", "fTyp" }, //
+					new Object[] { now, 0, fTyp_file }, //
+					// Additional collumns that exist in the database table
+					// to provide special handling.
+					null // The only misc col, is pKy, which is being handled by DB
+					);
+			}
 		}
 		
-		// Update the destination directory itself
-		// sqlObj.delete(fileWorkspaceTableName, "oid = ? AND path = ?", new Object[] { oid,
-		// 	destinationFolder });
-		// Apply the update statement
-		sqlObj.prepareStatement(
-			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
-			destinationFolder, oid, sourceFolder).update();
+		// Apply the upsert statement
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			// Unique values to "INSERT" or "UPDATE" on
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, destinationFolder }, //
+			// Values that require updating 
+			new String[] { "uTm", "data" }, //
+			new Object[] { now, null }, //
+			// Values if exists, do NOT update them (aka ignored in UPDATE)
+			new String[] { "cTm", "eTm", "fTyp" }, //
+			new Object[] { now, 0, fTyp_folder }, //
+			// Additional collumns that exist in the database table
+			// to provide special handling.
+			null // The only misc col, is pKy, which is being handled by DB
+			);
 	}
 	
 	//--------------------------------------------------------------------------

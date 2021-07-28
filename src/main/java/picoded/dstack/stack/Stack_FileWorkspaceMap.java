@@ -382,7 +382,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 			dataLayers[i].backend_moveFolderPath(oid, sourceFolder, destinationFolder);
 		}
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Move support
@@ -437,7 +437,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	public void backend_copyFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_moveFolderPath(oid, sourceFolder, destinationFolder);
+			dataLayers[i].backend_copyFolderPath(oid, sourceFolder, destinationFolder);
 		}
 	}
 	

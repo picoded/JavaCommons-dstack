@@ -202,7 +202,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
 		assertTrue(fileWorkspace.fileExist("moved/folder/file.txt"));
 	}
-
+	
 	//-----------------------------------------------------------------------------------
 	//
 	// Copy test
@@ -219,12 +219,17 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
 		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
 		
-		// Move it
-		fileWorkspace.copyFile("test/folder/file.txt", "test/folder/moved.txt");
+		// Copy it
+		fileWorkspace.copyFile("test/folder/file.txt", "test/folder/copied.txt");
 		
-		// File moved
-		// assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
-		assertTrue(fileWorkspace.fileExist("test/folder/moved.txt"));
+		// Original file remains intact
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// File has been copied
+		assertTrue(fileWorkspace.fileExist("test/folder/copied.txt"));
+		
+		// File should be equals
+		assertEquals(fileWorkspace.readString("/test/folder/copied.txt"), "anything");
 	}
 	
 	@Test
@@ -237,12 +242,17 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
 		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
 		
-		// Move it
-		fileWorkspace.copyFolderPath("test/folder/", "moved/folder/");
+		// Copy the folder
+		fileWorkspace.copyFolderPath("test/folder/", "test/copied/");
 		
-		// File moved
-		// assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
-		assertTrue(fileWorkspace.fileExist("moved/folder/file.txt"));
+		// Original folder/file remains intact
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Folder has been copied
+		assertTrue(fileWorkspace.fileExist("test/copied/file.txt"));
+		
+		// File should be equals
+		assertEquals(fileWorkspace.readString("test/copied/file.txt"), new String("anything"));
 	}
 	
 	//-----------------------------------------------------------------------------------

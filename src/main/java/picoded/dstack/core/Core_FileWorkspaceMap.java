@@ -256,7 +256,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		final String destinationFolder) {
 		throw new RuntimeException("Missing backend implementation");
 	}
-
+	
 	// Copy support
 	//--------------------------------------------------------------------------
 	
@@ -268,7 +268,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
 	 *          missing files / corrupted data can occur when executed concurrently with other operations.
 	 * 
-	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
 	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
 	 * 
 	 * This operation may in effect function as a rename

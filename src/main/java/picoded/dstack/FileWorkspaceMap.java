@@ -93,7 +93,7 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	default boolean atomicMoveSupported() {
 		return false;
 	}
-
+	
 	/**
 	 * @return if the current configured implementation supports atomic copy operations.
 	 */
