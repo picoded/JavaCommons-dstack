@@ -152,26 +152,26 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		sqlObj.delete(dataStorageTable);
 	}
 	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Internal functions, used by DataObject
-	// //
-	// //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	//
+	// Internal functions, used by DataObject
+	//
+	//--------------------------------------------------------------------------
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Removes the complete remote data map, for DataObject.
-	//  * This is used to nuke an entire object
-	//  *
-	//  * @param  Object ID to remove
-	//  *
-	//  * @return  nothing
-	//  **/
-	// public void DataObjectRemoteDataMap_remove(String _oid) {
-	// 	// Delete the data
-	// 	queryBuilder.jSqlObjectMapRemove(_oid);
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the complete remote data map, for DataObject.
+	 * This is used to nuke an entire object
+	 *
+	 * @param  Object ID to remove
+	 *
+	 * @return  nothing
+	 **/
+	public void DataObjectRemoteDataMap_remove(String _oid) {
+		// Delete the data
+		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { _oid });
+	}
 	
 	// /**
 	//  * Gets the complete remote data map, for DataObject.
