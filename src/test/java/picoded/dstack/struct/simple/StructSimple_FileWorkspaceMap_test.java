@@ -252,7 +252,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertTrue(fileWorkspace.fileExist("test/copied/file.txt"));
 		
 		// File should be equals
-		assertEquals(fileWorkspace.readString("test/copied/file.txt"), new String("anything"));
+		assertEquals(fileWorkspace.readString("test/copied/file.txt"), "anything");
 	}
 	
 	//-----------------------------------------------------------------------------------
