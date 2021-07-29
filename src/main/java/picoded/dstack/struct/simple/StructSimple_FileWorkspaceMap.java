@@ -390,7 +390,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Check if sourceFolder exist
 			if (workspace.get(sourceFile) == null) {
-				throw new RuntimeException("AAAsourceFile does not exist (oid=" + oid + ") : "
+				throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
 					+ sourceFile);
 			}
 			
