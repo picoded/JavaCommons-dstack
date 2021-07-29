@@ -559,15 +559,15 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// First lets get all the various paths
 		Set<String> affectedPaths = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
 		
-		// Setup parent folders
-		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFolder));
+		// Setup destination folders
+		backend_ensureFolderPath(oid, destinationFolder);
 		
 		// Get current timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		
-		// For each path, lets do the respective upsert
+		// For each path, lets scan for folders to recursively initialize
 		for (String subPath : affectedPaths) {
-			// Upsert into database
+			// Folders would end with the reserved "/" character
 			if (subPath.endsWith("/")) {
 				// Upsert statement for folder
 				sqlObj.upsert( //
@@ -585,10 +585,16 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 					// to provide special handling.
 					null // The only misc col, is pKy, which is being handled by DB
 					);
-			} else {
+			}
+		}
+		
+		// For each path, lets scan for files (not a folder)
+		for (String subPath : affectedPaths) {
+			// Setup the various sub directories
+			if (!subPath.endsWith("/")) {
 				// Read the file content
 				byte[] data = backend_fileRead(oid, sourceFolder + subPath);
-				// Upsert statement for file
+				// And copy over the file content
 				sqlObj.upsert( //
 					fileWorkspaceTableName, //
 					// Unique values to "INSERT" or "UPDATE" on
@@ -606,23 +612,6 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 					);
 			}
 		}
-		
-		// Apply the upsert statement
-		sqlObj.upsert( //
-			fileWorkspaceTableName, //
-			// Unique values to "INSERT" or "UPDATE" on
-			new String[] { "oID", "path" }, //
-			new Object[] { oid, destinationFolder }, //
-			// Values that require updating 
-			new String[] { "uTm", "data" }, //
-			new Object[] { now, null }, //
-			// Values if exists, do NOT update them (aka ignored in UPDATE)
-			new String[] { "cTm", "eTm", "fTyp" }, //
-			new Object[] { now, 0, fTyp_folder }, //
-			// Additional collumns that exist in the database table
-			// to provide special handling.
-			null // The only misc col, is pKy, which is being handled by DB
-			);
 	}
 	
 	//--------------------------------------------------------------------------
