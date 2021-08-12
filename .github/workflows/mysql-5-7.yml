@@ -1,4 +1,4 @@
-name: Java CI
+name: MySql 5.7 Support Test
 on:
   push:
     branches: [ master, eugene/* ]

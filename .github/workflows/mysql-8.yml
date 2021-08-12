@@ -1,4 +1,4 @@
-name: Java CI
+name: MySql 8.0 Support Test
 on:
   push:
     branches: [ master, eugene/* ]

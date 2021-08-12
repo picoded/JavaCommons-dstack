@@ -1,4 +1,4 @@
-name: Java CI
+name: Core Test & Binary Build
 on:
   push:
     branches: [ master, eugene/* ]
