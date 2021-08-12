@@ -34,5 +34,3 @@ jobs:
       run: ./gradlew src
     - name: Run unit tests
       run: ./gradlew test -Ptest_mysql
-    - name: Build with Gradle
-      run: ./gradlew build
