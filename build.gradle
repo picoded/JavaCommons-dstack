@@ -80,7 +80,7 @@ dependencies {
 	//-------------------------------------------------------------------------------------------------------------------
 
 	// Connection pooling
-	api "com.zaxxer:HikariCP:3.4.3" // connection pooling
+	api "com.zaxxer:HikariCP:4.0.3" // connection pooling
 
 	// OJDBC driver connection
 	// providedCompile group: 'com.oracle', name: 'ojdbc8', version: '18.5.0.0.0'
