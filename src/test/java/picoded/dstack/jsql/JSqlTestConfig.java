@@ -61,7 +61,7 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// Default Credentials for MYSQL //
 	//-------------------------------//
-	static private String MYSQL_HOST = "demodb-mysql.picoded-dev.com";
+	static private String MYSQL_HOST = "localhost";
 	static private String MYSQL_DATA = "JAVACOMMONS";
 	static private String MYSQL_USER = "JAVACOMMONS";
 	static private String MYSQL_PASS = "JAVACOMMONS";
