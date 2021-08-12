@@ -38,7 +38,7 @@ jobs:
           build/reports/**/*
           build/test-results/**/*
           build/jacoco/**/*
-    - name: Archive code coverage results
+    - name: Archive binary files
       uses: actions/upload-artifact@v2
       with:
         name: binary-libs
