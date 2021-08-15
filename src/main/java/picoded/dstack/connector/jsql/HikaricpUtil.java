@@ -217,7 +217,7 @@ class HikaricpUtil {
 		}
 		
 		// Setup the configured connection URL + DB
-		hconfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		// hconfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
 		
 		hconfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name);
 		
@@ -233,7 +233,7 @@ class HikaricpUtil {
 			config.getBoolean("cachePrepStmts", true) //
 			);
 		hconfig.addDataSourceProperty("prepStmtCacheSize", //
-			config.getInt("prepStmtCacheSize", 250) //
+			config.getInt("prepStmtCacheSize", 500) //
 			);
 		hconfig.addDataSourceProperty("prepStmtCacheSqlLimit", //
 			config.getInt("prepStmtCacheSqlLimit", 2048) //
