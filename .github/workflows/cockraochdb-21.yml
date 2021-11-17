@@ -48,7 +48,7 @@ jobs:
     - name: Test basic cockroach DB connection
       run: |
         sudo apt-get update && \
-        sudo apt-get install postgresql-client-11 && \
+        sudo apt-get install postgresql-client && \
         psql -p 26257 -h 127.0.0.1 --username=javacommons --no-password -c "SHOW DATABASES"
     - name: Setup gradle binaries
       run: ./gradlew
