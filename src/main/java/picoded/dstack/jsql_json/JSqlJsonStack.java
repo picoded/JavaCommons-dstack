@@ -63,17 +63,18 @@ public class JSqlJsonStack extends JSqlStack {
 	 * @return initialized data structure if type is supported
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
-		// Initialize for the respective type
-		if (type.equalsIgnoreCase("DataObjectMap")) {
-			// Get the respective config
-			GenericConvertMap<String, Object> dataObjectMapConfig = config
-				.fetchGenericConvertStringMap("dataObjectMap", "{}");
-			GenericConvertMap<String, Object> tableConfig = dataObjectMapConfig
-				.fetchGenericConvertStringMap(name);
-			
-			// Initialize with (or without) config
-			return new JSql_DataObjectMap(conn, name, tableConfig);
-		}
+		
+		// // Initialize for the respective type
+		// if (type.equalsIgnoreCase("DataObjectMap")) {
+		// 	// Get the respective config
+		// 	GenericConvertMap<String, Object> dataObjectMapConfig = config
+		// 		.fetchGenericConvertStringMap("dataObjectMap", "{}");
+		// 	GenericConvertMap<String, Object> tableConfig = dataObjectMapConfig
+		// 		.fetchGenericConvertStringMap(name);
+		
+		// 	// Initialize with (or without) config
+		// 	return new JSql_DataObjectMap(conn, name, tableConfig);
+		// }
 		
 		// Fall back to the original support
 		return super.initDataStructure(name, type);

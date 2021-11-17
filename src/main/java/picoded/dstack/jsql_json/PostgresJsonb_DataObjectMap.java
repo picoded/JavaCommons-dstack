@@ -25,7 +25,7 @@ import picoded.core.conv.ListValueConv;
  * 
  * Effectively obseleting the original Entity-Key-Value map design
  **/
-public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
+abstract public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -103,11 +103,11 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		//
 		// See: https://www.cockroachlabs.com/docs/v20.2/performance-best-practices-overview.html#unique-id-best-practices
 		//
-
+		
 		// DATA Table constructor
 		//----------------------------
 		sqlObj.update_raw( //
-			"CREATE TABLE IF NOT EXISTS "+dataStorageTable+" (" + //
+			"CREATE TABLE IF NOT EXISTS " + dataStorageTable + " (" + //
 				// User based primary key
 				"oID VARCHAR(64) UNIQUE, " + //
 				"pTm TIMESTAMP, " + //
@@ -119,17 +119,17 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 				"data JSONB, " + //
 				// Real primary key for DB
 				"PRIMARY KEY(oID, pTm) " + //
-			")" //
-		);
+				")" //
+			);
 		
 		// Baseline GIN index
 		//----------------------------
 		sqlObj.update_raw( //
-			"CREATE INDEX IF NOT EXISTS data_idx "+//
-			"ON "+dataStorageTable+" " + //
-			"USING gin (data)" //
-		);
-
+			"CREATE INDEX IF NOT EXISTS data_idx " + //
+				"ON " + dataStorageTable + " " + //
+				"USING gin (data)" //
+			);
+		
 		//------------------------------------------------------
 		// @TODO: Additional collumn specific B-Tree index
 		//        which is declarable by config options
@@ -187,10 +187,10 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	//  **/
 	// public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 	// 	Set<String> keys) {
-		
+	
 	// 	// Curent timestamp
 	// 	long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
-		
+	
 	// 	// Ensure GUID is registered
 	// 	sqlObj.upsert( //
 	// 		primaryKeyTable, //
@@ -202,7 +202,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	// 		new Object[] { now, 0 }, //
 	// 		null // The only misc col, is pKy, which is being handled by DB
 	// 		);
-		
+	
 	// 	// Does the data append
 	// 	queryBuilder.jSqlObjectMapUpdate(_oid, fullMap, keys);
 	// }

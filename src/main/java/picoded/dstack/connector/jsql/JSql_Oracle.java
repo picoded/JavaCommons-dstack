@@ -732,7 +732,6 @@ public class JSql_Oracle extends JSql_Base {
 		// Sanatize out AUTOINCREMENT (known issue?)
 		qString = qString.replaceAll("AUTOINCREMENT", "");
 		
-
 		// Perform the original update call
 		int res = super.update(qString, values);
 		
