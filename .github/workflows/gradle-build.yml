@@ -28,6 +28,8 @@ jobs:
       run: ./gradlew src
     - name: Run unit tests
       run: ./gradlew test
+    - name: Run jacocoTestReport
+      run: ./gradlew jacocoTestReport
     - name: Run the build
       run: ./gradlew build
     - name: Archive code coverage results
