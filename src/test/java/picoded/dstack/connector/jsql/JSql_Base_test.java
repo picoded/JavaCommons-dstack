@@ -30,13 +30,18 @@ public abstract class JSql_Base_test {
 	public abstract JSql sqlImplementation();
 	
 	protected JSql jsqlObj;
-	protected static String testTableName = "JSqlTest_"
-		+ JSqlTestConfig.randomTablePrefix().toUpperCase();
+
+	// Common test table name to reuse between session,
+	// this is converted to a class parameter for inter class compatibility
+	protected static String staticTestTableName = ("JSqlTest_"
+		+ JSqlTestConfig.randomTablePrefix()).toUpperCase();
+
+	// The class parameter, that is easily hanlded in extended classes
+	protected String testTableName = staticTestTableName.toUpperCase();
 	
 	@BeforeClass
 	public static void oneTimeSetUp() {
 		// one-time initialization code
-		testTableName = testTableName.toUpperCase();
 	}
 	
 	@AfterClass
@@ -47,6 +52,7 @@ public abstract class JSql_Base_test {
 	@Before
 	public void setUp() {
 		jsqlObj = sqlImplementation();
+		testTableName = staticTestTableName.toUpperCase();
 	}
 	
 	@After

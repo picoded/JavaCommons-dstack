@@ -25,13 +25,11 @@ public class JSql_Postgres_test extends JSql_Base_test {
 	//
 	//////////////////////////////////////////////////////////////////////////
 	
-	protected static String testTableName = "JSqlTest_"
-		+ JSqlTestConfig.randomTablePrefix().toLowerCase();
-	
-	@BeforeClass
-	public static void oneTimeSetUp() {
-		// one-time initialization code
-		testTableName = testTableName.toLowerCase();
+	// We overwrite the test table setup, to lowercse
+	@Before
+	public void setUp() {
+		jsqlObj = sqlImplementation();
+		testTableName = staticTestTableName.toLowerCase();
 	}
 	
 	//////////////////////////////////////////////////////////////////////////
