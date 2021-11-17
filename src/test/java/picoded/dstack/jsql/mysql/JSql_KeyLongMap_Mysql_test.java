@@ -6,6 +6,9 @@ import picoded.dstack.jsql.*;
 import picoded.dstack.connector.jsql.*;
 import picoded.dstack.struct.simple.*;
 
+// java imports
+import java.security.SecureRandom;
+
 // Junit
 import org.junit.Test;
 

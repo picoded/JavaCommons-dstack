@@ -6,6 +6,9 @@ import picoded.dstack.jsql.*;
 import picoded.dstack.connector.jsql.*;
 import picoded.dstack.struct.simple.*;
 
+// java imports
+import java.security.SecureRandom;
+
 public class JSql_KeyLongMap_Postgres_test extends JSql_KeyLongMap_test {
 	
 	// To override for implementation
