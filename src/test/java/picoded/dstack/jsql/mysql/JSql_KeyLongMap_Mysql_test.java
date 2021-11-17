@@ -9,8 +9,9 @@ import picoded.dstack.struct.simple.*;
 // java imports
 import java.security.SecureRandom;
 
-// Junit
-import org.junit.Test;
+// Test system include
+import static org.junit.Assert.*;
+import org.junit.*;
 
 public class JSql_KeyLongMap_Mysql_test extends JSql_KeyLongMap_test {
 	
