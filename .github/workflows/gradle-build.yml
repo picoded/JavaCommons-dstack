@@ -41,11 +41,13 @@ jobs:
           build/reports/**/*
           build/test-results/**/*
           build/jacoco/**/*
-    - uses: codecov/codecov-action@v2
+    - name: Upload code coverage to codecov
+      uses: codecov/codecov-action@v2
+      if: always()
       with:
         # flags: gradle-build # optional
+        # directory: build/jacoco/
         verbose: true # optional (default = false)
-        directory: build/jacoco/
         fail_ci_if_error: false
     - name: Archive binary files
       uses: actions/upload-artifact@v2
