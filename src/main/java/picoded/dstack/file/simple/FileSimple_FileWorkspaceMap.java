@@ -483,6 +483,77 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Copy support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_copyFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		
+		// Check for source file
+		File sourceObj = workspaceFileObj(oid, sourceFile);
+		if (!sourceObj.isFile()) {
+			throw new RuntimeException("sourceFile does not exist / is not a file (oid=" + oid
+				+ ") : " + sourceFile);
+		}
+		
+		// Apply the copy
+		FileUtil.copyFile(sourceObj, workspaceFileObj(oid, destinationFile));
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		// Check for source folder
+		File sourceObj = workspaceFileObj(oid, sourceFolder);
+		if (!sourceObj.isDirectory()) {
+			throw new RuntimeException("sourceFolder does not exist / is not a folder (oid=" + oid
+				+ ") : " + sourceFolder);
+		}
+		
+		// Apply the Copy
+		FileUtil.copyDirectory(sourceObj, workspaceFileObj(oid, destinationFolder));
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Listing support
 	//
 	//--------------------------------------------------------------------------

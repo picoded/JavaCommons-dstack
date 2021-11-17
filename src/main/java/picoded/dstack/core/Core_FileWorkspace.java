@@ -321,6 +321,50 @@ public class Core_FileWorkspace implements FileWorkspace {
 			normalizeFolderPathString(destinationFolder));
 	}
 	
+	// Copy support
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param sourceFile
+	 * @param destinationFile
+	 */
+	public void copyFile(final String sourceFile, final String destinationFile) {
+		main.backend_copyFile(_oid, normalizeFilePathString(sourceFile),
+			normalizeFilePathString(destinationFile));
+	}
+	
+	/**
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param sourceFolder
+	 * @param destinationFolder
+	 */
+	public void copyFolderPath(final String sourceFolder, final String destinationFolder) {
+		main.backend_copyFolderPath(_oid, normalizeFolderPathString(sourceFolder),
+			normalizeFolderPathString(destinationFolder));
+	}
+	
 	// Listing support
 	//--------------------------------------------------------------------------
 	

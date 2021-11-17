@@ -13,7 +13,7 @@ plugins {
 	// id "com.github.onslip.gradle-one-jar" version "1.0.5"
 
 	// Shadow plugin used to build the shade jar
-	id 'com.github.johnrengelman.plugin-shadow' version '2.0.2'
+	id 'com.github.johnrengelman.shadow' version '2.0.4'
 
 	// jacoco code coverage for test
 	id 'jacoco'
@@ -92,7 +92,7 @@ dependencies {
 
 	// api files("./lib/jsql/ojdbc6.jar")  // for oracle	
 	api "org.xerial:sqlite-jdbc:3.25.2" // for sqlite
-	api "mysql:mysql-connector-java:6.0.6" // for mysql
+	api "mysql:mysql-connector-java:8.0.26" // for mysql
 
 	// Newer MSSQL connection (THIS DOES NOT WORK)
 	// api "com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8" // for mssql
@@ -266,6 +266,12 @@ test {
 		// As our test tends to be io-blocked rather then cpu
 		// we will run more tests in parallels
 		maxParallelForks = (Runtime.runtime.availableProcessors() * 2) as int
+
+		// We clamp this to 12 threads, because the high volume of SQL test
+		// can currently cause connection errors on the test servers
+		if( maxParallelForks > 12 ) {
+			maxParallelForks = 12;
+		}
 	}
 	
 	// Set up the number of tests per fork

@@ -205,6 +205,58 @@ public class StructSimple_FileWorkspaceMap_test {
 	
 	//-----------------------------------------------------------------------------------
 	//
+	// Copy test
+	//
+	//-----------------------------------------------------------------------------------
+	
+	@Test
+	public void fileWrite_andFileCopy() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Copy it
+		fileWorkspace.copyFile("test/folder/file.txt", "test/folder/copied.txt");
+		
+		// Original file remains intact
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// File has been copied
+		assertTrue(fileWorkspace.fileExist("test/folder/copied.txt"));
+		
+		// File should be equals
+		assertEquals(fileWorkspace.readString("/test/folder/copied.txt"), "anything");
+	}
+	
+	@Test
+	public void fileWrite_andFolderCopy() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Copy the folder
+		fileWorkspace.copyFolderPath("test/folder/", "test/copied/");
+		
+		// Original folder/file remains intact
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		
+		// Folder has been copied
+		assertTrue(fileWorkspace.fileExist("test/copied/file.txt"));
+		
+		// File should be equals
+		assertEquals(fileWorkspace.readString("test/copied/file.txt"), "anything");
+	}
+	
+	//-----------------------------------------------------------------------------------
+	//
 	// Path sets
 	//
 	//-----------------------------------------------------------------------------------

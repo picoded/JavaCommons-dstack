@@ -6,11 +6,18 @@ import picoded.core.struct.GenericConvertList;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.management.RuntimeErrorException;
+
+import org.apache.commons.io.FileUtils;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
@@ -468,6 +475,143 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		sqlObj.prepareStatement(
 			"UPDATE " + fileWorkspaceTableName + " SET path = ? WHERE oid = ? AND path = ?",
 			destinationFolder, oid, sourceFolder).update();
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Copy support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_copyFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		
+		// Abort if file does not exist
+		if (!backend_fileExist(oid, sourceFile)) {
+			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : " + sourceFile);
+		}
+		
+		// Setup parent folders
+		backend_ensureFolderPath(oid, FileUtil.getParentPath(destinationFile));
+		
+		// Read the file content
+		byte[] data = backend_fileRead(oid, sourceFile);
+		// Get current timestamp
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		// Upsert into database
+		sqlObj.upsert( //
+			fileWorkspaceTableName, //
+			// Unique values to "INSERT" or "UPDATE" on
+			new String[] { "oID", "path" }, //
+			new Object[] { oid, destinationFile }, //
+			// Values that require updating 
+			new String[] { "uTm", "data" }, //
+			new Object[] { now, data }, //
+			// Values if exists, do NOT update them (aka ignored in UPDATE)
+			new String[] { "cTm", "eTm", "fTyp" }, //
+			new Object[] { now, 0, fTyp_file }, //
+			// Additional collumns that exist in the database table
+			// to provide special handling.
+			null // The only misc col, is pKy, which is being handled by DB
+			);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		// First lets get all the various paths
+		Set<String> affectedPaths = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+		
+		// Setup destination folders
+		backend_ensureFolderPath(oid, destinationFolder);
+		
+		// Get current timestamp
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		
+		// For each path, lets scan for folders to recursively initialize
+		for (String subPath : affectedPaths) {
+			// Folders would end with the reserved "/" character
+			if (subPath.endsWith("/")) {
+				// Upsert statement for folder
+				sqlObj.upsert( //
+					fileWorkspaceTableName, //
+					// Unique values to "INSERT" or "UPDATE" on
+					new String[] { "oID", "path" }, //
+					new Object[] { oid, destinationFolder + subPath }, //
+					// Values that require updating 
+					new String[] { "uTm", "data" }, //
+					new Object[] { now, null }, //
+					// Values if exists, do NOT update them (aka ignored in UPDATE)
+					new String[] { "cTm", "eTm", "fTyp" }, //
+					new Object[] { now, 0, fTyp_folder }, //
+					// Additional collumns that exist in the database table
+					// to provide special handling.
+					null // The only misc col, is pKy, which is being handled by DB
+					);
+			}
+		}
+		
+		// For each path, lets scan for files (not a folder)
+		for (String subPath : affectedPaths) {
+			// Setup the various sub directories
+			if (!subPath.endsWith("/")) {
+				// Read the file content
+				byte[] data = backend_fileRead(oid, sourceFolder + subPath);
+				// And copy over the file content
+				sqlObj.upsert( //
+					fileWorkspaceTableName, //
+					// Unique values to "INSERT" or "UPDATE" on
+					new String[] { "oID", "path" }, //
+					new Object[] { oid, destinationFolder + subPath }, //
+					// Values that require updating 
+					new String[] { "uTm", "data" }, //
+					new Object[] { now, data }, //
+					// Values if exists, do NOT update them (aka ignored in UPDATE)
+					new String[] { "cTm", "eTm", "fTyp" }, //
+					new Object[] { now, 0, fTyp_file }, //
+					// Additional collumns that exist in the database table
+					// to provide special handling.
+					null // The only misc col, is pKy, which is being handled by DB
+					);
+			}
+		}
 	}
 	
 	//--------------------------------------------------------------------------
