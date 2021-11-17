@@ -40,6 +40,8 @@ jobs:
       run: ./gradlew src
     - name: Run unit tests
       run: ./gradlew test -Ptest_postgres
+    - name: Run jacocoTestReport
+      run: ./gradlew jacocoTestReport
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       if: always()
@@ -49,3 +51,11 @@ jobs:
           build/reports/**/*
           build/test-results/**/*
           build/jacoco/**/*
+    - name: Upload code coverage to codecov
+      uses: codecov/codecov-action@v2
+      if: always()
+      with:
+        # flags: gradle-build # optional
+        # directory: build/jacoco/
+        verbose: true # optional (default = false)
+        fail_ci_if_error: false
