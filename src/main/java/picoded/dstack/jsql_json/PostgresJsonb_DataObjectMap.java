@@ -18,6 +18,9 @@ import picoded.core.struct.query.Query;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.dstack.connector.jsql.*;
 import picoded.core.conv.ListValueConv;
+import picoded.core.conv.ConvertJSON;
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.GenericConvertList;
 
 /**
  * Postgres Jsonb implementation of data object map,
@@ -25,7 +28,7 @@ import picoded.core.conv.ListValueConv;
  * 
  * Effectively obseleting the original Entity-Key-Value map design
  **/
-abstract public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
+public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -110,15 +113,16 @@ abstract public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			"CREATE TABLE IF NOT EXISTS " + dataStorageTable + " (" + //
 				// User based primary key
 				"oID VARCHAR(64) UNIQUE, " + //
-				"pTm TIMESTAMP, " + //
 				// Time stamps
 				"cTm BIGINT, " + //
 				"uTm BIGINT, " + //
 				"eTm BIGINT, " + //
 				// JSON data
 				"data JSONB, " + //
+				// BINARY data
+				"bData BLOB, " + //
 				// Real primary key for DB
-				"PRIMARY KEY(oID, pTm) " + //
+				"PRIMARY KEY(oID, cTm) " + //
 				")" //
 			);
 		
@@ -173,57 +177,82 @@ abstract public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { _oid });
 	}
 	
-	// /**
-	//  * Gets the complete remote data map, for DataObject.
-	//  * @returns null if not exists, else a map with the data
-	//  **/
-	// public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-	// 	return queryBuilder.jSqlObjectMapFetch(_oid, null);
-	// }
+	/**
+	 * Gets the complete remote data map, for DataObject.
+	 * @returns null if not exists, else a map with the data
+	 **/
+	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
+		
+		// Fetch the datamap
+		JSqlResult res = sqlObj.select( //
+			dataStorageTable, //
+			"*", "oID = ?", //
+			new Object[] { _oid } //
+			);
+		
+		// Get thee value lists
+		GenericConvertList<Object> data_list = res.get("data");
+		
+		// Return null, if list is empty
+		if (data_list == null || data_list.size() <= 0) {
+			return null;
+		}
+		
+		// Get the data JSON string
+		String data = data_list.get(0).toString();
+		
+		// Convert into a map
+		return ConvertJSON.toMap(data);
+	}
 	
-	// /**
-	//  * Updates the actual backend storage of DataObject
-	//  * either partially (if supported / used), or completely
-	//  **/
-	// public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
-	// 	Set<String> keys) {
+	/**
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 **/
+	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
+		Set<String> keys) {
+		
+		// Curent timestamp
+		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+		
+		// Ensure GUID is registered
+		sqlObj.upsert( //
+			dataStorageTable, //
+			new String[] { "oID" }, //
+			new Object[] { _oid }, //
+			new String[] { "uTm", "data" }, //
+			new Object[] { now, ConvertJSON.fromMap(fullMap) }, //
+			new String[] { "cTm", "eTm" }, //
+			new Object[] { now, 0 }, //
+			null // The only misc col, is pKy, which is being handled by DB
+			);
+	}
 	
-	// 	// Curent timestamp
-	// 	long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
 	
-	// 	// Ensure GUID is registered
-	// 	sqlObj.upsert( //
-	// 		primaryKeyTable, //
-	// 		new String[] { "oID" }, //
-	// 		new Object[] { _oid }, //
-	// 		new String[] { "uTm" }, //
-	// 		new Object[] { now }, //
-	// 		new String[] { "cTm", "eTm" }, //
-	// 		new Object[] { now, 0 }, //
-	// 		null // The only misc col, is pKy, which is being handled by DB
-	// 		);
-	
-	// 	// Does the data append
-	// 	queryBuilder.jSqlObjectMapUpdate(_oid, fullMap, keys);
-	// }
-	
-	// //--------------------------------------------------------------------------
-	// //
-	// // KeySet support
-	// //
-	// //--------------------------------------------------------------------------
-	
-	// /**
-	//  * Get and returns all the GUID's, note that due to its
-	//  * potential of returning a large data set, production use
-	//  * should be avoided.
-	//  *
-	//  * @return set of keys
-	//  **/
-	// @Override
-	// public Set<String> keySet() {
-	// 	return queryBuilder.getOidKeySet();
-	// }
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet() {
+		
+		// Fetch the oID kust
+		JSqlResult res = sqlObj.select(dataStorageTable, "oID");
+		
+		// Convert it into a set
+		if (res == null || res.get("oID") == null) {
+			return new HashSet<String>();
+		}
+		return ListValueConv.toStringSet(res.getObjectList("oID"));
+	}
 	
 	// //--------------------------------------------------------------------------
 	// //
@@ -269,35 +298,6 @@ abstract public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	// public long queryCount(String whereClause, Object[] whereValues) {
 	// 	return queryBuilder.dataObjectMapCount(whereClause, whereValues, null, -1, -1);
 	// }
-	
-	//--------------------------------------------------------------------------
-	//
-	// Get key names handling
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * Scans the object and get the various keynames used.
-	 * This is used mainly in adminstration interface, etc.
-	 *
-	 * The seekDepth parameter is ignored in JSql mode, as its optimized.
-	 * 
-	 * @TODO - Fixed table hybrid support for JSql
-	 *
-	 * @param  seekDepth, which detirmines the upper limit for iterating
-	 *         objects for the key names, use -1 to search all
-	 *
-	 * @return  The various key names used in the objects
-	 **/
-	@Override
-	public Set<String> getKeyNames(int seekDepth) {
-		JSqlResult r = sqlObj.select(dataStorageTable, "DISTINCT kID");
-		if (r == null || r.get("kID") == null) {
-			return new HashSet<String>();
-		}
-		
-		return ListValueConv.toStringSet(r.getObjectList("kID"));
-	}
 	
 	//--------------------------------------------------------------------------
 	//

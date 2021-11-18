@@ -137,7 +137,7 @@ public class StructSimple_KeyValueMap_test {
 		assertNotNull(testObj.get("yes"));
 		
 		// sleep the execution for 1.5 secs so the inserted key gets expired.
-		Thread.sleep(1500);
+		Thread.sleep(2500);
 		
 		// key should be null after expiration time.
 		assertEquals(null, testObj.get("yes"));

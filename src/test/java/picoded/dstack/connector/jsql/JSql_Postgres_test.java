@@ -89,7 +89,8 @@ public class JSql_Postgres_test extends JSql_Base_test {
 		// Create view : NOTE THIS DOES NOT USE THE * WILDCARD OPTION
 		// and instead uses the VIEW with all the collumns (base test does otherwise) 
 		// - this is a known issue for cockroachDB which we are currently testing against
-		jsqlObj.update("CREATE VIEW " + testTableName + "_View AS SELECT COL1,COL2,COL3 FROM " + testTableName);
+		jsqlObj.update("CREATE VIEW " + testTableName + "_View AS SELECT COL1,COL2,COL3 FROM "
+			+ testTableName);
 		
 		// Drop created view
 		jsqlObj.update("DROP VIEW IF EXISTS `" + testTableName + "_View`");
