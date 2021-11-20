@@ -200,7 +200,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		}
 		
 		// Convert into a map
-		return JsonbUtils.deserializeDataMap(data_list.getString(0),
+		return JsonbUtils.deserializeDataMap(data_list.get(0).toString(),
 			(byte[]) (res.get("bData").get(0)));
 	}
 	
