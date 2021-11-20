@@ -46,6 +46,8 @@ public class JsonbUtils {
 		protected Kryo initialValue() {
 			Kryo kryo = new Kryo();
 			kryo.register(HashMap.class);
+			kryo.register(byte[].class);
+			// kryo.register(byte.class);
 			return kryo;
 		}
 	};
