@@ -21,6 +21,7 @@ import picoded.core.conv.ListValueConv;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertList;
+import picoded.core.struct.MutablePair;
 
 /**
  * Postgres Jsonb implementation of data object map,
@@ -198,11 +199,9 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			return null;
 		}
 		
-		// Get the data JSON string
-		String data = data_list.get(0).toString();
-		
 		// Convert into a map
-		return ConvertJSON.toMap(data);
+		return JsonbUtils.deserializeDataMap(data_list.getString(0),
+			(byte[]) (res.get("bData").get(0)));
 	}
 	
 	/**
@@ -212,6 +211,9 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		
+		// Get the data pair
+		MutablePair<String, byte[]> dataPair = JsonbUtils.serializeDataMap(fullMap);
+		
 		// Curent timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		
@@ -220,8 +222,8 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			dataStorageTable, //
 			new String[] { "oID" }, //
 			new Object[] { _oid }, //
-			new String[] { "uTm", "data" }, //
-			new Object[] { now, ConvertJSON.fromMap(fullMap) }, //
+			new String[] { "uTm", "data", "bData" }, //
+			new Object[] { now, dataPair.getLeft(), dataPair.getRight() }, //
 			new String[] { "cTm", "eTm" }, //
 			new Object[] { now, 0 }, //
 			null // The only misc col, is pKy, which is being handled by DB
