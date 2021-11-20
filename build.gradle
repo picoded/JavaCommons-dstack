@@ -112,6 +112,9 @@ dependencies {
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
 
+	// Adding the kyro serialization library
+	api 'com.esotericsoftware:kryo:5.2.0'
+	
 	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 	// implementation 'com.google.guava:guava:23.0'
