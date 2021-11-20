@@ -385,7 +385,7 @@ public class JSql_DataObjectMapUtil {
 				
 				// Delete support
 				if (v == ObjectToken.NULL || v == null) {
-					// Skip reserved key, oid key is allowed to be removed directly
+					// Skip reserved key, oid key is NOT allowed to be removed directly
 					if (k.equalsIgnoreCase("oid") || k.equalsIgnoreCase("_oid")) {
 						continue;
 					}
