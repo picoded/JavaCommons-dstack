@@ -1,31 +1,24 @@
-package picoded.dstack.jsql;
+package picoded.dstack.jsql_json;
 
 import java.util.logging.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import picoded.core.security.NxtCrypt;
-import picoded.dstack.DataObjectMap;
-import picoded.dstack.DataObject;
-import picoded.dstack.core.Core_DataObjectMap;
-import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.query.OrderBy;
 import picoded.core.struct.query.Query;
-import picoded.core.struct.GenericConvertHashMap;
-import picoded.dstack.connector.jsql.*;
-import picoded.core.conv.ListValueConv;
+import picoded.core.struct.query.internal.QueryFilter;
+import picoded.dstack.DataObject;
 import picoded.core.conv.ConvertJSON;
-import picoded.core.struct.GenericConvertMap;
-import picoded.core.struct.GenericConvertList;
+import picoded.core.conv.GenericConvert;
 import picoded.core.struct.MutablePair;
+import picoded.core.common.EmptyArray;
 import picoded.core.common.ObjectToken;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -174,5 +167,263 @@ public class JsonbUtils {
 		
 		// And return
 		return retMap;
+	}
+	
+	/** Given the JSON column name, return its remapped value (or its optimized varients) */
+	public static String jsonColumnRemap(String inColumn) {
+		
+		// Skip the system columns (no need to replace)
+		// no change is needed
+		if (inColumn.equals("oID")) {
+			return "oID";
+		}
+		
+		// Remap _oid to the optimized version instead
+		if (inColumn.equals("_oid")) {
+			return "oID";
+		}
+		
+		// Return the json mapped column
+		return "data->>'" + inColumn.replaceAll("\'", "\\'") + "'";
+	}
+	
+	/**
+	 * Given the where clause values, build the query specific for JSON based data tables
+	 * 
+	 * @param whereClause
+	 * @param whereValues
+	 * @return built query object, to be applied directly
+	 */
+	public static Query jsonQueryBuilder(String whereClause, Object[] whereValues) {
+		// Quick skip if null
+		if (whereClause == null) {
+			return null;
+		}
+		
+		// The basic Query to build on
+		Query queryObj = Query.build(whereClause, whereValues);
+		
+		// Get the internal fieldQueryMap and queryArgumentsMap
+		Map<String, List<Query>> fieldQueryMap = queryObj.fieldQueryMap();
+		Map<String, Object> queryArgsMap = queryObj.queryArgumentsMap();
+		
+		// Lets iterate the fields
+		for (String column : fieldQueryMap.keySet()) {
+			
+			// Get its remapped key
+			String remapColumn = JsonbUtils.jsonColumnRemap(column);
+			
+			// Skip if column is equals
+			if (column.equals(remapColumn)) {
+				continue;
+			}
+			
+			// Get the various columns that needs to be replaced
+			List<Query> toReplaceQueries = fieldQueryMap.get(column);
+			
+			// // No query filtering was done, therefor, NULL must be suported
+			// if (toReplaceQueries == null || toReplaceQueries.size() <= 0) {
+			// 	keysWhichMustHandleNullValues.add(column);
+			// 	continue;
+			// }
+			
+			// Lets do the replacement, one by one
+			for (Query toReplace : toReplaceQueries) {
+				
+				// The final remap collumn
+				String remapColumnWithTypeCast = remapColumn;
+
+				// Check if its comparing against an int, if so cast it
+				if( toReplace.defaultArgumentValue() instanceof Number ) {
+					remapColumnWithTypeCast = "("+remapColumn+")::numeric";
+				}
+
+				// Update the larger query
+				Query replacement = QueryFilter.basicQueryFromTokens( //
+					queryArgsMap, remapColumnWithTypeCast, //
+					toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+				);
+				// Replaces old query with new query
+				queryObj = queryObj.replaceQuery(toReplace, replacement);
+			}
+		}
+		
+		// Return the full query that was built
+		return queryObj;
+	}
+	
+	/**
+	 * Given the where clause values, build the query specific for JSON based data tables
+	 * 
+	 * @param inQuery
+	 * @return built query object, to be applied directly
+	 */
+	public static Query jsonQueryBuilder(Query inQuery) {
+		return JsonbUtils.jsonQueryBuilder(inQuery.toSqlString(), inQuery.queryArgumentsArray());
+	}
+	
+	/**
+	 * Given a generated jsonQuery, convert it into multablePair parts, for easier usage
+	 * @param inQuery
+	 * @return
+	 */
+	public static MutablePair<String, Object[]> queryToPair(Query inQuery) {
+		// Quick abort
+		if (inQuery == null) {
+			return null;
+		}
+
+		// Normalizing the postgres string
+		String queryStr = inQuery.toSqlString().replaceAll("\"(.+?->>.+?)\" ([LIKE=><!NOT]+) \\?", "$1 $2 ?");
+		queryStr = queryStr.replaceAll("\"oID\" ([LIKE=><!NOT]+) \\?", "oID $1 ?");
+		queryStr = queryStr.replaceAll("'oID' ([LIKE=><!NOT]+) \\?", "oID $1 ?");
+
+		Object[] queryArgs = inQuery.queryArgumentsArray();
+		
+		System.out.println("JSONB : queryToPair conversion");
+		System.out.println(queryStr);
+		System.out.println( ConvertJSON.fromArray(queryArgs) );
+		
+		// Due to the quoting limitations placed on `Query.toString`, 
+		// we need to readjust for JSON compatibility by removing the outer quotes
+		// (there is already an inner quote)
+		
+		// Build the pair
+		return new MutablePair<String, Object[]>( queryStr, queryArgs );
+	}
+	
+	/**
+	 * Given the where clause values, build the query specific for JSON based data tables
+	 * 
+	 * @param whereClause
+	 * @param whereValues
+	 * @return built query object, to be applied directly
+	 */
+	public static MutablePair<String, Object[]> jsonQueryPairBuilder(String whereClause,
+		Object[] whereValues) {
+		return queryToPair(jsonQueryBuilder(whereClause, whereValues));
+	}
+	
+	/**
+	 * Given the where clause values, build the query specific for JSON based data tables
+	 * 
+	 * @param whereClause
+	 * @param whereValues
+	 * @return built query object, to be applied directly
+	 */
+	public static MutablePair<String, Object[]> jsonQueryPairBuilder(Query inQuery) {
+		return queryToPair(jsonQueryBuilder(inQuery));
+	}
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  OrderBy string processing
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Sanatize the order by string, and places the field name as query arguments
+	 *
+	 * @param  Raw order by string
+	 *
+	 * @return  Order by function obj
+	 **/
+	public static OrderBy<DataObject> jsonOrderByBuilder(String rawString) {
+		// Skip if blank
+		if (rawString == null) {
+			return null;
+		}
+		
+		// Clear out excess whtiespace
+		rawString = rawString.trim().replaceAll("\\s+", " ");
+		if (rawString.length() <= 0) {
+			throw new RuntimeException("Unexpected blank found in OrderBy query : " + rawString);
+		}
+		
+		// Build the object
+		OrderBy<DataObject> orderByObj = new OrderBy<DataObject>(rawString);
+		
+		// Iterate the keynames, and do replacements as needed
+		for (String key : orderByObj.getKeyNames()) {
+			String newKey = JsonbUtils.jsonColumnRemap(key);
+			if (!key.equals(newKey)) {
+				orderByObj.replaceKeyName(key, newKey);
+			}
+		}
+		
+		// Return the OrderBy object
+		return orderByObj;
+	}
+	
+	/**
+	 * Sanatize the order by string, and places the field name as query arguments
+	 *
+	 * @param  Raw order by string
+	 *
+	 * @return  Order by function obj
+	 **/
+	public static String jsonOrderByStringBuilder(String rawString) {
+		// Get the OrderBy obj
+		OrderBy<DataObject> orderByObj = JsonbUtils.jsonOrderByBuilder(rawString);
+		if (orderByObj != null) {
+			return orderByObj.toString().replaceAll("\"(.*->>.*)\"", "$1");
+		}
+		return null;
+	}
+	
+	//-----------------------------------------------------------------------------------------------
+	//
+	//  Raw JSON query builder
+	//
+	//-----------------------------------------------------------------------------------------------
+	
+	/**
+	 * Builde the "giant complex query" to query against the JSON based backend
+	 * @param dataStorageTable    Table name to use
+	 * @param selectCol           Column to select
+	 * @param whereClause         where query statement
+	 * @param whereValues         where clause values array
+	 * @param orderByStr          orderBy clause string, to sort result
+	 * @param offset              offset of the result to display, use -1 to ignore
+	 * @param limit               number of objects to return max, use -1 to ignore
+	 * @return
+	 */
+	public static MutablePair<String, Object[]> fullQueryRawBuilder( String dataStorageTable, String selectCol, String whereClause, Object[] whereValues, String orderByStr,
+	int offset, int limit ) {
+
+		// Build the WHERE clause query first
+		MutablePair<String, Object[]> reqQuery = JsonbUtils.jsonQueryPairBuilder(whereClause, whereValues);
+		
+		// Build the orderBy object
+		String reqOrderByStr = JsonbUtils.jsonOrderByStringBuilder(orderByStr);
+		
+		// Lets build the FULL query string and args
+		StringBuilder fullQuery = new StringBuilder("SELECT "+selectCol+" FROM "+dataStorageTable);
+		Object[] fullArgs = EmptyArray.OBJECT;
+
+		// Handle WHERE clause
+		if( reqQuery != null ) {
+			fullQuery.append(" WHERE "+reqQuery.left);
+			fullArgs = reqQuery.right;
+		}
+
+		// Handle OrderBy clause (fallsback to oID)
+		if( reqOrderByStr != null ) {
+			fullQuery.append(" ORDER BY "+reqOrderByStr);
+		} else {
+			fullQuery.append(" ORDER BY oID");
+		}
+
+		// Limit and offset clause
+		if (limit > 0) {
+			fullQuery.append(" LIMIT " + limit);
+			
+			if (offset > 0) {
+				fullQuery.append(" OFFSET " + offset);
+			}
+		}
+		
+		// Return the argument pair
+		return new MutablePair<>( fullQuery.toString(), fullArgs );
 	}
 }

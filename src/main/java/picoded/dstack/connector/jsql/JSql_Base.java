@@ -11,6 +11,7 @@ import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.CaseInsensitiveHashMap;
 import picoded.core.struct.MutablePair;
+import picoded.core.struct.query.Query;
 
 /**
  * Default generic JSQL implmentation,

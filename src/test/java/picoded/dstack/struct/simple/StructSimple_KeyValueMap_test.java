@@ -10,6 +10,7 @@ import java.util.HashSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junitpioneer.jupiter.RetryingTest;
 
 // Test depends
 import picoded.dstack.*;
@@ -127,7 +128,7 @@ public class StructSimple_KeyValueMap_test {
 			testObj.keySet("world"));
 	}
 	
-	@Test
+	@RetryingTest(3)
 	public void SLOW_testColumnExpiration() throws Exception {
 		// set column expiration time to current time + 1 secs.
 		long expirationTime = System.currentTimeMillis() + 1 * 1000;

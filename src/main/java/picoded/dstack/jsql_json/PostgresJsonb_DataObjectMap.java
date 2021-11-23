@@ -1,7 +1,8 @@
-package picoded.dstack.jsql;
+package picoded.dstack.jsql_json;
 
 import java.util.logging.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -13,7 +14,9 @@ import picoded.core.security.NxtCrypt;
 import picoded.dstack.DataObjectMap;
 import picoded.dstack.DataObject;
 import picoded.dstack.core.Core_DataObjectMap;
+import picoded.dstack.jsql.JSql_DataObjectMapUtil;
 import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.query.OrderBy;
 import picoded.core.struct.query.Query;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.dstack.connector.jsql.*;
@@ -256,40 +259,71 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		return ListValueConv.toStringSet(res.getObjectList("oID"));
 	}
 	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Query based optimization
-	// //
-	// //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	//
+	// Query based optimization
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param whereClause         where query statement
+	 * @param whereValues         where clause values array
+	 * @param orderByStr          orderBy clause string, to sort result
+	 * @param offset              offset of the result to display, use -1 to ignore
+	 * @param limit               number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(String whereClause, Object[] whereValues, String orderByStr,
+		int offset, int limit) {
+		
+		// Build the full query
+		MutablePair<String, Object[]> fullRawQuery = JsonbUtils.fullQueryRawBuilder( //
+			dataStorageTable, "oID", //
+			whereClause, whereValues, //
+			orderByStr, offset, limit //
+		);
+
+		// Execute and get the result
+		// we do a raw query, to avoid any JSQL parsing, which was not designed for 
+		// JSONB postgres use case (manual overwrite being done here)
+		JSqlResult res = sqlObj.query_raw(fullRawQuery.left, fullRawQuery.right);
+
+		// Get the oID list and return it
+		List<Object> oID_list = res.getObjectList("oID");
+		
+		// Generate the object list
+		if (oID_list != null) {
+			return ListValueConv.objectListToStringArray(oID_list);
+		}
+		
+		// Blank list as fallback (nothing found)
+		return new String[0];
+	}
+	
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+		return query_id(queryClause.toString(), queryClause.queryArgumentsArray(), orderByStr,
+			offset, limit);
+	}
 	
 	// /**
-	//  * Performs a search query, and returns the respective DataObject keys.
-	//  *
-	//  * This is the GUID key varient of query, this is critical for stack lookup
-	//  *
-	//  * @param   queryClause, of where query statement and value
-	//  * @param   orderByStr string to sort the order by, use null to ignore
-	//  * @param   offset of the result to display, use -1 to ignore
-	//  * @param   number of objects to return max, use -1 to ignore
-	//  *
-	//  * @return  The String[] array
-	//  **/
-	// public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
-	// 	if (queryClause == null) {
-	// 		return queryBuilder.dataObjectMapQuery_id( //
-	// 			null, null, //
-	// 			orderByStr, offset, limit //
-	// 			);
-	// 	}
-	// 	return queryBuilder.dataObjectMapQuery_id( //
-	// 		queryClause.toSqlString(), //
-	// 		queryClause.queryArgumentsArray(), //
-	// 		orderByStr, offset, limit //
-	// 		);
-	// }
-	
-	// /**
-	//  * Performs a search query, and returns the respective DataObjects
+	//  * Performs a search query, and returns the respective count
 	//  *
 	//  * @param   where query statement
 	//  * @param   where clause values array

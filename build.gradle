@@ -124,6 +124,9 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 	testImplementation 'com.carrotsearch:junit-benchmarks:0.7.2'
 
+	// Used to automate retry of known problematic test
+	testImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
+
 }
 
 //----------------------------------------------------------------
