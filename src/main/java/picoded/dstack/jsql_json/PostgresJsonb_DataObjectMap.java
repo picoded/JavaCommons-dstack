@@ -322,18 +322,38 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			offset, limit);
 	}
 	
-	// /**
-	//  * Performs a search query, and returns the respective count
-	//  *
-	//  * @param   where query statement
-	//  * @param   where clause values array
-	//  *
-	//  * @returns  The total count for the query
-	//  */
-	// @Override
-	// public long queryCount(String whereClause, Object[] whereValues) {
-	// 	return queryBuilder.dataObjectMapCount(whereClause, whereValues, null, -1, -1);
-	// }
+	/**
+	 * Performs a search query, and returns the respective count
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @returns  The total count for the query
+	 */
+	@Override
+	public long queryCount(String whereClause, Object[] whereValues) {
+		// Build the full query
+		MutablePair<String, Object[]> fullRawQuery = JsonbUtils.fullQueryRawBuilder( //
+			dataStorageTable, "COUNT(oID) AS rcount", //
+			whereClause, whereValues, //
+			null, -1, -1 //
+		);
+
+		// Execute and get the result
+		// we do a raw query, to avoid any JSQL parsing, which was not designed for 
+		// JSONB postgres use case (manual overwrite being done here)
+		JSqlResult res = sqlObj.query_raw(fullRawQuery.left, fullRawQuery.right);
+
+		// Get rcount result
+		GenericConvertList<Object> rcountArr = res.get("rcount");
+		
+		// Get the rcount arr
+		if (rcountArr != null && rcountArr.size() > 0) {
+			return rcountArr.getLong(0);
+		}
+		// Blank as fallback
+		return 0;
+	}
 	
 	//--------------------------------------------------------------------------
 	//
