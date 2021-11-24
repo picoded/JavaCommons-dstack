@@ -1,16 +1,10 @@
 package picoded.dstack.jsql_json;
 
-import java.util.logging.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import picoded.core.security.NxtCrypt;
 import picoded.dstack.DataObjectMap;
 import picoded.dstack.DataObject;
 import picoded.dstack.core.Core_DataObjectMap;
@@ -334,7 +328,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	public long queryCount(String whereClause, Object[] whereValues) {
 		// Build the full query
 		MutablePair<String, Object[]> fullRawQuery = JsonbUtils.fullQueryRawBuilder( //
-			dataStorageTable, "COUNT(oID) AS rcount", //
+			dataStorageTable, "COUNT(*) AS rcount", //
 			whereClause, whereValues, //
 			null, -1, -1 //
 		);

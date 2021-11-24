@@ -13,6 +13,10 @@ import java.io.ByteArrayOutputStream;
 
 import picoded.core.struct.query.OrderBy;
 import picoded.core.struct.query.Query;
+import picoded.core.struct.query.QueryType;
+import picoded.core.struct.query.condition.Or;
+import picoded.core.struct.query.condition.Not;
+import picoded.core.struct.query.condition.ConditionBase;
 import picoded.core.struct.query.internal.QueryFilter;
 import picoded.dstack.DataObject;
 import picoded.core.conv.ConvertJSON;
@@ -29,7 +33,7 @@ import com.esotericsoftware.kryo.io.Output;
  * Various JSONB specific utilities, used internally to handle data processing
  **/
 public class JsonbUtils {
-	
+
 	/**
 	 * ThreadLocal copy of kryo - implemented as refrenced from
 	 * https://hazelcast.com/blog/kryo-serializer/
@@ -44,10 +48,9 @@ public class JsonbUtils {
 			return kryo;
 		}
 	};
-	
+
 	/**
-	 * Serializing the data map into two object pairs consisting of
-	 * - a JSON string
+	 * Serializing the data map into two object pairs consisting of - a JSON string
 	 * - serialized data binary (eg. byte[])
 	 *
 	 * @param {Map<String,Object>} objMap - map to extract values to store from
@@ -58,34 +61,33 @@ public class JsonbUtils {
 		// The json and bin map, to encode seprately
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		Map<String, Object> binMap = new HashMap<String, Object>();
-		
-		// Strictly speaking, the implmentation support of other 
+
+		// Strictly speaking, the implmentation support of other
 		// JSQL (non JSON) backend does not support the use of byte[] data
 		// in nested dataset.
-		// 
+		//
 		// While this is not a limitation of the current backend design
 		// we make the same presumption, while avoiding the need
 		// for recursive scans / conversion
 		Set<String> keySet = inMap.keySet();
-		
+
 		// Iterate the key list to apply updates
 		for (String k : keySet) {
 			// Get the value
 			Object v = inMap.get(k);
-			
+
 			// Skip reserved key, otm is not allowed to be saved
 			// (to ensure blank object is saved)
-			if (k.equalsIgnoreCase("_otm")) { //reserved
+			if (k.equalsIgnoreCase("_otm")) { // reserved
 				continue;
 			}
-			
+
 			// Key length size protection
 			if (k.length() > 64) {
 				throw new RuntimeException(
-					"Attempted to insert a key value larger then 64 for (_oid = " + inMap.get("_oid")
-						+ "): " + k);
+						"Attempted to insert a key value larger then 64 for (_oid = " + inMap.get("_oid") + "): " + k);
 			}
-			
+
 			// Delete support, ignore NULL values
 			if (v == ObjectToken.NULL || v == null) {
 				// Skip reserved key, oid key is NOT allowed to be removed directly
@@ -100,40 +102,40 @@ public class JsonbUtils {
 				jsonMap.put(k, v);
 			}
 		}
-		
+
 		// Lets do the required conversions
 		String json = ConvertJSON.fromMap(jsonMap);
 		byte[] bin = null;
-		
+
 		// Count the keyset
 		if (binMap.keySet().size() > 0) {
 			// Lets encode the binMap
-			
+
 			// Get the kyro instance
 			Kryo kryo = kryoThreadLocal.get();
-			
-			// Setup the default byte array stream 
-			// @CONSIDER: Should we initialize with (16kb buffer?) `new ByteArrayOutputStream(16384)`
+
+			// Setup the default byte array stream
+			// @CONSIDER: Should we initialize with (16kb buffer?) `new
+			// ByteArrayOutputStream(16384)`
 			ByteArrayOutputStream BA_OutputStream = new ByteArrayOutputStream();
 			DeflaterOutputStream D_OutputStream = new DeflaterOutputStream(BA_OutputStream);
 			Output kyroOutput = new Output(D_OutputStream);
-			
+
 			// Write the object, into the output stream
 			kryo.writeObject(kyroOutput, binMap);
 			kyroOutput.close();
-			
+
 			// Output into a bin byte[]
 			bin = BA_OutputStream.toByteArray();
 		}
-		
+
 		// Return the full result pair.
 		return new MutablePair<String, byte[]>(json, bin);
 	}
-	
+
 	/**
-	 * DeSerializing the data map from the two object pairs consisting of
-	 * - a JSON string
-	 * - serialized data binary (eg. byte[])
+	 * DeSerializing the data map from the two object pairs consisting of - a JSON
+	 * string - serialized data binary (eg. byte[])
 	 *
 	 * @param {String} the json data string
 	 * @param {byte[]} the binary data
@@ -143,48 +145,110 @@ public class JsonbUtils {
 	public static Map<String, Object> deserializeDataMap(String jsonData, byte[] binData) {
 		// The json map
 		Map<String, Object> jsonMap = ConvertJSON.toMap(jsonData);
-		
+
 		// if bin data is null, return the json data as it is
 		if (binData == null) {
 			return jsonMap;
 		}
-		
+
 		// Lets process the bin data
 		ByteArrayInputStream BA_InputStream = new ByteArrayInputStream(binData);
 		InflaterInputStream I_InputStream = new InflaterInputStream(BA_InputStream);
 		Input kyroInput = new Input(I_InputStream);
-		
+
 		// Get the kyro instance
 		Kryo kryo = kryoThreadLocal.get();
-		
+
 		// Read the binary data map
 		Map<String, Object> binMap = kryo.readObject(kyroInput, HashMap.class);
-		
+
 		// Build the return map
 		Map<String, Object> retMap = new HashMap<String, Object>();
 		retMap.putAll(jsonMap);
 		retMap.putAll(binMap);
-		
+
 		// And return
 		return retMap;
 	}
-	
-	/** Given the JSON column name, return its remapped value (or its optimized varients) */
+
+	/**
+	 * Given the JSON column name, return its remapped value (or its optimized
+	 * varients)
+	 */
 	public static String jsonColumnRemap(String inColumn) {
-		
+
 		// Skip the system columns (no need to replace)
 		// no change is needed
 		if (inColumn.equals("oID")) {
 			return "oID";
 		}
-		
+
 		// Remap _oid to the optimized version instead
 		if (inColumn.equals("_oid")) {
 			return "oID";
 		}
-		
+
 		// Return the json mapped column
 		return "data->>'" + inColumn.replaceAll("\'", "\\'") + "'";
+	}
+
+	/**
+	 * CustomQueryStr - used to overwrite specific segments that cannot be supported
+	 * with the current query implementation
+	 */
+	protected static class CustomQueryStr implements Query {
+		//
+		// Constructor Setup
+		// --------------------------------------------------------------------
+
+		// Custom string overwrite
+		public String queryStr = null;
+
+		/**
+		 * The constructor with the field name, and default argument
+		 *
+		 * @param default field to test
+		 **/
+		public CustomQueryStr(String inQueryStr) {
+			queryStr = inQueryStr;
+		}
+
+		/**
+		 * The overwritten string value
+		 **/
+		@Override
+		public String toString() {
+			return queryStr;
+		}
+
+		//
+		// Unsupported overwrite
+		//--------------------------------------------------------------------
+		
+		@Override
+		public Map<String, List<Object>> keyValuesMap(Map<String, List<Object>> arg0) {
+			return null;
+		}
+
+		@Override
+		public String operatorSymbol() {
+			return null;
+		}
+
+		@Override
+		public boolean test(Object arg0) {
+			return false;
+		}
+
+		@Override
+		public boolean test(Object arg0, Map<String, Object> arg1) {
+			return false;
+		}
+
+		@Override
+		public QueryType type() {
+			return null;
+		}
 	}
 	
 	/**
@@ -238,13 +302,41 @@ public class JsonbUtils {
 					remapColumnWithTypeCast = "("+remapColumn+")::numeric";
 				}
 
-				// Update the larger query
-				Query replacement = QueryFilter.basicQueryFromTokens( //
+				// Prepare the replacement query
+				Query newQuery = QueryFilter.basicQueryFromTokens( //
 					queryArgsMap, remapColumnWithTypeCast, //
 					toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 				);
+
+				// //
+				// // NULL value operation support
+				// //
+				// if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
+				// 	// Check for inequality check, where NULL must be supported
+				// 	// -----
+
+				// 	// The element exist query to build on
+				// 	Query elementExistsQuery = new JsonbUtils.CustomQueryStr("data?'"+column.replaceAll("\'", "\\'")+"'");
+
+				// 	// != NULL support
+				// 	if(toReplace.defaultArgumentValue() == null) {
+				// 		// Replace with : elementExistsQuery
+				// 		newQuery = elementExistsQuery;
+				// 	} else {
+				// 		// Allow matching against "NULL" or empty values
+				// 		newQuery = new Or( elementExistsQuery, newQuery, queryArgsMap );
+				// 	}
+
+				// 	// Check for equality condition, with NULL values
+				// } else if (toReplace.operatorSymbol().equalsIgnoreCase("=")
+				// 	&& toReplace.defaultArgumentValue() == null) {
+				// 	// The NOT( element exist query to build on )
+				// 	// -----
+				// 	newQuery = new JsonbUtils.CustomQueryStr("NOT data?'"+column.replaceAll("\'", "\\'")+"'");
+				// }
+
 				// Replaces old query with new query
-				queryObj = queryObj.replaceQuery(toReplace, replacement);
+				queryObj = queryObj.replaceQuery(toReplace, newQuery);
 			}
 		}
 		
@@ -280,9 +372,9 @@ public class JsonbUtils {
 
 		Object[] queryArgs = inQuery.queryArgumentsArray();
 		
-		System.out.println("JSONB : queryToPair conversion");
-		System.out.println(queryStr);
-		System.out.println( ConvertJSON.fromArray(queryArgs) );
+		// System.out.println("JSONB : queryToPair conversion");
+		// System.out.println(queryStr);
+		// System.out.println( ConvertJSON.fromArray(queryArgs) );
 		
 		// Due to the quoting limitations placed on `Query.toString`, 
 		// we need to readjust for JSON compatibility by removing the outer quotes
@@ -410,6 +502,8 @@ public class JsonbUtils {
 		// Handle OrderBy clause (fallsback to oID)
 		if( reqOrderByStr != null ) {
 			fullQuery.append(" ORDER BY "+reqOrderByStr);
+		} else if( selectCol.startsWith("COUNT") ) {
+			// No ordering is needed for COUNT
 		} else {
 			fullQuery.append(" ORDER BY oID");
 		}
