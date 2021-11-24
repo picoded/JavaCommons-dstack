@@ -47,7 +47,7 @@ public interface CommonStructure extends SystemSetupInterface {
 	/**
 	 * Perform increment maintenance, meant for minor changes between requests.
 	 *
-	 * By default this randomly triggers a maintenance call with 2% probability.
+	 * By default this randomly triggers a maintenance call with 0.2% probability.
 	 * The main reason for doing so, is that for many implmentations there may not be
 	 * a concept of incremental maintenance, and in many cases its implementor may forget
 	 * to actually call a maintenance call. For years.
@@ -60,9 +60,9 @@ public interface CommonStructure extends SystemSetupInterface {
 	 * devops team is. Your client and their actual infrastructure may be "not as awesome"
 	 **/
 	default void incrementalMaintenance() {
-		// 2 percent chance of trigering maintenance
+		// 0.2 percent chance of trigering maintenance
 		// This is to lower to overall performance cost incrementalMaintenance per request
-		int num = RandomUtils.nextInt(0, 100);
+		int num = RandomUtils.nextInt(0, 1000);
 		if (num <= 1) {
 			maintenance();
 		}
