@@ -1,4 +1,4 @@
-name: Postgres 13.5 Support Test
+name: Postgres 14.1 Support Test
 on:
   push:
     branches: [ master, eugene/* ]
@@ -12,7 +12,7 @@ jobs:
     # so we are gonna to run the docker containers via the bash commandline
     # services:
     #   postgres:
-    #     image: postgres:13.5
+    #     image: postgres:14.1
     #     env:
     #       POSTGRES_DATABASE: javacommons
     #       POSTGRES_USER: javacommons
@@ -44,7 +44,7 @@ jobs:
           -e POSTGRES_PASSWORD=javacommons \
           --name=postgres --hostname=postgres \
           -p 26257:5432 \
-          postgres:13.5 \
+          postgres:14.1 \
           postgres -c 'max_connections=500'
         sleep 5s
     # - name: Setup initial postgres DB
