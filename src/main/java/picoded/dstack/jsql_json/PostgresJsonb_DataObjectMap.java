@@ -214,17 +214,30 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		// Curent timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		
-		// Ensure GUID is registered
-		sqlObj.upsert( //
-			dataStorageTable, //
-			new String[] { "oID" }, //
-			new Object[] { _oid }, //
-			new String[] { "uTm", "data", "bData" }, //
-			new Object[] { now, dataPair.getLeft(), dataPair.getRight() }, //
-			new String[] { "cTm", "eTm" }, //
-			new Object[] { now, 0 }, //
-			null // The only misc col, is pKy, which is being handled by DB
-			);
+		// // Ensure GUID is registered
+		// sqlObj.upsert( //
+		// 	dataStorageTable, //
+		// 	new String[] { "oID" }, //
+		// 	new Object[] { _oid }, //
+		// 	new String[] { "uTm", "data", "bData" }, //
+		// 	new Object[] { now, dataPair.getLeft(), dataPair.getRight() }, //
+		// 	new String[] { "cTm", "eTm" }, //
+		// 	new Object[] { now, 0 }, //
+		// 	null // The only misc col, is pKy, which is being handled by DB
+		// 	);
+
+		// Perform the upsert command
+		sqlObj.update_raw( //
+			"INSERT INTO "+dataStorageTable+" "+ //
+			"( oID, cTm, uTm, eTm, data, bData ) "+ //
+			"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) "+ //
+			"ON CONFLICT ( oID ) DO UPDATE SET "+ //
+			"uTm = EXCLUDED.uTm, "+ //
+			"data = EXCLUDED.data, "+ //
+			"bData = EXCLUDED.bData"
+		, new Object[] { //
+			_oid, now, now, 0, dataPair.getLeft(), dataPair.getRight() //
+		});
 	}
 	
 	//--------------------------------------------------------------------------
