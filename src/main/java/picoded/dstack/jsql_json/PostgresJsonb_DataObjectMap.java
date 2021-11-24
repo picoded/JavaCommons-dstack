@@ -118,7 +118,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 				// JSON data
 				"data JSONB, " + //
 				// BINARY data
-				"bData BLOB, " + //
+				"bData BYTEA, " + //
 				// Real primary key for DB
 				"PRIMARY KEY(oID, cTm) " + //
 				")" //
