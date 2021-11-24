@@ -8,16 +8,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:13.5
-        env:
-          POSTGRES_DATABASE: javacommons
-          POSTGRES_USER: javacommons
-          POSTGRES_PASSWORD: javacommons
-        ports:
-          - 26257:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+    # Because github services, does not allow overwriting "CMD" / "ENTRYPOINT" commands
+    # so we are gonna to run the docker containers via the bash commandline
+    # services:
+    #   postgres:
+    #     image: postgres:13.5
+    #     env:
+    #       POSTGRES_DATABASE: javacommons
+    #       POSTGRES_USER: javacommons
+    #       POSTGRES_PASSWORD: javacommons
+    #     ports:
+    #       - 26257:5432
+    #     options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - uses: actions/checkout@v1
@@ -34,6 +36,22 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
+    - name: Setup cockroachDB 
+      run: |
+        sudo docker run -d \
+          -e POSTGRES_DATABASE=javacommons \
+          -e POSTGRES_USER=javacommons \
+          -e POSTGRES_PASSWORD=javacommons \
+          --name=postgres --hostname=postgres \
+          -p 26257:5432 \
+          postgres:13.5 \
+          postgres -c 'max_connections=500'
+        sleep 5s
+    # - name: Setup initial postgres DB
+    #   run: |
+    #     sudo docker exec postgres cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS javacommons" && \
+    #     sudo docker exec postgres cockroach sql --insecure -e "CREATE USER IF NOT EXISTS javacommons" && \
+    #     sudo docker exec postgres cockroach sql --insecure -e "GRANT ALL ON DATABASE javacommons TO javacommons"
     - name: Setup gradle binaries
       run: ./gradlew
     - name: Pull dependencies libs, and perform initial compile
