@@ -749,6 +749,23 @@ public class StructSimple_DataObjectMap_test {
 	}
 	
 	@Test
+	public void testWithInequalNull() {
+		// Setup 
+		this.testWithUnserParameters_setup();
+		
+		// Meta Object to manipulate around with
+		DataObject[] queryRes = null;
+		
+		// Query for objects, with exsiting properties
+		queryRes = mtObj.query("dun != ?", new Object[] { null });
+		assertEquals(2, queryRes.length);
+		
+		// Query for objects, with missing property
+		queryRes = mtObj.query("dun != ?", new Object[] { null });
+		assertEquals(2, queryRes.length);
+	}
+	
+	@Test
 	public void testWithUnsetParameters_orderBy() {
 		// Setup 
 		this.testWithUnserParameters_setup();

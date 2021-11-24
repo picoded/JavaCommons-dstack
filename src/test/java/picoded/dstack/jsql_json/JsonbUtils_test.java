@@ -33,6 +33,6 @@ public class JsonbUtils_test {
 		// _oid with number parmeter
 		res = JsonbUtils.jsonQueryPairBuilder("num != ? AND _oid = ?", new Object[] { 1, "<unique-oID>" });
 		assertNotNull(res);
-		assertEquals( "(data->>'num')::numeric != ? AND oID = ?", res.left );
+		assertEquals( "((data->>'num')::numeric != ? OR NOT data??'num') AND oID = ?", res.left );
 	}
 }

@@ -303,37 +303,43 @@ public class JsonbUtils {
 				}
 
 				// Prepare the replacement query
-				Query newQuery = QueryFilter.basicQueryFromTokens( //
+				Query remapQuery = QueryFilter.basicQueryFromTokens( //
 					queryArgsMap, remapColumnWithTypeCast, //
 					toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
 				);
+				Query newQuery = remapQuery;
 
-				// //
-				// // NULL value operation support
-				// //
-				// if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
-				// 	// Check for inequality check, where NULL must be supported
-				// 	// -----
+				// The element exist queries to build on (if needed)
+				// note that ?? translate to ? , the first "?" is used as an escape character
+				Query elementExistsQuery = new JsonbUtils.CustomQueryStr("data??'"+column.replaceAll("\'", "\\'")+"'");
+				Query elementNotExistsQuery = new JsonbUtils.CustomQueryStr("NOT data??'"+column.replaceAll("\'", "\\'")+"'");
 
-				// 	// The element exist query to build on
-				// 	Query elementExistsQuery = new JsonbUtils.CustomQueryStr("data?'"+column.replaceAll("\'", "\\'")+"'");
+				//
+				// NULL value operation support
+				//
+				if (toReplace.operatorSymbol().equalsIgnoreCase("!=")) {
+					// Check for inequality check, where NULL must be supported
+					// -----
 
-				// 	// != NULL support
-				// 	if(toReplace.defaultArgumentValue() == null) {
-				// 		// Replace with : elementExistsQuery
-				// 		newQuery = elementExistsQuery;
-				// 	} else {
-				// 		// Allow matching against "NULL" or empty values
-				// 		newQuery = new Or( elementExistsQuery, newQuery, queryArgsMap );
-				// 	}
+					// != NULL support
+					if(toReplace.defaultArgumentValue() == null) {
+						// Replace with : elementExistsQuery OR != null
+						newQuery = new Or( remapQuery, elementExistsQuery, queryArgsMap);
+					} else {
+						// Allow matching against "NULL" or empty values
+						newQuery = new Or( remapQuery, elementNotExistsQuery, queryArgsMap );
+					}
 
-				// 	// Check for equality condition, with NULL values
-				// } else if (toReplace.operatorSymbol().equalsIgnoreCase("=")
-				// 	&& toReplace.defaultArgumentValue() == null) {
-				// 	// The NOT( element exist query to build on )
-				// 	// -----
-				// 	newQuery = new JsonbUtils.CustomQueryStr("NOT data?'"+column.replaceAll("\'", "\\'")+"'");
-				// }
+				} else if ( //
+					toReplace.operatorSymbol().equalsIgnoreCase("=") && //
+					toReplace.defaultArgumentValue() == null //
+				) {
+					// Check for equality condition, with NULL values
+					// -----
+
+					// The NOT( element exist query to build on )
+					newQuery = new Or( remapQuery, elementNotExistsQuery, queryArgsMap );
+				}
 
 				// Replaces old query with new query
 				queryObj = queryObj.replaceQuery(toReplace, newQuery);
