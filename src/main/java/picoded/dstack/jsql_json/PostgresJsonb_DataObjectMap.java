@@ -364,6 +364,59 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
+	// Maintenance calls
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Setup the various JSONB indexes for the given set of fields.
+	 * Because this process is "long" and can/will time out - it is 
+	 * recommended to only perform this in a backgorund task.
+	 * 
+	 * This function is called automatically in `maintenance()` calls
+	 * 
+	 * @param fieldNames
+	 */
+	public void performAutoIndexing(Set<String> fieldNames) {
+		// Lets iterate the various fieldNames
+		for( String field : fieldNames ) {
+			performAutoIndexing(field);
+		}
+	}
+
+	/**
+	 * Setup the JSONB index for the given field name
+	 * @param fieldName
+	 */
+	public void performAutoIndexing(String fieldName) {
+		// Skip oID, and _oid
+		if( fieldName.equals("oID") || fieldName.equals("_oid") ) {
+			return;
+		}
+
+		// Sanatized fieldnames
+		String cleanFieldName = fieldName.replaceAll("[^A-Za-z0-9]", "");
+
+		// Lets build the index
+		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_STR ON "+dataStorageTable+" USING BTREE ((data->>'"+fieldName.replaceAll("\'", "\\'")+"'))", new Object[] {});
+		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_NUM ON "+dataStorageTable+" USING BTREE ((data->>'"+fieldName.replaceAll("\'", "\\'")+"')::numeric)", new Object[] {});
+	}
+
+	/**
+	 * Maintenance call, which performs various index setup used to optimize
+	 * the JSONB setup.
+	 **/
+	@Override
+	public void maintenance() {
+		
+		// Check if auto indexing is enabled
+		if( configMap.getBoolean("autoIndex", true) ) {
+			performAutoIndexing( keySet() );
+		}
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Special iteration support
 	//
 	// NOTE: Fixed table hybrid support is not implemented for this function

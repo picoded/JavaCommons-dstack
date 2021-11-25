@@ -995,4 +995,17 @@ public class StructSimple_DataObjectMap_test {
 		assertNotNull(mtObj.randomObject());
 		assertNotNull(mtObj.looselyIterateObject(null));
 	}
+
+	// Test calling of .maintainance
+	//-----------------------------------------------
+	
+	/**
+	 * Ensure no exceptions occur for calling of .maintainance
+	 */
+	@Test
+	public void testMaintainanceCalls() {
+		indexBasedTestSetup();
+		mtObj.maintenance();
+		indexBasedTestSetup();
+	}
 }
