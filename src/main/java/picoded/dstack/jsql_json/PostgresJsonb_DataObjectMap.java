@@ -399,7 +399,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 
 		// Lets build the index
 		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_STR ON "+dataStorageTable+" USING BTREE ((data->>'"+fieldName.replaceAll("\'", "\\'")+"'))", new Object[] {});
-		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_NUM ON "+dataStorageTable+" USING BTREE ((data->>'"+fieldName.replaceAll("\'", "\\'")+"')::numeric)", new Object[] {});
+		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_NUM ON "+dataStorageTable+" USING BTREE (cast(data->>'"+fieldName.replaceAll("\'", "\\'")+"') AS numeric)", new Object[] {});
 	}
 
 	/**
