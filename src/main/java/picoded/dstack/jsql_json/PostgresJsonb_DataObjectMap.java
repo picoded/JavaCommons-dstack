@@ -408,7 +408,6 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public void maintenance() {
-		
 		// Check if auto indexing is enabled
 		if( configMap.getBoolean("autoIndex", true) ) {
 			performAutoIndexing( keySet() );

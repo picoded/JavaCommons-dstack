@@ -56,7 +56,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	public int smallCols = 50;
 	public int mediumCols = 200;
 	public int largeCols = 800;
-	//Things break from 400 onwards in SQL, too many collumns, args etc.
+	//Things break from 400 onwards in traditional SQL, too many collumns, args etc.
 	
 	/// Small map of 10 string, and 10 numeric properties
 	Map<String, Object> smallMap = null;
