@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build:
+  unit_test:
     runs-on: ubuntu-latest
 
     # Because github services, does not allow overwriting "CMD" / "ENTRYPOINT" commands
