@@ -1,64 +1,69 @@
-name: (perf) MySql 8.0 Support Test
-on:
-  push:
-    branches: [ master, eugene/* ]
-  pull_request:
-    branches: [ master ]
-jobs:
-  perf_test:
-    runs-on: ubuntu-latest
-    
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: JAVACOMMONS
-          MYSQL_USER: JAVACOMMONS
-          MYSQL_PASSWORD: JAVACOMMONS
-          MYSQL_ROOT_PASSWORD: ROOTPASSWD
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+#-------------------------------------------------------------------------------------------------------------------------------
+# Disabling perf test to ensure build time is < 4m
+# see: https://github.com/picoded/JavaCommons-dstack/blob/7f321d8bed9ea8445018ba5315084475dc81c786/notes/perf-test-notes.md
+#-------------------------------------------------------------------------------------------------------------------------------
 
-    steps:
-    - uses: actions/checkout@v1
-    - name: Init submodules
-      run: ./git-init-submodules.sh
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-    - name: Cache Gradle packages
-      uses: actions/cache@v2
-      with:
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/build.gradle') }}
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-    - name: Setup gradle binaries
-      run: ./gradlew
-    - name: Pull dependencies libs, and perform initial compile
-      run: ./gradlew src
-      # Running the various perf tests
-    - name: Run perf unit tests
-      run: |
-        ./gradle-test-classpath.sh picoded.dstack.jsql.mysql.JSql_DataObjectMap_Mysql_perf
-    - name: Run jacocoTestReport
-      run: ./gradlew jacocoTestReport
-    - name: Archive code coverage results
-      uses: actions/upload-artifact@v2
-      if: always()
-      with:
-        name: test-result-report
-        path: |
-          build/reports/**/*
-          build/test-results/**/*
-          build/jacoco/**/*
-    - name: Upload code coverage to codecov
-      uses: codecov/codecov-action@v2
-      if: always()
-      with:
-        # flags: gradle-build # optional
-        # directory: build/jacoco/
-        verbose: true # optional (default = false)
-        fail_ci_if_error: false
+# name: (perf) MySql 8.0 Support Test
+# on:
+#   push:
+#     branches: [ master, eugene/* ]
+#   pull_request:
+#     branches: [ master ]
+# jobs:
+#   perf_test:
+#     runs-on: ubuntu-latest
+    
+#     services:
+#       mysql:
+#         image: mysql:8.0
+#         env:
+#           MYSQL_DATABASE: JAVACOMMONS
+#           MYSQL_USER: JAVACOMMONS
+#           MYSQL_PASSWORD: JAVACOMMONS
+#           MYSQL_ROOT_PASSWORD: ROOTPASSWD
+#         ports:
+#           - 3306:3306
+#         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+#     steps:
+#     - uses: actions/checkout@v1
+#     - name: Init submodules
+#       run: ./git-init-submodules.sh
+#     - name: Set up JDK 1.8
+#       uses: actions/setup-java@v1
+#       with:
+#         java-version: 1.8
+#     - name: Cache Gradle packages
+#       uses: actions/cache@v2
+#       with:
+#         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/build.gradle') }}
+#         path: |
+#           ~/.gradle/caches
+#           ~/.gradle/wrapper
+#     - name: Setup gradle binaries
+#       run: ./gradlew
+#     - name: Pull dependencies libs, and perform initial compile
+#       run: ./gradlew src
+#       # Running the various perf tests
+#     - name: Run perf unit tests
+#       run: |
+#         ./gradle-test-classpath.sh picoded.dstack.jsql.mysql.JSql_DataObjectMap_Mysql_perf
+#     - name: Run jacocoTestReport
+#       run: ./gradlew jacocoTestReport
+#     - name: Archive code coverage results
+#       uses: actions/upload-artifact@v2
+#       if: always()
+#       with:
+#         name: test-result-report
+#         path: |
+#           build/reports/**/*
+#           build/test-results/**/*
+#           build/jacoco/**/*
+#     - name: Upload code coverage to codecov
+#       uses: codecov/codecov-action@v2
+#       if: always()
+#       with:
+#         # flags: gradle-build # optional
+#         # directory: build/jacoco/
+#         verbose: true # optional (default = false)
+#         fail_ci_if_error: false
