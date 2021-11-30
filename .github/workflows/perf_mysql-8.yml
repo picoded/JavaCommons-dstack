@@ -1,4 +1,4 @@
-name: (perf) Local Sqlite Support Test
+name: (perf) MySql 8.0 Support Test
 on:
   push:
     branches: [ master, eugene/* ]
@@ -7,19 +7,18 @@ on:
 jobs:
   perf_test:
     runs-on: ubuntu-latest
-
-    # Because github services, does not allow overwriting "CMD" / "ENTRYPOINT" commands
-    # so we are gonna to run the docker containers via the bash commandline
-    # services:
-    #   postgres:
-    #     image: cockroachdb/cockroach:v21.1.12
-    #     env:
-    #       POSTGRES_DATABASE: javacommons
-    #       POSTGRES_USER: javacommons
-    #       POSTGRES_PASSWORD: javacommons
-    #     ports:
-    #       - 26257:26257
-    #     options: --health-cmd="curl http://localhost:8080/health?ready=1" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: JAVACOMMONS
+          MYSQL_USER: JAVACOMMONS
+          MYSQL_PASSWORD: JAVACOMMONS
+          MYSQL_ROOT_PASSWORD: ROOTPASSWD
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - uses: actions/checkout@v1
@@ -43,8 +42,7 @@ jobs:
       # Running the various perf tests
     - name: Run perf unit tests
       run: |
-        ./gradle-test-classpath.sh picoded.dstack.struct.simple.StructSimple_DataObjectMap_perf
-        ./gradle-test-classpath.sh picoded.dstack.jsql.JSql_DataObjectMap_perf
+        ./gradle-test-classpath.sh picoded.dstack.jsql.mysql.JSql_DataObjectMap_Mysql_perf
     - name: Run jacocoTestReport
       run: ./gradlew jacocoTestReport
     - name: Archive code coverage results
