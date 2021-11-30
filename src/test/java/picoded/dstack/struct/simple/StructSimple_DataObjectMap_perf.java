@@ -5,18 +5,12 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
-import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 
 // Java includes
 import java.util.*;
 
-// External lib includes
-import org.apache.commons.lang3.RandomUtils;
-
 // Test depends
-import picoded.core.conv.GUID;
 import picoded.core.conv.Base58;
-import picoded.core.struct.CaseInsensitiveHashMap;
 import picoded.dstack.*;
 import picoded.dstack.struct.simple.*;
 
@@ -38,8 +32,6 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	public void setUp() {
 		mtObj = implementationConstructor();
 		mtObj.systemSetup();
-		
-		prepareTestObjects();
 	}
 	
 	@After
@@ -75,7 +67,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 			ret.put("S" + i, base.md5hash("M"+mapSize+"I"+itxCount));
 			++i;
 			if( i < mapSize ) {
-				ret.put("N" + i, mapSize*1000 + itxCount);
+				ret.put("N" + i, mapSize*10000 + itxCount);
 			}
 		}
 		
@@ -94,7 +86,10 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	/// Configurable iteration sets count
 	public int baseIterationCount = 1000;
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	// Basic map insert perf benchmark
+	//-----------------------------------------------------
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void smallMapPerf() throws Exception {
 		// Initial setup with maintenance
@@ -107,7 +102,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void mediumMapPerf() throws Exception {
 		// Initial setup with maintenance
@@ -120,7 +115,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void largeMapPerf() throws Exception {
 		// Initial setup with maintenance
@@ -133,7 +128,10 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	// Basic map insert+update perf benchmark
+	//-----------------------------------------------------
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void smallMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
@@ -149,7 +147,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void mediumMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
@@ -165,7 +163,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void largeMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
@@ -178,6 +176,33 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 			mo.saveDelta();
 			mo.putAll( setupTestMap(largeCols, i) );
 			mo.saveDelta();
+		}
+	}
+	
+	// Basic map insert & query perf benchmark
+	//-----------------------------------------------------
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void smallMapQueryPerf() throws Exception {
+		// Initial setup of map
+		smallMapPerf();
+
+		// Lets perform the iteration query
+		for (int i = 1; i < baseIterationCount-2; ++i) {
+			assertEquals( baseIterationCount-i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
+		}
+	}
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void mediumMapQueryPerf() throws Exception {
+		// Initial setup of map
+		mediumMapPerf();
+
+		// Lets perform the iteration query
+		for (int i = 1; i < baseIterationCount-2; ++i) {
+			assertEquals( baseIterationCount-i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
 		}
 	}
 	
