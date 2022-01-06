@@ -1654,7 +1654,7 @@ public class JSql_DataObjectMap_QueryBuilder {
 	 * @param {Map<String,Object>} objMap - map to extract values to store from
 	 * @param {Set<String>} keyList       - keylist to limit insert load
 	 * 
-	 * @returns null/ret object if not exists, else a map (ret) with the data
+	 * @return null/ret object if not exists, else a map (ret) with the data
 	 **/
 	public void jSqlObjectMapUpdate( //
 		String _oid, //

@@ -729,25 +729,13 @@ public class JSql_Oracle extends JSql_Base {
 	 * @return  -1 if failed, 0 and above for affected rows
 	 **/
 	public int update(String qString, Object... values) {
+		// Sanatize out AUTOINCREMENT (known issue?)
+		qString = qString.replaceAll("AUTOINCREMENT", "");
+		
 		// Perform the original update call
-		//System.out.println("-----------------------------------");
-		//System.out.println(qString);
-		if (values.length == 0)
-			//System.out.println("Query args is empty");
-			
-			for (Object val : values) {
-				if (val != null) {
-					//System.out.println(" | " + val.toString() + " | ");
-				} else {
-					//System.out.println(" | val is null | ");
-				}
-				
-			}
-		
 		int res = super.update(qString, values);
-		//System.out.println("RES : " + res);
 		
-		// Normalize certain known age cases
+		// Normalize certain known edge cases
 		if (res < 0) {
 			if (qString.contains("DROP") || qString.contains("IF EXISTS")) {
 				return 0;

@@ -5,17 +5,12 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
-import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 
 // Java includes
 import java.util.*;
 
-// External lib includes
-import org.apache.commons.lang3.RandomUtils;
-
 // Test depends
-import picoded.core.conv.GUID;
-import picoded.core.struct.CaseInsensitiveHashMap;
+import picoded.core.conv.Base58;
 import picoded.dstack.*;
 import picoded.dstack.struct.simple.*;
 
@@ -31,14 +26,12 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		return new StructSimple_DataObjectMap();
 	}
 	
-	// Setup and sanity test
+	// Setup and teardown
 	//-----------------------------------------------------
 	@Before
 	public void setUp() {
 		mtObj = implementationConstructor();
 		mtObj.systemSetup();
-		
-		prepareTestObjects();
 	}
 	
 	@After
@@ -49,118 +42,167 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 		mtObj = null;
 	}
 	
+	// Setup of test map
+	//-----------------------------------------------------
+	
+	/// Base62 encoder, and decoder
+	Base58 base = Base58.getInstance();
+	
+	/**
+	 * Iterate and setup a test map, of a given size
+	 * This generates a none random map. According to the params
+	 * 
+	 * @param mapSize   map size to generate
+	 * @param itxCount  iteration count, used to seed the values
+	 * @return
+	 */
+	public Map<String, Object> setupTestMap(int mapSize, int itxCount) {
+		HashMap<String, Object> ret = new HashMap<String, Object>();
+		
+		// Lets setup some of the baseline stuff
+		ret.put("ITX", itxCount);
+		
+		// Lets add in some random values
+		for (int i = 1; i < mapSize; ++i) {
+			ret.put("S" + i, base.md5hash("M" + mapSize + "I" + itxCount));
+			++i;
+			if (i < mapSize) {
+				ret.put("N" + i, mapSize * 10000 + itxCount);
+			}
+		}
+		
+		return ret;
+	}
+	
 	// Performance benchmark setup
 	//-----------------------------------------------------
 	
 	// Number of cols for int, and string respectively
 	public int smallCols = 50;
 	public int mediumCols = 200;
-	public int largeCols = 800;
-	//Things break from 400 onwards in SQL, too many collumns, args etc.
-	
-	/// Small map of 10 string, and 10 numeric properties
-	Map<String, Object> smallMap = null;
-	
-	/// Medium map of 200 string, and 250 numeric properties
-	Map<String, Object> mediumMap = null;
-	
-	/// Large map of 1000 string, and 1000 numeric properties
-	Map<String, Object> largeMap = null;
-	
-	/// Small map of 10 string, and 10 numeric properties
-	Map<String, Object> smallMap2 = null;
-	
-	/// Medium map of 200 string, and 250 numeric properties
-	Map<String, Object> mediumMap2 = null;
-	
-	/// Large map of 1000 string, and 1000 numeric properties
-	Map<String, Object> largeMap2 = null;
-	
-	/// Iterate and setup a test map, to a given size
-	public Map<String, Object> setupTestMap(int max) {
-		HashMap<String, Object> ret = new HashMap<String, Object>();
-		
-		for (int i = 0; i < max; ++i) {
-			ret.put("S" + i, GUID.base58());
-			ret.put("N" + i, Math.pow(1.1, i) * RandomUtils.nextDouble(0, 2.0));
-		}
-		
-		return ret;
-	}
-	
-	/// Prepare several test objects for performance testing alter
-	public void prepareTestObjects() {
-		smallMap = setupTestMap(smallCols);
-		mediumMap = setupTestMap(mediumCols);
-		largeMap = setupTestMap(largeCols);
-		smallMap2 = setupTestMap(smallCols);
-		mediumMap2 = setupTestMap(mediumCols);
-		largeMap2 = setupTestMap(largeCols);
-	}
+	public int largeCols = 400;
+	//Things break from 400 onwards in traditional SQL, too many collumns, args etc.
 	
 	/// Configurable iteration sets count
-	public int iterationCount = 100;
+	public int baseIterationCount = 1000;
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
-	@Test
-	public void largeMapPerf() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			mtObj.newEntry(largeMap);
-			mtObj.newEntry(largeMap2);
-		}
-	}
+	// Basic map insert perf benchmark
+	//-----------------------------------------------------
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
-	@Test
-	public void mediumMapPerf() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			mtObj.newEntry(mediumMap);
-			mtObj.newEntry(mediumMap2);
-		}
-	}
-	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void smallMapPerf() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			mtObj.newEntry(smallMap);
-			mtObj.newEntry(smallMap2);
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(smallCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			mtObj.newEntry(setupTestMap(smallCols, i));
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
-	public void largeMapPerf_insertAndUpdate() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			DataObject mo = mtObj.newEntry(largeMap);
-			mo.saveDelta();
-			
-			mo.putAll(largeMap2);
-			mo.saveDelta();
+	public void mediumMapPerf() throws Exception {
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(mediumCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			mtObj.newEntry(setupTestMap(mediumCols, i));
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
-	public void mediumMapPerf_insertAndUpdate() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			DataObject mo = mtObj.newEntry(mediumMap);
-			mo.saveDelta();
-			
-			mo.putAll(mediumMap2);
-			mo.saveDelta();
+	public void largeMapPerf() throws Exception {
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(largeCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			mtObj.newEntry(setupTestMap(largeCols, i));
 		}
 	}
 	
-	@BenchmarkOptions(benchmarkRounds = 10, warmupRounds = 1)
+	// Basic map insert+update perf benchmark
+	//-----------------------------------------------------
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
 	@Test
 	public void smallMapPerf_insertAndUpdate() throws Exception {
-		for (int i = 0; i < iterationCount; ++i) {
-			DataObject mo = mtObj.newEntry(smallMap);
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(smallCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			DataObject mo = mtObj.newEntry(setupTestMap(smallCols, -i));
 			mo.saveDelta();
-			
-			mo.putAll(smallMap2);
+			mo.putAll(setupTestMap(smallCols, i));
 			mo.saveDelta();
+		}
+	}
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void mediumMapPerf_insertAndUpdate() throws Exception {
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(mediumCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			DataObject mo = mtObj.newEntry(setupTestMap(mediumCols, -i));
+			mo.saveDelta();
+			mo.putAll(setupTestMap(mediumCols, i));
+			mo.saveDelta();
+		}
+	}
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void largeMapPerf_insertAndUpdate() throws Exception {
+		// Initial setup with maintenance
+		mtObj.newEntry(setupTestMap(largeCols, 0));
+		mtObj.maintenance();
+		
+		// The actual test benchmarking
+		for (int i = 1; i < baseIterationCount; ++i) {
+			DataObject mo = mtObj.newEntry(setupTestMap(largeCols, -i));
+			mo.saveDelta();
+			mo.putAll(setupTestMap(largeCols, i));
+			mo.saveDelta();
+		}
+	}
+	
+	// Basic map insert & query perf benchmark
+	//-----------------------------------------------------
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void smallMapQueryPerf() throws Exception {
+		// Initial setup of map
+		smallMapPerf();
+		
+		// Lets perform the iteration query
+		for (int i = 1; i < baseIterationCount - 2; ++i) {
+			assertEquals(baseIterationCount - i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
+		}
+	}
+	
+	@BenchmarkOptions(benchmarkRounds = 3, warmupRounds = 1)
+	@Test
+	public void mediumMapQueryPerf() throws Exception {
+		// Initial setup of map
+		mediumMapPerf();
+		
+		// Lets perform the iteration query
+		for (int i = 1; i < baseIterationCount - 2; ++i) {
+			assertEquals(baseIterationCount - i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
 		}
 	}
 	

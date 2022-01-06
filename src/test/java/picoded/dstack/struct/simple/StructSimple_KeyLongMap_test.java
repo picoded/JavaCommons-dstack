@@ -16,6 +16,7 @@ import java.util.HashSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junitpioneer.jupiter.RetryingTest;
 
 // Test depends
 import picoded.dstack.KeyLongMap;
@@ -304,7 +305,7 @@ public class StructSimple_KeyLongMap_test {
 		assertNotNull(testObj.getLifespan("yes"));
 	}
 	
-	@Test
+	@RetryingTest(3)
 	public void SLOW_testColumnExpiration() throws Exception {
 		// set column expiration time to current time + 1 secs.
 		long expirationTime = System.currentTimeMillis() + 1 * 1000;
@@ -314,7 +315,7 @@ public class StructSimple_KeyLongMap_test {
 		assertNotNull(testObj.get("yes"));
 		
 		// sleep the execution for 1.5 secs so the inserted key gets expired.
-		Thread.sleep(1500);
+		Thread.sleep(2500);
 		
 		// key should be null after expiration time.
 		assertEquals(null, testObj.get("yes"));

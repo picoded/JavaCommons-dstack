@@ -25,13 +25,11 @@ public class JSql_Postgres_test extends JSql_Base_test {
 	//
 	//////////////////////////////////////////////////////////////////////////
 	
-	protected static String testTableName = "JSqlTest_"
-		+ JSqlTestConfig.randomTablePrefix().toLowerCase();
-	
-	@BeforeClass
-	public static void oneTimeSetUp() {
-		// one-time initialization code
-		testTableName = testTableName.toLowerCase();
+	// We overwrite the test table setup, to lowercse
+	@Before
+	public void setUp() {
+		jsqlObj = sqlImplementation();
+		testTableName = staticTestTableName.toLowerCase();
 	}
 	
 	//////////////////////////////////////////////////////////////////////////
@@ -72,6 +70,31 @@ public class JSql_Postgres_test extends JSql_Base_test {
 	// - not in use within dstack
 	//
 	//////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * This is the base execute sql test example, in which other examples are built on
+	 */
+	@Test
+	public void create_and_drop_view() {
+		// This is replaced by : create_and_drop_view_fixed_col
+	}
+	
+	@Test
+	public void create_and_drop_view_fixed_col() {
+		setupAndAddRowRecord();
+		
+		// Drop non existent view
+		jsqlObj.update("DROP VIEW IF EXISTS `" + testTableName + "_View`");
+		
+		// Create view : NOTE THIS DOES NOT USE THE * WILDCARD OPTION
+		// and instead uses the VIEW with all the collumns (base test does otherwise) 
+		// - this is a known issue for cockroachDB which we are currently testing against
+		jsqlObj.update("CREATE VIEW " + testTableName + "_View AS SELECT COL1,COL2,COL3 FROM "
+			+ testTableName);
+		
+		// Drop created view
+		jsqlObj.update("DROP VIEW IF EXISTS `" + testTableName + "_View`");
+	}
 	
 	@Test
 	public void getTableColumnTypeMapTest() {

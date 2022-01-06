@@ -300,7 +300,7 @@ public class JSql_Postgres extends JSql_Base {
 			queryBuilder.append("DO NOTHING;");
 		}
 		
-		System.out.println(queryBuilder.toString());
+		// System.out.println(queryBuilder.toString());
 		
 		// The actual query
 		return new JSqlPreparedStatement(queryBuilder.toString(), queryArgs.toArray(), this);

@@ -6,8 +6,12 @@ import picoded.dstack.jsql.*;
 import picoded.dstack.connector.jsql.*;
 import picoded.dstack.struct.simple.*;
 
-// Junit
-import org.junit.Test;
+// java imports
+import java.security.SecureRandom;
+
+// Test system include
+import static org.junit.Assert.*;
+import org.junit.*;
 
 public class JSql_KeyLongMap_Mysql_test extends JSql_KeyLongMap_test {
 	
@@ -25,15 +29,15 @@ public class JSql_KeyLongMap_Mysql_test extends JSql_KeyLongMap_test {
 	//-----------------------------------------------------
 	
 	// NOTE : Large long values (such as randomLong)
-	//        is currently a known issue for mysql
+	//        is currently a known issue for mysql/postgres
 	//        as it seems to clamp its accuracy to 20 digits (somehow)
 	//        when its currently speced for 24 digits
-	//        - This test is currently being silenced in mysql
+	//        - This test is currently being clamped to int size in mysql/postgres
 	@Test
 	public void weakCompareAndSet_randomLong() {
-		// // Lets derive the "new" lock token - randomly!
-		// long testValue = Math.abs((new SecureRandom()).nextLong());
-		// testWeakCompareAndSetAccuracy(testValue);
+		// Lets derive the "new" lock token - randomly!
+		long testValue = Math.abs((new SecureRandom()).nextInt());
+		testWeakCompareAndSetAccuracy(testValue);
 	}
 	
 }

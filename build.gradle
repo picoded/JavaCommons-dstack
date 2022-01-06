@@ -112,6 +112,9 @@ dependencies {
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
 
+	// Adding the kyro serialization library
+	api 'com.esotericsoftware:kryo:5.2.0'
+	
 	// This dependencies is used internally, and not exposed to consumers on their own compile classpath.
 	//-------------------------------------------------------------------------------------------------------------------
 	// implementation 'com.google.guava:guava:23.0'
@@ -120,6 +123,9 @@ dependencies {
 	//-------------------------------------------------------------------------------------------------------------------
 	testImplementation 'junit:junit:4.12'
 	testImplementation 'com.carrotsearch:junit-benchmarks:0.7.2'
+
+	// Used to automate retry of known problematic test
+	testImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
 
 }
 
@@ -330,8 +336,10 @@ task incrementalTest(type: TestWatcher) {
 	exclude "**/perf/*.java"
 	exclude "**/*_perf*"
 
-	// Include mssql, mysql, and oracle test
-	// only if they are configured respectively
+	// Include mssql, mysql, and oracle test only if they are configured respectively
+	//
+	// You can enable any of them by running the `gradle test` command with their `-P`
+	// option, for example `gradle test -Ptest_mssql`
 	if(!project.hasProperty("test_mssql")) {
 		exclude "**/*Mssql*"
 	}
@@ -340,6 +348,12 @@ task incrementalTest(type: TestWatcher) {
 	}
 	if(!project.hasProperty("test_mysql")) {
 		exclude "**/*Mysql*"
+	}
+	if(!project.hasProperty("test_postgres")) {
+		exclude "**/*Postgres*"
+	}
+	if(!project.hasProperty("test_sqlite")) {
+		exclude "**/*Sqlite*"
 	}
 
 	// Setup test to run on parllel threads = to number of processors by default
