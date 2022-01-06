@@ -1,9 +1,18 @@
 name: (perf) Local Sqlite Support Test
 on:
+  # -------------------------------------------------------------------------------------------------------------------------------
+  # Disabling perf test to ensure build time is < 4m
+  # The "perf" branch is a placeholder (it does not exists now)
+  # see: https://github.com/picoded/JavaCommons-dstack/blob/7f321d8bed9ea8445018ba5315084475dc81c786/notes/perf-test-notes.md
+  # -------------------------------------------------------------------------------------------------------------------------------
+  # push:
+  #   branches: [ master, eugene/* ]
+  # pull_request:
+  #   branches: [ master ]
   push:
-    branches: [ master, eugene/* ]
-  pull_request:
-    branches: [ master ]
+    branches: [ perf ]
+  # pull_request:
+  #   branches: [ perf ]
 jobs:
   perf_test:
     runs-on: ubuntu-latest

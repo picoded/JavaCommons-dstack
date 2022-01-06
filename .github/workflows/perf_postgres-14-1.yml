@@ -11,6 +11,8 @@ on:
   #   branches: [ master ]
   push:
     branches: [ perf ]
+  # pull_request:
+  #   branches: [ perf ]
 jobs:
   perf_test:
     runs-on: ubuntu-latest
