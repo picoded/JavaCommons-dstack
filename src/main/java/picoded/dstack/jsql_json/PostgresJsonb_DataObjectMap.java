@@ -208,8 +208,8 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		
-		// Get the data pair
-		MutablePair<String, byte[]> dataPair = JsonbUtils.serializeDataMap(fullMap);
+		// Get the json and binary data pair
+		MutablePair<String, byte[]> dataPair = JsonbUtils.serializeDataMap(fullMap, keys);
 		
 		// Curent timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
@@ -233,7 +233,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) "+ //
 			"ON CONFLICT ( oID ) DO UPDATE SET "+ //
 			"uTm = EXCLUDED.uTm, "+ //
-			"data = EXCLUDED.data, "+ //
+			"data = data || EXCLUDED.data, "+ //
 			"bData = EXCLUDED.bData"
 		, new Object[] { //
 			_oid, now, now, 0, dataPair.getLeft(), dataPair.getRight() //

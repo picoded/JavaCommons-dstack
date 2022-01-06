@@ -54,13 +54,17 @@ public class JsonbUtils {
 	 * - serialized data binary (eg. byte[])
 	 *
 	 * @param {Map<String,Object>} objMap - map to extract values to store from
+	 * @param {Set<String>} keySet - used to map the serialized data that needs to be updated
 	 *
 	 * @return Converted pairs of 2 objects
 	 */
-	public static MutablePair<String, byte[]> serializeDataMap(Map<String, Object> inMap) {
+	public static MutablePair<String, byte[]> serializeDataMap(Map<String, Object> inMap, Set<String> keySet) {
 		// The json and bin map, to encode seprately
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		Map<String, Object> binMap = new HashMap<String, Object>();
+
+		// Get the full keySet map
+		Set<String> fullSet = inMap.keySet();
 
 		// Strictly speaking, the implmentation support of other
 		// JSQL (non JSON) backend does not support the use of byte[] data
@@ -69,7 +73,9 @@ public class JsonbUtils {
 		// While this is not a limitation of the current backend design
 		// we make the same presumption, while avoiding the need
 		// for recursive scans / conversion
-		Set<String> keySet = inMap.keySet();
+		if( keySet == null ) {
+			keySet = fullSet;
+		}
 
 		// Iterate the key list to apply updates
 		for (String k : keySet) {
@@ -99,7 +105,10 @@ public class JsonbUtils {
 				binMap.put(k, v);
 			} else {
 				// In all other cases, treat it as JSON data
-				jsonMap.put(k, v);
+				// we add it to the jsonMap, if its within the keyset
+				if( keySet.contains(k) ) {
+					jsonMap.put(k, v);
+				}
 			}
 		}
 
