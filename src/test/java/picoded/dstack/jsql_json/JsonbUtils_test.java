@@ -19,20 +19,21 @@ public class JsonbUtils_test {
 	
 	@Test
 	public void jsonQueryPairBuilder_test() {
-
+		
 		// Result to be handled
-		MutablePair<String,Object[]> res = null;
-
+		MutablePair<String, Object[]> res = null;
+		
 		// Example taken from "queryWithOID" test
-
+		
 		// _oid only
 		res = JsonbUtils.jsonQueryPairBuilder("_oid = ?", new Object[] { "<unique-oID>" });
 		assertNotNull(res);
-		assertEquals( "oID = ?", res.left );
-
+		assertEquals("oID = ?", res.left);
+		
 		// _oid with number parmeter
-		res = JsonbUtils.jsonQueryPairBuilder("num != ? AND _oid = ?", new Object[] { 1, "<unique-oID>" });
+		res = JsonbUtils.jsonQueryPairBuilder("num != ? AND _oid = ?", new Object[] { 1,
+			"<unique-oID>" });
 		assertNotNull(res);
-		assertEquals( "((data->>'num')::numeric != ? OR NOT data??'num') AND oID = ?", res.left );
+		assertEquals("((data->>'num')::numeric != ? OR NOT data??'num') AND oID = ?", res.left);
 	}
 }

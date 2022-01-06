@@ -47,7 +47,7 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	
 	/// Base62 encoder, and decoder
 	Base58 base = Base58.getInstance();
-
+	
 	/**
 	 * Iterate and setup a test map, of a given size
 	 * This generates a none random map. According to the params
@@ -56,18 +56,18 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	 * @param itxCount  iteration count, used to seed the values
 	 * @return
 	 */
-	public Map<String, Object> setupTestMap( int mapSize, int itxCount ) {
+	public Map<String, Object> setupTestMap(int mapSize, int itxCount) {
 		HashMap<String, Object> ret = new HashMap<String, Object>();
 		
 		// Lets setup some of the baseline stuff
 		ret.put("ITX", itxCount);
-
+		
 		// Lets add in some random values
 		for (int i = 1; i < mapSize; ++i) {
-			ret.put("S" + i, base.md5hash("M"+mapSize+"I"+itxCount));
+			ret.put("S" + i, base.md5hash("M" + mapSize + "I" + itxCount));
 			++i;
-			if( i < mapSize ) {
-				ret.put("N" + i, mapSize*10000 + itxCount);
+			if (i < mapSize) {
+				ret.put("N" + i, mapSize * 10000 + itxCount);
 			}
 		}
 		
@@ -93,12 +93,12 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void smallMapPerf() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(smallCols, 0) );
+		mtObj.newEntry(setupTestMap(smallCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			mtObj.newEntry( setupTestMap(smallCols, i) );
+			mtObj.newEntry(setupTestMap(smallCols, i));
 		}
 	}
 	
@@ -106,12 +106,12 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void mediumMapPerf() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(mediumCols, 0) );
+		mtObj.newEntry(setupTestMap(mediumCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			mtObj.newEntry( setupTestMap(mediumCols, i) );
+			mtObj.newEntry(setupTestMap(mediumCols, i));
 		}
 	}
 	
@@ -119,12 +119,12 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void largeMapPerf() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(largeCols, 0) );
+		mtObj.newEntry(setupTestMap(largeCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			mtObj.newEntry( setupTestMap(largeCols, i) );
+			mtObj.newEntry(setupTestMap(largeCols, i));
 		}
 	}
 	
@@ -135,14 +135,14 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void smallMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(smallCols, 0) );
+		mtObj.newEntry(setupTestMap(smallCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			DataObject mo = mtObj.newEntry( setupTestMap(smallCols, -i) );
+			DataObject mo = mtObj.newEntry(setupTestMap(smallCols, -i));
 			mo.saveDelta();
-			mo.putAll( setupTestMap(smallCols, i) );
+			mo.putAll(setupTestMap(smallCols, i));
 			mo.saveDelta();
 		}
 	}
@@ -151,14 +151,14 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void mediumMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(mediumCols, 0) );
+		mtObj.newEntry(setupTestMap(mediumCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			DataObject mo = mtObj.newEntry( setupTestMap(mediumCols, -i) );
+			DataObject mo = mtObj.newEntry(setupTestMap(mediumCols, -i));
 			mo.saveDelta();
-			mo.putAll( setupTestMap(mediumCols, i) );
+			mo.putAll(setupTestMap(mediumCols, i));
 			mo.saveDelta();
 		}
 	}
@@ -167,14 +167,14 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	@Test
 	public void largeMapPerf_insertAndUpdate() throws Exception {
 		// Initial setup with maintenance
-		mtObj.newEntry( setupTestMap(largeCols, 0) );
+		mtObj.newEntry(setupTestMap(largeCols, 0));
 		mtObj.maintenance();
-
+		
 		// The actual test benchmarking
 		for (int i = 1; i < baseIterationCount; ++i) {
-			DataObject mo = mtObj.newEntry( setupTestMap(largeCols, -i) );
+			DataObject mo = mtObj.newEntry(setupTestMap(largeCols, -i));
 			mo.saveDelta();
-			mo.putAll( setupTestMap(largeCols, i) );
+			mo.putAll(setupTestMap(largeCols, i));
 			mo.saveDelta();
 		}
 	}
@@ -187,10 +187,10 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	public void smallMapQueryPerf() throws Exception {
 		// Initial setup of map
 		smallMapPerf();
-
+		
 		// Lets perform the iteration query
-		for (int i = 1; i < baseIterationCount-2; ++i) {
-			assertEquals( baseIterationCount-i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
+		for (int i = 1; i < baseIterationCount - 2; ++i) {
+			assertEquals(baseIterationCount - i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
 		}
 	}
 	
@@ -199,12 +199,11 @@ public class StructSimple_DataObjectMap_perf extends AbstractBenchmark {
 	public void mediumMapQueryPerf() throws Exception {
 		// Initial setup of map
 		mediumMapPerf();
-
+		
 		// Lets perform the iteration query
-		for (int i = 1; i < baseIterationCount-2; ++i) {
-			assertEquals( baseIterationCount-i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
+		for (int i = 1; i < baseIterationCount - 2; ++i) {
+			assertEquals(baseIterationCount - i, mtObj.queryCount("ITX >= ?", new Object[] { i }));
 		}
 	}
-	
 	
 }

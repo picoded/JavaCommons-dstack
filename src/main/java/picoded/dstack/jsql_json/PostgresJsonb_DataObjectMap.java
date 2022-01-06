@@ -225,19 +225,18 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		// 	new Object[] { now, 0 }, //
 		// 	null // The only misc col, is pKy, which is being handled by DB
 		// 	);
-
+		
 		// Perform the upsert command
 		sqlObj.update_raw( //
-			"INSERT INTO "+dataStorageTable+" "+ //
-			"( oID, cTm, uTm, eTm, data, bData ) "+ //
-			"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) "+ //
-			"ON CONFLICT ( oID ) DO UPDATE SET "+ //
-			"uTm = EXCLUDED.uTm, "+ //
-			"data = data || EXCLUDED.data, "+ //
-			"bData = EXCLUDED.bData"
-		, new Object[] { //
+			"INSERT INTO " + dataStorageTable + " " + //
+				"( oID, cTm, uTm, eTm, data, bData ) " + //
+				"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) " + //
+				"ON CONFLICT ( oID ) DO UPDATE SET " + //
+				"uTm = EXCLUDED.uTm, " + //
+				"data = data || EXCLUDED.data, " + //
+				"bData = EXCLUDED.bData", new Object[] { //
 			_oid, now, now, 0, dataPair.getLeft(), dataPair.getRight() //
-		});
+			});
 	}
 	
 	//--------------------------------------------------------------------------
@@ -293,13 +292,13 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			dataStorageTable, "oID", //
 			whereClause, whereValues, //
 			orderByStr, offset, limit //
-		);
-
+			);
+		
 		// Execute and get the result
 		// we do a raw query, to avoid any JSQL parsing, which was not designed for 
 		// JSONB postgres use case (manual overwrite being done here)
 		JSqlResult res = sqlObj.query_raw(fullRawQuery.left, fullRawQuery.right);
-
+		
 		// Get the oID list and return it
 		List<Object> oID_list = res.getObjectList("oID");
 		
@@ -344,13 +343,13 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 			dataStorageTable, "COUNT(*) AS rcount", //
 			whereClause, whereValues, //
 			null, -1, -1 //
-		);
-
+			);
+		
 		// Execute and get the result
 		// we do a raw query, to avoid any JSQL parsing, which was not designed for 
 		// JSONB postgres use case (manual overwrite being done here)
 		JSqlResult res = sqlObj.query_raw(fullRawQuery.left, fullRawQuery.right);
-
+		
 		// Get rcount result
 		GenericConvertList<Object> rcountArr = res.get("rcount");
 		
@@ -379,29 +378,34 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	 */
 	public void performAutoIndexing(Set<String> fieldNames) {
 		// Lets iterate the various fieldNames
-		for( String field : fieldNames ) {
+		for (String field : fieldNames) {
 			performAutoIndexing(field);
 		}
 	}
-
+	
 	/**
 	 * Setup the JSONB index for the given field name
 	 * @param fieldName
 	 */
 	public void performAutoIndexing(String fieldName) {
 		// Skip oID, and _oid
-		if( fieldName.equals("oID") || fieldName.equals("_oid") ) {
+		if (fieldName.equals("oID") || fieldName.equals("_oid")) {
 			return;
 		}
-
+		
 		// Sanatized fieldnames
 		String cleanFieldName = fieldName.replaceAll("[^A-Za-z0-9]", "");
-
+		
 		// Lets build the index
-		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_STR ON "+dataStorageTable+" USING BTREE ((data->>'"+fieldName.replaceAll("\'", "\\'")+"'))", new Object[] {});
-		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_"+cleanFieldName+"_NUM ON "+dataStorageTable+" USING BTREE (cast(data->>'"+fieldName.replaceAll("\'", "\\'")+"' AS numeric))", new Object[] {});
+		sqlObj.update_raw(
+			"CREATE INDEX IF NOT EXISTS IDX_" + cleanFieldName + "_STR ON " + dataStorageTable
+				+ " USING BTREE ((data->>'" + fieldName.replaceAll("\'", "\\'") + "'))",
+			new Object[] {});
+		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_" + cleanFieldName + "_NUM ON "
+			+ dataStorageTable + " USING BTREE (cast(data->>'" + fieldName.replaceAll("\'", "\\'")
+			+ "' AS numeric))", new Object[] {});
 	}
-
+	
 	/**
 	 * Maintenance call, which performs various index setup used to optimize
 	 * the JSONB setup.
@@ -409,8 +413,8 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void maintenance() {
 		// Check if auto indexing is enabled
-		if( configMap.getBoolean("autoIndex", true) ) {
-			performAutoIndexing( keySet() );
+		if (configMap.getBoolean("autoIndex", true)) {
+			performAutoIndexing(keySet());
 		}
 	}
 	
