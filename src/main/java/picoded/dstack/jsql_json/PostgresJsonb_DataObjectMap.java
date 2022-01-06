@@ -232,9 +232,9 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 				"( oID, cTm, uTm, eTm, data, bData ) " + //
 				"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) " + //
 				"ON CONFLICT ( oID ) DO UPDATE SET " + //
-				"uTm = EXCLUDED.uTm, " + //
-				"data = data || EXCLUDED.data, " + //
-				"bData = EXCLUDED.bData", new Object[] { //
+				"uTm=EXCLUDED.uTm, " + //
+				"data=data||EXCLUDED.data, " + //
+				"bData=EXCLUDED.bData", new Object[] { //
 			_oid, now, now, 0, dataPair.getLeft(), dataPair.getRight() //
 			});
 	}
