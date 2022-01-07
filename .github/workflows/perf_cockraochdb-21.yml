@@ -9,8 +9,13 @@ on:
   #   branches: [ master, eugene/* ]
   # pull_request:
   #   branches: [ master ]
+  # -------------------------------------------------------------------------------------------------------------------------------
+  # Disabling the perf test - as this takes over 5 hours
+  # -------------------------------------------------------------------------------------------------------------------------------
   push:
-    branches: [ perf ]
+    branches: [ never-ever-run-this ]
+  # push:
+  #   branches: [ perf ]
   # pull_request:
   #   branches: [ perf ]
 jobs:
