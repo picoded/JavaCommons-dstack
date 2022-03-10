@@ -108,7 +108,7 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// Default Credentials for MSSQL //
 	//-------------------------------//
-	static private String MSSQL_HOST = "demodb-mssql.picoded-dev.com";
+	static private String MSSQL_HOST = "localhost";
 	static private String MSSQL_NAME = "JAVACOMMONS";
 	static private String MSSQL_USER = "JAVACOMMONS";
 	static private String MSSQL_PASS = "JAVACOMMONS";
@@ -141,7 +141,7 @@ public class JSqlTestConfig {
 	//--------------------------------//
 	// Default Credentials for ORACLE //
 	//--------------------------------//
-	static private String ORACLE_PATH = "@//salesbox-db-oracle.cvbukxarewjf.ap-southeast-1.rds.amazonaws.com:1521/ORCL";
+	static private String ORACLE_PATH = "@//localhost:1521/ORCL";
 	static private String ORACLE_USER = "JAVACOMMONS";
 	static private String ORACLE_PASS = "JAVACOMMONS";
 	
@@ -189,7 +189,7 @@ public class JSqlTestConfig {
 	//-------------------------------//
 	// LDAP Server location          //
 	//-------------------------------//
-	static private String LDAP_HOST = "demodb-ldap.picoded-dev.com";
+	static private String LDAP_HOST = "localhost";
 	static private String LDAP_DOMAIN = "com.demo";
 	static private int LDAP_PORT = 389;
 	
