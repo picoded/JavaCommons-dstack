@@ -109,6 +109,9 @@ dependencies {
 	// api "com.hazelcast:hazelcast:3.11.4"
 	// api "com.hazelcast:hazelcast-client:3.11.4"
 
+	// Mongo DB 
+	api "org.mongodb:mongo-java-driver:3.12.11"
+
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
 
