@@ -34,6 +34,12 @@ public class MongoDBStack extends CoreStack {
 	 * Given the mongodb config object, get the full_url
 	 */
 	public static String getFullConnectionURL(GenericConvertMap<String, Object> config) {
+        // Get the DB name (required)
+        String dbname = config.getString("name", null);
+		if (dbname == null || dbname.isEmpty()) {
+			throw new IllegalArgumentException("Missing database 'name' for mongodb config");
+		}
+
 		// Get the full connection url, and use it if present
 		String full_url = config.getString("full_url", null);
 		if (full_url != null) {
@@ -41,24 +47,25 @@ public class MongoDBStack extends CoreStack {
 		}
 		
 		// Lets get the config respectively
+        String protocol = config.getString("protocol", "mongodb+srv");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
-		String opts = config.getString("opt_str", "r=majority&w=majority&maxPoolSize=50");
+		String opts = config.getString("opt_str", "r=majority&w=majority&retryWrites=true&maxPoolSize=50");
 		
 		// In the future we may want to support opt_map
 		// this should still support the default read/write "majority" concern.
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
 		// Lets build the auth str
-        String authStr = ""
+        String authStr = "";
 		if (user != null && pass != null) {
             authStr = user+":"+pass+"@";
 		}
 		
 		// Return the full URL without user & pass
-		return "mongodb://" + authStr + host + ":" + port + "/?" + opts;
+		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
 	}
 	
 	/**
@@ -92,7 +99,7 @@ public class MongoDBStack extends CoreStack {
 				"Missing 'mongodb' config object for MongoDB stack provider");
 		}
 		
-		// Ge the connection
+		// Get the connection & database
 		conn = setupFromConfig(dbConfig);
 	}
 	
