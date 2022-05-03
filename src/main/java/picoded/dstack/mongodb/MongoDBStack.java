@@ -9,6 +9,7 @@ import picoded.dstack.core.*;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.ServerApi;
 import com.mongodb.ServerApiVersion;
 import com.mongodb.MongoClientSettings;
@@ -24,7 +25,8 @@ public class MongoDBStack extends CoreStack {
 	/**
 	 * The internal MongoClient connection
 	 */
-	protected MongoClient conn = null;
+	protected MongoClient client_conn = null;
+    protected MongoDatabase db_conn = null;
 	
 	//-------------------------------------------------------------------------
 	// Database connection constructor
@@ -100,7 +102,10 @@ public class MongoDBStack extends CoreStack {
 		}
 		
 		// Get the connection & database
-		conn = setupFromConfig(dbConfig);
+		client_conn = setupFromConfig(dbConfig);
+        
+        // Get the DB conneciton
+        db_conn = client_conn.getDatabase( inConfig.getString("name") );
 	}
 	
 	/**
