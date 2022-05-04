@@ -37,7 +37,7 @@ import com.mongodb.client.model.Filters;
  * - Filter API: https://mongodb.github.io/mongo-java-driver/3.6/javadoc/com/mongodb/client/model/Filters.html#where-java.lang.String-
  **/
 public class MongoDB_DataObjectMap extends Core_DataObjectMap {
-    
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor
@@ -109,8 +109,65 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			Filters.or( // 
 				Filters.exists("_oid", true), //
 				Filters.exists("_oid", false) //
-		 	) //
-		); //
+				) //
+			); //
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Internal functions, used by DataObject
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the complete remote data map, for DataObject.
+	 * This is used to nuke an entire object
+	 *
+	 * @param  Object ID to remove
+	 *
+	 * @return  nothing
+	 **/
+	public void DataObjectRemoteDataMap_remove(String _oid) {
+		// Delete the data
+		collection.deleteOne(Filters.eq("_id", _oid));
+	}
+	
+	/**
+	 * Gets the complete remote data map, for DataObject.
+	 * @returns null if not exists, else a map with the data
+	 **/
+	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
+		return null;
+	}
+	
+	/**
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 **/
+	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
+		Set<String> keys) {
+		
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet() {
+		
+		return null;
 	}
 	
 	//--------------------------------------------------------------------------

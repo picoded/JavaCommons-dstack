@@ -26,7 +26,7 @@ public class MongoDBStack extends CoreStack {
 	 * The internal MongoClient connection
 	 */
 	protected MongoClient client_conn = null;
-    protected MongoDatabase db_conn = null;
+	protected MongoDatabase db_conn = null;
 	
 	//-------------------------------------------------------------------------
 	// Database connection constructor
@@ -36,12 +36,12 @@ public class MongoDBStack extends CoreStack {
 	 * Given the mongodb config object, get the full_url
 	 */
 	public static String getFullConnectionURL(GenericConvertMap<String, Object> config) {
-        // Get the DB name (required)
-        String dbname = config.getString("name", null);
+		// Get the DB name (required)
+		String dbname = config.getString("name", null);
 		if (dbname == null || dbname.isEmpty()) {
 			throw new IllegalArgumentException("Missing database 'name' for mongodb config");
 		}
-
+		
 		// Get the full connection url, and use it if present
 		String full_url = config.getString("full_url", null);
 		if (full_url != null) {
@@ -49,21 +49,22 @@ public class MongoDBStack extends CoreStack {
 		}
 		
 		// Lets get the config respectively
-        String protocol = config.getString("protocol", "mongodb+srv");
+		String protocol = config.getString("protocol", "mongodb+srv");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
-		String opts = config.getString("opt_str", "r=majority&w=majority&retryWrites=true&maxPoolSize=50");
+		String opts = config.getString("opt_str",
+			"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
 		
 		// In the future we may want to support opt_map
 		// this should still support the default read/write "majority" concern.
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
 		// Lets build the auth str
-        String authStr = "";
+		String authStr = "";
 		if (user != null && pass != null) {
-            authStr = user+":"+pass+"@";
+			authStr = user + ":" + pass + "@";
 		}
 		
 		// Return the full URL without user & pass
@@ -82,7 +83,7 @@ public class MongoDBStack extends CoreStack {
 		MongoClientSettings settings = MongoClientSettings.builder()
 			.applyConnectionString(new ConnectionString(full_url)).serverApi(serverApi).build();
 		
-        // Create the client, and return it
+		// Create the client, and return it
 		return MongoClients.create(settings);
 	}
 	
@@ -103,9 +104,9 @@ public class MongoDBStack extends CoreStack {
 		
 		// Get the connection & database
 		client_conn = setupFromConfig(dbConfig);
-        
-        // Get the DB conneciton
-        db_conn = client_conn.getDatabase( inConfig.getString("name") );
+		
+		// Get the DB conneciton
+		db_conn = client_conn.getDatabase(inConfig.getString("name"));
 	}
 	
 	/**
