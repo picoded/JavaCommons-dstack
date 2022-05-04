@@ -88,7 +88,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	
 	//--------------------------------------------------------------------------
 	//
-	// Backend system setup / teardown / maintenance (DStackCommon)
+	// Backend system setup / teardown (DStackCommon)
 	//
 	//--------------------------------------------------------------------------
 	
@@ -404,6 +404,14 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		sqlObj.update_raw("CREATE INDEX IF NOT EXISTS IDX_" + cleanFieldName + "_NUM ON "
 			+ dataStorageTable + " USING BTREE (cast(data->>'" + fieldName.replaceAll("\'", "\\'")
 			+ "' AS numeric))", new Object[] {});
+	}
+	
+	/**
+	 * Incremental maintainance should not trigger maintenance.
+	 * As its potentially blocking with a very long call
+	 **/
+	public void incrementalMaintenance() {
+		// does nothing
 	}
 	
 	/**
