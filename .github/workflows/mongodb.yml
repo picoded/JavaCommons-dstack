@@ -1,4 +1,4 @@
-name: Postgres 14.1 Support Test
+name: MongoDB support test
 on:
   push:
     branches: [ master, eugene/*, "mongodb*", "*mongodb*" ]

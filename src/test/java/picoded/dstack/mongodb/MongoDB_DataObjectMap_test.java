@@ -31,7 +31,7 @@ public class MongoDB_DataObjectMap_test extends StructSimple_DataObjectMap_test 
 				
 				GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
 				stackConfig.put("name", "MongoDB_DataObjectMap_test");
-				stackConfig.put("hazelcast", mongodbConfig);
+				stackConfig.put("mongodb", mongodbConfig);
 				
 				instance = new MongoDBStack(stackConfig);
 			}
