@@ -27,10 +27,12 @@ import org.bson.Document;
 import com.mongodb.client.model.Filters;
 
 /**
- * MongoDB implementation of DataObjectMap data structure.
+ * ## Purpose
+ * Support MongoDB implementation of DataObjectMap data structure.
  *
  * Built ontop of the Core_DataObjectMap_struct implementation.
  * 
+ * ## Dev Notes
  * Developers of this class would need to reference the following
  * 
  * - Collection API : https://mongodb.github.io/mongo-java-driver/4.6/apidocs/mongodb-driver-sync/com/mongodb/client/MongoCollection.html
