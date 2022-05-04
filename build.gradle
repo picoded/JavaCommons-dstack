@@ -268,6 +268,10 @@ test {
 		exclude "**/*Sqlite*"
 	}
 
+	if(!project.hasProperty("test_mongodb")) {
+		exclude "**/*MongoDB*"
+	}
+
 	// Setup test to run on parllel threads = to number of processors by default
 	if (project.hasProperty('maxParallelForks')) {
 		maxParallelForks = project.maxParallelForks as int
