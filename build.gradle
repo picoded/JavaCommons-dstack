@@ -21,11 +21,11 @@ plugins {
 
 // Dependency providers to fetch from
 repositories {
-	// Use jcenter for resolving your dependencies.
-	jcenter()
-
-	// Alterantively maven central could be used instead
+	// Use maven central to resolve dependencies
 	mavenCentral()
+
+	// Use jcenter as an alternative
+	jcenter()
 
 	// You can declare any other Maven/Ivy/file repository here.
 }
