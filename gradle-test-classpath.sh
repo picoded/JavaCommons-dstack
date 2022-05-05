@@ -6,4 +6,4 @@ then
     exit 1
 fi
 
-./gradlew test -Ptest_mysql -Ptest_sqlite -Ptest_mssql -Ptest_oracle -Ptest_postgres -Ptest_perf --tests $1
+./gradlew test -Ptest_all -Ptest_perf --tests $1
