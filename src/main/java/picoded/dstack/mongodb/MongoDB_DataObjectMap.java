@@ -167,22 +167,61 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 * either partially (if supported / used), or completely
 	 **/
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
-		Set<String> keys) {
+		Set<String> updateKeys) {
 		
 		// Configure this to be an "upsert" query
 		FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
 		opt.upsert(true);
 		
-		// Generate the document to "upsert"
-		Document doc = new Document();
-		for (String key : keys) {
-			doc.put(key, fullMap.get(key));
+		// Generate the document of changes
+		// See: https://www.mongodb.com/docs/manual/reference/operator/update/setOnInsert/
+		//
+		// We do this via the various, set/unset/etc operators
+		Document set_doc = new Document();
+		Document setOnInsert_doc = new Document();
+		Document unset_doc = new Document();
+
+		// Lets iterate the keys, and decide accordingly
+		Set<String> fullKeys = fullMap.keySet();
+		for( String key : fullKeys ) {
+			// Get the value
+			Object value = fullMap.get(key);
+
+			// Special _oid handling
+			if( key.equals("_oid") ) {
+				setOnInsert_doc.append("_oid", _oid);
+				continue;
+			}
+
+			// Lets apply the update values
+			if( updateKeys.contains(key) ) {
+				// Handle NULL values unset
+				if( value == null || value == ObjectToken.NULL ) {
+					unset_doc.append(key, "");
+					continue;
+				}
+
+				// Handle values update
+				set_doc.append(key, value);
+			}
+
+			// OK - this is not in the update dataset
+			// meaning we should do a "setOnInsert" if its not null
+			if( value == null || value == ObjectToken.NULL ) {
+				// does nothing
+			} else {
+				setOnInsert_doc.append(key, value);
+			}
 		}
-		// Enforce _oid
-		doc.put("_oid", _oid);
+
+		// Generate the "update" doc
+		Document updateDoc = new Document();
+		updateDoc.append("$set", set_doc);
+		updateDoc.append("$setOnInsert", setOnInsert_doc);
+		updateDoc.append("$unset", unset_doc);
 		
 		// Upsert the document
-		collection.findOneAndUpdate(Filters.eq("_oid", _oid), doc, opt);
+		collection.findOneAndUpdate(Filters.eq("_oid", _oid), updateDoc, opt);
 	}
 	
 	//--------------------------------------------------------------------------

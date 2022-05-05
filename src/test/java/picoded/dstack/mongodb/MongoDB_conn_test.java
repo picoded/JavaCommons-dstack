@@ -156,7 +156,6 @@ public class MongoDB_conn_test {
 		assertEquals(null, resMap.get("_id"));
 		assertEquals("the world is both big and small", resMap.get("messsage"));
 
-
 		//-------------------------------------
 		// D : Delete the document !
 		//-------------------------------------
