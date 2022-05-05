@@ -1,4 +1,4 @@
-name: Local Sqlite Support Test
+name: Local Hazelcast Test
 on:
   push:
     branches: [ master, "*" ]
