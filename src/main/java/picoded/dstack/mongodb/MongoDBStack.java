@@ -49,7 +49,7 @@ public class MongoDBStack extends CoreStack {
 		}
 		
 		// Lets get the config respectively
-		String protocol = config.getString("protocol", "mongodb+srv");
+		String protocol = config.getString("protocol", "mongodb");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "localhost");
