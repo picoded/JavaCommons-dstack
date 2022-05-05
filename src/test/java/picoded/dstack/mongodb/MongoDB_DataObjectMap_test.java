@@ -28,7 +28,7 @@ public class MongoDB_DataObjectMap_test extends StructSimple_DataObjectMap_test 
 				GenericConvertMap<String, Object> mongodbConfig = new GenericConvertHashMap<>();
 				mongodbConfig.put("host", DStackTestConfig.MONGODB_HOST());
 				mongodbConfig.put("port", DStackTestConfig.MONGODB_PORT());
-
+				
 				// Use a random DB name
 				mongodbConfig.put("name", DStackTestConfig.randomTablePrefix());
 				

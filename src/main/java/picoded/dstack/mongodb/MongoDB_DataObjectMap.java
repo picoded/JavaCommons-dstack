@@ -2,6 +2,7 @@ package picoded.dstack.mongodb;
 
 // Java imports
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,10 +22,13 @@ import picoded.dstack.*;
 import picoded.dstack.core.*;
 
 // MongoDB imports
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
+import com.mongodb.client.*;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 
 /**
  * ## Purpose
@@ -79,15 +83,22 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void systemSetup() {
 		//
-		// By mongodb default we ONLY index the _id (which is used as _oid)
+		// By mongodb default we use its native _id implementation
+		// and handle our _oid seperately.
+		//
+		// We intentionally DO NOT use mongodb _id, allowing it retain optimal performance.
 		//
 		// Overtime, when "maintainance" is called, additional
 		// indexes would be generated, to improve overall query peformance.
 		//
-		// Assuming "autoIndex" is enabled. The default behaviour is "true"
-		// As of now, nothing needs to be done, as the default index is auto created
+		// This assumes "autoIndex" is enabled. The default behaviour is "true"
 		//
-		// collection.createIndex("something")
+		IndexOptions opt = new IndexOptions();
+		opt = opt.unique(true);
+		opt = opt.name("_oid");
+		collection.createIndex(Indexes.ascending("_oid"), opt);
+		
+		// @TODO consider wildcard index
 	}
 	
 	/**
@@ -133,15 +144,22 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
-		collection.deleteOne(Filters.eq("_id", _oid));
+		collection.deleteOne(Filters.eq("_oid", _oid));
 	}
 	
 	/**
 	 * Gets the complete remote data map, for DataObject.
-	 * @returns null if not exists, else a map with the data
+	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		return null;
+		// Get the find result
+		FindIterable<Document> res = collection.find(Filters.eq("_oid", _oid));
+		
+		// Export the data without _id
+		res = res.projection(Projections.excludeId());
+		
+		// Return the first document (if any)
+		return res.first();
 	}
 	
 	/**
@@ -151,6 +169,20 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 		
+		// Configure this to be an "upsert" query
+		FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
+		opt.upsert(true);
+		
+		// Generate the document to "upsert"
+		Document doc = new Document();
+		for (String key : keys) {
+			doc.put(key, fullMap.get(key));
+		}
+		// Enforce _oid
+		doc.put("_oid", _oid);
+		
+		// Upsert the document
+		collection.findOneAndUpdate(Filters.eq("_oid", _oid), doc, opt);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -168,8 +200,22 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public Set<String> keySet() {
+		// The return hashset
+		HashSet<String> ret = new HashSet<String>();
 		
-		return null;
+		// Lets fetch everything ... D=
+		FindIterable<Document> search = collection.find();
+		search = search.projection(Projections.include("_oid"));
+		
+		// Lets iterate the search
+		try (MongoCursor<Document> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				ret.add(cursor.next().getString("_oid"));
+			}
+		}
+		
+		// Return the full keyset
+		return ret;
 	}
 	
 	//--------------------------------------------------------------------------
@@ -192,10 +238,11 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public void maintenance() {
-		// Check if auto indexing is enabled
-		if (configMap.getBoolean("autoIndex", true)) {
-			// performAutoIndexing(keySet());
-		}
+		// @TODO consider wildcard index
+		// // Check if auto indexing is enabled
+		// if (configMap.getBoolean("autoIndex", true)) {
+		// 	// performAutoIndexing(keySet());
+		// }
 	}
 	
 }

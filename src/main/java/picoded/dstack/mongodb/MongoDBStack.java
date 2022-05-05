@@ -68,7 +68,7 @@ public class MongoDBStack extends CoreStack {
 		}
 		
 		// Return the full URL depending on the settings
-		if( protocol.equals("mongodb+srv") ) {
+		if (protocol.equals("mongodb+srv")) {
 			// mongodb+srv does not support the port protocol
 			return protocol + "://" + authStr + host + "/" + dbname + "?" + opts;
 		}
