@@ -17,7 +17,9 @@ import picoded.core.conv.GenericConvert;
 import picoded.core.conv.NestedObjectFetch;
 import picoded.core.conv.NestedObjectUtil;
 import picoded.core.conv.StringEscape;
+import picoded.core.struct.query.OrderBy;
 import picoded.core.struct.query.Query;
+import picoded.core.struct.query.QueryType;
 import picoded.core.common.ObjectToken;
 import picoded.dstack.*;
 import picoded.dstack.core.*;
@@ -25,6 +27,7 @@ import picoded.dstack.core.*;
 // MongoDB imports
 import org.bson.Document;
 import org.bson.types.Binary;
+import org.bson.conversions.Bson;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Filters;
@@ -66,12 +69,6 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		super();
 		collection = inStack.db_conn.getCollection(name);
 	}
-	
-	//--------------------------------------------------------------------------
-	//
-	// BSON utilities
-	//
-	//--------------------------------------------------------------------------
 	
 	//--------------------------------------------------------------------------
 	//
@@ -297,6 +294,167 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		// Return the full keyset
 		return ret;
 	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Query based optimization
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Given the SQL style query, convert it into the BSON query format
+	 */
+	static protected Bson queryObjToBsonFilter(Query inQuery) {
+		QueryType type = inQuery.type();
+
+		// Handle the query according to its type
+		if( inQuery.isCombinationOperator() ) {
+			// Lets convert each of the subquery
+			List<Bson> remappedQuery = new ArrayList<>();
+			for( Query subQuery : inQuery.childrenQuery() ) {
+				remappedQuery.add( queryObjToBsonFilter(subQuery) );
+			}
+			// Combination type (AND, OR, NOT)
+			if( type == QueryType.AND ) {
+				return Filters.and( remappedQuery );
+			}
+			if( type == QueryType.OR ) {
+				return Filters.or( remappedQuery );
+			}
+			if( type == QueryType.NOT ) {
+				if( remappedQuery.size() > 0 ) {
+					throw new RuntimeException("NOT operator, expects only 1 subquery");
+				}
+				return Filters.not( remappedQuery.get(0) );
+			}
+		} else {
+			// Basic operator
+			if( type == QueryType.EQUALS ) {
+				return Filters.eq( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.NOT_EQUALS ) {
+				return Filters.ne( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.LESS_THAN ) {
+				return Filters.lt( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.LESS_THAN_OR_EQUALS ) {
+				return Filters.lte( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.MORE_THAN ) {
+				return Filters.gt( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.MORE_THAN_OR_EQUALS ) {
+				return Filters.gte( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			}
+			if( type == QueryType.LIKE ) {
+				// Because the LIKE operator does not natively exists,
+				// we will generates its REGEX equivalent
+
+				String val = GenericConvert.toString( inQuery.defaultArgumentValue() );
+				val = val.replaceAll("*","\\*");
+				val = val.replaceAll("%",".*");
+				val = val.replaceAll("_",".+");
+
+				return Filters.regex( inQuery.fieldName(), val );
+			}
+		}
+
+		throw new RuntimeException("Unkown query type : "+inQuery.type());
+	}
+
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+		
+		// The query filter to use, use "all" if queryClause is null
+		Bson bsonFilter = null;
+		if( queryClause != null ) {
+			// Lets convert the SQL where clause to bsonFilter
+			bsonFilter = queryObjToBsonFilter(queryClause);
+		} else {
+			// our equivalent of all filter
+			bsonFilter = Filters.exists("_oid", true);
+		}
+
+		// Lets fetch the data, for the various _oid
+		FindIterable<Document> search = collection.find(bsonFilter);
+		search = search.projection(Projections.include("_oid"));
+		
+		// Build the orderBy clause
+		if( orderByStr != null && orderByStr.length() > 0 ) {
+			// The final sorting BSON
+			Document sortBson = new Document();
+
+			// Normalize it first
+			orderByStr = (new OrderBy(orderByStr)).toString();
+
+			// Split it accordingly
+			String[] orderSeq = orderByStr.split(",");
+			for(int i=0; i<orderSeq.length; ++i) {
+				String subSeq = orderSeq[i];
+
+				// This safely handles both ASC, and DESC sequence
+				String field = subSeq.substring(0, subSeq.length()-4).trim();
+				
+				// Append the order by rule accordingly
+				if( subSeq.endsWith("ASC") ) {
+					sortBson.append(field, 1);
+				} else if( subSeq.endsWith("DESC") ) {
+					sortBson.append(field, -1);
+				}
+			}
+
+			// Apply the sorting
+			search.sort( sortBson );
+		}
+
+		// Handle offset
+		if( offset > 0 ) {
+			search.skip(offset);
+		}
+
+		// And length
+		if( limit >= 0 ) {
+			search.limit(limit);
+		}
+
+		// The return list
+		List<String> ret = new ArrayList<String>();
+		
+		// Lets iterate the search
+		try (MongoCursor<Document> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				ret.add(cursor.next().getString("_oid"));
+			}
+		}
+		
+		// Return the full keyset
+		return GenericConvert.toStringArray(ret);
+	}
+	
+	// /**
+	//  * Performs a search query, and returns the respective DataObjects
+	//  *
+	//  * @param   where query statement
+	//  * @param   where clause values array
+	//  *
+	//  * @returns  The total count for the query
+	//  */
+	// @Override
+	// public long queryCount(String whereClause, Object[] whereValues) {
+	// 	return queryBuilder.dataObjectMapCount(whereClause, whereValues, null, -1, -1);
+	// }
 	
 	//--------------------------------------------------------------------------
 	//
