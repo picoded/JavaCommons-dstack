@@ -441,18 +441,27 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		return GenericConvert.toStringArray(ret);
 	}
 	
-	// /**
-	//  * Performs a search query, and returns the respective DataObjects
-	//  *
-	//  * @param   where query statement
-	//  * @param   where clause values array
-	//  *
-	//  * @returns  The total count for the query
-	//  */
-	// @Override
-	// public long queryCount(String whereClause, Object[] whereValues) {
-	// 	return queryBuilder.dataObjectMapCount(whereClause, whereValues, null, -1, -1);
-	// }
+	/**
+	 * Performs a search query, and returns the respective DataObjects
+	 *
+	 * @param   where query statement
+	 * @param   where clause values array
+	 *
+	 * @returns  The total count for the query
+	 */
+	@Override
+	public long queryCount(String whereClause, Object[] whereValues) {
+		// return collection count, if there is no where clause
+		if( whereClause == null ) {
+			return collection.countDocuments();
+		}
+
+		// The query filter to use, use "all" if queryClause is null
+		Bson bsonFilter = queryObjToBsonFilter(Query.build(whereClause, whereValues));
+		
+		// Perform the query and count
+		return collection.countDocuments(bsonFilter);
+	}
 	
 	//--------------------------------------------------------------------------
 	//
