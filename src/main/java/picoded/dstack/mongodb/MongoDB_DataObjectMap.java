@@ -396,22 +396,20 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			// The final sorting BSON
 			Document sortBson = new Document();
 
-			// Normalize it first
-			orderByStr = (new OrderBy(orderByStr)).toString();
-
 			// Split it accordingly
 			String[] orderSeq = orderByStr.split(",");
 			for(int i=0; i<orderSeq.length; ++i) {
 				String subSeq = orderSeq[i];
+				String subSeq_uc = subSeq.toUpperCase();
 
-				// This safely handles both ASC, and DESC sequence
-				String field = subSeq.substring(0, subSeq.length()-4).trim();
-				
 				// Append the order by rule accordingly
-				if( subSeq.endsWith("ASC") ) {
-					sortBson.append(field, 1);
+				if( subSeq_uc.endsWith("ASC") ) {
+					sortBson.append( subSeq.substring(0, subSeq.length()-3).trim(), 1 );
 				} else if( subSeq.endsWith("DESC") ) {
-					sortBson.append(field, -1);
+					sortBson.append( subSeq.substring(0, subSeq.length()-4).trim(), -1 );
+				} else {
+					// DEFAULT is ASC
+					sortBson.append( subSeq.trim(), 1 );
 				}
 			}
 
