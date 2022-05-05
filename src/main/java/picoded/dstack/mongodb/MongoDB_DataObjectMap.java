@@ -203,6 +203,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 
 				// Handle values update
 				set_doc.append(key, value);
+				continue;
 			}
 
 			// OK - this is not in the update dataset
