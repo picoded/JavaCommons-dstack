@@ -67,7 +67,11 @@ public class MongoDBStack extends CoreStack {
 			authStr = user + ":" + pass + "@";
 		}
 		
-		// Return the full URL without user & pass
+		// Return the full URL depending on the settings
+		if( protocol.equals("mongodb+srv") ) {
+			// mongodb+srv does not support the port protocol
+			return protocol + "://" + authStr + host + "/" + dbname + "?" + opts;
+		}
 		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
 	}
 	
@@ -118,19 +122,18 @@ public class MongoDBStack extends CoreStack {
 	 * @return initialized data structure if type is supported
 	 */
 	protected Core_DataStructure initDataStructure(String name, String type) {
-		// // Initialize for the respective type
-		// Core_DataStructure ret = null;
-		// if (type.equalsIgnoreCase("DataObjectMap")) {
-		// 	ret = new StructCache_DataObjectMap();
-		// }
+		// Initialize for the respective type
+		Core_DataStructure ret = null;
+		if (type.equalsIgnoreCase("DataObjectMap")) {
+			ret = new MongoDB_DataObjectMap(this, name);
+		}
 		
-		// // If datastrucutre initialized, setup name
-		// if (ret != null) {
-		// 	ret.configMap().put("name", name);
-		// 	return ret;
-		// }
+		// If datastrucutre initialized, setup name
+		if (ret != null) {
+			ret.configMap().put("name", name);
+		}
 		
-		// No valid type, return null
-		return null;
+		// Return the initialized object (or null)
+		return ret;
 	}
 }

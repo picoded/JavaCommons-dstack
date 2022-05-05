@@ -267,7 +267,11 @@ test {
 	if(!project.hasProperty("test_sqlite")) {
 		exclude "**/*Sqlite*"
 	}
-
+	if(!project.hasProperty("test_hazelcast")) {
+		exclude "**/*Hazelcast*"
+		exclude "**/*hazelcast*"
+		exclude "**/*HJ_*"
+	}
 	if(!project.hasProperty("test_mongodb")) {
 		exclude "**/*MongoDB*"
 	}
@@ -364,6 +368,11 @@ task incrementalTest(type: TestWatcher) {
 	}
 	if(!project.hasProperty("test_hazelcast")) {
 		exclude "**/*Hazelcast*"
+		exclude "**/*hazelcast*"
+		exclude "**/*HJ_*"
+	}
+	if(!project.hasProperty("test_mongodb")) {
+		exclude "**/*MongoDB*"
 	}
 
 	// Setup test to run on parllel threads = to number of processors by default
