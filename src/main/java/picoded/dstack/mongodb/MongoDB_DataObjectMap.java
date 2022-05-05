@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.conv.GenericConvert;
 import picoded.core.conv.NestedObjectFetch;
+import picoded.core.conv.NestedObjectUtil;
 import picoded.core.conv.StringEscape;
 import picoded.core.struct.query.Query;
 import picoded.core.common.ObjectToken;
@@ -23,6 +24,7 @@ import picoded.dstack.core.*;
 
 // MongoDB imports
 import org.bson.Document;
+import org.bson.types.Binary;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Filters;
@@ -155,11 +157,43 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		// Get the find result
 		FindIterable<Document> res = collection.find(Filters.eq("_oid", _oid));
 		
-		// Export the data without _id
-		res = res.projection(Projections.excludeId());
+		// Get the Document object
+		Document resObj = res.first();
+		if (resObj == null) {
+			return null;
+		}
 		
-		// Return the first document (if any)
-		return res.first();
+		// The return object
+		Map<String, Object> ret = new HashMap<>();
+		
+		// Lets iterate through the object
+		Set<String> fullKeys = resObj.keySet();
+		for (String key : fullKeys) {
+			// Skip the _id reserved col
+			if (key.equalsIgnoreCase("_id")) {
+				continue;
+			}
+			
+			// Get the value
+			Object val = resObj.get(key);
+			
+			// Unwrap the binary type
+			if (val instanceof Binary) {
+				val = ((Binary) val).getData();
+			}
+			
+			// Populate the ret map
+			ret.put(key, val);
+		}
+		
+		// Neither of this works to resolve the mssqlOuterBracket issue
+		// Looks like we need to properly reimplement the query support
+		//
+		// NestedObjectUtil.repackFullyQualifiedNameKeys(ret);
+		// NestedObjectUtil.unpackFullyQualifiedNameKeys(ret);
+		
+		// Return the full map
+		return ret;
 	}
 	
 	/**
@@ -180,41 +214,47 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		Document set_doc = new Document();
 		Document setOnInsert_doc = new Document();
 		Document unset_doc = new Document();
-
+		
 		// Lets iterate the keys, and decide accordingly
 		Set<String> fullKeys = fullMap.keySet();
-		for( String key : fullKeys ) {
+		for (String key : fullKeys) {
 			// Get the value
 			Object value = fullMap.get(key);
-
+			
 			// Special _oid handling
-			if( key.equals("_oid") ) {
+			if (key.equals("_oid")) {
 				setOnInsert_doc.append("_oid", _oid);
 				continue;
 			}
-
+			
+			// Wrap the binary values for the BSON format 
+			// if needed
+			if (value instanceof byte[]) {
+				value = new Binary((byte[]) value);
+			}
+			
 			// Lets apply the update values
-			if( updateKeys.contains(key) ) {
+			if (updateKeys.contains(key)) {
 				// Handle NULL values unset
-				if( value == null || value == ObjectToken.NULL ) {
+				if (value == null || value == ObjectToken.NULL) {
 					unset_doc.append(key, "");
 					continue;
 				}
-
+				
 				// Handle values update
 				set_doc.append(key, value);
 				continue;
 			}
-
+			
 			// OK - this is not in the update dataset
 			// meaning we should do a "setOnInsert" if its not null
-			if( value == null || value == ObjectToken.NULL ) {
+			if (value == null || value == ObjectToken.NULL) {
 				// does nothing
 			} else {
 				setOnInsert_doc.append(key, value);
 			}
 		}
-
+		
 		// Generate the "update" doc
 		Document updateDoc = new Document();
 		updateDoc.append("$set", set_doc);

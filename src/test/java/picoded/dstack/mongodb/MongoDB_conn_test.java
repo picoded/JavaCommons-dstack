@@ -35,14 +35,16 @@ public class MongoDB_conn_test {
 	
 	@Test
 	public void connectivityTest() {
-
+		
 		//-------------------------------------
 		// Connectivity Setup
 		//-------------------------------------
-
+		
 		// Get the full_url
-		String full_url = "mongodb://"+DStackTestConfig.MONGODB_HOST()+":"+DStackTestConfig.MONGODB_PORT()+"/testdb"+"?r=majority&w=majority&retryWrites=true&maxPoolSize=50";
-
+		String full_url = "mongodb://" + DStackTestConfig.MONGODB_HOST() + ":"
+			+ DStackTestConfig.MONGODB_PORT() + "/testdb"
+			+ "?r=majority&w=majority&retryWrites=true&maxPoolSize=50";
+		
 		// Lets build using the stable API settings
 		ServerApi serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
 		MongoClientSettings settings = MongoClientSettings.builder()
@@ -51,15 +53,15 @@ public class MongoDB_conn_test {
 		// The mongodb client
 		MongoClient client = MongoClients.create(settings);
 		assertNotNull(client);
-
+		
 		// The mongodb database
 		MongoDatabase database = client.getDatabase("testdb");
 		assertNotNull(database);
-
+		
 		// The mongodb collection
 		MongoCollection<Document> collection = database.getCollection("testcollection");
 		assertNotNull(collection);
-
+		
 		// Unique _oid index setup
 		IndexOptions opt = new IndexOptions();
 		opt = opt.unique(true);
@@ -69,7 +71,7 @@ public class MongoDB_conn_test {
 		//-------------------------------------
 		// Data cleanup
 		//-------------------------------------
-
+		
 		// Remove any stale data from previous test
 		
 		// Delete all items
@@ -83,45 +85,45 @@ public class MongoDB_conn_test {
 				Filters.exists("_oid", false) //
 				) //
 			); //
-
+		
 		//-------------------------------------
 		// C : Create the first document
 		//-------------------------------------
-
+		
 		// Generate the document to first "insert"
 		Document doc = new Document();
 		doc.put("hello", "world");
 		doc.put("_oid", "001");
-
+		
 		// Lets insert the first document
 		collection.insertOne(doc);
-
+		
 		//-------------------------------------
 		// R : Read the first document
 		//-------------------------------------
-
+		
 		// Get the find result
 		FindIterable<Document> findRes = collection.find(Filters.eq("_oid", "001"));
-		assertNotNull( findRes );
+		assertNotNull(findRes);
 		
 		// Export the data without native mongodb '_id'
 		findRes = findRes.projection(Projections.excludeId());
 		
 		// Get the document (as a map???)
 		// in theory its possible, because a Document, is a Map
-		Map<String,Object> resMap = findRes.first();
-		assertNotNull( resMap );
-
+		Map<String, Object> resMap = findRes.first();
+		assertNotNull(resMap);
+		
 		// Lets validate the values
 		assertEquals("001", resMap.get("_oid"));
 		assertEquals("world", resMap.get("hello"));
 		// Ensure the native mongodb '_id' is scrubbed out
 		assertEquals(null, resMap.get("_id"));
-
+		
 		//-------------------------------------
 		// U : Update the first document
 		//-------------------------------------
-
+		
 		// Generate the details, that needs updating
 		//
 		// See: https://www.mongodb.com/docs/manual/reference/operator/update/set/
@@ -129,46 +131,46 @@ public class MongoDB_conn_test {
 		doc = new Document();
 		doc.append("messsage", "the world is both big and small");
 		// doc.append("_oid", "001");
-
+		
 		Document updateDoc = new Document();
 		updateDoc.put("$set", doc);
 		
 		// Lets do a find and update
-		collection.findOneAndUpdate(Filters.eq("_oid","001"), updateDoc);
-
+		collection.findOneAndUpdate(Filters.eq("_oid", "001"), updateDoc);
+		
 		// Lets validate that the changes were made
 		//----------------------------------------------
-
+		
 		// Get the find result
 		findRes = collection.find(Filters.eq("_oid", "001"));
-		assertNotNull( findRes );
+		assertNotNull(findRes);
 		
 		// Export the data without native mongodb '_id'
 		findRes = findRes.projection(Projections.excludeId());
 		
 		// Get the document (as a map?)
 		resMap = findRes.first();
-		assertNotNull( resMap );
-
+		assertNotNull(resMap);
+		
 		// Lets validate the values
 		assertEquals("001", resMap.get("_oid"));
 		assertEquals("world", resMap.get("hello"));
 		assertEquals(null, resMap.get("_id"));
 		assertEquals("the world is both big and small", resMap.get("messsage"));
-
+		
 		//-------------------------------------
 		// D : Delete the document !
 		//-------------------------------------
-
+		
 		// Delete
 		DeleteResult delRes = collection.deleteOne(Filters.eq("_oid", "001"));
 		assertEquals(1, delRes.getDeletedCount());
-
+		
 		// And validate if it exists
 		findRes = collection.find(Filters.eq("_oid", "001"));
 		findRes = findRes.projection(Projections.excludeId());
-		assertNull( findRes.first() );
-
+		assertNull(findRes.first());
+		
 	}
-
+	
 }
