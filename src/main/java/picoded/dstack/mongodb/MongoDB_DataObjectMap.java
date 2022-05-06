@@ -34,6 +34,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.Aggregates;
 
 /**
  * ## Purpose
@@ -461,6 +462,92 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		
 		// Perform the query and count
 		return collection.countDocuments(bsonFilter);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Random object and loose iteration support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Gets and return a random object ID
+	 *
+	 * @return  Random object ID
+	 **/
+	public String randomObjectID() {
+		// Aggregation sample
+		Document doc = collection.aggregate(Arrays.asList(Aggregates.sample(1))).first();
+		if( doc != null ) {
+			return doc.getString("_oid");
+		}
+		return null;
+	}
+	
+	/**
+	 * Gets and return the next object ID key for iteration given the current ID,
+	 * null gets the first object in iteration.
+	 *
+	 * It is important to note actual iteration sequence is implementation dependent.
+	 * And does not gurantee that newly added objects, after the iteration started,
+	 * will be part of the chain of results.
+	 *
+	 * Similarly if the currentID was removed midway during iteration, the return
+	 * result is not properly defined, and can either be null, or the closest object matched
+	 * or even a random object.
+	 *
+	 * It is however guranteed, if no changes / writes occurs. A complete iteration
+	 * will iterate all existing objects.
+	 *
+	 * The larger intention of this function, is to allow a background thread to slowly
+	 * iterate across all objects, eventually. With an acceptable margin of loss on,
+	 * recently created/edited object. As these objects will eventually be iterated in
+	 * repeated rounds on subsequent calls.
+	 *
+	 * Due to its roughly random nature in production (with concurrent objects generated)
+	 * and its iterative nature as an eventuality. The phrase looselyIterate was chosen,
+	 * to properly reflect its nature.
+	 *
+	 * Another way to phrase it, in worse case scenerio, its completely random, eventually iterating all objects
+	 * In best case scenerio, it does proper iteration as per normal.
+	 *
+	 * @param   Current object ID, can be NULL
+	 *
+	 * @return  Next object ID, if found
+	 **/
+	public String looselyIterateObjectID(String currentID) {
+		// The query filter to use, use "all" if queryClause is null
+		Bson bsonFilter = null;
+		if( currentID == null ) {
+			// our equivalent of all filter
+			bsonFilter = Filters.exists("_oid", true);
+		} else {
+			// greater then
+			bsonFilter = Filters.gt("_oid", currentID);
+		}
+
+		// Lets fetch the data, for the various _oid
+		FindIterable<Document> search = collection.find(bsonFilter);
+		search = search.projection(Projections.include("_oid"));
+	
+		// The final sorting BSON
+		Document sortBson = new Document();
+		sortBson.append("_oid", 1);
+
+		// Apply the sorting
+		search.sort( sortBson );
+
+		// Apply the limit of 1
+		search.limit(1);
+
+		// Get the Document object
+		Document resObj = search.first();
+		if (resObj == null) {
+			return null;
+		}
+		
+		// Return the next _oid
+		return resObj.getString("_oid");
 	}
 	
 	//--------------------------------------------------------------------------
