@@ -110,7 +110,7 @@ dependencies {
 	// api "com.hazelcast:hazelcast-client:3.11.4"
 
 	// Mongo DB 
-	api 'org.mongodb:mongodb-driver-sync:4.6.0'
+	api 'org.mongodb:mongodb-driver-sync:4.3.4'
 
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
