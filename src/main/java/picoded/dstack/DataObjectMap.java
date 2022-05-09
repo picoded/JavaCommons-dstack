@@ -337,11 +337,11 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		// Iterate the list, get key names
 		DataObject obj = randomObject();
 		res.addAll(obj.keySet());
-
+		
 		// Lets iterate through
-		for(int i=1; i<seekDepth; ++i) {
+		for (int i = 1; i < seekDepth; ++i) {
 			obj = looselyIterateObject(obj);
-			if(obj != null) {
+			if (obj != null) {
 				res.addAll(obj.keySet());
 			}
 		}

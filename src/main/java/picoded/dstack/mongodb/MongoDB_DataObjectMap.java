@@ -307,63 +307,63 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 */
 	static protected Bson queryObjToBsonFilter(Query inQuery) {
 		QueryType type = inQuery.type();
-
+		
 		// Handle the query according to its type
-		if( inQuery.isCombinationOperator() ) {
+		if (inQuery.isCombinationOperator()) {
 			// Lets convert each of the subquery
 			List<Bson> remappedQuery = new ArrayList<>();
-			for( Query subQuery : inQuery.childrenQuery() ) {
-				remappedQuery.add( queryObjToBsonFilter(subQuery) );
+			for (Query subQuery : inQuery.childrenQuery()) {
+				remappedQuery.add(queryObjToBsonFilter(subQuery));
 			}
 			// Combination type (AND, OR, NOT)
-			if( type == QueryType.AND ) {
-				return Filters.and( remappedQuery );
+			if (type == QueryType.AND) {
+				return Filters.and(remappedQuery);
 			}
-			if( type == QueryType.OR ) {
-				return Filters.or( remappedQuery );
+			if (type == QueryType.OR) {
+				return Filters.or(remappedQuery);
 			}
-			if( type == QueryType.NOT ) {
-				if( remappedQuery.size() > 0 ) {
+			if (type == QueryType.NOT) {
+				if (remappedQuery.size() > 0) {
 					throw new RuntimeException("NOT operator, expects only 1 subquery");
 				}
-				return Filters.not( remappedQuery.get(0) );
+				return Filters.not(remappedQuery.get(0));
 			}
 		} else {
 			// Basic operator
-			if( type == QueryType.EQUALS ) {
-				return Filters.eq( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.EQUALS) {
+				return Filters.eq(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.NOT_EQUALS ) {
-				return Filters.ne( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.NOT_EQUALS) {
+				return Filters.ne(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.LESS_THAN ) {
-				return Filters.lt( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.LESS_THAN) {
+				return Filters.lt(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.LESS_THAN_OR_EQUALS ) {
-				return Filters.lte( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.LESS_THAN_OR_EQUALS) {
+				return Filters.lte(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.MORE_THAN ) {
-				return Filters.gt( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.MORE_THAN) {
+				return Filters.gt(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.MORE_THAN_OR_EQUALS ) {
-				return Filters.gte( inQuery.fieldName(), inQuery.defaultArgumentValue() );
+			if (type == QueryType.MORE_THAN_OR_EQUALS) {
+				return Filters.gte(inQuery.fieldName(), inQuery.defaultArgumentValue());
 			}
-			if( type == QueryType.LIKE ) {
+			if (type == QueryType.LIKE) {
 				// Because the LIKE operator does not natively exists,
 				// we will generates its REGEX equivalent
-
-				String val = GenericConvert.toString( inQuery.defaultArgumentValue() );
-				val = val.replaceAll("*","\\*");
-				val = val.replaceAll("%",".*");
-				val = val.replaceAll("_",".+");
-
-				return Filters.regex( inQuery.fieldName(), val );
+				
+				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
+				val = val.replaceAll("*", "\\*");
+				val = val.replaceAll("%", ".*");
+				val = val.replaceAll("_", ".+");
+				
+				return Filters.regex(inQuery.fieldName(), val);
 			}
 		}
-
-		throw new RuntimeException("Unkown query type : "+inQuery.type());
+		
+		throw new RuntimeException("Unkown query type : " + inQuery.type());
 	}
-
+	
 	/**
 	 * Performs a search query, and returns the respective DataObject keys.
 	 *
@@ -380,54 +380,54 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		
 		// The query filter to use, use "all" if queryClause is null
 		Bson bsonFilter = null;
-		if( queryClause != null ) {
+		if (queryClause != null) {
 			// Lets convert the SQL where clause to bsonFilter
 			bsonFilter = queryObjToBsonFilter(queryClause);
 		} else {
 			// our equivalent of all filter
 			bsonFilter = Filters.exists("_oid", true);
 		}
-
+		
 		// Lets fetch the data, for the various _oid
 		FindIterable<Document> search = collection.find(bsonFilter);
 		search = search.projection(Projections.include("_oid"));
 		
 		// Build the orderBy clause
-		if( orderByStr != null && orderByStr.length() > 0 ) {
+		if (orderByStr != null && orderByStr.length() > 0) {
 			// The final sorting BSON
 			Document sortBson = new Document();
-
+			
 			// Split it accordingly
 			String[] orderSeq = orderByStr.split(",");
-			for(int i=0; i<orderSeq.length; ++i) {
+			for (int i = 0; i < orderSeq.length; ++i) {
 				String subSeq = orderSeq[i];
 				String subSeq_uc = subSeq.toUpperCase();
-
+				
 				// Append the order by rule accordingly
-				if( subSeq_uc.endsWith("ASC") ) {
-					sortBson.append( subSeq.substring(0, subSeq.length()-3).trim(), 1 );
-				} else if( subSeq.endsWith("DESC") ) {
-					sortBson.append( subSeq.substring(0, subSeq.length()-4).trim(), -1 );
+				if (subSeq_uc.endsWith("ASC")) {
+					sortBson.append(subSeq.substring(0, subSeq.length() - 3).trim(), 1);
+				} else if (subSeq.endsWith("DESC")) {
+					sortBson.append(subSeq.substring(0, subSeq.length() - 4).trim(), -1);
 				} else {
 					// DEFAULT is ASC
-					sortBson.append( subSeq.trim(), 1 );
+					sortBson.append(subSeq.trim(), 1);
 				}
 			}
-
+			
 			// Apply the sorting
-			search.sort( sortBson );
+			search.sort(sortBson);
 		}
-
+		
 		// Handle offset
-		if( offset > 0 ) {
+		if (offset > 0) {
 			search.skip(offset);
 		}
-
+		
 		// And length
-		if( limit >= 0 ) {
+		if (limit >= 0) {
 			search.limit(limit);
 		}
-
+		
 		// The return list
 		List<String> ret = new ArrayList<String>();
 		
@@ -453,10 +453,10 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public long queryCount(String whereClause, Object[] whereValues) {
 		// return collection count, if there is no where clause
-		if( whereClause == null ) {
+		if (whereClause == null) {
 			return collection.countDocuments();
 		}
-
+		
 		// The query filter to use, use "all" if queryClause is null
 		Bson bsonFilter = queryObjToBsonFilter(Query.build(whereClause, whereValues));
 		
@@ -478,7 +478,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	public String randomObjectID() {
 		// Aggregation sample
 		Document doc = collection.aggregate(Arrays.asList(Aggregates.sample(1))).first();
-		if( doc != null ) {
+		if (doc != null) {
 			return doc.getString("_oid");
 		}
 		return null;
@@ -518,28 +518,28 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	public String looselyIterateObjectID(String currentID) {
 		// The query filter to use, use "all" if queryClause is null
 		Bson bsonFilter = null;
-		if( currentID == null ) {
+		if (currentID == null) {
 			// our equivalent of all filter
 			bsonFilter = Filters.exists("_oid", true);
 		} else {
 			// greater then
 			bsonFilter = Filters.gt("_oid", currentID);
 		}
-
+		
 		// Lets fetch the data, for the various _oid
 		FindIterable<Document> search = collection.find(bsonFilter);
 		search = search.projection(Projections.include("_oid"));
-	
+		
 		// The final sorting BSON
 		Document sortBson = new Document();
 		sortBson.append("_oid", 1);
-
+		
 		// Apply the sorting
-		search.sort( sortBson );
-
+		search.sort(sortBson);
+		
 		// Apply the limit of 1
 		search.limit(1);
-
+		
 		// Get the Document object
 		Document resObj = search.first();
 		if (resObj == null) {
