@@ -1,4 +1,4 @@
-name: MongoDB support test
+name: (perf) MongoDB support test
 on:
   push:
     branches: [ perf, "mongodb*", "*mongodb*" ]
