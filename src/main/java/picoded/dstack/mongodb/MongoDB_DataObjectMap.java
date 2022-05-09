@@ -98,7 +98,13 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		opt = opt.name("_oid");
 		collection.createIndex(Indexes.ascending("_oid"), opt);
 		
-		// @TODO consider wildcard index
+		// Wildcard indexing
+		//
+		// This helps improve general performance for arbitary data
+		// at a huge cost of write performance
+		opt = new IndexOptions();
+		opt = opt.name("wildcard");
+		collection.createIndex(Indexes.ascending("$**"), opt);
 	}
 	
 	/**
