@@ -13,17 +13,26 @@ All while maintaining the same interface for the application. Leaving the decisi
 Its most notable claass is `DataObjectMap` which functions as a `SQL` queryable `NoSQL` interface. That functions even against an SQL backend.
 Followed by `DStack` which faciltates the stacking of data backend provider for devops. Such as a distributed cache with an SQL backend.
 
-# Support Matrix
+# Provider Support Matrix
 
-| backend       | status        | notes                                                | DataObjectMap | KeyValueMap | KeyLongMap | FileWorkspaceMap |
-|---------------|---------------|------------------------------------------------------|---------------|-------------|------------|------------------|
-| struct.simple | development   | reference implementation, not for used in production | storage       | storage     | storage    | storage          |
-| struct.cache  | development   |                                                      | storage       |             |            |                  |
-| jsql          | in-production | see SQL support table below for details              | full          | full        | full       | full             |
-| hazelcast     | development   |                                                      | storage       | storage     |            |                  |
-| file.simple   | development   |                                                      |               |             |            | development      |
-| ignite        | development   | roadmap                                              |               |             |            |                  |
-| cockroachdb   | development   | roadmap                                              |               |             |            |                  |
+| backend          | status        | notes                                                | DataObjectMap | KeyValueMap | KeyLongMap | FileWorkspaceMap |
+|------------------|---------------|------------------------------------------------------|---------------|-------------|------------|------------------|
+| struct.simple    | in-production | reference implementation, not recommended for use    | storage       | storage     | storage    | storage          |
+| struct.cache     | in-production | local instance caching, useful for WORM data         | storage       |             |            |                  |
+| jsql             | in-production | *with limits: see SQL support notes below            | full          | full        | full       | full             |
+| hazelcast.cache  | in-production |                                                      | full          | full        | full       |                  |
+| hazelcast.store  | in-production |                                                      | full          | full        | full       |                  |
+| file.simple      | in-production |                                                      |               |             |            | storage          |
+| file.layered     | in-production |                                                      |               |             |            | storage          |
+| ignite           | development   | roadmap                                              |               |             |            |                  |
+| cockroachdb      | development   | roadmap                                              |               |             |            |                  |
+
+**Important notes**
+
+- "full", means it has been optimized for both storage, and query operations.
+- "storage" means does not support optimization for queries, for large queries, this can have detrimental performance implication, as the apistack will need to iterate a large number of data.
+- Hazelcast require a custom build / deployment with the JavaCommons JAR file to support the required functionality
+- MySQL connection / db seems to support only up to 16 digits of accuracy
 
 # Data Structures
 
@@ -35,7 +44,3 @@ Followed by `DStack` which faciltates the stacking of data backend provider for 
 | FileWorkspaceMap | development   | File workspace storage support                                             |
 | MessageQueue     | road-map      | Message queue                                                              |
 | JobQueue         | road-map      | Job request, response queue                                                |
-
-# Important known issues
-
-- MySQL connection / db seems to support only up to 16 digits of accuracy
