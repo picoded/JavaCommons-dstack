@@ -21,11 +21,11 @@ plugins {
 
 // Dependency providers to fetch from
 repositories {
-	// Use jcenter for resolving your dependencies.
-	jcenter()
-
-	// Alterantively maven central could be used instead
+	// Use maven central to resolve dependencies
 	mavenCentral()
+
+	// Use jcenter as an alternative
+	jcenter()
 
 	// You can declare any other Maven/Ivy/file repository here.
 }
@@ -108,6 +108,9 @@ dependencies {
 	api "com.hazelcast:hazelcast-all:4.0.2"
 	// api "com.hazelcast:hazelcast:3.11.4"
 	// api "com.hazelcast:hazelcast-client:3.11.4"
+
+	// Mongo DB 
+	api 'org.mongodb:mongodb-driver-sync:4.5.1'
 
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
@@ -245,24 +248,36 @@ test {
 		exclude "**/*_perf*"
 	}
 
-	// Include mssql, mysql, and oracle test only if they are configured respectively
+	// Include specific DB test only if they are configured respectively
 	//
 	// You can enable any of them by running the `gradle test` command with their `-P`
 	// option, for example `gradle test -Ptest_mssql`
-	if(!project.hasProperty("test_mssql")) {
-		exclude "**/*Mssql*"
-	}
-	if(!project.hasProperty("test_oracle")) {
-		exclude "**/*Oracle*"
-	}
-	if(!project.hasProperty("test_mysql")) {
-		exclude "**/*Mysql*"
-	}
-	if(!project.hasProperty("test_postgres")) {
-		exclude "**/*Postgres*"
-	}
-	if(!project.hasProperty("test_sqlite")) {
-		exclude "**/*Sqlite*"
+	if(project.hasProperty("test_all")) {
+		// does nothing, no exclusions needed
+	} else {
+		if(!project.hasProperty("test_mssql")) {
+			exclude "**/*Mssql*"
+		}
+		if(!project.hasProperty("test_oracle")) {
+			exclude "**/*Oracle*"
+		}
+		if(!project.hasProperty("test_mysql")) {
+			exclude "**/*Mysql*"
+		}
+		if(!project.hasProperty("test_postgres")) {
+			exclude "**/*Postgres*"
+		}
+		if(!project.hasProperty("test_sqlite")) {
+			exclude "**/*Sqlite*"
+		}
+		if(!project.hasProperty("test_hazelcast")) {
+			exclude "**/*Hazelcast*"
+			exclude "**/*hazelcast*"
+			exclude "**/*HJ_*"
+		}
+		if(!project.hasProperty("test_mongodb")) {
+			exclude "**/*MongoDB*"
+		}
 	}
 
 	// Setup test to run on parllel threads = to number of processors by default
@@ -336,24 +351,36 @@ task incrementalTest(type: TestWatcher) {
 	exclude "**/perf/*.java"
 	exclude "**/*_perf*"
 
-	// Include mssql, mysql, and oracle test only if they are configured respectively
+	// Include specific DB test only if they are configured respectively
 	//
 	// You can enable any of them by running the `gradle test` command with their `-P`
 	// option, for example `gradle test -Ptest_mssql`
-	if(!project.hasProperty("test_mssql")) {
-		exclude "**/*Mssql*"
-	}
-	if(!project.hasProperty("test_oracle")) {
-		exclude "**/*Oracle*"
-	}
-	if(!project.hasProperty("test_mysql")) {
-		exclude "**/*Mysql*"
-	}
-	if(!project.hasProperty("test_postgres")) {
-		exclude "**/*Postgres*"
-	}
-	if(!project.hasProperty("test_sqlite")) {
-		exclude "**/*Sqlite*"
+	if(project.hasProperty("test_all")) {
+		// does nothing, no exclusions needed
+	} else {
+		if(!project.hasProperty("test_mssql")) {
+			exclude "**/*Mssql*"
+		}
+		if(!project.hasProperty("test_oracle")) {
+			exclude "**/*Oracle*"
+		}
+		if(!project.hasProperty("test_mysql")) {
+			exclude "**/*Mysql*"
+		}
+		if(!project.hasProperty("test_postgres")) {
+			exclude "**/*Postgres*"
+		}
+		if(!project.hasProperty("test_sqlite")) {
+			exclude "**/*Sqlite*"
+		}
+		if(!project.hasProperty("test_hazelcast")) {
+			exclude "**/*Hazelcast*"
+			exclude "**/*hazelcast*"
+			exclude "**/*HJ_*"
+		}
+		if(!project.hasProperty("test_mongodb")) {
+			exclude "**/*MongoDB*"
+		}
 	}
 
 	// Setup test to run on parllel threads = to number of processors by default

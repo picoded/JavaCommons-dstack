@@ -335,18 +335,18 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		Set<String> res = new HashSet<String>();
 		
 		// Iterate the list, get key names
-		int idx = 0;
-		for (DataObject obj : values()) {
-			
-			// Break iteration once seekdepth limits reached
-			if (idx >= seekDepth && seekDepth >= 0) {
-				break;
+		DataObject obj = randomObject();
+		res.addAll(obj.keySet());
+		
+		// Lets iterate through
+		for (int i = 1; i < seekDepth; ++i) {
+			obj = looselyIterateObject(obj);
+			if (obj != null) {
+				res.addAll(obj.keySet());
 			}
-			
-			// Add all the various key names
-			res.addAll(obj.keySet());
 		}
 		
+		// Return the result set
 		return res;
 	}
 	

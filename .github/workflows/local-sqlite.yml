@@ -1,7 +1,7 @@
 name: Local Sqlite Support Test
 on:
   push:
-    branches: [ master, eugene/* ]
+    branches: [ master, "*" ]
   pull_request:
     branches: [ master ]
 jobs:
