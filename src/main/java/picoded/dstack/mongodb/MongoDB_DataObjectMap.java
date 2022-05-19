@@ -88,23 +88,22 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		//
 		// We intentionally DO NOT use mongodb _id, allowing it retain optimal performance.
 		//
-		// Overtime, when "maintainance" is called, additional
-		// indexes would be generated, to improve overall query peformance.
-		//
-		// This assumes "autoIndex" is enabled. The default behaviour is "true"
-		//
 		IndexOptions opt = new IndexOptions();
 		opt = opt.unique(true);
 		opt = opt.name("_oid");
+		opt = opt.background(true);
 		collection.createIndex(Indexes.ascending("_oid"), opt);
 		
 		// Wildcard indexing
 		//
 		// This helps improve general performance for arbitary data
 		// at a huge cost of write performance
-		opt = new IndexOptions();
-		opt = opt.name("wildcard");
-		collection.createIndex(Indexes.ascending("$**"), opt);
+		if (configMap.getBoolean("setupWildcardIndex", true)) {
+			opt = new IndexOptions();
+			opt = opt.name("wildcard");
+			opt = opt.background(true);
+			collection.createIndex(Indexes.ascending("$**"), opt);
+		}
 	}
 	
 	/**
