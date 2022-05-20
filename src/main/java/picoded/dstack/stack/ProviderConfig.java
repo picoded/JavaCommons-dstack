@@ -161,6 +161,9 @@ public class ProviderConfig {
 		if (type.equalsIgnoreCase("JSql")) {
 			return new picoded.dstack.jsql.JSqlStack(config);
 		}
+		if (type.equalsIgnoreCase("MongoDB")) {
+			return new picoded.dstack.mongodb.MongoDBStack(config);
+		}
 		if (type.equalsIgnoreCase("HazelcastStore")) {
 			return new picoded.dstack.hazelcast.store.HazelcastStoreStack(config);
 		}
