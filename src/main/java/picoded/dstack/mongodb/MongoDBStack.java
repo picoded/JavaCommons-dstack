@@ -109,8 +109,8 @@ public class MongoDBStack extends CoreStack {
 		// Get the connection & database
 		client_conn = setupFromConfig(dbConfig);
 		
-		// Get the DB conneciton
-		db_conn = client_conn.getDatabase(inConfig.getString("name"));
+		// Get the DB connection
+		db_conn = client_conn.getDatabase(dbConfig.fetchString("name"));
 	}
 	
 	/**
