@@ -313,6 +313,26 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	}
 	
 	//
+	// Query count optimization handling
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get the size of the current DataObjectMap
+	 **/
+	@Override
+	default int size() {
+		return queryCount(null,null);
+	}
+
+	/**
+	 * Get the size as a long for the DataObjectMap
+	 * This should be used instead of size (to work around int limits)
+	 */
+	default long longSize() {
+		return queryCount(null,null);
+	}
+	
+	//
 	// Get key names handling
 	//--------------------------------------------------------------------------
 	
