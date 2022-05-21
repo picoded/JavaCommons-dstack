@@ -318,10 +318,17 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	
 	/**
 	 * Get the size of the current DataObjectMap
+	 * 
+	 * Note that if the dataset size is larger then Integer.MAX_VALUE
+	 * it is clamped accordingly to the MAX_VALUE
 	 **/
 	@Override
 	default int size() {
-		return queryCount(null,null);
+		long s = queryCount(null,null);
+		if( s > Integer.MAX_VALUE ) {
+			return Integer.MAX_VALUE;
+		} 
+		return (int)s;
 	}
 
 	/**
