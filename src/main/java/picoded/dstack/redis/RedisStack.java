@@ -10,7 +10,6 @@ import picoded.dstack.core.*;
 import org.redisson.Redisson;
 import org.redisson.config.Config;
 import org.redisson.api.RedissonClient;
-org.redisson.client.RedisConnection
 
 /**
  * [Internal use only]
@@ -22,9 +21,8 @@ public class RedisStack extends CoreStack {
 	/**
 	 * The internal Redis connection
 	 */
-	protected RedisConnection db_conn = null;
 
-	protected RedissonClient client_conn = null;
+	protected RedissonClient conn = null;
 	
 	//-------------------------------------------------------------------------
 	// Database connection constructor
@@ -53,10 +51,10 @@ public class RedisStack extends CoreStack {
 		String protocol = config.getString("protocol", "redis");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
-		String host = config.getString("host", "172.17.0.1"); //default docker ip
+		String host = config.getString("host", "172.17.0.1"); //default docker ip 
 		int port = config.getInt("port", 6379); //default redis port
 		String opts = config.getString("opt_str",
-			"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
+		"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
 	
 		// Lets build the auth str
 		String authStr = "";
@@ -73,10 +71,11 @@ public class RedisStack extends CoreStack {
 	public static RedissonClient setupFromConfig(GenericConvertMap<String, Object> inConfig) {
 		// Get the full_url
 		String full_url = getFullConnectionURL(inConfig);
+		System.out.println(full_url);
 		
-		// Lets build using the stable API settings
-		ServerApi serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
-		Config config = Config.useSingleServer()
+		// Apply config
+		Config config = new Config();
+		config.useSingleServer()
 			.setAddress(full_url);
 		
 		// Create the client, and return it
@@ -87,6 +86,7 @@ public class RedisStack extends CoreStack {
 	 * Constructor with configuration map
 	 */
 	public RedisStack(GenericConvertMap<String, Object> inConfig) {
+		//https://github.com/redisson/redisson/wiki/10.-additional-features#107-low-level-redis-client
 		super(inConfig);
 		
 		// Extract the connection config object
@@ -99,10 +99,7 @@ public class RedisStack extends CoreStack {
 		}
 		
 		// Get the connection & database
-		client_conn = setupFromConfig(dbConfig);
-		
-		// Get the DB connection
-		db_conn = client_conn.getDatabase(dbConfig.fetchString("name"));
+		conn = setupFromConfig(dbConfig);
 	}
 	
 	/**
@@ -117,14 +114,8 @@ public class RedisStack extends CoreStack {
 		// Initialize for the respective type
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			ret = new Redis_DataObjectMap(this, name);
+			//ret = new Redis_DataObjectMap(this, name);
 		}
-		
-		// If datastrucutre initialized, setup name
-		if (ret != null) {
-			ret.configMap().put("name", name);
-		}
-		
 		// Return the initialized object (or null)
 		return ret;
 	}
