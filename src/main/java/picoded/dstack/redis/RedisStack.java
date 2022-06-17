@@ -21,7 +21,7 @@ public class RedisStack extends CoreStack {
 	/**
 	 * The internal Redis connection
 	 */
-
+	
 	protected RedissonClient conn = null;
 	
 	//-------------------------------------------------------------------------
@@ -34,7 +34,7 @@ public class RedisStack extends CoreStack {
 	 */
 	public static String getFullConnectionURL(GenericConvertMap<String, Object> config) {
 		// Get the DB name (required)
-
+		
 		// Redis db are labelled from 0 to 15
 		String dbname = config.getString("name", null);
 		if (dbname == null || dbname.isEmpty()) {
@@ -54,8 +54,8 @@ public class RedisStack extends CoreStack {
 		String host = config.getString("host", "172.17.0.1"); //default docker ip 
 		int port = config.getInt("port", 6379); //default redis port
 		String opts = config.getString("opt_str",
-		"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
-	
+			"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
+		
 		// Lets build the auth str
 		String authStr = "";
 		if (user != null && pass != null) {
@@ -75,8 +75,7 @@ public class RedisStack extends CoreStack {
 		
 		// Apply config
 		Config config = new Config();
-		config.useSingleServer()
-			.setAddress(full_url);
+		config.useSingleServer().setAddress(full_url);
 		
 		// Create the client, and return it
 		return Redisson.create(config);
