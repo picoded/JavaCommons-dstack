@@ -78,6 +78,12 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void clear() {
 	}
+
+	// @Override
+	// public void del(String key) {
+  	// 	redissonClient.getKeys().delete(key);
+	// }
+
 	
 	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
