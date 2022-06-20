@@ -40,35 +40,35 @@ public class Redis_conn_test {
 			.setAddress(full_url);
 		
 		// The mongodb client
-		RedissonClient redisson  = Redisson.create(config);
+		RedissonClient redisson = Redisson.create(config);
 		assertNotNull(redisson);
-
+		
 		// perform basic operations
 		RBucket<String> bucket = redisson.getBucket("stringObject");
 		bucket.set("hello world");
 		RMap<String, String> map = redisson.getMap("mapObject");
 		map.put("helloKey", "worldValue");
 		String objValue = bucket.get();
-		assertEquals(objValue,"hello world");
+		assertEquals(objValue, "hello world");
 		String mapValue = map.get("helloKey");
-		assertEquals(mapValue,"worldValue");
-
+		assertEquals(mapValue, "worldValue");
+		
 		//Set value, modify it then remove it in Redis
 		//Set AtomicLong key/value in Redis
 		String myKey = "myLong";
 		RAtomicLong atomicLong = redisson.getAtomicLong(myKey);
 		atomicLong.set(5);
-		assertEquals("5",atomicLong.toString());
+		assertEquals("5", atomicLong.toString());
 		//Increment value and check result
 		atomicLong.addAndGet(15);
-		assertEquals("20",atomicLong.toString());
+		assertEquals("20", atomicLong.toString());
 		//Delete Key
 		redisson.getKeys().delete(atomicLong);
-
+		
 		//Check keys doesn't exist anymore
 		RType type = redisson.getKeys().getType(myKey);
-		assertEquals(null,type);
-
+		assertEquals(null, type);
+		
 		//Clear current db of from all keys
 		redisson.getKeys().flushdb();
 		//Shutdown client connection

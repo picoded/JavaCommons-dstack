@@ -101,8 +101,21 @@ public class RedisStack extends CoreStack {
 		conn = setupFromConfig(dbConfig);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Internal package methods
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
-	 * Initilize and return the requested data structure with the given name or type if its supported
+	 * @return the internal hazelcastInstance connection
+	 */
+	protected RedissonClient getConnection() {
+		return conn;
+	}
+	
+	/**
+	 * Initialize and return the requested data structure with the given name or type if its supported
 	 * 
 	 * @param  name  name of the datastructure to initialize
 	 * @param  type  implmentation type (KeyValueMap / KeyLongMap / DataObjectMap / FileWorkspaceMap)

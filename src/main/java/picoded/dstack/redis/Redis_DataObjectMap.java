@@ -21,6 +21,8 @@ import picoded.dstack.*;
 import picoded.dstack.core.*;
 
 // Redis imports
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
 
 /**
  * Redis implementation of DataObjectMap data structure.
@@ -41,6 +43,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	
 	/** Redis instance representing the backend connection */
 	RedisStack redisStack = null;
+	RedissonClient redisson = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -51,6 +54,8 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	public Redis_DataObjectMap(RedisStack inStack, String name) {
 		super();
 		redisStack = inStack;
+		redisson = inStack.getConnection();
+		configMap().put("name", name);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -78,12 +83,11 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void clear() {
 	}
-
+	
 	// @Override
 	// public void del(String key) {
-  	// 	redissonClient.getKeys().delete(key);
+	// 	redissonClient.getKeys().delete(key);
 	// }
-
 	
 	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
