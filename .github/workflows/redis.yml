@@ -11,13 +11,13 @@ jobs:
     # Configuration, for us to perform test against multiple version in the future
     strategy:
       matrix:
-        redis-version: ['7.0.2']
+        redis-version: [7]
     
     # The test step
     steps:
     # Start Redis 
     - name: Start Redis
-      uses: supercharge/redis-github-action@1.7.0
+      uses: supercharge/redis-github-action@1.4.0
       with:
         redis-version: ${{ matrix.redis-version }}
 
