@@ -126,7 +126,11 @@ public class RedisStack extends CoreStack {
 		// Initialize for the respective type
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			//ret = new Redis_DataObjectMap(this, name);
+			ret = new Redis_DataObjectMap(this, name);
+		}
+		// If datastrucutre initialized, setup name
+		if (ret != null) {
+			ret.configMap().put("name", name);
 		}
 		// Return the initialized object (or null)
 		return ret;

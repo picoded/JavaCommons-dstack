@@ -23,6 +23,8 @@ import picoded.dstack.core.*;
 // Redis imports
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.RMap;
+import org.redisson.api.RSet;
 
 /**
  * Redis implementation of DataObjectMap data structure.
@@ -82,23 +84,40 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	@Override
 	public void clear() {
+		//Delete all the keys of the currently selected database
+		//redisson.getKeys().flushall();
+		
+		//Delete all the keys of all the existing databases
+		redisson.getKeys().flushall();
 	}
-	
-	// @Override
-	// public void del(String key) {
-	// 	redissonClient.getKeys().delete(key);
-	// }
 	
 	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
 		Set<String> keys) {
 	}
 	
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		Map<String, Object> ret = new HashMap<>();
+		RSet<String> res =  redisson.getSet("_oid");
+		String resObj =  res.random()
+		if (resObj == null) {
+			return null;
+		}
+
+		Map<String, Object> ret = new HashMap<>();\
+		
 		return ret;
 	}
 	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the complete remote data map, for DataObject.
+	 * This is used to nuke an entire object
+	 *
+	 * @param  Object ID to remove
+	 *
+	 * @return  nothing
+	 **/
 	public void DataObjectRemoteDataMap_remove(String _oid) {
+		redisson.getKeys().delete(_oid);
 	}
-	
 }
