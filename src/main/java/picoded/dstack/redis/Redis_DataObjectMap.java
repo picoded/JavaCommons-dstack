@@ -24,7 +24,8 @@ import picoded.dstack.core.*;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
-import org.redisson.api.RSet;
+
+// import org.redisson.api.RSet;
 
 /**
  * Redis implementation of DataObjectMap data structure.
@@ -91,18 +92,28 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		redisson.getKeys().flushall();
 	}
 	
-	public void DataObjectRemoteDataMap_update(String oid, Map<String, Object> fullMap,
-		Set<String> keys) {
+	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
+		Set<String> updateKeys) {
 	}
 	
+	/**
+	 * Gets the complete remote data map, for DataObject.
+	 * @return null if not exists, else a map with the data
+	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		RSet<String> res = redisson.getSet("_oid");
-		String resObj = res.random();
-		if (resObj == null) {
-			return null;
-		}
+		RMap<String, String> res = redisson.getMap("_oid");
 		
 		Map<String, Object> ret = new HashMap<>();
+		
+		Set<String> fullKeys = res.keySet();
+		for (String key : fullKeys) {
+			
+			// Get the value
+			Object val = res.get(key);
+			
+			// Populate the ret map
+			ret.put(key, val);
+		}
 		
 		return ret;
 	}
