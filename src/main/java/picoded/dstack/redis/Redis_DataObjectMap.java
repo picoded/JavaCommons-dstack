@@ -96,13 +96,13 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	}
 	
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		RSet<String> res =  redisson.getSet("_oid");
-		String resObj =  res.random()
+		RSet<String> res = redisson.getSet("_oid");
+		String resObj = res.random();
 		if (resObj == null) {
 			return null;
 		}
-
-		Map<String, Object> ret = new HashMap<>();\
+		
+		Map<String, Object> ret = new HashMap<>();
 		
 		return ret;
 	}
