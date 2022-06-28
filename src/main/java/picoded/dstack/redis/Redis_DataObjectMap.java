@@ -119,6 +119,22 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	}
 	
 	/**
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet(Long value) {
+		// The return hashset
+		HashSet<String> ret = new HashSet<String>();
+		
+		//Fetch everything in current db
+		RKeys keySet = redisson.getKeys();
+		keySet.getKeysByPattern(value).forEach(k -> ret.add(k));
+		
+		// Return the full keyset
+		return ret;
+	}
+	
+	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
 	 * Removes the complete remote data map, for DataObject.
