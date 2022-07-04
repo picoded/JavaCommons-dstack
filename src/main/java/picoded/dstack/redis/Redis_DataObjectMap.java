@@ -2,7 +2,6 @@ package picoded.dstack.redis;
 
 // Java imports
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,6 @@ import picoded.dstack.core.*;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
-import org.redisson.api.RKeys;
 
 // import org.redisson.api.RSet;
 
@@ -124,13 +122,13 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 * @return set of keys
 	 **/
 	@Override
-	public Set<String> keySet() {
+	public Set<String> keySet(Long value) {
 		// The return hashset
 		HashSet<String> ret = new HashSet<String>();
 		
 		//Fetch everything in current db
 		RKeys keySet = redisson.getKeys();
-		keySet.getKeysByPattern("_oid").forEach(k -> ret.add(k));
+		keySet.getKeysByPattern(value).forEach(k -> ret.add(k));
 		
 		// Return the full keyset
 		return ret;
@@ -149,5 +147,4 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		redisson.getKeys().delete(_oid);
 	}
-	
 }
