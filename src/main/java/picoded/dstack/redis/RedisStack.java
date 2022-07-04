@@ -62,8 +62,7 @@ public class RedisStack extends CoreStack {
 			authStr = user + ":" + pass + "@";
 		}
 		
-		//return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
-		return protocol + "://" + authStr + host + ":" + port + "/0" + "?" + opts;
+		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
 	}
 	
 	/**

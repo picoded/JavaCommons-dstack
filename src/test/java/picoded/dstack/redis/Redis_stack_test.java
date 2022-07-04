@@ -37,7 +37,7 @@ public class Redis_stack_test {
 		redisConfig.put("host", DStackTestConfig.REDIS_HOST());
 		redisConfig.put("port", DStackTestConfig.REDIS_PORT());
 		
-		redisConfig.put("name", "0");
+		redisConfig.put("name", DStackTestConfig.randomTablePrefix());
 		
 		GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
 		stackConfig.put("name", "Redis_DataObjectMap_test");
@@ -45,7 +45,23 @@ public class Redis_stack_test {
 		
 		instance = new RedisStack(stackConfig);
 		
-		assertSame("pong",instance.ping());
+        //Test instance instanciation :o)
+		assertSame("pong", instance.ping());
+		
+		RedissonClient redisson = null;
+        redisson = instance.getConnection();
+		assertNotNull(redisson);
+
+        //Test that redisson client works properly because i'm paranoid
+        RBucket<String> bucket = redisson.getBucket("stringObject");
+		bucket.set("hello world");
+		String objValue = bucket.get();
+		assertEquals(objValue, "hello world");
+
+        //Clear current db of from all keys
+		redisson.getKeys().flushdb();
+		//Shutdown client connection
+		redisson.shutdown();
 	}
 	
 }
