@@ -109,6 +109,13 @@ public class RedisStack extends CoreStack {
 	//--------------------------------------------------------------------------
 	
 	/**
+	 * @return pong
+	 */
+	protected String ping() {
+		return "pong";
+	}
+	
+	/**
 	 * @return the internal hazelcastInstance connection
 	 */
 	protected RedissonClient getConnection() {
