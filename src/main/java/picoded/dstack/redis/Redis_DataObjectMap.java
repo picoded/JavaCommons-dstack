@@ -38,7 +38,7 @@ import org.redisson.api.RKeys;
  * 
  * - 
  **/
-public class Redis_DataObjectMap extends Core_DataObjectMap {
+public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -62,6 +62,53 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		redisStack = inStack;
 		redisson = inStack.getConnection();
 		redisMap = redisson.getMap(name);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// map naming support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @return name memoizer
+	 */
+	private String _name = null;
+	
+	/**
+	 * @return Get the internal map name, required to be in configMap
+	 */
+	private String name() {
+		// Return memorized name
+		if (_name != null) {
+			return _name;
+		}
+		
+		// Attempt to load cachename from config
+		_name = configMap().getString("name");
+		if (_name == null || _name.equals("")) {
+			throw new IllegalArgumentException("Missing name configuration");
+		}
+		
+		// Return config cachename
+		return _name;
+	}
+	
+	/**
+	 * @return backendmap memoizer
+	 */
+	private RMap<String, Map<String, Object>> _backendRMap = null;
+	
+	/**
+	 * @return Storage map used for the backend operations of one "DataObjectMap"
+	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
+	 */
+	protected RMap<String, Map<String, Object>> backendMap() {
+		if (_backendRMap != null) {
+			return _backendRMap;
+		}
+		_backendRMap = redisson.getMap(name());
+		return _backendRMap;
 	}
 	
 	//--------------------------------------------------------------------------
@@ -96,8 +143,32 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		redisson.getKeys().flushall();
 	}
 	
+	/**
+	 * Updates the actual backend storage of DataObject
+	 * either partially (if supported / used), or completely
+	 **/
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> updateKeys) {
+		
+		Map<String, Object> clonedMap = new HashMap<String, Object>();
+		
+		// Lets iterate the keys, and decide accordingly
+		for (String key : fullMap.keySet()) {
+			// Get the full map value
+			Object val = fullMap.get(key);
+			
+			// Check for Map / List like objects
+			if (val instanceof Map || val instanceof List) {
+				// Clone it - by JSON serializing back and forth
+				clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)));
+			} else {
+				// Store it directly, this should be a primative, or byte[]
+				clonedMap.put(key, val);
+			}
+		}
+		
+		// call the default implementation
+		super.DataObjectRemoteDataMap_update(_oid, clonedMap, updateKeys);
 	}
 	
 	/**
@@ -109,7 +180,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		// keys.add(_oid);
 		// Map<String, Object> res = redisMap.getAll(keys);
 		RMap<String, Object> res = redisMap;
-
+		
 		//Input value myself 
 		// res.put("helloKey", "worldValue");
 		System.out.println(res);
@@ -119,8 +190,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		System.out.println(res.readAllMap());
 		// System.out.println(res.readAllEntrySet());
 		// System.out.println(res.readAllValues());
-
-
+		
 		Map<String, Object> ret = new HashMap<>();
 		
 		Set<String> fullKeys = res.keySet();
@@ -166,4 +236,5 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		//redisson.getKeys().delete(_oid);
 		redisMap.fastRemove(_oid);
 	}
+	
 }
