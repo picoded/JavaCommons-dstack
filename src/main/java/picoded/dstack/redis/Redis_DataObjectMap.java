@@ -150,6 +150,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> updateKeys) {
 		
+			//yus
 		Map<String, Object> clonedMap = new HashMap<String, Object>();
 		
 		// Lets iterate the keys, and decide accordingly
