@@ -4,13 +4,12 @@ package picoded.dstack.redis;
 import static org.junit.Assert.*;
 import org.junit.*;
 
+import picoded.core.conv.GUID;
 import picoded.core.struct.*;
 import picoded.dstack.*;
 import picoded.dstack.struct.simple.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.redisson.config.Config;
 import org.redisson.Redisson;
@@ -21,6 +20,8 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
 
 import org.redisson.api.RAtomicLong;
+
+import org.apache.commons.lang3.RandomUtils;
 
 /**
  * Minimal Redis connectivity test.
@@ -45,23 +46,24 @@ public class Redis_stack_test {
 		
 		instance = new RedisStack(stackConfig);
 		
-        //Test instance instanciation :o)
+		//Test instance instanciation :o)
 		assertSame("pong", instance.ping());
 		
 		RedissonClient redisson = null;
-        redisson = instance.getConnection();
+		redisson = instance.getConnection();
 		assertNotNull(redisson);
-
-        //Test that redisson client works properly because i'm paranoid
-        RBucket<String> bucket = redisson.getBucket("stringObject");
+		
+		//Test that redisson client works properly because i'm paranoid
+		RBucket<String> bucket = redisson.getBucket("stringObject");
 		bucket.set("hello world");
 		String objValue = bucket.get();
 		assertEquals(objValue, "hello world");
-
-        //Clear current db of from all keys
+		
+		assertNotNull(instance.dataObjectMap(DStackTestConfig.randomTablePrefix()));
+		
+		//Clear current db of from all keys
 		redisson.getKeys().flushdb();
 		//Shutdown client connection
 		redisson.shutdown();
 	}
-	
 }

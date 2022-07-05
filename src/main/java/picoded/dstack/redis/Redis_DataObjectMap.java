@@ -49,6 +49,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	/** Redis instance representing the backend connection */
 	RedisStack redisStack = null;
 	RedissonClient redisson = null;
+	RMap<String, Object> redisMap = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -60,7 +61,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
-		configMap().put("name", name);
+		redisMap = redisson.getMap(name);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -80,6 +81,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
 	public void systemDestroy() {
+		redisMap.delete();
 	}
 	
 	/**
@@ -88,7 +90,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	@Override
 	public void clear() {
 		//Delete all the keys of the currently selected database
-		//redisson.getKeys().flushall();
+		//redisson.getKeys().flushdb();
 		
 		//Delete all the keys of all the existing databases
 		redisson.getKeys().flushall();
@@ -103,8 +105,19 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		RMap<String, String> res = redisson.getMap("_oid");
-		
+		RMap<String, Object> res = redisMap;
+
+		//Input value myself 
+		// res.put("helloKey", "worldValue");
+		System.out.println(res);
+		System.out.println("RMap content:");
+		// Where are you content ?
+		// System.out.println(res.readAllKeySet());
+		System.out.println(res.readAllMap());
+		// System.out.println(res.readAllEntrySet());
+		// System.out.println(res.readAllValues());
+
+
 		Map<String, Object> ret = new HashMap<>();
 		
 		Set<String> fullKeys = res.keySet();
@@ -147,6 +160,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 * @return  nothing
 	 **/
 	public void DataObjectRemoteDataMap_remove(String _oid) {
-		redisson.getKeys().delete(_oid);
+		//redisson.getKeys().delete(_oid);
+		redisMap.fastRemove(_oid);
 	}
 }
