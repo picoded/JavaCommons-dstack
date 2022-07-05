@@ -105,6 +105,9 @@ public class Redis_DataObjectMap extends Core_DataObjectMap {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
+		// Set<String> keys = new HashSet<String>();
+		// keys.add(_oid);
+		// Map<String, Object> res = redisMap.getAll(keys);
 		RMap<String, Object> res = redisMap;
 
 		//Input value myself 
