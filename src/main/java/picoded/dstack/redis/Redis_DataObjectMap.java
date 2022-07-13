@@ -150,7 +150,6 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> updateKeys) {
 		
-			//yus
 		Map<String, Object> clonedMap = new HashMap<String, Object>();
 		
 		// Lets iterate the keys, and decide accordingly
@@ -210,16 +209,20 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	/**
 	 * @return set of keys
 	 **/
-	@Override
-	public Set<String> keySet() {
+	public Set<String> keySet(String value) {
 		// The return hashset
 		HashSet<String> ret = new HashSet<String>();
-		
+
 		//Fetch everything in current db
 		RKeys keySet = redisson.getKeys();
-		keySet.getKeysByPattern("_oid").forEach(k -> ret.add(k));
-		
-		// Return the full keyset
+		if (value != null) {
+			// Return key where value is matched
+			keySet.getKeysByPattern(value).forEach(k -> ret.add(k));
+		}
+		else {
+			// Return the full keyset
+			keySet.getKeys().forEach(k -> ret.add(k));
+		}
 		return ret;
 	}
 	
