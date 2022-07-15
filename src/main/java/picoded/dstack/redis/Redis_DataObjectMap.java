@@ -176,20 +176,15 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		// Set<String> keys = new HashSet<String>();
-		// keys.add(_oid);
-		// Map<String, Object> res = redisMap.getAll(keys);
+
 		RMap<String, Object> res = redisMap;
 		
-		//Input value myself 
-		// res.put("helloKey", "worldValue");
-		System.out.println(res);
-		System.out.println("RMap content:");
-		// Where are you content ?
-		// System.out.println(res.readAllKeySet());
-		System.out.println(res.readAllMap());
-		// System.out.println(res.readAllEntrySet());
-		// System.out.println(res.readAllValues());
+		// System.out.println("------------RMap content--------------:");
+		// System.out.println(res.readAllMap()); // all map entries
+		// System.out.println(res.readAllEntrySet()); // everything
+		// System.out.println(res.readAllValues()); // all values 
+		// System.out.println(res.readAllKeySet()); // just keys
+		// System.out.println("------------RMap END--------------:");
 		
 		Map<String, Object> ret = new HashMap<>();
 		
@@ -239,6 +234,60 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		//redisson.getKeys().delete(_oid);
 		redisMap.fastRemove(_oid);
+	}
+
+	/**
+	 * Performs a search query, and returns the respective DataObject keys.
+	 *
+	 * This is the GUID key varient of query, this is critical for stack lookup
+	 *
+	 * @param   queryClause, of where query statement and value
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array
+	 **/
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+		
+		// The return list of DataObjects
+		List<String> retList = null;
+
+		RMap<String, Object> myRedisMap = redisMap;
+		
+		// Setup the query, if needed
+		if (queryClause == null) {
+			// Null gets all
+			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+		} else {
+			
+			// Get the list of _oid that passes the query
+			//Set<String> idSet = backendIMap().keySet(queryPredicate);
+			//String[] idArr = idSet.toArray(new String[0]);
+			
+			// DataObject[] from idArr
+			//DataObject[] doArr = getArrayFromID(idArr, true);
+			
+			// Converts to a list
+			//retList = new ArrayList(Arrays.asList(doArr));
+			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+		}
+		
+		// Sort, offset, convert to array, and return
+		// ???
+		
+		// Prepare the actual return string array
+		int retLength = retList.size();
+		String[] ret = new String[retLength];
+		for (int a = 0; a < retLength; ++a) {
+			//._oid(); -> where is it coming from
+			//ret[a] = retList.get(a)._oid();
+			ret[a] = String.valueOf(retList.get(a));
+		}
+		
+		System.out.println(ret);
+		// Returns sorted array of strings
+		return ret;
 	}
 	
 }
