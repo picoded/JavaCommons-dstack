@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -200,7 +201,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	abstract public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
+	public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
 
 		// forward the null, and let the error handling below settle it
 		if( data == null ) {
@@ -208,8 +209,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		}
 
 		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
 		try {
-			byte[] rawBytes = null;
 			if( data instanceof ByteArrayOutputStream ) {
 				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
 			} else {

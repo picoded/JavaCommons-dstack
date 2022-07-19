@@ -6,6 +6,7 @@ import picoded.dstack.core.Core_FileWorkspaceMap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
@@ -218,7 +219,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
-		
+
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
 		if( dataLayers.length == 1 ) {
@@ -235,8 +236,8 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		}
 
 		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
 		try {
-			byte[] rawBytes = null;
 			if( data instanceof ByteArrayOutputStream ) {
 				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
 			} else {
