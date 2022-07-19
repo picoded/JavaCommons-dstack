@@ -2,6 +2,8 @@ package picoded.dstack.core;
 
 // Java imports
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.*;
 
 // Picoded imports
@@ -160,6 +162,32 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
 	}
 	
+	// Read / write input/output stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Reads the contents of a file into a byte array.
+	 *
+	 * @param  filepath in the workspace to extract
+	 *
+	 * @return the file contents, null if file does not exists
+	 */
+	public InputStream readByteStream(final String filepath) {
+		return main.backend_fileReadStream(_oid, normalizeFilePathString(filepath));
+	}
+	
+	/**
+	 * Writes an output array to a file creating the file if it does not exist.
+	 *
+	 * the parent directories of the file will be created if they do not exist.
+	 *
+	 * @param filepath in the workspace to extract
+	 * @param data the content to write to the file
+	 **/
+	public void writeByteStream(final String filepath, final OutputStream data) {
+		main.backend_fileWriteStream(_oid, normalizeFilePathString(filepath), data);
+	}
+	
 	// Read / write byteArray information
 	//--------------------------------------------------------------------------
 	
@@ -190,7 +218,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Appends a byte array to a file creating the file if it does not exist.
 	 *
 	 * NOTE that by default this DOES NOT perform any file locks. As such,
-	 * if used in a concurrent access situation. Segmentys may get out of sync.
+	 * if used in a concurrent access situation. Segments may get out of sync.
 	 *
 	 * @param file   the file to write to
 	 * @param data   the content to write to the file

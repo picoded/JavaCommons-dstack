@@ -6,8 +6,11 @@ package picoded.dstack.core;
 import picoded.dstack.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -159,6 +162,64 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   data to write the file with
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
+	
+	// File read and write using byte stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return the stored data as a byte stream.
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public InputStream backend_fileReadStream(final String oid, final String filepath) {
+		// Get the byte data
+		byte[] rawBytes = backend_fileRead(oid, filepath);
+		if( rawBytes == null ) {
+			return null;
+		}
+		return new ByteArrayInputStream( rawBytes );
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	abstract public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
+
+		// forward the null, and let the error handling below settle it
+		if( data == null ) {
+			backend_fileWrite(oid, filepath, null);
+		}
+
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
+		if( data instanceof ByteArrayOutputStream ) {
+			rawBytes = data.toByteArray();
+		} else {
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			buffer.writeTo(data);
+			rawBytes = buffer.toByteArray();
+		}
+
+		// Does the bytearray writes
+		backend_fileWrite(oid, filepath, rawBytes);
+	}
 	
 	// Folder Pathing support
 	//--------------------------------------------------------------------------
