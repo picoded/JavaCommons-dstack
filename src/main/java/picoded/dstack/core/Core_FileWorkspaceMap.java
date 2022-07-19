@@ -208,13 +208,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		}
 
 		// Converts it to bytearray respectively
-		byte[] rawBytes = null;
-		if( data instanceof ByteArrayOutputStream ) {
-			rawBytes = data.toByteArray();
-		} else {
-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-			buffer.writeTo(data);
-			rawBytes = buffer.toByteArray();
+		try {
+			byte[] rawBytes = null;
+			if( data instanceof ByteArrayOutputStream ) {
+				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			} else {
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				buffer.writeTo(data);
+				rawBytes = buffer.toByteArray();
+			}
+		} catch(IOException e) {
+			throw new RuntimeException(e);
 		}
 
 		// Does the bytearray writes
