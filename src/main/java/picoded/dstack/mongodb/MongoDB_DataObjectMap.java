@@ -91,13 +91,20 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		IndexOptions opt = new IndexOptions();
 		opt = opt.unique(true);
 		opt = opt.name("_oid");
-		opt = opt.background(true);
+
+		// Due to the need for _oid to ensure consistency, we would not be creating it in the background
+		// opt = opt.background(true);
+
+		// Lets create the index
 		collection.createIndex(Indexes.ascending("_oid"), opt);
-		
+
+		//
 		// Wildcard indexing
 		//
 		// This helps improve general performance for arbitary data
-		// at a huge cost of write performance
+		// at a huge cost of write performance. Useful for general purpose DataObjectMap
+		// but not useful when fine hand-tunning is requried for some use cases
+		//
 		if (configMap.getBoolean("setupWildcardIndex", true)) {
 			opt = new IndexOptions();
 			opt = opt.name("wildcard");
