@@ -3,6 +3,10 @@ package picoded.dstack.stack;
 import picoded.dstack.CommonStructure;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -133,8 +137,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Get and return the stored data as a byte[]
 	 *
 	 * @param  ObjectID of workspace
@@ -164,8 +166,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	}
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Writes the full byte array of a file in the backend
 	 *
 	 * @param   ObjectID of workspace
@@ -178,6 +178,78 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_fileWrite(oid, filepath, data);
 		}
+	}
+	
+	// File read and write using byte stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and return the stored data as a InputStream
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	@Override
+	public InputStream backend_fileReadStream(final String oid, final String filepath) {
+
+		// Due to the behaviour of how the file data needs to be handled across multiple layers
+		// we only use an optimized "readStream" call if the filesystem is a single stack layer
+		if( dataLayers.length == 1 ) {
+			return dataLayers[0].backend_fileReadStream(oid, filepath);
+		}
+
+		// Fallback behaviour, polyfill the byte[] implementation
+		//------------------------------------------------------------
+		byte[] rawBytes = backend_fileRead(oid, filepath);
+		if( rawBytes == null ) {
+			return null;
+		}
+		return new ByteArrayInputStream( rawBytes );
+	}
+	
+	/**
+	 * Writes the full by of a file in the backend
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	@Override
+	public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
+		
+		// Due to the behaviour of how the file data needs to be handled across multiple layers
+		// we only use an optimized "readStream" call if the filesystem is a single stack layer
+		if( dataLayers.length == 1 ) {
+			dataLayers[0].backend_fileWriteStream(oid, filepath, data);
+			return;
+		}
+
+		// Fallback behaviour, polyfill the byte[] implementation
+		//------------------------------------------------------------
+
+		// forward the null, and let the error handling below settle it
+		if( data == null ) {
+			backend_fileWrite(oid, filepath, null);
+		}
+
+		// Converts it to bytearray respectively
+		try {
+			byte[] rawBytes = null;
+			if( data instanceof ByteArrayOutputStream ) {
+				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			} else {
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				buffer.writeTo(data);
+				rawBytes = buffer.toByteArray();
+			}
+		} catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		// Does the bytearray writes
+		backend_fileWrite(oid, filepath, rawBytes);
 	}
 	
 	// File exist / removal
