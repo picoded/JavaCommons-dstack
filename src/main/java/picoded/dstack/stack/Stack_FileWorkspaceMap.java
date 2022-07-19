@@ -74,6 +74,10 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
+
+	// Workspace operations
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -111,6 +115,24 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	}
 	
 	/**
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
+	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_setupWorkspace(oid);
+		}
+	}
+	
+	// File read and write using byte array
+	//--------------------------------------------------------------------------
+	
+	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
 	 * Get and return the stored data as a byte[]
@@ -144,6 +166,26 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
+	 * Writes the full byte array of a file in the backend
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	@Override
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
+		// Write the data starting from the lowest layer
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_fileWrite(oid, filepath, data);
+		}
+	}
+	
+	// File exist / removal
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
 	 * Get and return if the file exists, due to the potentially
 	 * large size nature of files stored in FileWorkspace.
 	 *
@@ -170,23 +212,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Writes the full byte array of a file in the backend
-	 *
-	 * @param   ObjectID of workspace
-	 * @param   filepath to use for the workspace
-	 * @param   data to write the file with
-	 **/
-	@Override
-	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-		// Write the data starting from the lowest layer
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_fileWrite(oid, filepath, data);
-		}
-	}
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Removes the specified file path from the workspace in the backend
 	 *
 	 * @param oid identifier to the workspace
@@ -197,21 +222,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		// Remove the file starting from the lowest layer
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_removeFile(oid, filepath);
-		}
-	}
-	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid) {
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid);
 		}
 	}
 	
