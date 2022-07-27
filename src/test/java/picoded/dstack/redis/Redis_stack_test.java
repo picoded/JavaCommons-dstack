@@ -19,6 +19,8 @@ import org.redisson.api.RType;
 import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
 
+import org.redisson.client.codec.StringCodec;
+
 import org.redisson.api.RAtomicLong;
 
 import org.apache.commons.lang3.RandomUtils;
@@ -52,12 +54,6 @@ public class Redis_stack_test {
 		RedissonClient redisson = null;
 		redisson = instance.getConnection();
 		assertNotNull(redisson);
-		
-		//Test that redisson client works properly because i'm paranoid
-		RBucket<String> bucket = redisson.getBucket("stringObject");
-		bucket.set("hello world");
-		String objValue = bucket.get();
-		assertEquals(objValue, "hello world");
 		
 		assertNotNull(instance.dataObjectMap(DStackTestConfig.randomTablePrefix()));
 		

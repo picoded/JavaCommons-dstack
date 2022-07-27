@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Collection;
+import java.util.Iterator;
 
 // JavaCommons imports
 import picoded.core.conv.ConvertJSON;
@@ -26,6 +28,11 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
 import org.redisson.api.RKeys;
+import org.redisson.api.RSet;
+import org.redisson.api.RSetMultimap;
+
+
+import org.redisson.client.codec.StringCodec;
 
 // import org.redisson.api.RSet;
 
@@ -50,6 +57,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	RedisStack redisStack = null;
 	RedissonClient redisson = null;
 	RMap<String, Object> redisMap = null;
+	//RSet<Object> set = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -61,7 +69,8 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
-		redisMap = redisson.getMap(name);
+		redisMap = redisson.getMap(name, StringCodec.INSTANCE);
+		//set = redisson.getSet(name, StringCodec.INSTANCE);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -107,7 +116,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		if (_backendRMap != null) {
 			return _backendRMap;
 		}
-		_backendRMap = redisson.getMap(name());
+		_backendRMap = redisson.getMap(name(), StringCodec.INSTANCE);
 		return _backendRMap;
 	}
 	
@@ -125,22 +134,22 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	}
 	
 	/**
-	 * Teardown and delete the backend storage table, etc. If needed
-	 **/
-	public void systemDestroy() {
-		redisMap.delete();
-	}
-	
-	/**
 	 * Removes all data, without tearing down setup
 	 **/
 	@Override
 	public void clear() {
 		//Delete all the keys of the currently selected database
-		//redisson.getKeys().flushdb();
+		redisson.getKeys().flushdb();
 		
 		//Delete all the keys of all the existing databases
 		redisson.getKeys().flushall();
+	}
+
+	/**
+	 * Teardown and delete the backend storage table, etc. If needed
+	 **/
+	public void systemDestroy() {
+		//redisMap.delete();
 	}
 	
 	/**
@@ -151,24 +160,35 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		Set<String> updateKeys) {
 		
 		Map<String, Object> clonedMap = new HashMap<String, Object>();
-		
+
 		// Lets iterate the keys, and decide accordingly
 		for (String key : fullMap.keySet()) {
 			// Get the full map value
 			Object val = fullMap.get(key);
-			
-			// Check for Map / List like objects
-			if (val instanceof Map || val instanceof List) {
-				// Clone it - by JSON serializing back and forth
-				clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)));
-			} else {
-				// Store it directly, this should be a primative, or byte[]
+
+			// // Check for Map / List like objects
+			// if (val instanceof Map || val instanceof List) {
+			// 	// Clone it - by JSON serializing back and forth
+			// 	clonedMap.put(key, ConvertJSON.toObject(ConvertJSON.fromObject(val)));
+			// } 
+
+			if (updateKeys.contains(key)) {
 				clonedMap.put(key, val);
 			}
 		}
-		
-		// call the default implementation
+
+		//RSET test
+		//check with SMEMBERS instead of HGETALL
+		//set.add(clonedMap);
+
+		// call the default implementation, basically equal to redisMap.put(_oid,clonedMap)
 		super.DataObjectRemoteDataMap_update(_oid, clonedMap, updateKeys);
+		
+		//Print map slice for the _oid
+		// Set<String> keys = new HashSet<String>();
+		// keys.add(_oid);
+		// Map<String, Object> mapSlice = redisMap.getAll(keys);
+		// System.out.println(mapSlice);
 	}
 	
 	/**
@@ -176,50 +196,52 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-
-		RMap<String, Object> res = redisMap;
 		
-		// System.out.println("------------RMap content--------------:");
-		// System.out.println(res.readAllMap()); // all map entries
-		// System.out.println(res.readAllEntrySet()); // everything
-		// System.out.println(res.readAllValues()); // all values 
-		// System.out.println(res.readAllKeySet()); // just keys
-		// System.out.println("------------RMap END--------------:");
+		Collection<Object> res = redisMap.values(_oid);
+
+		Object resObj = res.iterator().next();
+		if (resObj == null) {
+			return null;
+		}
+
+		//NEED TO FIND HOW TO CONVERT resObj TO MAP
 		
 		Map<String, Object> ret = new HashMap<>();
 		
-		Set<String> fullKeys = res.keySet();
+		// Lets iterate through the object
+		Set<String> fullKeys = resObj.keySet();
 		for (String key : fullKeys) {
-			
+	
 			// Get the value
-			Object val = res.get(key);
-			
+			Object val = resObj.get(key);
+					
 			// Populate the ret map
 			ret.put(key, val);
 		}
-		
+	
 		return ret;
 	}
 	
-	/**
-	 * @return set of keys
-	 **/
-	public Set<String> keySet(String value) {
-		// The return hashset
-		HashSet<String> ret = new HashSet<String>();
-
-		//Fetch everything in current db
-		RKeys keySet = redisson.getKeys();
-		if (value != null) {
-			// Return key where value is matched
-			keySet.getKeysByPattern(value).forEach(k -> ret.add(k));
-		}
-		else {
-			// Return the full keyset
-			keySet.getKeys().forEach(k -> ret.add(k));
-		}
-		return ret;
-	}
+	// /**
+	//  * @return set of keys
+	//  **/
+	// @Override
+	// public Set<String> keySet() {
+	// 	System.out.println("KEYSET");
+	// 	// The return hashset
+	// 	HashSet<String> ret = new HashSet<String>();
+	
+	// 	//Fetch everything in current db
+	// 	RKeys keySet = redisson.getKeys();
+	// 	if (value != null) {
+	// 		// Return key where value is matched
+	// 		keySet.getKeysByPattern(value).forEach(k -> ret.add(k));
+	// 	} else {
+	// 		// Return the full keyset
+	// 		keySet.getKeys().forEach(k -> ret.add(k));
+	// 	}
+	// 	return ret;
+	// }
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -232,10 +254,10 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return  nothing
 	 **/
 	public void DataObjectRemoteDataMap_remove(String _oid) {
-		//redisson.getKeys().delete(_oid);
+		// //redisson.getKeys().delete(_oid);
 		redisMap.fastRemove(_oid);
 	}
-
+	
 	/**
 	 * Performs a search query, and returns the respective DataObject keys.
 	 *
@@ -248,46 +270,46 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 *
 	 * @return  The String[] array
 	 **/
-	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
-		
-		// The return list of DataObjects
-		List<String> retList = null;
-
-		RMap<String, Object> myRedisMap = redisMap;
-		
-		// Setup the query, if needed
-		if (queryClause == null) {
-			// Null gets all
-			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
-		} else {
-			
-			// Get the list of _oid that passes the query
-			//Set<String> idSet = backendIMap().keySet(queryPredicate);
-			//String[] idArr = idSet.toArray(new String[0]);
-			
-			// DataObject[] from idArr
-			//DataObject[] doArr = getArrayFromID(idArr, true);
-			
-			// Converts to a list
-			//retList = new ArrayList(Arrays.asList(doArr));
-			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
-		}
-		
-		// Sort, offset, convert to array, and return
-		// ???
-		
-		// Prepare the actual return string array
-		int retLength = retList.size();
-		String[] ret = new String[retLength];
-		for (int a = 0; a < retLength; ++a) {
-			//._oid(); -> where is it coming from
-			//ret[a] = retList.get(a)._oid();
-			ret[a] = String.valueOf(retList.get(a));
-		}
-		
-		System.out.println(ret);
-		// Returns sorted array of strings
-		return ret;
-	}
+	// public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+	
+	// 	// The return list of DataObjects
+	// 	List<String> retList = null;
+	
+	// 	RMap<String, Object> myRedisMap = redisMap;
+	
+	// 	// Setup the query, if needed
+	// 	if (queryClause == null) {
+	// 		// Null gets all
+	// 		retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+	// 	} else {
+	
+	// 		// Get the list of _oid that passes the query
+	// 		//Set<String> idSet = backendIMap().keySet(queryPredicate);
+	// 		//String[] idArr = idSet.toArray(new String[0]);
+	
+	// 		// DataObject[] from idArr
+	// 		//DataObject[] doArr = getArrayFromID(idArr, true);
+	
+	// 		// Converts to a list
+	// 		//retList = new ArrayList(Arrays.asList(doArr));
+	// 		retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+	// 	}
+	
+	// 	// Sort, offset, convert to array, and return
+	// 	// ???
+	
+	// 	// Prepare the actual return string array
+	// 	int retLength = retList.size();
+	// 	String[] ret = new String[retLength];
+	// 	for (int a = 0; a < retLength; ++a) {
+	// 		//._oid(); -> where is it coming from
+	// 		//ret[a] = retList.get(a)._oid();
+	// 		ret[a] = String.valueOf(retList.get(a));
+	// 	}
+	
+	// 	System.out.println(Arrays.toString(ret));
+	// 	// Returns sorted array of strings
+	// 	return ret;
+	// }
 	
 }
