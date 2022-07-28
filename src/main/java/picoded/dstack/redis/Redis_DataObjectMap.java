@@ -12,6 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Collectors;
+
+
 
 // JavaCommons imports
 import picoded.core.conv.ConvertJSON;
@@ -25,16 +28,22 @@ import picoded.dstack.core.*;
 
 // Redis imports
 import org.redisson.Redisson;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
 import org.redisson.api.RKeys;
 import org.redisson.api.RSet;
 import org.redisson.api.RSetMultimap;
 
+// Jackson library used
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.databind.MapperFeature;
 
-import org.redisson.client.codec.StringCodec;
+import org.hjson.*;
 
-// import org.redisson.api.RSet;
 
 /**
  * Redis implementation of DataObjectMap data structure.
@@ -196,7 +205,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-		
+
 		Collection<Object> res = redisMap.values(_oid);
 
 		Object resObj = res.iterator().next();
@@ -204,16 +213,35 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 			return null;
 		}
 
-		//NEED TO FIND HOW TO CONVERT resObj TO MAP
+		//Convert resObj to String
+		String resString = resObj.toString();
+		//Get rid of {}
+		resString = resString.substring(1, resString.length() - 1);
+
+		//Convert resString to Map
+		//if duplicate keys show up, the first one encountered takes precedence 
+		//for latest value for a duplicate key then use (a, b)-> b as the merge lambda.)
+		Map<String, Object> resMap = Arrays.stream(resString.split(","))
+			.map(str -> str.split("="))
+			.collect(Collectors.toMap(a -> a[0], a->a[1], (a, b) -> a));
+
+
+		//Convert resObj to String so I can use replace() to make it a valid hjson
+		//https://github.com/hjson/hjson-java
+		// String tmpString=resObj.toString();
+		// tmpString=tmpString.replace('=',':');
+		// System.out.println(resObj);
+		// Map<String, String> mapData = GenericConvert.toStringMap(resObj);
+		// System.out.println(mapData);
 		
 		Map<String, Object> ret = new HashMap<>();
 		
 		// Lets iterate through the object
-		Set<String> fullKeys = resObj.keySet();
+		Set<String> fullKeys = resMap.keySet();
 		for (String key : fullKeys) {
 	
 			// Get the value
-			Object val = resObj.get(key);
+			Object val = resMap.get(key);
 					
 			// Populate the ret map
 			ret.put(key, val);
