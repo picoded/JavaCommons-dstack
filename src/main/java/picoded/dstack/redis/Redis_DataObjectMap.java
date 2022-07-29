@@ -29,6 +29,7 @@ import picoded.dstack.core.*;
 // Redis imports
 import org.redisson.Redisson;
 import org.redisson.client.codec.StringCodec;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
 import org.redisson.api.RKeys;
@@ -78,7 +79,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
-		redisMap = redisson.getMap(name, StringCodec.INSTANCE);
+		redisMap = redisson.getMap(name, JsonJacksonCodec.INSTANCE);
 		//set = redisson.getSet(name, StringCodec.INSTANCE);
 	}
 	
@@ -125,7 +126,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		if (_backendRMap != null) {
 			return _backendRMap;
 		}
-		_backendRMap = redisson.getMap(name(), StringCodec.INSTANCE);
+		_backendRMap = redisson.getMap(name(), JsonJacksonCodec.INSTANCE);
 		return _backendRMap;
 	}
 	
@@ -192,12 +193,11 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 
 		// call the default implementation, basically equal to redisMap.put(_oid,clonedMap)
 		super.DataObjectRemoteDataMap_update(_oid, clonedMap, updateKeys);
-		
-		//Print map slice for the _oid
-		// Set<String> keys = new HashSet<String>();
-		// keys.add(_oid);
-		// Map<String, Object> mapSlice = redisMap.getAll(keys);
-		// System.out.println(mapSlice);
+	}
+
+	public Map<String,Object> ObjToMap(Object resObj) {
+		if( resObj instanceof Map ) { return (Map<String,Object>) resObj; }
+		else {return null;}
 	}
 	
 	/**
@@ -206,48 +206,38 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
 
-		Collection<Object> res = redisMap.values(_oid);
+		//Map Slicing 
+		Set<String> keys = new HashSet<String>();
+		keys.add(_oid);
+		Map<String, Object> mapSlice = redisMap.getAll(keys);
 
-		Object resObj = res.iterator().next();
-		if (resObj == null) {
+		Map.Entry<String,Object> res = mapSlice.entrySet().iterator().next();
+		Object tmpObj = res.getValue();
+
+		if (tmpObj == null) {
 			return null;
 		}
 
-		//Convert resObj to String
-		String resString = resObj.toString();
-		//Get rid of {}
-		resString = resString.substring(1, resString.length() - 1);
+		Map<String, Object> resObj = null;
+		resObj = ObjToMap(tmpObj);
 
-		//Convert resString to Map
-		//if duplicate keys show up, the first one encountered takes precedence 
-		//for latest value for a duplicate key then use (a, b)-> b as the merge lambda.)
-		Map<String, Object> resMap = Arrays.stream(resString.split(","))
-			.map(str -> str.split("="))
-			.collect(Collectors.toMap(a -> a[0], a->a[1], (a, b) -> a));
-
-
-		//Convert resObj to String so I can use replace() to make it a valid hjson
-		//https://github.com/hjson/hjson-java
-		// String tmpString=resObj.toString();
-		// tmpString=tmpString.replace('=',':');
-		// System.out.println(resObj);
-		// Map<String, String> mapData = GenericConvert.toStringMap(resObj);
-		// System.out.println(mapData);
+		System.out.println(resObj);
+		System.out.println(resObj instanceof Map);
 		
 		Map<String, Object> ret = new HashMap<>();
 		
 		// Lets iterate through the object
-		Set<String> fullKeys = resMap.keySet();
+		Set<String> fullKeys = resObj.keySet();
 		for (String key : fullKeys) {
 	
 			// Get the value
-			Object val = resMap.get(key);
+			Object val = resObj.get(key);
 					
 			// Populate the ret map
 			ret.put(key, val);
 		}
 	
-		return ret;
+		return ret = null;
 	}
 	
 	// /**
@@ -298,46 +288,46 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 *
 	 * @return  The String[] array
 	 **/
-	// public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
+	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 	
-	// 	// The return list of DataObjects
-	// 	List<String> retList = null;
+		// The return list of DataObjects
+		List<String> retList = null;
 	
-	// 	RMap<String, Object> myRedisMap = redisMap;
+		RMap<String, Object> myRedisMap = redisMap;
 	
-	// 	// Setup the query, if needed
-	// 	if (queryClause == null) {
-	// 		// Null gets all
-	// 		retList = new ArrayList<String>(myRedisMap.readAllKeySet());
-	// 	} else {
+		// Setup the query, if needed
+		if (queryClause == null) {
+			// Null gets all
+			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+		} else {
 	
-	// 		// Get the list of _oid that passes the query
-	// 		//Set<String> idSet = backendIMap().keySet(queryPredicate);
-	// 		//String[] idArr = idSet.toArray(new String[0]);
+			// Get the list of _oid that passes the query
+			//Set<String> idSet = backendIMap().keySet(queryPredicate);
+			//String[] idArr = idSet.toArray(new String[0]);
 	
-	// 		// DataObject[] from idArr
-	// 		//DataObject[] doArr = getArrayFromID(idArr, true);
+			// DataObject[] from idArr
+			//DataObject[] doArr = getArrayFromID(idArr, true);
 	
-	// 		// Converts to a list
-	// 		//retList = new ArrayList(Arrays.asList(doArr));
-	// 		retList = new ArrayList<String>(myRedisMap.readAllKeySet());
-	// 	}
+			// Converts to a list
+			//retList = new ArrayList(Arrays.asList(doArr));
+			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
+		}
 	
-	// 	// Sort, offset, convert to array, and return
-	// 	// ???
+		// Sort, offset, convert to array, and return
+		// ???
 	
-	// 	// Prepare the actual return string array
-	// 	int retLength = retList.size();
-	// 	String[] ret = new String[retLength];
-	// 	for (int a = 0; a < retLength; ++a) {
-	// 		//._oid(); -> where is it coming from
-	// 		//ret[a] = retList.get(a)._oid();
-	// 		ret[a] = String.valueOf(retList.get(a));
-	// 	}
+		// Prepare the actual return string array
+		int retLength = retList.size();
+		String[] ret = new String[retLength];
+		for (int a = 0; a < retLength; ++a) {
+			//._oid(); -> where is it coming from
+			//ret[a] = retList.get(a)._oid();
+			ret[a] = String.valueOf(retList.get(a));
+		}
 	
-	// 	System.out.println(Arrays.toString(ret));
-	// 	// Returns sorted array of strings
-	// 	return ret;
-	// }
+		System.out.println(Arrays.toString(ret));
+		// Returns sorted array of strings
+		return ret;
+	}
 	
 }
