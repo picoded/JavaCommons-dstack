@@ -136,7 +136,9 @@ public interface FileWorkspace {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Get the input stream representation of a given filepath
+	 * Get the input stream representation of a given filepath.
+	 * 
+	 * You are expected to close, the stream on your own, to avoid memory leaks
 	 * 
 	 * @param filePath in the workspace to extract
 	 * @return the file contents, null if file does not exists
@@ -147,10 +149,12 @@ public interface FileWorkspace {
 	}
 	
 	/**
-	 * Writes an output array to a file creating the file if it does not exist.
-	 *
+	 * Writes an output stream to a file creating the file if it does not exist.
 	 * the parent directories of the file will be created if they do not exist.
 	 *
+	 * Note that depending on the implementaiton, this may not be optimized,
+	 * and may only return after the OutputStream is fully processedd.
+	 * 
 	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
