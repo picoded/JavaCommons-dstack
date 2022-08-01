@@ -12,9 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.stream.Collectors;
-
-
 
 // JavaCommons imports
 import picoded.core.conv.ConvertJSON;
@@ -33,8 +30,6 @@ import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
 import org.redisson.api.RKeys;
-import org.redisson.api.RSet;
-import org.redisson.api.RSetMultimap;
 
 // Jackson library used
 import com.fasterxml.jackson.core.JsonParser;
@@ -159,7 +154,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
 	public void systemDestroy() {
-		//redisMap.delete();
+		redisMap.delete();
 	}
 	
 	/**
@@ -187,16 +182,12 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 			}
 		}
 
-		//RSET test
-		//check with SMEMBERS instead of HGETALL
-		//set.add(clonedMap);
-
 		// call the default implementation, basically equal to redisMap.put(_oid,clonedMap)
 		super.DataObjectRemoteDataMap_update(_oid, clonedMap, updateKeys);
 	}
 
-	public Map<String,Object> ObjToMap(Object resObj) {
-		if( resObj instanceof Map ) { return (Map<String,Object>) resObj; }
+	public Map<String,Object> ObjToMap(Object obj) {
+		if( obj instanceof Map ) { return (Map<String,Object>) obj; }
 		else {return null;}
 	}
 	
@@ -208,11 +199,18 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 
 		//Map Slicing 
 		Set<String> keys = new HashSet<String>();
-		keys.add(_oid);
-		Map<String, Object> mapSlice = redisMap.getAll(keys);
+		Map<String, Object> mapSlice = new HashMap<String, Object>();
+		Map.Entry<String,Object> res = null;
+		Object tmpObj = null;
 
-		Map.Entry<String,Object> res = mapSlice.entrySet().iterator().next();
-		Object tmpObj = res.getValue();
+		keys.add(_oid);
+		mapSlice = redisMap.getAll(keys);
+		
+		Iterator<Map.Entry<String,Object>> it = mapSlice.entrySet().iterator();
+		if(it.hasNext()){
+			res = it.next();
+			tmpObj = res.getValue();
+		}
 
 		if (tmpObj == null) {
 			return null;
@@ -220,9 +218,6 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 
 		Map<String, Object> resObj = null;
 		resObj = ObjToMap(tmpObj);
-
-		System.out.println(resObj);
-		System.out.println(resObj instanceof Map);
 		
 		Map<String, Object> ret = new HashMap<>();
 		
@@ -237,7 +232,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 			ret.put(key, val);
 		}
 	
-		return ret = null;
+		return ret;
 	}
 	
 	// /**
