@@ -193,12 +193,12 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * @return  the stored byte array of the file
 	 **/
 	@Override
-	public InputStream backend_fileReadStream(final String oid, final String filepath) {
+	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
 
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
 		if( dataLayers.length == 1 ) {
-			return dataLayers[0].backend_fileReadStream(oid, filepath);
+			return dataLayers[0].backend_fileReadInputStream(oid, filepath);
 		}
 
 		// Fallback behaviour, polyfill the byte[] implementation
@@ -218,12 +218,12 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * @param   data to write the file with
 	 **/
 	@Override
-	public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
+	public void backend_fileWriteOutputStream(final String oid, final String filepath, final OutputStream data) {
 
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
 		if( dataLayers.length == 1 ) {
-			dataLayers[0].backend_fileWriteStream(oid, filepath, data);
+			dataLayers[0].backend_fileWriteOutputStream(oid, filepath, data);
 			return;
 		}
 

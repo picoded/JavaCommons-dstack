@@ -180,7 +180,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 *
 	 * @return  the stored byte array of the file
 	 **/
-	public InputStream backend_fileReadStream(final String oid, final String filepath) {
+	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
 		// Get the byte data
 		byte[] rawBytes = backend_fileRead(oid, filepath);
 		if( rawBytes == null ) {
@@ -201,7 +201,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	public void backend_fileWriteStream(final String oid, final String filepath, final OutputStream data) {
+	public void backend_fileWriteOutputStream(final String oid, final String filepath, final OutputStream data) {
 
 		// forward the null, and let the error handling below settle it
 		if( data == null ) {

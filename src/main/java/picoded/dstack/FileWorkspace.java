@@ -4,8 +4,11 @@ import picoded.core.conv.ArrayConv;
 import picoded.core.conv.StringConv;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -142,6 +145,35 @@ public interface FileWorkspace {
 		byte[] byteArr = readByteArray(filePath);
 		return new ByteArrayInputStream(byteArr);
 	}
+	
+	/**
+	 * Writes an output array to a file creating the file if it does not exist.
+	 *
+	 * the parent directories of the file will be created if they do not exist.
+	 *
+	 * @param filepath in the workspace to extract
+	 * @param data the content to write to the file
+	 **/
+	default void writeOutputStream(final String filepath, final OutputStream data) {
+		
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
+		try {
+			if( data instanceof ByteArrayOutputStream ) {
+				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			} else {
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				buffer.writeTo(data);
+				rawBytes = buffer.toByteArray();
+			}
+		} catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		// Does the bytearray writes
+		writeByteArray(filepath, rawBytes);
+	}
+	
 	
 	//
 	// Folder Pathing support

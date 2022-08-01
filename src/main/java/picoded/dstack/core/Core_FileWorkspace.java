@@ -162,7 +162,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
 	}
 	
-	// Read / write input/output stream
+	// Read/write input/output stream
 	//--------------------------------------------------------------------------
 	
 	/**
@@ -172,8 +172,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 *
 	 * @return the file contents, null if file does not exists
 	 */
-	public InputStream readByteStream(final String filepath) {
-		return main.backend_fileReadStream(_oid, normalizeFilePathString(filepath));
+	public InputStream readInputStream(final String filepath) {
+		return main.backend_fileReadInputStream(_oid, normalizeFilePathString(filepath));
 	}
 	
 	/**
@@ -184,8 +184,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
-	public void writeByteStream(final String filepath, final OutputStream data) {
-		main.backend_fileWriteStream(_oid, normalizeFilePathString(filepath), data);
+	public void writeOutputStream(final String filepath, final OutputStream data) {
+		main.backend_fileWriteOutputStream(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	// Read / write byteArray information

@@ -7,9 +7,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.apache.commons.io.IOUtils;
 // Test Case include
 import org.junit.After;
 import org.junit.Before;
@@ -327,6 +330,21 @@ public class StructSimple_FileWorkspaceMap_test {
 			assertEquals("File does not exist.", e.getMessage());
 		}
 		
+	}
+	
+	@Test
+	public void writeAndReadToFile_stream() throws Exception {
+		// Output stream to use for content
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		buffer.write( "data to write".getBytes() );
+
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeOutputStream("testPath", buffer );
+		assertNotNull(testObj.get(fileWorkspace._oid()).readByteArray("testPath"));
+		
+		InputStream readData = testObj.get(fileWorkspace._oid()).readInputStream("testPath");
+		byte[] readArray = IOUtils.toByteArray(readData);
+		assertEquals(new String(readArray), "data to write");
 	}
 	
 	@Test
