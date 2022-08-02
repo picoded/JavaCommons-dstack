@@ -240,7 +240,6 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	//  **/
 	// @Override
 	// public Set<String> keySet() {
-	// 	System.out.println("KEYSET");
 	// 	// The return hashset
 	// 	HashSet<String> ret = new HashSet<String>();
 	
@@ -270,6 +269,38 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		// //redisson.getKeys().delete(_oid);
 		redisMap.fastRemove(_oid);
 	}
+
+	/**
+	 * Given the SQL style query, convert it to relevant Redis Object
+	 */
+	static protected void queryToRedis(Query inQuery) {
+		QueryType type = inQuery.type();
+		
+		// Handle the query according to its type
+		// Basic operator
+		if (type == QueryType.EQUALS) {
+			//TODO
+		}
+		if (type == QueryType.NOT_EQUALS) {
+			//TODO
+		}
+		if (type == QueryType.LESS_THAN) {
+			//TODO
+		}
+		if (type == QueryType.LESS_THAN_OR_EQUALS) {
+			//TODO
+		}
+		if (type == QueryType.MORE_THAN) {
+			//TODO
+		}
+		if (type == QueryType.MORE_THAN_OR_EQUALS) {
+			//TODO
+		}
+		if (type == QueryType.LIKE) {
+			//TODO
+		}
+		throw new RuntimeException("Unkown query type : " + inQuery.type());
+	}
 	
 	/**
 	 * Performs a search query, and returns the respective DataObject keys.
@@ -285,6 +316,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
 	
+		System.out.println("QUERY: "+queryClause);
 		// The return list of DataObjects
 		List<String> retList = null;
 	
@@ -307,6 +339,8 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 			//retList = new ArrayList(Arrays.asList(doArr));
 			retList = new ArrayList<String>(myRedisMap.readAllKeySet());
 		}
+
+		System.out.println("QueryResult: "+retList);
 	
 		// Sort, offset, convert to array, and return
 		// ???
@@ -320,7 +354,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 			ret[a] = String.valueOf(retList.get(a));
 		}
 	
-		System.out.println(Arrays.toString(ret));
+		System.out.println("Return: "+Arrays.toString(ret));
 		// Returns sorted array of strings
 		return ret;
 	}
