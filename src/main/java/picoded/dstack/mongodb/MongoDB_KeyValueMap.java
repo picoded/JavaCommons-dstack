@@ -262,17 +262,17 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 		}
 		
 		// No valid value found, return null
-		if (expireAt < 0) {
+		if (expireAt_long < 0) {
 			return null;
 		}
 		
 		// Expired value, return null
-		if (expireAt != 0 && expireAt < now) {
+		if (expireAt_long != 0 && expireAt_long < now) {
 			return null;
 		}
 		
 		// Get the value, and return the pair
-		return new MutablePair<String, Long>(val, expireAt);
+		return new MutablePair<String, Long>(val, expireAt_long);
 	}
 	
 	/**
