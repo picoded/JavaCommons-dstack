@@ -242,8 +242,14 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 		
 		// Lets get all the key values
 		String val = GenericConvert.toString(resObj.get("val"), null);
-		long expireAt = GenericConvert.toLong(resObj.get("expireAt"), 0);
+		Date expireAt_date = resObj.get("expireAt");
+        long expireAt_long = 0;
 		
+        // Check if expireAt date is set
+        if( expireAt_date != null ) {
+            expireAt_long = expireAt_date.getTime();
+        }
+
 		// Check for null objects
 		if (val == null || val.isEmpty()) {
 			return null;
