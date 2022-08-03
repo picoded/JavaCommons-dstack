@@ -7,6 +7,9 @@ import picoded.dstack.*;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
@@ -201,8 +204,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	public void backend_fileWriteOutputStream(final String oid, final String filepath,
-		final OutputStream data) {
+	public void backend_fileWriteInputStream(final String oid, final String filepath,
+		final InputStream data) {
 		
 		// forward the null, and let the error handling below settle it
 		if (data == null) {
@@ -212,13 +215,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if (data instanceof ByteArrayOutputStream) {
-				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
-			} else {
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				buffer.writeTo(data);
-				rawBytes = buffer.toByteArray();
-			}
+			rawBytes = IOUtils.toByteArray(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

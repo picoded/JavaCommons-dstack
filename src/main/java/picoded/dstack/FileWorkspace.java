@@ -12,6 +12,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * Represent a file storage backend for a workspace
  * 
@@ -141,7 +143,7 @@ public interface FileWorkspace {
 	 * You are expected to close, the stream on your own, to avoid memory leaks
 	 * 
 	 * @param filePath in the workspace to extract
-	 * @return the file contents, null if file does not exists
+	 * @return the file contents as an input stream, null if file does not exists
 	 */
 	default InputStream readInputStream(final String filePath) {
 		byte[] byteArr = readByteArray(filePath);
@@ -149,7 +151,7 @@ public interface FileWorkspace {
 	}
 	
 	/**
-	 * Writes an output stream to a file creating the file if it does not exist.
+	 * Reads an input stream, and writes it to a fil, creating the file if it does not exist.
 	 * the parent directories of the file will be created if they do not exist.
 	 *
 	 * Note that depending on the implementaiton, this may not be optimized,
@@ -158,22 +160,14 @@ public interface FileWorkspace {
 	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
-	default void writeOutputStream(final String filepath, final OutputStream data) {
-		
+	default void writeInputStream(final String filepath, final InputStream data) {
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if (data instanceof ByteArrayOutputStream) {
-				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
-			} else {
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				buffer.writeTo(data);
-				rawBytes = buffer.toByteArray();
-			}
+			rawBytes = IOUtils.toByteArray(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		
 		// Does the bytearray writes
 		writeByteArray(filepath, rawBytes);
 	}

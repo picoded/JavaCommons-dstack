@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * Stacked implementation of KeyValueMap data structure.
  *
@@ -218,13 +220,13 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * @param   data to write the file with
 	 **/
 	@Override
-	public void backend_fileWriteOutputStream(final String oid, final String filepath,
-		final OutputStream data) {
+	public void backend_fileWriteInputStream(final String oid, final String filepath,
+		final InputStream data) {
 		
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
 		if (dataLayers.length == 1) {
-			dataLayers[0].backend_fileWriteOutputStream(oid, filepath, data);
+			dataLayers[0].backend_fileWriteInputStream(oid, filepath, data);
 			return;
 		}
 		
@@ -239,13 +241,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if (data instanceof ByteArrayOutputStream) {
-				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
-			} else {
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				buffer.writeTo(data);
-				rawBytes = buffer.toByteArray();
-			}
+			rawBytes = IOUtils.toByteArray(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

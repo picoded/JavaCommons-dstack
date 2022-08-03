@@ -184,8 +184,8 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to extract
 	 * @param data the content to write to the file
 	 **/
-	public void writeOutputStream(final String filepath, final OutputStream data) {
-		main.backend_fileWriteOutputStream(_oid, normalizeFilePathString(filepath), data);
+	public void writeInputStream(final String filepath, final InputStream data) {
+		main.backend_fileWriteInputStream(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	// Read / write byteArray information
