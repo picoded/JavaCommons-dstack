@@ -197,21 +197,27 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 		
 		// Generate the document of changes
 		// See: https://www.mongodb.com/docs/manual/reference/operator/update/setOnInsert/
-		Document set_doc = new Document();
-		set_doc.append("val", value);
+
+		// Generate the "update" doc
+		Document updateDoc = new Document();
+        Document set_doc = new Document();
 		
-		// Expire timestamp if its configured, else it should be ignored
-		if (expire > 0) {
-			set_doc.append("expireAt", new Date(expire));
+		// Expire timestamp if its configured, else it should be removed
+		if (expireAt > 0) {
+			set_doc.append("expireAt", new Date(expireAt));
+		} else {
+			Document unset_doc = new Document();
+			unset_doc.append("expireAt", "");
+			updateDoc.append("$unset", unset_doc);
 		}
+		
+        // Setup the value on update/insert/upsert
+		set_doc.append("val", value);
+        updateDoc.append("$set", set_doc);
 		
 		// Set the key on insert
 		Document setOnInsert_doc = new Document();
 		setOnInsert_doc.append("key", key);
-		
-		// Generate the "update" doc
-		Document updateDoc = new Document();
-		updateDoc.append("$set", set_doc);
 		updateDoc.append("$setOnInsert", setOnInsert_doc);
 		
 		// Upsert the document
