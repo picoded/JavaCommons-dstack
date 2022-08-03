@@ -190,17 +190,17 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 	 * @return null
 	 **/
 	@Override
-	public String setValueRaw(String key, String value, long expire) {
+	public String setValueRaw(String key, String value, long expireAt) {
 		// Configure this to be an "upsert" query
 		FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
 		opt.upsert(true);
 		
 		// Generate the document of changes
 		// See: https://www.mongodb.com/docs/manual/reference/operator/update/setOnInsert/
-
+		
 		// Generate the "update" doc
 		Document updateDoc = new Document();
-        Document set_doc = new Document();
+		Document set_doc = new Document();
 		
 		// Expire timestamp if its configured, else it should be removed
 		if (expireAt > 0) {
@@ -211,9 +211,9 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 			updateDoc.append("$unset", unset_doc);
 		}
 		
-        // Setup the value on update/insert/upsert
+		// Setup the value on update/insert/upsert
 		set_doc.append("val", value);
-        updateDoc.append("$set", set_doc);
+		updateDoc.append("$set", set_doc);
 		
 		// Set the key on insert
 		Document setOnInsert_doc = new Document();
@@ -248,14 +248,14 @@ public class MongoDB_KeyValueMap extends Core_KeyValueMap {
 		
 		// Lets get all the key values
 		String val = GenericConvert.toString(resObj.get("val"), null);
-		Date expireAt_date = resObj.get("expireAt");
-        long expireAt_long = 0;
+		Date expireAt_date = resObj.getDate("expireAt");
+		long expireAt_long = 0;
 		
-        // Check if expireAt date is set
-        if( expireAt_date != null ) {
-            expireAt_long = expireAt_date.getTime();
-        }
-
+		// Check if expireAt date is set
+		if (expireAt_date != null) {
+			expireAt_long = expireAt_date.getTime();
+		}
+		
 		// Check for null objects
 		if (val == null || val.isEmpty()) {
 			return null;
