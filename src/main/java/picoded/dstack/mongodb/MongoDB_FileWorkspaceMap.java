@@ -1,6 +1,7 @@
 package picoded.dstack.mongodb;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 // Java imports
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,6 +22,7 @@ import org.bson.conversions.Bson;
 import com.mongodb.client.*;
 import com.mongodb.client.gridfs.*;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 /**
@@ -35,7 +37,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * - GridFS : https://www.mongodb.com/docs/drivers/java/sync/current/fundamentals/gridfs/
  * - API: https://mongodb.github.io/mongo-java-driver/4.7/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html
  **/
-public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
+abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	// --------------------------------------------------------------------------
 	//
@@ -54,12 +56,12 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	 */
 	public MongoDB_FileWorkspaceMap(MongoDBStack inStack, String name) {
 		super();
-
+		
 		// Initialize the gridfs bucket, 
 		// with the relevent DB, name, and config
 		gridFSBucket = GridFSBuckets.create(inStack.db_conn, name) //
-			.withChunkSizeBytes( 8 * 1000 * 1000 );
-
+			.withChunkSizeBytes(8 * 1000 * 1000);
+		
 		//
 		// Note that we intentionally chose 8*1000*1000 chunk sizes
 		// As this will give about 1-4kb space for chunk headers to
@@ -119,20 +121,20 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
-		// Lets build the query for the "root file"
-		Bson query = Filters.eq("filename", oid);
-
-		// Lets prepare the search
-		FindIterable<GridFSFile> search = gridFSBucket.find(query).limit(1);
-
-		// Lets iterate the search result, and return true on an item
-		try (MongoCursor<Document> cursor = search.iterator()) {
-			while (cursor.hasNext()) {
-				// ret.add(cursor.next().getString("_oid"));
-				return true;
-			}
-		}
-
+		// // Lets build the query for the "root file"
+		// Bson query = Filters.eq("filename", oid);
+		
+		// // Lets prepare the search
+		// FindIterable<GridFSFile> search = gridFSBucket.find(query).limit(1);
+		
+		// // Lets iterate the search result, and return true on an item
+		// try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+		// 	while (cursor.hasNext()) {
+		// 		// ret.add(cursor.next().getString("_oid"));
+		// 		return true;
+		// 	}
+		// }
+		
 		// Fail, as the search found no iterations
 		return false;
 	}
@@ -151,15 +153,17 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 		// with the relevent _oid, that can be easily lookedup
 		//
 		// This is done using a closable input stream, with an empty byte array
-		try ( ByteArrayInputStream emptyStream = new ByteArrayInputStream(EmptyArray.BYTE) ) {
+		try (ByteArrayInputStream emptyStream = new ByteArrayInputStream(EmptyArray.BYTE)) {
 			// Setup the metadata for the file
 			Document metadata = new Document();
 			metadata.append("_oid", oid);
 			metadata.append("type", "root");
-
+			
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
 			gridFSBucket.uploadFromStream(oid, emptyStream, opt);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -201,7 +205,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// public byte[] backend_fileRead(String oid, String filepath) {
 	// 	try {
 	// 		accessLock.readLock().lock();
-			
+	
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace != null && filepath != null) {
 	// 			return workspace.get(filepath);
@@ -210,7 +214,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	} finally {
 	// 		accessLock.readLock().unlock();
 	// 	}
-		
+	
 	// }
 	
 	// /**
@@ -230,7 +234,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// public boolean backend_fileExist(final String oid, final String filepath) {
 	// 	try {
 	// 		accessLock.readLock().lock();
-			
+	
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace != null && filepath != null) {
 	// 			return workspace.get(filepath) != null;
@@ -254,14 +258,14 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// public void backend_fileWrite(String oid, String filepath, byte[] data) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get workspace, with normalized parent path
 	// 		ConcurrentHashMap<String, byte[]> workspace = noLock_setupWorkspaceFolderPath(oid,
 	// 			FileUtil.getParentPath(filepath));
-			
+	
 	// 		// And put in the filepth data
 	// 		workspace.put(filepath, data);
-			
+	
 	// 	} finally {
 	// 		accessLock.writeLock().unlock();
 	// 	}
@@ -279,14 +283,14 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// public void backend_removeFile(String oid, String filepath) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-			
+	
 	// 		// workspace exist, remove the file in the workspace
 	// 		if (workspace != null) {
 	// 			workspace.remove(filepath);
 	// 		}
-			
+	
 	// 	} finally {
 	// 		accessLock.writeLock().unlock();
 	// 	}
@@ -312,13 +316,13 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// public void backend_removeFolderPath(final String oid, final String folderPath) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			return;
 	// 		}
-			
+	
 	// 		// Get the keyset - in a new hashset 
 	// 		// (so it wouldnt crash when we do modification)
 	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
@@ -328,7 +332,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 				workspace.remove(key);
 	// 			}
 	// 		}
-			
+	
 	// 	} finally {
 	// 		accessLock.writeLock().unlock();
 	// 	}
@@ -409,25 +413,25 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	final String destinationFile) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
 	// 		}
-			
+	
 	// 		// Check if sourceFolder exist
 	// 		if (workspace.get(sourceFile) == null) {
 	// 			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
 	// 				+ sourceFile);
 	// 		}
-			
+	
 	// 		// Initialize the destionation folder
 	// 		noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
-			
+	
 	// 		// Copy the file
 	// 		workspace.put(destinationFile, workspace.get(sourceFile));
-			
+	
 	// 		// And remove the old copy
 	// 		workspace.remove(sourceFile);
 	// 	} finally {
@@ -459,19 +463,19 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	final String destinationFolder) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
 	// 		}
-			
+	
 	// 		// Check if sourceFolder exist
 	// 		if (workspace.get(sourceFolder) == null) {
 	// 			throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
 	// 				+ sourceFolder);
 	// 		}
-			
+	
 	// 		// Get the keyset - in a new hashset 
 	// 		// (so it wouldnt crash when we do modification)
 	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
@@ -485,7 +489,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 				workspace.remove(key);
 	// 			}
 	// 		}
-			
+	
 	// 	} finally {
 	// 		accessLock.writeLock().unlock();
 	// 	}
@@ -527,22 +531,22 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	final String destinationFile) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
 	// 		}
-			
+	
 	// 		// Check if sourceFolder exist
 	// 		if (workspace.get(sourceFile) == null) {
 	// 			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
 	// 				+ sourceFile);
 	// 		}
-			
+	
 	// 		// Initialize the destionation folder
 	// 		noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
-			
+	
 	// 		// Copy the file
 	// 		workspace.put(destinationFile, workspace.get(sourceFile));
 	// 	} finally {
@@ -574,19 +578,19 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	final String destinationFolder) {
 	// 	try {
 	// 		accessLock.writeLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
 	// 		}
-			
+	
 	// 		// Check if sourceFolder exist
 	// 		if (workspace.get(sourceFolder) == null) {
 	// 			throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
 	// 				+ sourceFolder);
 	// 		}
-			
+	
 	// 		// Get the keyset - in a new hashset 
 	// 		// (so it wouldnt crash when we do modification)
 	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
@@ -598,7 +602,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 					workspace.get(key));
 	// 			}
 	// 		}
-			
+	
 	// 	} finally {
 	// 		accessLock.writeLock().unlock();
 	// 	}
@@ -624,13 +628,13 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 	final int minDepth, final int maxDepth) {
 	// 	try {
 	// 		accessLock.readLock().lock();
-			
+	
 	// 		// Get the workspace, and abort if null
 	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
 	// 		if (workspace == null) {
 	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
 	// 		}
-			
+	
 	// 		// Check if folderPath exist
 	// 		String searchPath = folderPath;
 	// 		if (searchPath.equals("/")) {
@@ -640,7 +644,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	// 			throw new RuntimeException("folderPath does not exist (oid=" + oid + ") : "
 	// 				+ searchPath);
 	// 		}
-			
+	
 	// 		// Return a filtered set
 	// 		return backend_filtterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
 	// 	} finally {
@@ -656,7 +660,7 @@ public class MongoDB_FileWorkspaceMap /* extends Core_FileWorkspaceMap */ {
 	
 	// @Override
 	// public void systemSetup() {
-		
+	
 	// }
 	
 	// @Override
