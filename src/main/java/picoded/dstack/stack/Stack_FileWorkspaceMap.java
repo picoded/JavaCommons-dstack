@@ -79,7 +79,7 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
-
+	
 	// Workspace operations
 	//--------------------------------------------------------------------------
 	
@@ -194,20 +194,20 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 **/
 	@Override
 	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
-
+		
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
-		if( dataLayers.length == 1 ) {
+		if (dataLayers.length == 1) {
 			return dataLayers[0].backend_fileReadInputStream(oid, filepath);
 		}
-
+		
 		// Fallback behaviour, polyfill the byte[] implementation
 		//------------------------------------------------------------
 		byte[] rawBytes = backend_fileRead(oid, filepath);
-		if( rawBytes == null ) {
+		if (rawBytes == null) {
 			return null;
 		}
-		return new ByteArrayInputStream( rawBytes );
+		return new ByteArrayInputStream(rawBytes);
 	}
 	
 	/**
@@ -218,37 +218,38 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	 * @param   data to write the file with
 	 **/
 	@Override
-	public void backend_fileWriteOutputStream(final String oid, final String filepath, final OutputStream data) {
-
+	public void backend_fileWriteOutputStream(final String oid, final String filepath,
+		final OutputStream data) {
+		
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
 		// we only use an optimized "readStream" call if the filesystem is a single stack layer
-		if( dataLayers.length == 1 ) {
+		if (dataLayers.length == 1) {
 			dataLayers[0].backend_fileWriteOutputStream(oid, filepath, data);
 			return;
 		}
-
+		
 		// Fallback behaviour, polyfill the byte[] implementation
 		//------------------------------------------------------------
-
+		
 		// forward the null, and let the error handling below settle it
-		if( data == null ) {
+		if (data == null) {
 			backend_fileWrite(oid, filepath, null);
 		}
-
+		
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if( data instanceof ByteArrayOutputStream ) {
-				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			if (data instanceof ByteArrayOutputStream) {
+				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
 			} else {
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				buffer.writeTo(data);
 				rawBytes = buffer.toByteArray();
 			}
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		// Does the bytearray writes
 		backend_fileWrite(oid, filepath, rawBytes);
 	}

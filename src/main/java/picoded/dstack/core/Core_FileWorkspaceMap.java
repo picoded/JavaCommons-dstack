@@ -183,10 +183,10 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
 		// Get the byte data
 		byte[] rawBytes = backend_fileRead(oid, filepath);
-		if( rawBytes == null ) {
+		if (rawBytes == null) {
 			return null;
 		}
-		return new ByteArrayInputStream( rawBytes );
+		return new ByteArrayInputStream(rawBytes);
 	}
 	
 	/**
@@ -201,27 +201,28 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	public void backend_fileWriteOutputStream(final String oid, final String filepath, final OutputStream data) {
-
+	public void backend_fileWriteOutputStream(final String oid, final String filepath,
+		final OutputStream data) {
+		
 		// forward the null, and let the error handling below settle it
-		if( data == null ) {
+		if (data == null) {
 			backend_fileWrite(oid, filepath, null);
 		}
-
+		
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if( data instanceof ByteArrayOutputStream ) {
-				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			if (data instanceof ByteArrayOutputStream) {
+				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
 			} else {
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				buffer.writeTo(data);
 				rawBytes = buffer.toByteArray();
 			}
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		// Does the bytearray writes
 		backend_fileWrite(oid, filepath, rawBytes);
 	}

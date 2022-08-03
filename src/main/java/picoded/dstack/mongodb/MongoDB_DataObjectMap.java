@@ -90,13 +90,13 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		IndexOptions opt = new IndexOptions();
 		opt = opt.unique(true);
 		opt = opt.name("_oid");
-
+		
 		// Due to the need for _oid to ensure consistency, we would not be creating it in the background
 		// opt = opt.background(true);
-
+		
 		// Lets create the index
 		collection.createIndex(Indexes.ascending("_oid"), opt);
-
+		
 		//
 		// Wildcard indexing
 		//

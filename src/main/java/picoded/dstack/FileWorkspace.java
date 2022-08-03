@@ -163,21 +163,20 @@ public interface FileWorkspace {
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
-			if( data instanceof ByteArrayOutputStream ) {
-				rawBytes = ((ByteArrayOutputStream)data).toByteArray();
+			if (data instanceof ByteArrayOutputStream) {
+				rawBytes = ((ByteArrayOutputStream) data).toByteArray();
 			} else {
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				buffer.writeTo(data);
 				rawBytes = buffer.toByteArray();
 			}
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		// Does the bytearray writes
 		writeByteArray(filepath, rawBytes);
 	}
-	
 	
 	//
 	// Folder Pathing support

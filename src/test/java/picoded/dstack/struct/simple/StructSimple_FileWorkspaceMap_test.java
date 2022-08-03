@@ -336,10 +336,10 @@ public class StructSimple_FileWorkspaceMap_test {
 	public void writeAndReadToFile_stream() throws Exception {
 		// Output stream to use for content
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		buffer.write( "data to write".getBytes() );
-
+		buffer.write("data to write".getBytes());
+		
 		FileWorkspace fileWorkspace = testObj.newEntry();
-		fileWorkspace.writeOutputStream("testPath", buffer );
+		fileWorkspace.writeOutputStream("testPath", buffer);
 		assertNotNull(testObj.get(fileWorkspace._oid()).readByteArray("testPath"));
 		
 		InputStream readData = testObj.get(fileWorkspace._oid()).readInputStream("testPath");
