@@ -299,7 +299,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_moveFile(final String oid, final String sourceFile,
 		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
+		backend_copyFile(oid, sourceFile, destinationFile);
+		backend_removeFile(oid, sourceFile);
 	}
 	
 	/**
@@ -324,7 +325,23 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_moveFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
+		// Get the list of valid sub paths in the sourceFolder
+		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+
+		// Lets sync up all the folders first
+		for(String dir : subPath) {
+			if(dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder+subPath);
+			}
+		}
+		// Lets sync up all the files next
+		for(String file : subPath) {
+			if(!file.endsWith("/")) {
+				backend_moveFile(oid, sourceFolder+subPath, destinationFolder+subPath);
+			}
+		}
+		// Lets remove the original folders
+		backend_removeFolderPath(oid, sourceFolder);
 	}
 	
 	// Copy support
@@ -350,7 +367,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_copyFile(final String oid, final String sourceFile,
 		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
+		backend_fileWriteInputStream(oid, destinationFile, backend_fileReadInputStream(oid, sourceFile));
 	}
 	
 	/**
@@ -375,7 +392,21 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_copyFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
+		// Get the list of valid sub paths in the sourceFolder
+		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+
+		// Lets sync up all the folders first
+		for(String dir : subPath) {
+			if(dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder+subPath);
+			}
+		}
+		// Lets sync up all the files next
+		for(String file : subPath) {
+			if(!file.endsWith("/")) {
+				backend_copyFile(oid, sourceFolder+subPath, destinationFolder+subPath);
+			}
+		}
 	}
 	
 	//
@@ -421,7 +452,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Internal utility function used to filter a path set, and remove items that does not match
+	 * Internal utility function used to filter a path set, and remove items that does not match.
+	 * This is used to help filter raw results, from existing implementation
 	 * 
 	 * - its folderPath prefix
 	 * - min/max depth
@@ -429,7 +461,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * 
 	 * @param rawSet
 	 * @param folderPath
-	 * @param minDepth
+	 * @param minDepth (0 = all items, 1 = must be in atleast a folder, 2 = folder, inside a folder)
 	 * @param maxDepth
 	 * @param pathType (0 = any, 1 = file, 2 = folder)
 	 * @return
