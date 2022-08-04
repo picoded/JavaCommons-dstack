@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Date;
 
 // JavaCommons imports
 import picoded.core.common.EmptyArray;
@@ -528,7 +529,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long backend_createdTimestamp(final String oid, final String filepath) {
-		return -1;
+
+		// Currently only modified timestamp is supported
+		return backend_modifiedTimestamp(oid, filepath);
 	}
 	
 	/**
@@ -543,6 +546,22 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long backend_modifiedTimestamp(final String oid, final String filepath) {
+		// Lets build the query for the "root file"
+		Bson query = Filters.eq("filename", fullpath);
+		
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			if (cursor.hasNext()) {
+				GridFSFile fileObj = cursor.next();
+				Date uploadDate = fileObj.getUploadDate();
+				return uploadDate.getTime();
+			}
+		}
+		
+		// Fail, as the search found no iterations
 		return -1;
 	}
 	
