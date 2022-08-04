@@ -318,6 +318,10 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return rmFlag;
 	}
 
+	protected void performFileCleanup(String oid, String path) {
+
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// File write
@@ -604,7 +608,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			// Remove matching path
 			query = Filters.and(
 				Filters.eq("metadata._oid", oid),
-				Filters.regex("filename", "^"+Pattern.quote(folderPath)+".*")
+				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
 			);
 		}
 
