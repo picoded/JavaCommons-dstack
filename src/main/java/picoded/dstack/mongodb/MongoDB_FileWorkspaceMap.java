@@ -304,16 +304,18 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		GridFSFindIterable search = gridFSBucket.find(query);
 		
 		// Lets iterate the search result, and return true on an item
+		boolean rmFlag = false;
 		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
 			while (cursor.hasNext()) {
 				GridFSFile fileObj = cursor.next();
 				gridFSBucket.delete(fileObj.getId());
+
+				rmFlag = true;
 			}
-			return true;
 		}
 
-		// removal didn't occur
-		return false;
+		// Return the remove status
+		return rmFlag;
 	}
 
 	//--------------------------------------------------------------------------
