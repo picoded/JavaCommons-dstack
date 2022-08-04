@@ -30,17 +30,6 @@ import org.redisson.client.codec.StringCodec;
 import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RMap;
-import org.redisson.api.RKeys;
-
-// Jackson library used
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.databind.MapperFeature;
-
-import org.hjson.*;
-
 
 /**
  * Redis implementation of DataObjectMap data structure.

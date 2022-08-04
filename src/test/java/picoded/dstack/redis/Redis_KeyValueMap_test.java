@@ -7,7 +7,11 @@ import picoded.dstack.struct.simple.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 
+<<<<<<< HEAD
 public class Redis_KeyValueMap_test extends StructSimple_KeyValueMap_test {
+=======
+public class RedisKeyValueMap_test extends StructSimple_KeyValueMap_test {
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f
 	// Redis stack instance
 	protected static volatile RedisStack instance = null;
 	
@@ -15,7 +19,11 @@ public class Redis_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	public KeyValueMap implementationConstructor() {
 		
 		// Initialize server
+<<<<<<< HEAD
 		synchronized (Redis_KeyValueMap_test.class) {
+=======
+		synchronized (RedisKeyValueMap_test.class) {
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f
 			if (instance == null) {
 				// The default config uses "172.17.0.1" (default docker bridge address) 
 				// and port 6379 (default redis port)
@@ -37,4 +45,8 @@ public class Redis_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 		// Load the KeyValueMap
 		return instance.keyValueMap(DStackTestConfig.randomTablePrefix());
 	}
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f

@@ -6,7 +6,11 @@ import picoded.dstack.struct.simple.*;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+<<<<<<< HEAD
 public class Redis_KeyLongMap_test extends StructSimple_KeyLongMap_test {
+=======
+public class RedisKeyLongMap_test extends StructSimple_KeyLongMap_test {
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f
 	// Redis stack instance
 	protected static volatile RedisStack instance = null;
 	
@@ -14,7 +18,11 @@ public class Redis_KeyLongMap_test extends StructSimple_KeyLongMap_test {
 	public KeyLongMap implementationConstructor() {
 		
 		// Initialize server
+<<<<<<< HEAD
 		synchronized (Redis_KeyLongMap_test.class) {
+=======
+		synchronized (RedisKeyLongMap_test.class) {
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f
 			if (instance == null) {
 				// The default config uses "172.17.0.1" (default docker bridge address) 
 				// and port 6379 (default redis port)
@@ -34,6 +42,12 @@ public class Redis_KeyLongMap_test extends StructSimple_KeyLongMap_test {
 			}
 		}
 		// Load the KeyLongMap
+<<<<<<< HEAD
 		return instance.keyLongMap(DStackTestConfig.randomTablePrefix());
 	}
 }
+=======
+		return instance.KeyLongMap(DStackTestConfig.randomTablePrefix());
+	}
+}
+>>>>>>> ba5858da6960b26e62926ee51c1e3f547b58774f
