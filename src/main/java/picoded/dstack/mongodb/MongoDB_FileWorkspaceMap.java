@@ -290,7 +290,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/** 
 	 * Utility function used, to remove a specific file
 	 **/
-	protected boolean removeFilePathOnce(String oid, String path) {
+	protected boolean removeFilePath(String oid, String path) {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
@@ -300,16 +300,16 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Remove matching path
 		query = Filters.eq("filename", oid+"/"+path);
 
-		// Lets prepare the search
-		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
+		// Lets prepare the search (removes all versions)
+		GridFSFindIterable search = gridFSBucket.find(query);
 		
 		// Lets iterate the search result, and return true on an item
 		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
-			if (cursor.hasNext()) {
+			while (cursor.hasNext()) {
 				GridFSFile fileObj = cursor.next();
 				gridFSBucket.delete(fileObj.getId());
-				return true;
 			}
+			return true;
 		}
 
 		// removal didn't occur
@@ -378,7 +378,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
-			gridFSBucket.uploadFromStream(oid, data, opt);
+			gridFSBucket.uploadFromStream(fullPath, data, opt);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -450,7 +450,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
-		removeFilePathOnce(oid, cleanFilePath(filepath));
+		removeFilePath(oid, cleanFilePath(filepath));
 	}
 	
 	// Folder Pathing support
