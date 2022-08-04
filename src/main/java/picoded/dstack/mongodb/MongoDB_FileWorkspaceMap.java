@@ -2,6 +2,7 @@ package picoded.dstack.mongodb;
 
 // Java imports
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -505,108 +506,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
-	// Move support
 	//--------------------------------------------------------------------------
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 * 
-	 * Move a given file within the system
-	 * 
-	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
-	 *          missing files / corrupted data can occur when executed concurrently with other operations.
-	 * 
-	 * In general "S3-like" object storage will not safely support atomic move operations.
-	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
-	 * 
-	 * This operation may in effect function as a rename
-	 * If the destionation file exists, it will be overwritten
-	 * 
-	 * @param  ObjectID of workspace
-	 * @param  sourceFile
-	 * @param  destinationFile
-	 */
-	public void backend_moveFile(final String oid, final String sourceFile,
-		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
-	}
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 * 
-	 * Move a given file within the system
-	 * 
-	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
-	 *          missing files / corrupted data can occur when executed concurrently with other operations.
-	 * 
-	 * In general "S3-like" object storage will not safely support atomic move operations.
-	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
-	 * 
-	 * Note that both source, and destionation folder will be normalized to include the "/" path.
-	 * This operation may in effect function as a rename
-	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
-	 * 
-	 * @param  ObjectID of workspace
-	 * @param  sourceFolder
-	 * @param  destinationFolder
-	 * 
-	 */
-	public void backend_moveFolderPath(final String oid, final String sourceFolder,
-		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
-	}
-	
-	// Copy support
-	//--------------------------------------------------------------------------
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 * 
-	 * Copy a given file within the system
-	 * 
-	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
-	 *          missing files / corrupted data can occur when executed concurrently with other operations.
-	 * 
-	 * In general "S3-like" object storage will not safely support atomic copy operations.
-	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
-	 * 
-	 * This operation may in effect function as a rename
-	 * If the destionation file exists, it will be overwritten
-	 * 
-	 * @param  ObjectID of workspace
-	 * @param  sourceFile
-	 * @param  destinationFile
-	 */
-	public void backend_copyFile(final String oid, final String sourceFile,
-		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
-	}
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 * 
-	 * Copy a given file within the system
-	 * 
-	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
-	 *          missing files / corrupted data can occur when executed concurrently with other operations.
-	 * 
-	 * In general "S3-like" object storage will not safely support atomic Copy operations.
-	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
-	 * 
-	 * Note that both source, and destionation folder will be normalized to include the "/" path.
-	 * This operation may in effect function as a rename
-	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
-	 * 
-	 * @param  ObjectID of workspace
-	 * @param  sourceFolder
-	 * @param  destinationFolder
-	 * 
-	 */
-	public void backend_copyFolderPath(final String oid, final String sourceFolder,
-		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
-	}
-	
 	//
 	// Create and updated timestamp support
 	//
@@ -646,6 +546,12 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return -1;
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Query, and listing support
+	//
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * List all the various files and folders found in the given folderPath
 	 * 
@@ -657,9 +563,63 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return list of path strings - relative to the given folderPath (folders end with "/")
 	 */
 	@Override
-	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, String folderPath,
 		final int minDepth, final int maxDepth) {
-		throw new RuntimeException("Missing backend implementation");
+			
+		// Lets build the query for the "root file"
+		Bson query = null;
+		
+		// The fulle prefix path
+		String fullPrefixPath = oid+"/";
+		
+		// Lets build the query, for fetchign the relevent items
+		if( folderPath == null || folderPath.equals("/") || folderPath.isEmpty() ) {
+			// Handles query for all folder paths
+			query = Filters.eq("metadata._oid", oid);
+		} else {
+			// Cleanup the path
+			folderPath = cleanFilePath(folderPath);
+			fullPrefixPath = fullPrefixPath+folderPath;
+			
+			// Remove matching path
+			query = Filters.and(
+				Filters.eq("metadata._oid", oid),
+				Filters.regex("filename", "^"+Pattern.quote(folderPath)+".*")
+			);
+		}
+
+		// The return set
+		Set<String> ret = new HashSet<>();
+
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				// Get the fileobj and filename
+				GridFSFile fileObj = cursor.next();
+				String fullFilename = fileObj.getFilename();
+
+				// Remove the oid prefix
+				String filepath = fullFilename.substring( fullPrefixPath.length() );
+
+				// Register the validpath
+				ret.add(filepath);
+
+				// Lets split the filepath
+				String[] filepathArr = filepath.split("/");
+				List<String> filepathList = Arrays.asList(filepathArr);
+
+				// Lets handle parent folders
+				for(int i=1+Math.max(minDepth,0); i<(filepathArr.length-1); ++i) {
+					ret.add( String.join("/", filepathList.subList(0,i)+"/" ) );
+				}
+			}
+		}
+
+		// Filter and return the final set
+		return backend_filtterPathSet( ret, folderPath, minDepth, maxDepth, 0);
 	}
 	
 }
