@@ -1,13 +1,17 @@
 package picoded.dstack.mongodb;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 // Java imports
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 // JavaCommons imports
 import picoded.core.common.EmptyArray;
@@ -15,6 +19,7 @@ import picoded.core.file.FileUtil;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import org.apache.commons.io.IOUtils;
 // MongoDB imports
 import org.bson.Document;
 import org.bson.types.Binary;
@@ -24,6 +29,7 @@ import com.mongodb.client.gridfs.*;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import com.mongodb.client.model.Filters;
 
 /**
  * ## Purpose
@@ -37,7 +43,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  * - GridFS : https://www.mongodb.com/docs/drivers/java/sync/current/fundamentals/gridfs/
  * - API: https://mongodb.github.io/mongo-java-driver/4.7/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html
  **/
-abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
+public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	// --------------------------------------------------------------------------
 	//
@@ -71,7 +77,7 @@ abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// of 2 : https://jira.mongodb.org/browse/SERVER-13331
 		//
 		// Meaning a full "8 * 1000 * 1000" chunk would use "8 * 1024 * 1024"
-		// worth of space, after adding the unknown headers (<=2kb)
+		// worth of space, after adding the unknown headers (<=4kb of space : 8*24*24)
 		//
 	}
 	
@@ -121,22 +127,8 @@ abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public boolean backend_workspaceExist(String oid) {
-		// // Lets build the query for the "root file"
-		// Bson query = Filters.eq("filename", oid);
-		
-		// // Lets prepare the search
-		// FindIterable<GridFSFile> search = gridFSBucket.find(query).limit(1);
-		
-		// // Lets iterate the search result, and return true on an item
-		// try (MongoCursor<GridFSFile> cursor = search.iterator()) {
-		// 	while (cursor.hasNext()) {
-		// 		// ret.add(cursor.next().getString("_oid"));
-		// 		return true;
-		// 	}
-		// }
-		
-		// Fail, as the search found no iterations
-		return false;
+		// The folder root, will only contain the "oid"
+		return fullRawPathExist(oid);
 	}
 	
 	/**
@@ -149,6 +141,100 @@ abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	@Override
 	public void backend_setupWorkspace(String oid) {
+		// We setup a blank file with type root
+		if(!fullRawPathExist(oid)) {
+			setupAnchorFile(oid, oid, "root");
+		}
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes the FileWorkspace, used to nuke an entire workspace
+	 *
+	 * @param ObjectID of workspace to remove
+	 **/
+	@Override
+	public void backend_workspaceRemove(String oid) {
+		removeFilePathRecursively(oid, null);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// Utility functions
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Given a filepath, ensure a clean filepath (without starting "/")
+	 */
+	protected static String cleanFilePath(final String filepath) {
+		// Note that the FileUtil.normalize step is not needed, as 
+		// this is already done in the Core_FileWorkspaceMap 
+		// ---
+		// String cleanFilePath = FileUtil.normalize(filepath);
+
+		// Cleanup the file apth
+		String cleanFilePath = filepath;
+		while (cleanFilePath.startsWith("/")) {
+			cleanFilePath = cleanFilePath.substring(1);
+		}
+		return cleanFilePath;
+	}
+	
+	/** Utility function used, to check if a workspace, or file exists **/
+	protected boolean fullRawPathExist(String fullpath) {
+		// Lets build the query for the "root file"
+		Bson query = Filters.eq("filename", fullpath);
+		
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			if (cursor.hasNext()) {
+				// ret.add(cursor.next().getString("_oid"));
+				return true;
+			}
+		}
+		
+		// Fail, as the search found no iterations
+		return false;
+	}
+
+	/** Utility function used, to check if a folder, or file with folder prefix exists **/
+	protected boolean prefixPathExist(String oid, String path) {
+		// Lets build the query for the "root file"
+		Bson query = null;
+		
+		// Cleanup the path
+		path = cleanFilePath(path);
+		
+		// Remove matching path
+		query = Filters.and(
+			Filters.eq("metadata._oid", oid),
+			Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
+		);
+
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			if (cursor.hasNext()) {
+				return true;
+			}
+		}
+
+		// No match found, fail
+		return false;
+	}
+
+	/**
+	 * Setup an empty file, used for various use cases
+	 */
+	@Override
+	public void setupAnchorFile(String oid, String fullPath, String type) {
 		// In general we will upload a blank file
 		// with the relevent _oid, that can be easily lookedup
 		//
@@ -157,535 +243,424 @@ abstract public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			// Setup the metadata for the file
 			Document metadata = new Document();
 			metadata.append("_oid", oid);
-			metadata.append("type", "root");
+			metadata.append("type", type);
 			
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
-			gridFSBucket.uploadFromStream(oid, emptyStream, opt);
+			gridFSBucket.uploadFromStream(fullPath, emptyStream, opt);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Removes the FileWorkspace, used to nuke an entire workspace
-	//  *
-	//  * @param ObjectID of workspace to remove
-	//  **/
-	// @Override
-	// public void backend_workspaceRemove(String oid) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	// 		fileContentMap.remove(oid);
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
+	/** 
+	 * Utility function used, to recursively delete all files within a specific path
+	 **/
+	protected void removeFilePathRecursively(String oid, String path) {
+		// Lets build the query for the "root file"
+		Bson query = null;
+		
+		if( path == null ) {
+			// Remove everything under the oid
+			query = Filters.eq("metadata._oid", oid);
+		} else {
+			// Cleanup the path
+			path = cleanFilePath(path);
+			
+			// Remove matching path
+			query = Filters.and(
+				Filters.eq("metadata._oid", oid),
+				Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
+			);
+		}
+
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				GridFSFile fileObj = cursor.next();
+				gridFSBucket.delete(fileObj.getId());
+			}
+		}
+	}
+
+	/** 
+	 * Utility function used, to remove a specific file
+	 **/
+	protected boolean removeFilePathOnce(String oid, String path) {
+		// Lets build the query for the "root file"
+		Bson query = null;
+		
+		// Cleanup the path
+		path = cleanFilePath(path);
+		
+		// Remove matching path
+		query = Filters.eq("filename", oid+"/"+path);
+
+		// Lets prepare the search
+		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
+		
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
+			if (cursor.hasNext()) {
+				GridFSFile fileObj = cursor.next();
+				gridFSBucket.delete(fileObj.getId());
+				return true;
+			}
+		}
+
+		// removal didn't occur
+		return false;
+	}
+
+	//--------------------------------------------------------------------------
+	//
+	// File write
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
 	
-	// //--------------------------------------------------------------------------
-	// //
-	// // File read / write
-	// // [Internal use, to be extended in future implementation]
-	// //
-	// //--------------------------------------------------------------------------
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	@Override
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
+		// Build the input stream
+		ByteArrayInputStream buffer = null;
+		
+		// Only build if its not null
+		if (data != null) {
+			buffer = new ByteArrayInputStream(data);
+		}
+		
+		// Then pump it
+		backend_fileWriteInputStream(oid, filepath, buffer);
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Get and return the stored data as a byte[]
-	//  *
-	//  * @param  ObjectID of workspace
-	//  * @param  filepath to use for the workspace
-	//  *
-	//  * @return  the stored byte array of the file
-	//  **/
-	// @Override
-	// public byte[] backend_fileRead(String oid, String filepath) {
-	// 	try {
-	// 		accessLock.readLock().lock();
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	public void backend_fileWriteInputStream(String oid, String filepath, InputStream data) {
+		// Get the clean file path
+		String cleanPath = cleanFilePath(filepath);
+		
+		// Build the full path
+		String fullPath = oid + "/" + cleanPath;
+		
+		if (data == null) {
+			data = new ByteArrayInputStream(EmptyArray.BYTE);
+		}
+		
+		// Write the file
+		try {
+			// Setup the metadata for the file
+			Document metadata = new Document();
+			metadata.append("_oid", oid);
+			metadata.append("type", "file");
+			
+			// Prepare the upload options
+			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
+			gridFSBucket.uploadFromStream(oid, data, opt);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				data.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 	
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace != null && filepath != null) {
-	// 			return workspace.get(filepath);
-	// 		}
-	// 		return null;
-	// 	} finally {
-	// 		accessLock.readLock().unlock();
-	// 	}
+	//--------------------------------------------------------------------------
+	//
+	// File read / exists
+	// [Internal use, to be extended in future implementation]
+	//
+	//--------------------------------------------------------------------------
 	
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return the stored data as a byte[]
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	@Override
+	public byte[] backend_fileRead(String oid, String filepath) {
+		InputStream buffer = backend_fileReadInputStream(oid, filepath);
+		byte[] ret = null;
+		try {
+			ret = IOUtils.toByteArray(buffer);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				buffer.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return ret;
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Get and return if the file exists, due to the potentially
-	//  * large size nature of files stored in FileWorkspace.
-	//  *
-	//  * Its highly recommended to optimize this function,
-	//  * instead of leaving it as default
-	//  *
-	//  * @param  ObjectID of workspace
-	//  * @param  filepath to use for the workspace
-	//  *
-	//  * @return  boolean true, if file eixst
-	//  **/
-	// public boolean backend_fileExist(final String oid, final String filepath) {
-	// 	try {
-	// 		accessLock.readLock().lock();
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return the stored data as a byte stream.
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public InputStream backend_fileReadInputStream(String oid, String filepath) {
+		return gridFSBucket.openDownloadStream(oid + "/" + cleanFilePath(filepath));
+	}
 	
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace != null && filepath != null) {
-	// 			return workspace.get(filepath) != null;
-	// 		}
-	// 	} finally {
-	// 		accessLock.readLock().unlock();
-	// 	}
-	// 	return false;
-	// }
+	@Override
+	public boolean backend_fileExist(String oid, String filepath) {
+		// Check against the full file path
+		return fullRawPathExist(oid + "/" + cleanFilePath(filepath));
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Writes the full byte array of a file in the backend
-	//  *
-	//  * @param   ObjectID of workspace
-	//  * @param   filepath to use for the workspace
-	//  * @param   data to write the file with
-	//  **/
-	// @Override
-	// public void backend_fileWrite(String oid, String filepath, byte[] data) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
+	@Override
+	public void backend_removeFile(String oid, String filepath) {
+		removeFilePathOnce(oid, cleanFilePath(filepath));
+	}
 	
-	// 		// Get workspace, with normalized parent path
-	// 		ConcurrentHashMap<String, byte[]> workspace = noLock_setupWorkspaceFolderPath(oid,
-	// 			FileUtil.getParentPath(filepath));
+	// Folder Pathing support
+	//--------------------------------------------------------------------------
 	
-	// 		// And put in the filepth data
-	// 		workspace.put(filepath, data);
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Delete an existing path from the workspace.
+	 * This recursively removes all file content under the given path prefix
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		removeFilePathRecursively(oid, cleanFilePath(folderPath));
+	}
 	
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Validate the given folder path exists.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public boolean backend_folderPathExist(final String oid, final String folderPath) {
+		// Note that this passes if any of the files were created directly without folders
+		return prefixPathExist(oid, cleanFilePath(folderPath));
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Removes the specified file path from the workspace in the backend
-	//  *
-	//  * @param oid identifier to the workspace
-	//  * @param filepath the file to be removed
-	//  */
-	// @Override
-	// public void backend_removeFile(String oid, String filepath) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Automatically generate a given folder path if it does not exist
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	public void backend_ensureFolderPath(final String oid, final String folderPath) {
+		// Cleanup folderPath
+		String path = cleanFilePath(folderPath);
+
+		// We setup a blank file with type root, this checks only for the anchor file
+		// if it does not exists, we will make it
+		if(!fullRawPathExist(oid+"/"+path)) {
+			setupAnchorFile(oid, path, "dir");
+		}
+	}
 	
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
+	// Move support
+	//--------------------------------------------------------------------------
 	
-	// 		// workspace exist, remove the file in the workspace
-	// 		if (workspace != null) {
-	// 			workspace.remove(filepath);
-	// 		}
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_moveFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Move a given file within the system
+	 * 
+	 * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic move operations.
+	 * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_moveFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Folder pathing support
-	// //
-	// //--------------------------------------------------------------------------
+	// Copy support
+	//--------------------------------------------------------------------------
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Delete an existing path from the workspace.
-	//  * This recursively removes all file content under the given path prefix
-	//  *
-	//  * @param  ObjectID of workspace
-	//  * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	//  *
-	//  * @return  the stored byte array of the file
-	//  **/
-	// public void backend_removeFolderPath(final String oid, final String folderPath) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * This operation may in effect function as a rename
+	 * If the destionation file exists, it will be overwritten
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFile
+	 * @param  destinationFile
+	 */
+	public void backend_copyFile(final String oid, final String sourceFile,
+		final String destinationFile) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			return;
-	// 		}
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
-	// 		// Get the keyset - in a new hashset 
-	// 		// (so it wouldnt crash when we do modification)
-	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
-	// 		for (String key : allKeys) {
-	// 			// If folder path match - remove it
-	// 			if (key.startsWith(folderPath)) {
-	// 				workspace.remove(key);
-	// 			}
-	// 		}
+	//
+	// Create and updated timestamp support
+	//
+	// Note that this feature does not have "normalized" support across
+	// backend implementation, and is provided "as-it-is" for applicable
+	// backend implementations.
+	//
+	//--------------------------------------------------------------------------
 	
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+
+	 * The created timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_createdTimestamp(final String oid, final String filepath) {
+		return -1;
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Validate the given folder path exists.
-	//  *
-	//  * @param  ObjectID of workspace
-	//  * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	//  *
-	//  * @return  the stored byte array of the file
-	//  **/
-	// public boolean backend_folderPathExist(final String oid, final String folderPath) {
-	// 	try {
-	// 		accessLock.readLock().lock();
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		return workspace != null && workspace.get(folderPath) != null;
-	// 	} finally {
-	// 		accessLock.readLock().unlock();
-	// 	}
-	// }
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 
+	 * The modified timestamp of the map in ms,
+	 * note that -1 means the current backend does not support this feature
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath in the workspace to check
+	 *
+	 * @return  DataObject created timestamp in ms
+	 */
+	public long backend_modifiedTimestamp(final String oid, final String filepath) {
+		return -1;
+	}
 	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  *
-	//  * Automatically generate a given folder path if it does not exist
-	//  *
-	//  * @param  ObjectID of workspace
-	//  * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	//  *
-	//  * @return  the stored byte array of the file
-	//  **/
-	// public void backend_ensureFolderPath(final String oid, final String folderPath) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	// 		noLock_setupWorkspaceFolderPath(oid, folderPath);
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
+	/**
+	 * List all the various files and folders found in the given folderPath
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
+	 * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
+	 * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
+	 * 
+	 * @return list of path strings - relative to the given folderPath (folders end with "/")
+	 */
+	@Override
+	public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
+		final int minDepth, final int maxDepth) {
+		throw new RuntimeException("Missing backend implementation");
+	}
 	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Move support
-	// //
-	// //--------------------------------------------------------------------------
-	
-	// /**
-	//  * @return if the current configured implementation supports atomic move operations.
-	//  */
-	// public boolean atomicMoveSupported() {
-	// 	// True due to StructSimple use of a globle write lock
-	// 	return true;
-	// }
-	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  * 
-	//  * Move a given file within the system
-	//  * 
-	//  * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
-	//  *          missing files / corrupted data can occur when executed concurrently with other operations.
-	//  * 
-	//  * In general "S3-like" object storage will not safely support atomic move operations.
-	//  * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
-	//  * 
-	//  * This operation may in effect function as a rename
-	//  * If the destionation file exists, it will be overwritten
-	//  * 
-	//  * @param  ObjectID of workspace
-	//  * @param  sourceFile
-	//  * @param  destinationFile
-	//  */
-	// public void backend_moveFile(final String oid, final String sourceFile,
-	// 	final String destinationFile) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
-	// 		}
-	
-	// 		// Check if sourceFolder exist
-	// 		if (workspace.get(sourceFile) == null) {
-	// 			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
-	// 				+ sourceFile);
-	// 		}
-	
-	// 		// Initialize the destionation folder
-	// 		noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
-	
-	// 		// Copy the file
-	// 		workspace.put(destinationFile, workspace.get(sourceFile));
-	
-	// 		// And remove the old copy
-	// 		workspace.remove(sourceFile);
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
-	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  * 
-	//  * Move a given file within the system
-	//  * 
-	//  * WARNING: Move operations are typically not "atomic" in nature, and can be unsafe where
-	//  *          missing files / corrupted data can occur when executed concurrently with other operations.
-	//  * 
-	//  * In general "S3-like" object storage will not safely support atomic move operations.
-	//  * Please use the `atomicMoveSupported()` function to validate if such operations are supported.
-	//  * 
-	//  * Note that both source, and destionation folder will be normalized to include the "/" path.
-	//  * This operation may in effect function as a rename
-	//  * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
-	//  * 
-	//  * @param  ObjectID of workspace
-	//  * @param  sourceFolder
-	//  * @param  destinationFolder
-	//  * 
-	//  */
-	// public void backend_moveFolderPath(final String oid, final String sourceFolder,
-	// 	final String destinationFolder) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
-	// 		}
-	
-	// 		// Check if sourceFolder exist
-	// 		if (workspace.get(sourceFolder) == null) {
-	// 			throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
-	// 				+ sourceFolder);
-	// 		}
-	
-	// 		// Get the keyset - in a new hashset 
-	// 		// (so it wouldnt crash when we do modification)
-	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
-	// 		for (String key : allKeys) {
-	// 			// If folder path match - migrate it
-	// 			if (key.startsWith(sourceFolder)) {
-	// 				// Copy it over
-	// 				workspace.put(destinationFolder + key.substring(sourceFolder.length()),
-	// 					workspace.get(key));
-	// 				// Remove it
-	// 				workspace.remove(key);
-	// 			}
-	// 		}
-	
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
-	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Copy support
-	// //
-	// //--------------------------------------------------------------------------
-	
-	// /**
-	//  * @return if the current configured implementation supports atomic Copy operations.
-	//  */
-	// public boolean atomicCopySupported() {
-	// 	// True due to StructSimple use of a globle write lock
-	// 	return true;
-	// }
-	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  * 
-	//  * Copy a given file within the system
-	//  * 
-	//  * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
-	//  *          missing files / corrupted data can occur when executed concurrently with other operations.
-	//  * 
-	//  * In general "S3-like" object storage will not safely support atomic Copy operations.
-	//  * Please use the `atomicCopySupported()` function to validate if such operations are supported.
-	//  * 
-	//  * This operation may in effect function as a rename
-	//  * If the destionation file exists, it will be overwritten
-	//  * 
-	//  * @param  ObjectID of workspace
-	//  * @param  sourceFile
-	//  * @param  destinationFile
-	//  */
-	// public void backend_copyFile(final String oid, final String sourceFile,
-	// 	final String destinationFile) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
-	// 		}
-	
-	// 		// Check if sourceFolder exist
-	// 		if (workspace.get(sourceFile) == null) {
-	// 			throw new RuntimeException("sourceFile does not exist (oid=" + oid + ") : "
-	// 				+ sourceFile);
-	// 		}
-	
-	// 		// Initialize the destionation folder
-	// 		noLock_setupWorkspaceFolderPath(oid, FileUtil.getParentPath(destinationFile));
-	
-	// 		// Copy the file
-	// 		workspace.put(destinationFile, workspace.get(sourceFile));
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
-	
-	// /**
-	//  * [Internal use, to be extended in future implementation]
-	//  * 
-	//  * Copy a given file within the system
-	//  * 
-	//  * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
-	//  *          missing files / corrupted data can occur when executed concurrently with other operations.
-	//  * 
-	//  * In general "S3-like" object storage will not safely support atomic Copy operations.
-	//  * Please use the `atomicCopySupported()` function to validate if such operations are supported.
-	//  * 
-	//  * Note that both source, and destionation folder will be normalized to include the "/" path.
-	//  * This operation may in effect function as a rename
-	//  * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
-	//  * 
-	//  * @param  ObjectID of workspace
-	//  * @param  sourceFolder
-	//  * @param  destinationFolder
-	//  * 
-	//  */
-	// public void backend_copyFolderPath(final String oid, final String sourceFolder,
-	// 	final String destinationFolder) {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
-	// 		}
-	
-	// 		// Check if sourceFolder exist
-	// 		if (workspace.get(sourceFolder) == null) {
-	// 			throw new RuntimeException("sourceFolder does not exist (oid=" + oid + ") : "
-	// 				+ sourceFolder);
-	// 		}
-	
-	// 		// Get the keyset - in a new hashset 
-	// 		// (so it wouldnt crash when we do modification)
-	// 		Set<String> allKeys = new HashSet<>(workspace.keySet());
-	// 		for (String key : allKeys) {
-	// 			// If folder path match - migrate it
-	// 			if (key.startsWith(sourceFolder)) {
-	// 				// Copy it over
-	// 				workspace.put(destinationFolder + key.substring(sourceFolder.length()),
-	// 					workspace.get(key));
-	// 			}
-	// 		}
-	
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
-	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Listing support
-	// //
-	// //--------------------------------------------------------------------------
-	
-	// /**
-	//  * List all the various files and folders found in the given folderPath
-	//  * 
-	//  * @param  ObjectID of workspace
-	//  * @param  folderPath in the workspace (note, folderPath is normalized to end with "/")
-	//  * @param  minDepth minimum depth count, before outputing the listing (uses a <= match)
-	//  * @param  maxDepth maximum depth count, to stop the listing (-1 for infinite, uses a >= match)
-	//  * 
-	//  * @return list of path strings - relative to the given folderPath (folders end with "/")
-	//  */
-	// public Set<String> backend_getFileAndFolderPathSet(final String oid, final String folderPath,
-	// 	final int minDepth, final int maxDepth) {
-	// 	try {
-	// 		accessLock.readLock().lock();
-	
-	// 		// Get the workspace, and abort if null
-	// 		ConcurrentHashMap<String, byte[]> workspace = fileContentMap.get(oid);
-	// 		if (workspace == null) {
-	// 			throw new RuntimeException("FileWorkspace does not exist : " + oid);
-	// 		}
-	
-	// 		// Check if folderPath exist
-	// 		String searchPath = folderPath;
-	// 		if (searchPath.equals("/")) {
-	// 			searchPath = "";
-	// 		}
-	// 		if (searchPath.length() > 0 && workspace.get(searchPath) == null) {
-	// 			throw new RuntimeException("folderPath does not exist (oid=" + oid + ") : "
-	// 				+ searchPath);
-	// 		}
-	
-	// 		// Return a filtered set
-	// 		return backend_filtterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
-	// 	} finally {
-	// 		accessLock.readLock().unlock();
-	// 	}
-	// }
-	
-	// //--------------------------------------------------------------------------
-	// //
-	// // Constructor and maintenance
-	// //
-	// //--------------------------------------------------------------------------
-	
-	// @Override
-	// public void systemSetup() {
-	
-	// }
-	
-	// @Override
-	// public void systemDestroy() {
-	// 	clear();
-	// }
-	
-	// /**
-	//  * Maintenance step call, however due to the nature of most implementation not
-	//  * having any form of time "expiry", this call does nothing in most implementation.
-	//  *
-	//  * As such im making that the default =)
-	//  **/
-	// @Override
-	// public void maintenance() {
-	// 	// Do nothing
-	// }
-	
-	// @Override
-	// public void clear() {
-	// 	try {
-	// 		accessLock.writeLock().lock();
-	// 		fileContentMap.clear();
-	// 	} finally {
-	// 		accessLock.writeLock().unlock();
-	// 	}
-	// }
 }

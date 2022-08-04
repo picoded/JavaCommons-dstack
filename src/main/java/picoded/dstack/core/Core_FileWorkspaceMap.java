@@ -181,7 +181,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param  ObjectID of workspace
 	 * @param  filepath to use for the workspace
 	 *
-	 * @return  the stored byte array of the file
+	 * @return  the stored byte stream of the file
 	 **/
 	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
 		// Get the byte data
@@ -218,6 +218,12 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			rawBytes = IOUtils.toByteArray(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		} finally {
+			try {
+				data.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 		
 		// Does the bytearray writes

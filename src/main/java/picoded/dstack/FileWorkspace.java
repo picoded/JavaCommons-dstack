@@ -167,6 +167,12 @@ public interface FileWorkspace {
 			rawBytes = IOUtils.toByteArray(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		} finally {
+			try {
+				data.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 		// Does the bytearray writes
 		writeByteArray(filepath, rawBytes);
