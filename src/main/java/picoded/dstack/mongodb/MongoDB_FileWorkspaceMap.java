@@ -233,7 +233,6 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Setup an empty file, used for various use cases
 	 */
-	@Override
 	public void setupAnchorFile(String oid, String fullPath, String type) {
 		// In general we will upload a blank file
 		// with the relevent _oid, that can be easily lookedup
