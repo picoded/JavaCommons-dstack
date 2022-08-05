@@ -492,8 +492,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * - min/max depth
 	 * - any / file / folder
 	 * 
-	 * @param rawSet
-	 * @param folderPath
+	 * @param rawSet (note this expect the full RAW paths, without removing the folderPath prefix)
+	 * @param folderPath the folder path prefix to search and match against, and truncate
 	 * @param minDepth (0 = all items, 1 = must be in atleast a folder, 2 = folder, inside a folder)
 	 * @param maxDepth
 	 * @param pathType (0 = any, 1 = file, 2 = folder)
