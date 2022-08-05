@@ -1,6 +1,7 @@
 package picoded.dstack.core;
 
 import picoded.core.conv.ArrayConv;
+import picoded.core.file.FileUtil;
 
 // Java imports
 
@@ -103,6 +104,48 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * Does not throw any error if workspace was previously setup
 	 */
 	abstract public void backend_setupWorkspace(String oid);
+	
+	//--------------------------------------------------------------------------
+	// File / Folder string normalization
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @param filePath
+	 * @return filePath normalized to remove ending "/"
+	 */
+	protected static String normalizeFilePathString(final String filePath) {
+		if (filePath == null) {
+			throw new IllegalArgumentException("Invalid null filePath");
+		}
+		
+		String res = FileUtil.normalize(filePath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (res.endsWith("/")) {
+			res = res.substring(0, res.length() - 1);
+		}
+		return res;
+	}
+	
+	/**
+	 * @param folderPath
+	 * @return folderPath normalized with ending "/"
+	 */
+	protected static String normalizeFolderPathString(final String folderPath) {
+		if (folderPath == null || folderPath.length() <= 0) {
+			return "/";
+		}
+		
+		String res = FileUtil.normalize(folderPath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (!res.endsWith("/")) {
+			res = res + "/";
+		}
+		return res;
+	}
 	
 	//--------------------------------------------------------------------------
 	//
@@ -364,13 +407,13 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// Lets sync up all the folders first
 		for(String dir : subPath) {
 			if(dir.endsWith("/")) {
-				backend_ensureFolderPath(oid, destinationFolder+subPath);
+				backend_ensureFolderPath(oid, destinationFolder+dir);
 			}
 		}
 		// Lets sync up all the files next
 		for(String file : subPath) {
 			if(!file.endsWith("/")) {
-				backend_moveFile(oid, sourceFolder+subPath, destinationFolder+subPath);
+				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
 			}
 		}
 		// Lets remove the original folders
@@ -431,13 +474,13 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// Lets sync up all the folders first
 		for(String dir : subPath) {
 			if(dir.endsWith("/")) {
-				backend_ensureFolderPath(oid, destinationFolder+subPath);
+				backend_ensureFolderPath(oid, destinationFolder+dir);
 			}
 		}
 		// Lets sync up all the files next
 		for(String file : subPath) {
-			if(!file.endsWith("/")) {
-				backend_copyFile(oid, sourceFolder+subPath, destinationFolder+subPath);
+			if(file.endsWith("/") == false) {
+				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
 			}
 		}
 	}
@@ -551,12 +594,21 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			}
 			
 			// Alrighto - lets check file / folder type - and add it in
+
+			// Ignore empty, or root path
+			if(subPath.isEmpty() || subPath.equals("/")) {
+				continue;
+			}
+
+			// Expect a folder, reject files
 			if (pathType == 1) {
 				if (subPath.endsWith("/")) {
 					// Not a file - abort!
 					continue;
 				}
 			}
+
+			// Expect files, reject folders
 			if (pathType == 2) {
 				if (!subPath.endsWith("/")) {
 					// Not a folder - abort!

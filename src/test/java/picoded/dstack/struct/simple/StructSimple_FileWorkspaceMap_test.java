@@ -160,9 +160,10 @@ public class StructSimple_FileWorkspaceMap_test {
 		
 		// Remove and assert
 		fileWorkspace.removeFolderPath("test/folder");
-		assertFalse(fileWorkspace.folderPathExist("test/folder"));
-		assertTrue(fileWorkspace.folderPathExist("test"));
 		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertFalse(fileWorkspace.folderPathExist("test/folder"));
+
+		assertTrue(fileWorkspace.folderPathExist("test"));
 	}
 	
 	//-----------------------------------------------------------------------------------

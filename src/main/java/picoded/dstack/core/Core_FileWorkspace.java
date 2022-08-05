@@ -122,38 +122,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filePath
 	 * @return filePath normalized to remove ending "/"
 	 */
-	private static String normalizeFilePathString(final String filePath) {
-		if (filePath == null) {
-			throw new IllegalArgumentException("Invalid null filePath");
-		}
-		
-		String res = FileUtil.normalize(filePath, true);
-		if (res.startsWith("/")) {
-			res = res.substring(1);
-		}
-		if (res.endsWith("/")) {
-			res = res.substring(0, res.length() - 1);
-		}
-		return res;
+	protected static String normalizeFilePathString(final String filePath) {
+		return Core_FileWorkspaceMap.normalizeFilePathString(filePath);
 	}
 	
 	/**
 	 * @param folderPath
 	 * @return folderPath normalized with ending "/"
 	 */
-	private static String normalizeFolderPathString(final String folderPath) {
-		if (folderPath == null || folderPath.length() <= 0) {
-			return "/";
-		}
-		
-		String res = FileUtil.normalize(folderPath, true);
-		if (res.startsWith("/")) {
-			res = res.substring(1);
-		}
-		if (!res.endsWith("/")) {
-			res = res + "/";
-		}
-		return res;
+	protected static String normalizeFolderPathString(final String folderPath) {
+		return Core_FileWorkspaceMap.normalizeFolderPathString(folderPath);
 	}
 	
 	// File exists checks

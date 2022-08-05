@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 // MongoDB imports
 import org.bson.Document;
 import org.bson.types.Binary;
+import org.bson.types.ObjectId;
 import org.bson.conversions.Bson;
 import com.mongodb.client.*;
 import com.mongodb.client.gridfs.*;
@@ -110,7 +111,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// We insert a "root" object, to ensure the tables are initialized
 		// ---
 		if(!fullRawPathExist("root")) {
-			setupAnchorFile("root", "root", "root");
+			setupAnchorFile_withFullRawPath("root", "root", "root");
 		}
 
 		// Lets setup the index for the metadata fields (which is not enabled by default)
@@ -172,7 +173,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_setupWorkspace(String oid) {
 		// We setup a blank file with type root
 		if(!fullRawPathExist(oid)) {
-			setupAnchorFile(oid, oid, "space");
+			setupAnchorFile_withFullRawPath(oid, oid, "space");
 		}
 	}
 	
@@ -219,10 +220,16 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
+		// Get the full prefixpath
+		String fullPrefixPath = oid+"/"+path;
+
 		// Remove matching path
-		query = Filters.and(
-			Filters.eq("metadata.oid", oid),
-			Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
+		query = Filters.or(
+			Filters.eq("filename", fullPrefixPath),
+			Filters.and(
+				Filters.eq("metadata.oid", oid),
+				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
+			)
 		);
 
 		// Lets prepare the search
@@ -241,8 +248,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 
 	/**
 	 * Setup an empty file, used for various use cases
+	 * The extended funciton name is intentional to avoid confusion of "full path" with "path"
 	 */
-	public void setupAnchorFile(String oid, String fullPath, String type) {
+	public void setupAnchorFile_withFullRawPath(String oid, String fullPath, String type) {
 		// In general we will upload a blank file
 		// with the relevent oid, that can be easily lookedup
 		//
@@ -255,7 +263,10 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
-			gridFSBucket.uploadFromStream(fullPath, emptyStream, opt);
+			ObjectId objID = gridFSBucket.uploadFromStream(fullPath, emptyStream, opt);
+
+			// Flush it?
+			objID.toString();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -310,7 +321,6 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			while (cursor.hasNext()) {
 				GridFSFile fileObj = cursor.next();
 				gridFSBucket.delete(fileObj.getId());
-
 				rmFlag = true;
 			}
 		}
@@ -319,8 +329,39 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return rmFlag;
 	}
 
-	protected void performFileCleanup(String oid, String path) {
+	/** 
+	 * Given the current path, enforce the parent pathing dir
+	 * Used mainly to ensure "parent" folder exists on file write/rm
+	 **/
+	protected void ensureParentPath(String oid, String path) {
+		// Does nothing if path is empty
+		if( path == null || path.equals("/") || path.isEmpty() ) {
+			return;
+		}
 
+		// Cleanup ending slash
+		if( path.endsWith("/") ) {
+			path = path.substring(0, path.length() - 1);
+		}
+
+		// Get the parent path
+		String parPath = normalizeFolderPathString( FileUtil.getParentPath(path) );
+
+		// Does nothing if folder path is "blank"
+		if( parPath == null || parPath.equals("/") || parPath.isEmpty() ) {
+			return;
+		}
+
+		// Path enforcement
+		backend_ensureFolderPath(oid, parPath);
+	}
+
+	/**
+	 * Because mongoDB does file versioining on each save, we would need to cleanup 
+	 * older file versions where applicable, in a safe way
+	 */
+	protected void performVersionedFileCleanup(String oid, String path) {
+		// @TODO !!!
 	}
 
 	//--------------------------------------------------------------------------
@@ -383,7 +424,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
-			gridFSBucket.uploadFromStream(fullPath, data, opt);
+			ObjectId objID = gridFSBucket.uploadFromStream(fullPath, data, opt);
+			objID.toString();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -455,6 +497,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
+		ensureParentPath(oid, filepath);
 		removeFilePath(oid, filepath);
 	}
 	
@@ -473,6 +516,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		ensureParentPath(oid, folderPath);
 		removeFilePathRecursively(oid, folderPath);
 	}
 	
@@ -504,8 +548,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_ensureFolderPath(final String oid, final String folderPath) {
 		// We setup a blank file with type root, this checks only for the anchor file
 		// if it does not exists, we will make it
-		if(!fullRawPathExist(oid+"/"+folderPath)) {
-			setupAnchorFile(oid, folderPath, "dir");
+		if(fullRawPathExist(oid+"/"+folderPath) == false) {
+			setupAnchorFile_withFullRawPath(oid, oid+"/"+folderPath, "dir");
 		}
 	}
 	
@@ -599,14 +643,12 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			// Query using oid and the path
 			fullPrefixPath = fullPrefixPath+folderPath;
 
-			// Remove matching path
+			// Filter for matching path
 			query = Filters.and(
 				Filters.eq("metadata.oid", oid),
 				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
 			);
 		}
-
-		query = Filters.eq("metadata.oid", oid);
 
 		// The return set
 		Set<String> ret = new HashSet<>();
