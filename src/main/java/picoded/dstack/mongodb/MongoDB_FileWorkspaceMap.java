@@ -35,6 +35,8 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 
 /**
  * ## Purpose
@@ -56,8 +58,12 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	//
 	// --------------------------------------------------------------------------
 	
-	/** MongoDB instance representing the backend connection */
+	/** MongoDB instance representing gridFS */
 	GridFSBucket gridFSBucket = null;
+	
+	/** MongoDB instance representing the files and chunks collection (internal to the gridFSBucket) */
+	MongoCollection<Document> filesCollection = null;
+	MongoCollection<Document> chunksCollection = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -84,6 +90,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Meaning a full "8 * 1000 * 1000" chunk would use "8 * 1024 * 1024"
 		// worth of space, after adding the unknown headers (<=4kb of space : 8*24*24)
 		//
+
+		filesCollection = inStack.db_conn.getCollection(name+".files");
+		chunksCollection = inStack.db_conn.getCollection(name+".chunks");
 	}
 	
 	//--------------------------------------------------------------------------
@@ -97,6 +106,21 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void systemSetup() {
+
+		// We insert a "root" object, to ensure the tables are initialized
+		// ---
+		if(!fullRawPathExist("root")) {
+			setupAnchorFile("root", "root", "root");
+		}
+
+		// Lets setup the index for the metadata fields (which is not enabled by default)
+		// ---
+
+		// Lets create the index for the oid
+		IndexOptions opt = new IndexOptions();
+		opt = opt.name("metadata.oid");
+		filesCollection.createIndex(Indexes.ascending("oid"), opt);
+		
 	}
 	
 	/**
@@ -148,7 +172,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_setupWorkspace(String oid) {
 		// We setup a blank file with type root
 		if(!fullRawPathExist(oid)) {
-			setupAnchorFile(oid, oid, "root");
+			setupAnchorFile(oid, oid, "space");
 		}
 	}
 	
@@ -341,7 +365,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   filepath to use for the workspace
 	 * @param   data to write the file with
 	 **/
-	public void backend_fileWriteInputStream(String oid, String filepath, InputStream data) {
+	@Override
+	public void backend_fileWriteInputStream(final String oid, final String filepath, InputStream data) {
 		// Build the full path
 		String fullPath = oid + "/" + filepath;
 		
@@ -567,24 +592,21 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// The fulle prefix path
 		String fullPrefixPath = oid+"/";
 		
-		// Lets build the query, for fetchign the relevent items
 		if( folderPath == null || folderPath.equals("/") || folderPath.isEmpty() ) {
-			// Handles query for all folder paths
-			query = Filters.and(
-				Filters.eq("metadata.oid", oid),
-				// Filters.ne("filename", oid)
-				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
-			);
+			// Query everything (using only the oid)
+			query = Filters.eq("metadata.oid", oid);
 		} else {
-			// Cleanup the path
+			// Query using oid and the path
 			fullPrefixPath = fullPrefixPath+folderPath;
-			
+
 			// Remove matching path
 			query = Filters.and(
 				Filters.eq("metadata.oid", oid),
 				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
 			);
 		}
+
+		query = Filters.eq("metadata.oid", oid);
 
 		// The return set
 		Set<String> ret = new HashSet<>();
@@ -599,19 +621,30 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				GridFSFile fileObj = cursor.next();
 				String fullFilename = fileObj.getFilename();
 
+				// Skip the oid anchor
+				if( fullFilename.equals(oid) ) {
+					continue;
+				}
+
 				// Remove the oid prefix
-				String filepath = fullFilename.substring( fullPrefixPath.length() );
+				String filepath = fullFilename.substring( oid.length()+1 );
 
 				// Register the validpath
 				ret.add(filepath);
 
-				// Lets split the filepath
-				String[] filepathArr = filepath.split("/");
-				List<String> filepathList = Arrays.asList(filepathArr);
+				// Prepare a clean path without ending slash
+				String cleanPath = filepath;
+				if( cleanPath.endsWith("/") ) {
+					cleanPath = cleanPath.substring(0, cleanPath.length()-1);
+				}
 
-				// Lets handle parent folders
-				for(int i=1+Math.max(minDepth,0); i<(filepathArr.length-1); ++i) {
-					ret.add( String.join("/", filepathList.subList(0,i)+"/" ) );
+				// Lets split the filepath
+				String[] cleanPathArr = cleanPath.split("/");
+				List<String> cleanPathList = Arrays.asList(cleanPathArr);
+
+				// Lets handle parent folders, note that i<cleanPathArr.length, alread excludes the file itself
+				for(int i=1; i<cleanPathArr.length; ++i) {
+					ret.add( String.join("/", cleanPathList.subList(0,i) )+"/" );
 				}
 			}
 		}
