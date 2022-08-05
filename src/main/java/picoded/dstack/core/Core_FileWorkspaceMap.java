@@ -499,7 +499,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param pathType (0 = any, 1 = file, 2 = folder)
 	 * @return
 	 */
-	protected Set<String> backend_filtterPathSet(final Set<String> rawSet, final String folderPath,
+	protected Set<String> backend_filterPathSet(final Set<String> rawSet, final String folderPath,
 		final int minDepth, final int maxDepth, final int pathType) {
 		
 		// Normalize the folder path

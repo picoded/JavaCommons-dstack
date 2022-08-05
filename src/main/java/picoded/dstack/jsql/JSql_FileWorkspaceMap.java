@@ -654,7 +654,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Filter and return it accordingly
-		return backend_filtterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
+		return backend_filterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
 	}
 	
 }

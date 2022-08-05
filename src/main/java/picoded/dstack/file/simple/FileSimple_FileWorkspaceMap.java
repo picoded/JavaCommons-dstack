@@ -624,7 +624,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		recusively_populatePathSet(retSet, folderObj, "", maxDepth);
 		
 		// Return with minDepth filtering
-		return backend_filtterPathSet(retSet, "", minDepth, maxDepth, 0);
+		return backend_filterPathSet(retSet, "", minDepth, maxDepth, 0);
 	}
 	
 }
