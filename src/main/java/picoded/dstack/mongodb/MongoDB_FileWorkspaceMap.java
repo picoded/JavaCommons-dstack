@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import javax.management.RuntimeErrorException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -136,7 +139,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
-	 * This ensures the workspace _oid is registered within the map,
+	 * This ensures the workspace oid is registered within the map,
 	 * even if there is 0 files.
 	 *
 	 * Does not throw any error if workspace was previously setup
@@ -167,23 +170,6 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	//
 	//--------------------------------------------------------------------------
 	
-	/**
-	 * Given a filepath, ensure a clean filepath (without starting "/")
-	 */
-	protected static String cleanFilePath(final String filepath) {
-		// Note that the FileUtil.normalize step is not needed, as 
-		// this is already done in the Core_FileWorkspaceMap 
-		// ---
-		// String cleanFilePath = FileUtil.normalize(filepath);
-
-		// Cleanup the file apth
-		String cleanFilePath = filepath;
-		while (cleanFilePath.startsWith("/")) {
-			cleanFilePath = cleanFilePath.substring(1);
-		}
-		return cleanFilePath;
-	}
-	
 	/** Utility function used, to check if a workspace, or file exists **/
 	protected boolean fullRawPathExist(String fullpath) {
 		// Lets build the query for the "root file"
@@ -195,7 +181,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets iterate the search result, and return true on an item
 		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
 			if (cursor.hasNext()) {
-				// ret.add(cursor.next().getString("_oid"));
+				// ret.add(cursor.next().getString("oid"));
 				return true;
 			}
 		}
@@ -209,12 +195,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
-		// Cleanup the path
-		path = cleanFilePath(path);
-		
 		// Remove matching path
 		query = Filters.and(
-			Filters.eq("metadata._oid", oid),
+			Filters.eq("metadata.oid", oid),
 			Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
 		);
 
@@ -237,13 +220,13 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	public void setupAnchorFile(String oid, String fullPath, String type) {
 		// In general we will upload a blank file
-		// with the relevent _oid, that can be easily lookedup
+		// with the relevent oid, that can be easily lookedup
 		//
 		// This is done using a closable input stream, with an empty byte array
 		try (ByteArrayInputStream emptyStream = new ByteArrayInputStream(EmptyArray.BYTE)) {
 			// Setup the metadata for the file
 			Document metadata = new Document();
-			metadata.append("_oid", oid);
+			metadata.append("oid", oid);
 			metadata.append("type", type);
 			
 			// Prepare the upload options
@@ -263,14 +246,11 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		if( path == null || path.equals("/") || path.isEmpty() ) {
 			// Remove everything under the oid
-			query = Filters.eq("metadata._oid", oid);
+			query = Filters.eq("metadata.oid", oid);
 		} else {
-			// Cleanup the path
-			path = cleanFilePath(path);
-			
 			// Remove matching path
 			query = Filters.and(
-				Filters.eq("metadata._oid", oid),
+				Filters.eq("metadata.oid", oid),
 				Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
 			);
 		}
@@ -293,9 +273,6 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	protected boolean removeFilePath(String oid, String path) {
 		// Lets build the query for the "root file"
 		Bson query = null;
-		
-		// Cleanup the path
-		path = cleanFilePath(path);
 		
 		// Remove matching path
 		query = Filters.eq("filename", oid+"/"+path);
@@ -365,11 +342,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   data to write the file with
 	 **/
 	public void backend_fileWriteInputStream(String oid, String filepath, InputStream data) {
-		// Get the clean file path
-		String cleanPath = cleanFilePath(filepath);
-		
 		// Build the full path
-		String fullPath = oid + "/" + cleanPath;
+		String fullPath = oid + "/" + filepath;
 		
 		if (data == null) {
 			data = new ByteArrayInputStream(EmptyArray.BYTE);
@@ -379,7 +353,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		try {
 			// Setup the metadata for the file
 			Document metadata = new Document();
-			metadata.append("_oid", oid);
+			metadata.append("oid", oid);
 			metadata.append("type", "file");
 			
 			// Prepare the upload options
@@ -445,18 +419,18 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public InputStream backend_fileReadInputStream(String oid, String filepath) {
-		return gridFSBucket.openDownloadStream(oid + "/" + cleanFilePath(filepath));
+		return gridFSBucket.openDownloadStream(oid + "/" + filepath);
 	}
 	
 	@Override
 	public boolean backend_fileExist(String oid, String filepath) {
 		// Check against the full file path
-		return fullRawPathExist(oid + "/" + cleanFilePath(filepath));
+		return fullRawPathExist(oid + "/" + filepath);
 	}
 	
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
-		removeFilePath(oid, cleanFilePath(filepath));
+		removeFilePath(oid, filepath);
 	}
 	
 	// Folder Pathing support
@@ -474,7 +448,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public void backend_removeFolderPath(final String oid, final String folderPath) {
-		removeFilePathRecursively(oid, cleanFilePath(folderPath));
+		removeFilePathRecursively(oid, folderPath);
 	}
 	
 	/**
@@ -489,7 +463,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	public boolean backend_folderPathExist(final String oid, final String folderPath) {
 		// Note that this passes if any of the files were created directly without folders
-		return prefixPathExist(oid, cleanFilePath(folderPath));
+		return prefixPathExist(oid, folderPath);
 	}
 	
 	/**
@@ -503,13 +477,10 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public void backend_ensureFolderPath(final String oid, final String folderPath) {
-		// Cleanup folderPath
-		String path = cleanFilePath(folderPath);
-
 		// We setup a blank file with type root, this checks only for the anchor file
 		// if it does not exists, we will make it
-		if(!fullRawPathExist(oid+"/"+path)) {
-			setupAnchorFile(oid, path, "dir");
+		if(!fullRawPathExist(oid+"/"+folderPath)) {
+			setupAnchorFile(oid, folderPath, "dir");
 		}
 	}
 	
@@ -553,7 +524,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	public long backend_modifiedTimestamp(final String oid, final String filepath) {
 		// Lets build the query for the "root file"
-		Bson query = Filters.eq("filename", cleanFilePath(filepath));
+		Bson query = Filters.eq("filename", filepath);
 		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
@@ -599,15 +570,18 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query, for fetchign the relevent items
 		if( folderPath == null || folderPath.equals("/") || folderPath.isEmpty() ) {
 			// Handles query for all folder paths
-			query = Filters.eq("metadata._oid", oid);
+			query = Filters.and(
+				Filters.eq("metadata.oid", oid),
+				// Filters.ne("filename", oid)
+				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
+			);
 		} else {
 			// Cleanup the path
-			folderPath = cleanFilePath(folderPath);
 			fullPrefixPath = fullPrefixPath+folderPath;
 			
 			// Remove matching path
 			query = Filters.and(
-				Filters.eq("metadata._oid", oid),
+				Filters.eq("metadata.oid", oid),
 				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
 			);
 		}
@@ -643,7 +617,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 
 		// Filter and return the final set
-		return backend_filtterPathSet( ret, folderPath, minDepth, maxDepth, 0);
+		return backend_filterPathSet( ret, folderPath, minDepth, maxDepth, 0);
 	}
 	
 }
