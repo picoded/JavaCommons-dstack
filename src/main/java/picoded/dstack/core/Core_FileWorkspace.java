@@ -103,6 +103,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	@Override
 	public void setupWorkspace() {
 		main.setupWorkspace(_oid());
+		_isUninitialized = false;
 	}
 
 	/**
