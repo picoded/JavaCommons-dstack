@@ -1,5 +1,7 @@
 package picoded.dstack.core;
 
+import picoded.core.conv.ArrayConv;
+
 // Java imports
 
 // Picoded imports
@@ -228,6 +230,37 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		
 		// Does the bytearray writes
 		backend_fileWrite(oid, filepath, rawBytes);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	public void backend_fileAppendByteArray(final String oid, final String filepath,
+		final byte[] data) {
+		
+		// Get the existing byte array
+		byte[] read = backend_fileRead(oid, filepath);
+
+		// Just write it as it is (read is null)
+		if (read == null) {
+			backend_fileWrite(oid, filepath, data);
+			return;
+		}
+		
+		// Append new data to existing data
+		byte[] jointData = ArrayConv.addAll(read, data);
+		
+		// Write the new joint data
+		backend_fileWrite(oid, filepath, jointData);
 	}
 	
 	// Folder Pathing support
