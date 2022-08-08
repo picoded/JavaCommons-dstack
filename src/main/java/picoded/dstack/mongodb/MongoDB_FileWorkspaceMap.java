@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import javax.management.RuntimeErrorException;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -359,9 +356,110 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	/**
 	 * Because mongoDB does file versioining on each save, we would need to cleanup 
 	 * older file versions where applicable, in a safe way
+	 * 
+	 * In general, due to the difficulty of possible race conditions that may occur
+	 * when removing an "old version" immediately, that could be "read" mid-way.
+	 * 
+	 * First we scan for the list of all the file versions.
+	 * 
+	 * We find the latest that is at-least 10 seconds old (what we consider a safe window)
+	 * and delete all version before it.
+	 * 
+	 * If after the above, we found that there are still "10 versions", as there were
+	 * 10 writes in the past 10 seconds. We force a thread.sleep in increments of 1 second,
+	 * and remove any versions that matches the above criteria. Up to a full 10 seconds of delay.
+	 * 
+	 * This will forcefully throttle down any write heavy flows, to avoid contentions.
+	 * 
+	 * This safety measure is used in addition, to the checks performed on file write
 	 */
 	protected void performVersionedFileCleanup(String oid, String path) {
-		// @TODO !!!
+
+		// Lets get the list of files and their respective versions
+		// We query the file table directly, to reduce the required
+		// back and forth queries
+		
+		// Get the full filename
+		String filename = oid+"/"+path;
+		
+		// Get the current timestamp
+		long now = System.currentTimeMillis();
+		long tenSecondsAgo = now - (10 * 1000);
+
+		// Lets fetch the full list in descending date order
+		FindIterable<Document> search = filesCollection.find( Filters.eq("filename", filename) );
+		search = search.sort( (new Document()).append("uploadDate", -1) );
+
+		// Lets remap from cursor to list
+		List<Document> searchList = new ArrayList<>();
+		try (MongoCursor<Document> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				searchList.add(cursor.next());
+			}
+		}
+		
+		// Safe anchor point, all items after this is "safe to be deleted"
+		// if this is detected properly (do not delete the safeAnchorPoint file itself)
+		int safeAnchorPoint = -1;
+
+		// Lets find the document thats atleast 10 seconds old
+		for( int i=1; i<searchList.size(); ++i ) {
+			Document doc = searchList.get(i);
+
+			// Check if it meets the required timestamp
+			if(doc.getDate("uploadDate").getTime() < tenSecondsAgo) {
+				safeAnchorPoint = i;
+				break;
+			}
+		}
+
+		// Lets clear the old files, if safeAnchorPoint is found
+		if( safeAnchorPoint >= 1 ) {
+			// Lets loop through all items after the safeAnchorPoint
+			while( searchList.size() > (safeAnchorPoint + 1) ) {
+				// Get and remove the last item
+				Document doc = searchList.remove( searchList.size() - 1 );
+				ObjectId objID = doc.getObjectId("_id");
+
+				// Lets remove the file (and its chunks)
+				try {
+					gridFSBucket.delete(objID);
+				} catch(Exception e) {
+					// do nothing, as there could be a race condition delete 
+					// (2 delete by seperate write commands happenign together)
+				}
+			}
+		}
+
+		// If the list is less then 10, lets return
+		if( searchList.size() <= 10 ) {
+			return;
+		}
+
+		// We have more then 10 files, that is less then 10 seconds old
+		// Lets do a forced 10 seconds halt, so we can forcefully clear the files
+		try {
+			Thread.sleep(10 * 1000);
+		} catch(InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+		// And clear the various outdated files
+		// after the latest, and its immediate previous version
+		while( searchList.size() > 2 ) {
+			// Get and remove the last item
+			Document doc = searchList.remove( searchList.size() - 1 );
+			ObjectId objID = doc.getObjectId("_id");
+
+			// Lets remove the file (and its chunks)
+			try {
+				gridFSBucket.delete(objID);
+			} catch(Exception e) {
+				// do nothing, as there could be a race condition delete 
+				// (2 delete by seperate write commands happenign together)
+			}
+		}
+
 	}
 
 	//--------------------------------------------------------------------------
@@ -382,16 +480,111 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-		// Build the input stream
-		ByteArrayInputStream buffer = null;
+
+		// Build the full path
+		String fullPath = oid + "/" + filepath;
 		
-		// Only build if its not null
-		if (data != null) {
-			buffer = new ByteArrayInputStream(data);
+		//
+		// Due to the rather huge penalty of writing files, without actual content changes,
+		// and the performance implications of a high number of back to back file changes.
+		//
+		// We will employ the following throttling safeguards
+		//
+		// 1) Throttling file writes, when the existing file is less then 2 seconds old
+		// 2) Check against the current values, and skip the write if they match.
+		//
+		// This prevents the creation of a "new version" unless its needed. And slow down
+		// any flooding of back to back file writes.
+		//
+
+		// 1) Lets check the previous write timing, and throttle it if needed
+		// ---
+
+		// Lets get the time "NOW"
+		long now = System.currentTimeMillis();
+
+		// Lets build the query for the file involved
+		Bson query = Filters.eq("filename", fullPath);
+		
+		// Read timestamp, and objectid
+		ObjectId readObjId = null;
+		long readUploadTimestamp = -1;
+
+		// Lets iterate the search result, and return true on an item
+		try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
+			if (cursor.hasNext()) {
+				GridFSFile fileObj = cursor.next();
+				readUploadTimestamp = fileObj.getUploadDate().getTime();
+				readObjId = fileObj.getObjectId();
+			}
 		}
 		
-		// Then pump it
-		backend_fileWriteInputStream(oid, filepath, buffer);
+		// Check if the current file is less then 2 seconds old
+		// If so, we induce a wait for it to occur (if file exists)
+		if( readObjId != null && readUploadTimestamp + 2000 >= now ) {
+			try {
+				Thread.sleep( Math.min( Math.max( readUploadTimestamp + 2000 - now, 500), 2000 ) );
+			} catch(InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+
+			// And get the latest objectID again (in case of any changes)
+			try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
+				if (cursor.hasNext()) {
+					GridFSFile fileObj = cursor.next();
+					readUploadTimestamp = fileObj.getUploadDate().getTime();
+					readObjId = fileObj.getObjectId();
+				}
+			}
+		}
+
+		// 2) Lets check against current value
+		// ---
+
+		// Handle null byte[]
+		if( data == null ) {
+			data = EmptyArray.BYTE;
+		}
+
+		// Lets map the current value to an inputstream, in closable blocks
+		// We intentionally use inputstream, to avoid needing 2 byte[] blocks in memory
+		// (if file exists)
+		if( readObjId == null ) {
+			// does nothing if the object does not exists
+		} else {
+			try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data) ) {
+				try(InputStream existingValue = gridFSBucket.openDownloadStream(readObjId)) {
+					if(IOUtils.contentEquals(inBuffer, existingValue)) {
+						// They are the same, skip the write
+						return;
+					}
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} 
+		}
+
+		// Finally, lets write the update
+		// ---
+
+		try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data) ) {
+			// Setup the metadata for the file
+			Document metadata = new Document();
+			metadata.append("oid", oid);
+			metadata.append("type", "file");
+			
+			// Prepare the upload options
+			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
+			ObjectId objID = gridFSBucket.uploadFromStream(fullPath, inBuffer, opt);
+			objID.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		// Perform post file write cleanup (if there was a previous version)
+		if( readObjId != null ) {
+			performVersionedFileCleanup(oid, filepath);
+		}
 	}
 	
 	/**
@@ -408,25 +601,11 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWriteInputStream(final String oid, final String filepath, InputStream data) {
-		// Build the full path
-		String fullPath = oid + "/" + filepath;
-		
-		if (data == null) {
-			data = new ByteArrayInputStream(EmptyArray.BYTE);
-		}
-		
-		// Write the file
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
 		try {
-			// Setup the metadata for the file
-			Document metadata = new Document();
-			metadata.append("oid", oid);
-			metadata.append("type", "file");
-			
-			// Prepare the upload options
-			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
-			ObjectId objID = gridFSBucket.uploadFromStream(fullPath, data, opt);
-			objID.toString();
-		} catch (Exception e) {
+			rawBytes = IOUtils.toByteArray(data);
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
 			try {
@@ -435,6 +614,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				throw new RuntimeException(e);
 			}
 		}
+		// Does the bytearray writes
+		backend_fileWrite(oid, filepath, rawBytes);
 	}
 	
 	//--------------------------------------------------------------------------

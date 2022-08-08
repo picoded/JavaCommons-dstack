@@ -223,8 +223,12 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	public void backend_fileWriteInputStream(final String oid, final String filepath,
 		final InputStream data) {
 		
+		//
 		// Due to the behaviour of how the file data needs to be handled across multiple layers
-		// we only use an optimized "readStream" call if the filesystem is a single stack layer
+		// we only use an optimized "writeStream" call ONLY if the filesystem is a single stack layer
+		//
+		// Else we will revert to byte[] that can be applied multiple times across the stack
+		//
 		if (dataLayers.length == 1) {
 			dataLayers[0].backend_fileWriteInputStream(oid, filepath, data);
 			return;

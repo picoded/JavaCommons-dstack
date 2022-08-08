@@ -125,6 +125,12 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		if (res.endsWith("/")) {
 			res = res.substring(0, res.length() - 1);
 		}
+
+		// Block empty filepath
+		if( res.isEmpty() ) {
+			throw new RuntimeException("Empty file path is not allowed");
+		}
+
 		return res;
 	}
 	
