@@ -4,10 +4,15 @@ import picoded.core.conv.ArrayConv;
 import picoded.core.conv.StringConv;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Represent a file storage backend for a workspace
@@ -133,14 +138,44 @@ public interface FileWorkspace {
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Get the input stream representation of a given filepath
+	 * Get the input stream representation of a given filepath.
+	 * 
+	 * You are expected to close, the stream on your own, to avoid memory leaks
 	 * 
 	 * @param filePath in the workspace to extract
-	 * @return the file contents, null if file does not exists
+	 * @return the file contents as an input stream, null if file does not exists
 	 */
 	default InputStream readInputStream(final String filePath) {
 		byte[] byteArr = readByteArray(filePath);
 		return new ByteArrayInputStream(byteArr);
+	}
+	
+	/**
+	 * Reads an input stream, and writes it to a fil, creating the file if it does not exist.
+	 * the parent directories of the file will be created if they do not exist.
+	 *
+	 * Note that depending on the implementaiton, this may not be optimized,
+	 * and may only return after the OutputStream is fully processedd.
+	 * 
+	 * @param filepath in the workspace to extract
+	 * @param data the content to write to the file
+	 **/
+	default void writeInputStream(final String filepath, final InputStream data) {
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
+		try {
+			rawBytes = IOUtils.toByteArray(data);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				data.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		// Does the bytearray writes
+		writeByteArray(filepath, rawBytes);
 	}
 	
 	//

@@ -1,13 +1,23 @@
 package picoded.dstack.core;
 
+import picoded.core.conv.ArrayConv;
+import picoded.core.file.FileUtil;
+
 // Java imports
 
 // Picoded imports
 import picoded.dstack.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * Common base utility class of FileWorkspaceMap
@@ -96,6 +106,54 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	abstract public void backend_setupWorkspace(String oid);
 	
 	//--------------------------------------------------------------------------
+	// File / Folder string normalization
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * @param filePath
+	 * @return filePath normalized to remove ending "/"
+	 */
+	protected static String normalizeFilePathString(final String filePath) {
+		if (filePath == null) {
+			throw new IllegalArgumentException("Invalid null filePath");
+		}
+		
+		String res = FileUtil.normalize(filePath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (res.endsWith("/")) {
+			res = res.substring(0, res.length() - 1);
+		}
+
+		// Block empty filepath
+		if( res.isEmpty() ) {
+			throw new RuntimeException("Empty file path is not allowed");
+		}
+
+		return res;
+	}
+	
+	/**
+	 * @param folderPath
+	 * @return folderPath normalized with ending "/"
+	 */
+	protected static String normalizeFolderPathString(final String folderPath) {
+		if (folderPath == null || folderPath.length() <= 0) {
+			return "/";
+		}
+		
+		String res = FileUtil.normalize(folderPath, true);
+		if (res.startsWith("/")) {
+			res = res.substring(1);
+		}
+		if (!res.endsWith("/")) {
+			res = res + "/";
+		}
+		return res;
+	}
+	
+	//--------------------------------------------------------------------------
 	//
 	// Functions, used by FileWorkspace
 	// Note: It is safe to assume for all backend_* operations
@@ -159,6 +217,100 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 * @param   data to write the file with
 	 **/
 	abstract public void backend_fileWrite(final String oid, final String filepath, final byte[] data);
+	
+	// File read and write using byte stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Get and return the stored data as a byte stream.
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte stream of the file
+	 **/
+	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
+		// Get the byte data
+		byte[] rawBytes = backend_fileRead(oid, filepath);
+		if (rawBytes == null) {
+			return null;
+		}
+		return new ByteArrayInputStream(rawBytes);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	public void backend_fileWriteInputStream(final String oid, final String filepath,
+		final InputStream data) {
+		
+		// forward the null, and let the error handling below settle it
+		if (data == null) {
+			backend_fileWrite(oid, filepath, null);
+		}
+		
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
+		try {
+			rawBytes = IOUtils.toByteArray(data);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				data.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		// Does the bytearray writes
+		backend_fileWrite(oid, filepath, rawBytes);
+	}
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Writes the full byte array of a file in the backend
+	 * 
+	 * This overwrite is useful for backends which supports this flow.
+	 * Else it would simply be a wrapper over the non-stream version.
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	public void backend_fileAppendByteArray(final String oid, final String filepath,
+		final byte[] data) {
+		
+		// Get the existing byte array
+		byte[] read = backend_fileRead(oid, filepath);
+
+		// Just write it as it is (read is null)
+		if (read == null) {
+			backend_fileWrite(oid, filepath, data);
+			return;
+		}
+		
+		// Append new data to existing data
+		byte[] jointData = ArrayConv.addAll(read, data);
+		
+		// Write the new joint data
+		backend_fileWrite(oid, filepath, jointData);
+	}
 	
 	// Folder Pathing support
 	//--------------------------------------------------------------------------
@@ -229,7 +381,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_moveFile(final String oid, final String sourceFile,
 		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
+		backend_copyFile(oid, sourceFile, destinationFile);
+		backend_removeFile(oid, sourceFile);
 	}
 	
 	/**
@@ -254,7 +407,23 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_moveFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
+		// Get the list of valid sub paths in the sourceFolder
+		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+
+		// Lets sync up all the folders first
+		for(String dir : subPath) {
+			if(dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder+dir);
+			}
+		}
+		// Lets sync up all the files next
+		for(String file : subPath) {
+			if(!file.endsWith("/")) {
+				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
+			}
+		}
+		// Lets remove the original folders
+		backend_removeFolderPath(oid, sourceFolder);
 	}
 	
 	// Copy support
@@ -280,7 +449,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_copyFile(final String oid, final String sourceFile,
 		final String destinationFile) {
-		throw new RuntimeException("Missing backend implementation");
+		backend_fileWriteInputStream(oid, destinationFile, backend_fileReadInputStream(oid, sourceFile));
 	}
 	
 	/**
@@ -305,7 +474,21 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_copyFolderPath(final String oid, final String sourceFolder,
 		final String destinationFolder) {
-		throw new RuntimeException("Missing backend implementation");
+		// Get the list of valid sub paths in the sourceFolder
+		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+
+		// Lets sync up all the folders first
+		for(String dir : subPath) {
+			if(dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder+dir);
+			}
+		}
+		// Lets sync up all the files next
+		for(String file : subPath) {
+			if(file.endsWith("/") == false) {
+				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
+			}
+		}
 	}
 	
 	//
@@ -351,20 +534,21 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Internal utility function used to filter a path set, and remove items that does not match
+	 * Internal utility function used to filter a path set, and remove items that does not match.
+	 * This is used to help filter raw results, from existing implementation
 	 * 
 	 * - its folderPath prefix
 	 * - min/max depth
 	 * - any / file / folder
 	 * 
-	 * @param rawSet
-	 * @param folderPath
-	 * @param minDepth
+	 * @param rawSet (note this expect the full RAW paths, without removing the folderPath prefix)
+	 * @param folderPath the folder path prefix to search and match against, and truncate
+	 * @param minDepth (0 = all items, 1 = must be in atleast a folder, 2 = folder, inside a folder)
 	 * @param maxDepth
 	 * @param pathType (0 = any, 1 = file, 2 = folder)
 	 * @return
 	 */
-	protected Set<String> backend_filtterPathSet(final Set<String> rawSet, final String folderPath,
+	protected Set<String> backend_filterPathSet(final Set<String> rawSet, final String folderPath,
 		final int minDepth, final int maxDepth, final int pathType) {
 		
 		// Normalize the folder path
@@ -416,12 +600,21 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			}
 			
 			// Alrighto - lets check file / folder type - and add it in
+
+			// Ignore empty, or root path
+			if(subPath.isEmpty() || subPath.equals("/")) {
+				continue;
+			}
+
+			// Expect a folder, reject files
 			if (pathType == 1) {
 				if (subPath.endsWith("/")) {
 					// Not a file - abort!
 					continue;
 				}
 			}
+
+			// Expect files, reject folders
 			if (pathType == 2) {
 				if (!subPath.endsWith("/")) {
 					// Not a folder - abort!

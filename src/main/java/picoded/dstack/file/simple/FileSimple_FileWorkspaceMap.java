@@ -6,16 +6,9 @@ import picoded.dstack.core.Core_FileWorkspaceMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.management.RuntimeErrorException;
 
 /**
  * Reference class for Core_FileWorkspaceMap
@@ -631,7 +624,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		recusively_populatePathSet(retSet, folderObj, "", maxDepth);
 		
 		// Return with minDepth filtering
-		return backend_filtterPathSet(retSet, "", minDepth, maxDepth, 0);
+		return backend_filterPathSet(retSet, "", minDepth, maxDepth, 0);
 	}
 	
 }

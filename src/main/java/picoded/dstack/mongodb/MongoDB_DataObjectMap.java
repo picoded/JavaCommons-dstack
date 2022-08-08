@@ -40,10 +40,10 @@ import com.mongodb.client.model.Aggregates;
  * ## Purpose
  * Support MongoDB implementation of DataObjectMap data structure.
  *
- * Built ontop of the Core_DataObjectMap_struct implementation.
+ * Built ontop of the Core_DataObjectMap implementation.
  * 
  * ## Dev Notes
- * Developers of this class would need to reference the following
+ * Developers of this class would need to reference the following in MongoDB
  * 
  * - Collection API : https://mongodb.github.io/mongo-java-driver/4.6/apidocs/mongodb-driver-sync/com/mongodb/client/MongoCollection.html
  * - Filter API: https://mongodb.github.io/mongo-java-driver/3.6/javadoc/com/mongodb/client/model/Filters.html#where-java.lang.String-
@@ -57,7 +57,6 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	//--------------------------------------------------------------------------
 	
 	/** MongoDB instance representing the backend connection */
-	MongoDBStack hazelcastStack = null;
 	MongoCollection<Document> collection = null;
 	
 	/**
@@ -91,13 +90,20 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		IndexOptions opt = new IndexOptions();
 		opt = opt.unique(true);
 		opt = opt.name("_oid");
-		opt = opt.background(true);
+		
+		// Due to the need for _oid to ensure consistency, we would not be creating it in the background
+		// opt = opt.background(true);
+		
+		// Lets create the index
 		collection.createIndex(Indexes.ascending("_oid"), opt);
 		
+		//
 		// Wildcard indexing
 		//
 		// This helps improve general performance for arbitary data
-		// at a huge cost of write performance
+		// at a huge cost of write performance. Useful for general purpose DataObjectMap
+		// but not useful when fine hand-tunning is requried for some use cases
+		//
 		if (configMap.getBoolean("setupWildcardIndex", true)) {
 			opt = new IndexOptions();
 			opt = opt.name("wildcard");

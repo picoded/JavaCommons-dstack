@@ -2,6 +2,8 @@ package picoded.dstack.core;
 
 // Java imports
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.*;
 
 // Picoded imports
@@ -35,6 +37,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 **/
 	protected String _oid = null;
 	
+	/**
+	 * Boolean flag, if true, indicates that the current FileWorkspace is uninitialized
+	 * if so, we will setup the workspace if needed.
+	 */
+	protected boolean _isUninitialized = false;
+	
 	// Constructor
 	//----------------------------------------------
 	
@@ -60,6 +68,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 			// Issue a GUID
 			if (_oid == null) {
 				_oid = GUID.base58();
+				_isUninitialized = true;
 			}
 			
 			if (_oid.length() < 4) {
@@ -94,6 +103,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 	@Override
 	public void setupWorkspace() {
 		main.setupWorkspace(_oid());
+		_isUninitialized = false;
+	}
+
+	/**
+	 * Calls setupWorkspace if _isUninitialized is true
+	 */
+	protected void setupUninitializedWorkspace() {
+		if( _isUninitialized ) {
+			setupWorkspace();
+		}
 	}
 	
 	// File / Folder string normalization
@@ -103,38 +122,16 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filePath
 	 * @return filePath normalized to remove ending "/"
 	 */
-	private static String normalizeFilePathString(final String filePath) {
-		if (filePath == null) {
-			throw new IllegalArgumentException("Invalid null filePath");
-		}
-		
-		String res = FileUtil.normalize(filePath, true);
-		if (res.startsWith("/")) {
-			res = res.substring(1);
-		}
-		if (res.endsWith("/")) {
-			res = res.substring(0, res.length() - 1);
-		}
-		return res;
+	protected static String normalizeFilePathString(final String filePath) {
+		return Core_FileWorkspaceMap.normalizeFilePathString(filePath);
 	}
 	
 	/**
 	 * @param folderPath
 	 * @return folderPath normalized with ending "/"
 	 */
-	private static String normalizeFolderPathString(final String folderPath) {
-		if (folderPath == null || folderPath.length() <= 0) {
-			return "/";
-		}
-		
-		String res = FileUtil.normalize(folderPath, true);
-		if (res.startsWith("/")) {
-			res = res.substring(1);
-		}
-		if (!res.endsWith("/")) {
-			res = res + "/";
-		}
-		return res;
+	protected static String normalizeFolderPathString(final String folderPath) {
+		return Core_FileWorkspaceMap.normalizeFolderPathString(folderPath);
 	}
 	
 	// File exists checks
@@ -148,6 +145,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	public boolean fileExist(final String filepath) {
+		if( _isUninitialized ) {
+			return false;
+		}
 		return main.backend_fileExist(_oid, normalizeFilePathString(filepath));
 	}
 	
@@ -157,7 +157,40 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to delete
 	 */
 	public void removeFile(final String filepath) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
+	}
+	
+	// Read/write input/output stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Reads the contents of a file into a byte array.
+	 *
+	 * @param  filepath in the workspace to extract
+	 *
+	 * @return the file contents, null if file does not exists
+	 */
+	public InputStream readInputStream(final String filepath) {
+		if( _isUninitialized ) {
+			return null;
+		}
+		return main.backend_fileReadInputStream(_oid, normalizeFilePathString(filepath));
+	}
+	
+	/**
+	 * Writes an output array to a file creating the file if it does not exist.
+	 *
+	 * the parent directories of the file will be created if they do not exist.
+	 *
+	 * @param filepath in the workspace to extract
+	 * @param data the content to write to the file
+	 **/
+	public void writeInputStream(final String filepath, final InputStream data) {
+		setupUninitializedWorkspace();
+		main.backend_fileWriteInputStream(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	// Read / write byteArray information
@@ -171,6 +204,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return the file contents, null if file does not exists
 	 */
 	public byte[] readByteArray(final String filepath) {
+		if( _isUninitialized ) {
+			return null;
+		}
 		return main.backend_fileRead(_oid, normalizeFilePathString(filepath));
 	}
 	
@@ -183,6 +219,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param data the content to write to the file
 	 **/
 	public void writeByteArray(final String filepath, final byte[] data) {
+		setupUninitializedWorkspace();
 		main.backend_fileWrite(_oid, normalizeFilePathString(filepath), data);
 	}
 	
@@ -190,26 +227,14 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * Appends a byte array to a file creating the file if it does not exist.
 	 *
 	 * NOTE that by default this DOES NOT perform any file locks. As such,
-	 * if used in a concurrent access situation. Segmentys may get out of sync.
+	 * if used in a concurrent access situation. Segments may get out of sync.
 	 *
 	 * @param file   the file to write to
 	 * @param data   the content to write to the file
 	 **/
 	public void appendByteArray(final String filepath, final byte[] data) {
-		// Normalize the file path
-		String path = normalizeFilePathString(filepath);
-		
-		// Get existing data
-		byte[] read = readByteArray(path);
-		if (read == null) {
-			writeByteArray(path, data);
-		}
-		
-		// Append new data to existing data
-		byte[] jointData = ArrayConv.addAll(read, data);
-		
-		// Write the new joint data
-		writeByteArray(path, jointData);
+		setupUninitializedWorkspace();
+		main.backend_fileAppendByteArray(_oid, normalizeFilePathString(filepath), data);
 	}
 	
 	// Folder Pathing support
@@ -222,6 +247,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	public void removeFolderPath(final String folderPath) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_removeFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
@@ -232,6 +260,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true if folderPath is valid
 	 */
 	public boolean folderPathExist(final String folderPath) {
+		if( _isUninitialized ) {
+			return false;
+		}
 		return main.backend_folderPathExist(_oid, normalizeFolderPathString(folderPath));
 	}
 	
@@ -241,6 +272,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	public void ensureFolderPath(final String folderPath) {
+		setupUninitializedWorkspace();
 		main.backend_ensureFolderPath(_oid, normalizeFolderPathString(folderPath));
 	}
 	
@@ -262,6 +294,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long createdTimestamp(final String filepath) {
+		if( _isUninitialized ) {
+			return -1;
+		}
 		return main.backend_createdTimestamp(_oid, normalizeFilePathString(filepath));
 	}
 	
@@ -274,6 +309,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long modifiedTimestamp(final String filepath) {
+		if( _isUninitialized ) {
+			return -1;
+		}
 		return main.backend_modifiedTimestamp(_oid, normalizeFilePathString(filepath));
 	}
 	
@@ -296,6 +334,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFile
 	 */
 	public void moveFile(final String sourceFile, final String destinationFile) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_moveFile(_oid, normalizeFilePathString(sourceFile),
 			normalizeFilePathString(destinationFile));
 	}
@@ -317,6 +358,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFolder
 	 */
 	public void moveFolderPath(final String sourceFolder, final String destinationFolder) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_moveFolderPath(_oid, normalizeFolderPathString(sourceFolder),
 			normalizeFolderPathString(destinationFolder));
 	}
@@ -340,6 +384,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFile
 	 */
 	public void copyFile(final String sourceFile, final String destinationFile) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_copyFile(_oid, normalizeFilePathString(sourceFile),
 			normalizeFilePathString(destinationFile));
 	}
@@ -361,6 +408,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFolder
 	 */
 	public void copyFolderPath(final String sourceFolder, final String destinationFolder) {
+		if( _isUninitialized ) {
+			return;
+		}
 		main.backend_copyFolderPath(_oid, normalizeFolderPathString(sourceFolder),
 			normalizeFolderPathString(destinationFolder));
 	}
@@ -378,6 +428,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
 		final int maxDepth) {
+		if( _isUninitialized ) {
+			return new HashSet<>();
+		}
 		return main.backend_getFileAndFolderPathSet(_oid, normalizeFolderPathString(folderPath),
 			minDepth, maxDepth);
 	}
@@ -391,6 +444,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return list of path strings - relative to the given folderPath
 	 */
 	public Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth) {
+		if( _isUninitialized ) {
+			return new HashSet<>();
+		}
 		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
 			maxDepth);
 	}
@@ -405,6 +461,9 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFolderPathSet(final String folderPath, final int minDepth,
 		final int maxDepth) {
+		if( _isUninitialized ) {
+			return new HashSet<>();
+		}
 		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
 			maxDepth);
 	}

@@ -614,7 +614,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			}
 			
 			// Return a filtered set
-			return backend_filtterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
+			return backend_filterPathSet(workspace.keySet(), searchPath, minDepth, maxDepth, 0);
 		} finally {
 			accessLock.readLock().unlock();
 		}

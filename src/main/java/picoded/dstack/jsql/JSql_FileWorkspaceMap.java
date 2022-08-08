@@ -6,18 +6,8 @@ import picoded.core.struct.GenericConvertList;
 import picoded.dstack.connector.jsql.JSql;
 import picoded.dstack.connector.jsql.JSqlResult;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.management.RuntimeErrorException;
-
-import org.apache.commons.io.FileUtils;
 
 public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
@@ -664,7 +654,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Filter and return it accordingly
-		return backend_filtterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
+		return backend_filterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
 	}
 	
 }

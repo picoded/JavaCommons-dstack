@@ -3,8 +3,15 @@ package picoded.dstack.stack;
 import picoded.dstack.CommonStructure;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Stacked implementation of KeyValueMap data structure.
@@ -74,6 +81,10 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	// [Internal use, to be extended in future implementation]
 	//
 	//--------------------------------------------------------------------------
+	
+	// Workspace operations
+	//--------------------------------------------------------------------------
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -111,8 +122,24 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	}
 	
 	/**
-	 * [Internal use, to be extended in future implementation]
+	 * Setup the current fileWorkspace within the fileWorkspaceMap,
 	 *
+	 * This ensures the workspace _oid is registered within the map,
+	 * even if there is 0 files.
+	 *
+	 * Does not throw any error if workspace was previously setup
+	 */
+	@Override
+	public void backend_setupWorkspace(String oid) {
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_setupWorkspace(oid);
+		}
+	}
+	
+	// File read and write using byte array
+	//--------------------------------------------------------------------------
+	
+	/**
 	 * Get and return the stored data as a byte[]
 	 *
 	 * @param  ObjectID of workspace
@@ -140,6 +167,95 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		return null;
 		
 	}
+	
+	/**
+	 * Writes the full byte array of a file in the backend
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	@Override
+	public void backend_fileWrite(String oid, String filepath, byte[] data) {
+		// Write the data starting from the lowest layer
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			dataLayers[i].backend_fileWrite(oid, filepath, data);
+		}
+	}
+	
+	// File read and write using byte stream
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and return the stored data as a InputStream
+	 *
+	 * @param  ObjectID of workspace
+	 * @param  filepath to use for the workspace
+	 *
+	 * @return  the stored byte array of the file
+	 **/
+	@Override
+	public InputStream backend_fileReadInputStream(final String oid, final String filepath) {
+		
+		// Due to the behaviour of how the file data needs to be handled across multiple layers
+		// we only use an optimized "readStream" call if the filesystem is a single stack layer
+		if (dataLayers.length == 1) {
+			return dataLayers[0].backend_fileReadInputStream(oid, filepath);
+		}
+		
+		// Fallback behaviour, polyfill the byte[] implementation
+		//------------------------------------------------------------
+		byte[] rawBytes = backend_fileRead(oid, filepath);
+		if (rawBytes == null) {
+			return null;
+		}
+		return new ByteArrayInputStream(rawBytes);
+	}
+	
+	/**
+	 * Writes the full by of a file in the backend
+	 *
+	 * @param   ObjectID of workspace
+	 * @param   filepath to use for the workspace
+	 * @param   data to write the file with
+	 **/
+	@Override
+	public void backend_fileWriteInputStream(final String oid, final String filepath,
+		final InputStream data) {
+		
+		//
+		// Due to the behaviour of how the file data needs to be handled across multiple layers
+		// we only use an optimized "writeStream" call ONLY if the filesystem is a single stack layer
+		//
+		// Else we will revert to byte[] that can be applied multiple times across the stack
+		//
+		if (dataLayers.length == 1) {
+			dataLayers[0].backend_fileWriteInputStream(oid, filepath, data);
+			return;
+		}
+		
+		// Fallback behaviour, polyfill the byte[] implementation
+		//------------------------------------------------------------
+		
+		// forward the null, and let the error handling below settle it
+		if (data == null) {
+			backend_fileWrite(oid, filepath, null);
+		}
+		
+		// Converts it to bytearray respectively
+		byte[] rawBytes = null;
+		try {
+			rawBytes = IOUtils.toByteArray(data);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		// Does the bytearray writes
+		backend_fileWrite(oid, filepath, rawBytes);
+	}
+	
+	// File exist / removal
+	//--------------------------------------------------------------------------
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -170,23 +286,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
-	 * Writes the full byte array of a file in the backend
-	 *
-	 * @param   ObjectID of workspace
-	 * @param   filepath to use for the workspace
-	 * @param   data to write the file with
-	 **/
-	@Override
-	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-		// Write the data starting from the lowest layer
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_fileWrite(oid, filepath, data);
-		}
-	}
-	
-	/**
-	 * [Internal use, to be extended in future implementation]
-	 *
 	 * Removes the specified file path from the workspace in the backend
 	 *
 	 * @param oid identifier to the workspace
@@ -197,21 +296,6 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 		// Remove the file starting from the lowest layer
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].backend_removeFile(oid, filepath);
-		}
-	}
-	
-	/**
-	 * Setup the current fileWorkspace within the fileWorkspaceMap,
-	 *
-	 * This ensures the workspace _oid is registered within the map,
-	 * even if there is 0 files.
-	 *
-	 * Does not throw any error if workspace was previously setup
-	 */
-	@Override
-	public void backend_setupWorkspace(String oid) {
-		for (int i = dataLayers.length - 1; i >= 0; --i) {
-			dataLayers[i].backend_setupWorkspace(oid);
 		}
 	}
 	

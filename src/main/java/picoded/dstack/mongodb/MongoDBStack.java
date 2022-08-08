@@ -126,6 +126,12 @@ public class MongoDBStack extends CoreStack {
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
 			ret = new MongoDB_DataObjectMap(this, name);
+		} else if (type.equalsIgnoreCase("KeyValueMap")) {
+			ret = new MongoDB_KeyValueMap(this, name);
+		} else if (type.equalsIgnoreCase("KeyLongMap")) {
+			ret = new MongoDB_KeyLongMap(this, name);
+		} else if (type.equalsIgnoreCase("FileWorkspaceMap")) {
+			ret = new MongoDB_FileWorkspaceMap(this, name);
 		}
 		
 		// If datastrucutre initialized, setup name
