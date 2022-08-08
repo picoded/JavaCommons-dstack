@@ -11,7 +11,7 @@ jobs:
     # Configuration, for us to perform test against multiple version in the future
     strategy:
       matrix:
-        mongodb-version: ['5.0']
+        mongodb-version: ['5.0', '6.0']
     
     # The test step
     steps:
