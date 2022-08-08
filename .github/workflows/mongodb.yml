@@ -11,7 +11,8 @@ jobs:
     # Configuration, for us to perform test against multiple version in the future
     strategy:
       matrix:
-        mongodb-version: ['5.0', '6.0']
+        # , '6.0' is held back from testing until the official docker images are out
+        mongodb-version: ['5.0'] 
     
     # The test step
     steps:
