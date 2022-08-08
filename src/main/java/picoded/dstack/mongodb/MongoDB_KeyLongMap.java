@@ -438,6 +438,9 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 	FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
 	// 	opt.upsert(true);
 
+	// // !! THE FOLLOWING BELOW IS INCOMPLETE CODE (AND IS BROKEN)
+	// // ---
+
 	// 	// now timestamp
 	// 	Date now = new Date();
 		
