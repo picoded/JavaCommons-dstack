@@ -637,7 +637,15 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public byte[] backend_fileRead(String oid, String filepath) {
+		// Get the buffer
 		InputStream buffer = backend_fileReadInputStream(oid, filepath);
+		
+		// Null handling
+		if( buffer == null ) {
+			return null;
+		}
+		
+		// Cast the inputstream to byte[]
 		byte[] ret = null;
 		try {
 			ret = IOUtils.toByteArray(buffer);
@@ -667,7 +675,17 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public InputStream backend_fileReadInputStream(String oid, String filepath) {
-		return gridFSBucket.openDownloadStream(oid + "/" + filepath);
+		try {
+			return gridFSBucket.openDownloadStream(oid + "/" + filepath);
+		} catch(Exception e) {
+			if( e.getMessage().toLowerCase().indexOf("no file found") >= 0 ) {
+				// Does nothing if no file is found
+				return null;
+			} 
+
+			// rethrow the error
+			throw e;
+		}
 	}
 	
 	@Override
