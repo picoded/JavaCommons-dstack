@@ -145,6 +145,24 @@ public class StructSimple_FileWorkspaceMap_test {
 	}
 	
 	@Test
+	public void noFileRead_returnsNull() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		assertNotNull(fileWorkspace);
+		
+		// Check for null (no file) for non existant file
+		assertNull(fileWorkspace.readString("test/folder/file.txt"));
+
+		// Write file
+		fileWorkspace.writeString("test/folder/file.txt", "anything");
+		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
+		assertEquals(fileWorkspace.readString("test/folder/file.txt"), "anything");
+		
+		// Check for null (no file) for non existant file
+		assertNull(fileWorkspace.readString("test/folder/file-somethingElse.txt"));
+	}
+
+	@Test
 	public void fileWrite_andProperlySetupFolder() {
 		// Get the file workspace to use
 		FileWorkspace fileWorkspace = testObj.newEntry();
@@ -153,6 +171,9 @@ public class StructSimple_FileWorkspaceMap_test {
 		// Folder does not exist first
 		assertFalse(fileWorkspace.folderPathExist("test/folder"));
 		
+		// Check for null (no file) for non existant file
+		assertNull(fileWorkspace.readString("test/folder/file.txt"));
+
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
 		assertTrue(fileWorkspace.folderPathExist("test/folder"));
