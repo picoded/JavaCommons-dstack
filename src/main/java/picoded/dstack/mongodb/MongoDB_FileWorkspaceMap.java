@@ -894,4 +894,37 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return backend_filterPathSet( ret, folderPath, minDepth, maxDepth, 0);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet() {
+		// The return hashset
+		HashSet<String> ret = new HashSet<String>();
+		
+		// Lets fetch everything ... D=
+		DistinctIterable<String> search = filesCollection.distinct("metadata.oid", String.class);
+
+		// Lets iterate the search
+		try (MongoCursor<String> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				ret.add(cursor.next());
+			}
+		}
+		
+		// Return the full keyset
+		return ret;
+	}
+	
+	
 }

@@ -146,8 +146,9 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		//
 		// Alright, time to build a new cache
-		// We are in the era of GB ram computing, 100k cache would
-		// be a good sane default in server environment.
+		// We are in the era of GB ram computing, 10k cache would
+		// be a good sane default in server environment. Even if there are 
+		// multiple sets of StructCache, as it would take ~60MB
 		//
 		// to consider : auto detect RAM size in KB - and use that?
 		// a good rough guideline would be 1/4 of free ram space divided by 6kb
@@ -177,13 +178,13 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 		// 5006 bytes : Total bytes per object map
 		// ~ 6 kilo bytes : Rounded up
 		//
-		// # RAM cost for 100k objects
+		// # RAM cost for 10k objects
 		//
-		// 100,000 * 6 KB = 600 MB
+		// 100,000 * 6 KB = 60 MB
 		//
-		// > So yea, we are ok to assume a 100k objects for most parts
+		// > So yea, we are ok to assume a 10k objects for most parts
 		//
-		int capicity = configMap().getInt("capacity", 100000);
+		int capicity = configMap().getInt("capacity", 10000);
 		_valueMap = new Cache2kBuilder<String, Map<String, Object>>() {
 		} //
 		.name(cacheName())//
