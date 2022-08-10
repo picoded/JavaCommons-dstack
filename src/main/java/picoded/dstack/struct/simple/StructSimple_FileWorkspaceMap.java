@@ -620,6 +620,14 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 	}
 	
+	/**
+	 * Return the current list of ID keys for fileWorkspaceMap
+	 **/
+	@Override
+	public Set<String> keySet() {
+		return new HashSet<>(fileContentMap.keySet());
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance
