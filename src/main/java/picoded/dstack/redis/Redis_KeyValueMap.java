@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Iterator;
 
 // Picoded imports
 import picoded.core.conv.ConvertJSON;
@@ -124,7 +125,7 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
 	public void systemDestroy() {
-		redisMap.delete();
+		backendMap().clear();
 	}
 	
 	/**
@@ -168,13 +169,16 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 		HashSet<String> ret = new HashSet<String>();
 		//Fetch everything in current db
 		List<String> retList = null; 
-        // if (value != null) {
-			//backendMap().get(value);
-			//backendMap().keyset();
-            retList = new ArrayList<String>(backendmap().readAllKeySet());
-            // Return the full keyset
-            retList.forEach(k -> ret.add(k));
-		// }
+        if (value != null) {
+			//backendMap().get(value); 
+            //retList = new ArrayList<String>(backendMap().readAllKeySet());
+            retList = new ArrayList<String>(backendMap().readAllKeySet());
+			// Return the full keyset
+			retList.forEach(k -> ret.add(k));
+		}
+		retList = new ArrayList<String>(backendMap().readAllKeySet());
+		// Return the full keyset
+		retList.forEach(k -> ret.add(k));
 		return ret;
 	}
 	
@@ -227,9 +231,8 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 		}
 		
 		// Setup key, value - with expirary?
-		//TODO Use fastput ?
 		if (expire > 0) {
-			backendMap().put(key, value, Math.max(expire - System.currentTimeMillis(), 1),
+			backendMap().fastPut(key, value, Math.max(expire - System.currentTimeMillis(), 1),
 				TimeUnit.MILLISECONDS);
 		} else {
 			backendMap().put(key, value);
@@ -251,27 +254,31 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
 
-		// Get the entry view
-		Map.Entry<String, String> entry = backendMap().get(key);
-		if (entry == null) {
-			return null;
-		}
+		Set<String> keys = new HashSet<String>();
+		Map<String, String> mapSlice = new HashMap<String, String>();
+		Map.Entry<String,String> entry = null;
+		String value= null;
+
+		keys.add(key);
+		mapSlice = backendMap().getAll(keys);
+
+		Iterator<Map.Entry<String,String>> it = mapSlice.entrySet().iterator();
+		if(it.hasNext()){
+			entry = it.next();
+			if (entry == null) {
+				return null;
+			}
+			value = entry.getValue();
+
+			//Cheating there because I don't think redisson has Map Entry Eviction according to this:
+			//https://www.javadoc.io/doc/org.redisson/redisson/3.2.0/org/redisson/api/RMapCache.html
+			Long expireObj = 0L;
 		
-		// Get the value and expire object : milliseconds?
-		String value = entry.getValue();
-		Long expireObj = entry.getExpirationTime();
-		if (expireObj == null) {
-			expireObj = 0L;
+			// Note: 0 = no timestamp, hence valid value
+			long expiry = expireObj.longValue();
+			return new MutablePair<String, Long>(value, expiry);
 		}
-		
-		// Note: 0 = no timestamp, hence valid value
-		long expiry = expireObj.longValue();
-		if (expiry != 0 && expiry < now) {
-			return null;
-		}
-		
-		// Return the expirary pair
-		return new MutablePair<String, Long>(value, expiry);
+		return null;
 	}
 	
 }
