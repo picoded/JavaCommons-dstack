@@ -913,7 +913,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		HashSet<String> ret = new HashSet<String>();
 		
 		// Lets fetch everything ... D=
-		DistinctIterable<String> search = collection.distinct("metadata.oid", String.class);
+		DistinctIterable<String> search = filesCollection.distinct("metadata.oid", String.class);
 
 		// Lets iterate the search
 		try (MongoCursor<String> cursor = search.iterator()) {
