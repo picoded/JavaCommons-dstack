@@ -52,7 +52,6 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	RedisStack redisStack = null;
 	RedissonClient redisson = null;
 	RMap<String, Object> redisMap = null;
-	//RSet<Object> set = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -65,7 +64,6 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 		redisStack = inStack;
 		redisson = inStack.getConnection();
 		redisMap = redisson.getMap(name, JsonJacksonCodec.INSTANCE);
-		//set = redisson.getSet(name, StringCodec.INSTANCE);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -134,7 +132,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	@Override
 	public void clear() {
 		//Delete all the keys of the currently selected database
-		redisson.getKeys().flushdb();
+		//redisson.getKeys().flushdb();
 		
 		//Delete all the keys of all the existing databases
 		redisson.getKeys().flushall();

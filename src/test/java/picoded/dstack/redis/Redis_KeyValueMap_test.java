@@ -6,7 +6,12 @@ import picoded.dstack.struct.simple.*;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-
+/**
+ * ## Purpose
+ * This class is meant to test the Redis_KeyValueMap implementation,
+ * and ensure that it passes all the test layed out in StructSimple_KeyValueMap_test
+ * 
+ */
 public class Redis_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	// Redis stack instance
 	protected static volatile RedisStack instance = null;
@@ -28,7 +33,7 @@ public class Redis_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 				redisConfig.put("name", DStackTestConfig.randomTablePrefix());
 				
 				GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
-				stackConfig.put("name", "RedisKeyValueMap_test");
+				stackConfig.put("name", "Redis_KeyValueMap_test");
 				stackConfig.put("redis", redisConfig);
 				
 				instance = new RedisStack(stackConfig);

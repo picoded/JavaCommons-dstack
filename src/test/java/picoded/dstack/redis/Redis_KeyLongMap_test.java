@@ -27,7 +27,7 @@ public class Redis_KeyLongMap_test extends StructSimple_KeyLongMap_test {
 				redisConfig.put("name", DStackTestConfig.randomTablePrefix());
 				
 				GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
-				stackConfig.put("name", "RedisKeyLongMap_test");
+				stackConfig.put("name", "Redis_KeyLongMap_test");
 				stackConfig.put("redis", redisConfig);
 				
 				instance = new RedisStack(stackConfig);

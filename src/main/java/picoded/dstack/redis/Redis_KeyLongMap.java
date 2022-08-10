@@ -158,11 +158,11 @@ public class Redis_KeyLongMap extends Core_KeyLongMap {
 		HashSet<String> ret = new HashSet<String>();
 		//Fetch everything in current db
 		List<String> retList = null;
-        if (value != null) {
+        //if (value != null) {
             retList = new ArrayList<String>(redisMap.readAllKeySet());
             // Return the full keyset
             retList.forEach(k -> ret.add(k));
-		}
+		//}
 		return ret;
 	}
 
