@@ -627,4 +627,48 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return backend_filterPathSet(retSet, "", minDepth, maxDepth, 0);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet() {
+		// The return hashset
+		HashSet<String> ret = new HashSet<String>();
+		
+		// List all the files/folders
+		File[] dirList = baseDir.listFiles();
+		
+		// For each one of it, process it!
+		for (File subFile : dirList) {
+			// Skip if its not a directory
+			if( !subFile.isDirectory() ) {
+				continue;
+			}
+
+			// Get the presumed oid
+			String oid = subFile.getName();
+
+			// Validate the dir name (oid)
+			if( !validateOid(oid) ) {
+				continue;
+			}
+
+			// Add the oid to the ret set
+			ret.add(oid);
+		}
+
+		// Return the full keyset
+		return ret;
+	}
+	
 }
