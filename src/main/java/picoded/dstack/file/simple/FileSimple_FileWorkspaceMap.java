@@ -73,7 +73,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Adding safety check for file operation, ensuring oid is alphanumeric
-		if (!oid.matches("[a-zA-Z0-9]+")) {
+		if (!oid.matches("[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]+")) {
 			return false;
 		}
 		

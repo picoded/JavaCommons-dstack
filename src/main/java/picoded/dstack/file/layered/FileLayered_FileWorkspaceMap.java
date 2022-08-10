@@ -82,7 +82,7 @@ public class FileLayered_FileWorkspaceMap extends FileSimple_FileWorkspaceMap {
 			}
 
 			// List all the files/folders
-			File[] l2_dirList = baseDir.listFiles();
+			File[] l2_dirList = l1_dir.listFiles();
 			
 			for(File l2_dir : l2_dirList) {
 				// Skip if its not a directory
