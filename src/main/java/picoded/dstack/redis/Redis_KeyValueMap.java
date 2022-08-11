@@ -43,8 +43,6 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 	/** Redis instance representing the backend connection */
 	RedisStack redisStack = null;
 	RedissonClient redisson = null;
-	// RMap<String, Object> redisMap = null;
-	RMap<String, String>  redisMap = null;
 	
 	/**
 	 * Constructor, with name constructor
@@ -56,7 +54,6 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
-		redisMap = redisson.getMap(name, JsonJacksonCodec.INSTANCE);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -164,21 +161,25 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 	 * @return array of keys
 	 **/
 	@Override
-	public Set<String> keySet(String value) { //TODO
+	public Set<String> keySet(String value) {
 		// The return hashset
 		HashSet<String> ret = new HashSet<String>();
-		//Fetch everything in current db
 		List<String> retList = null; 
-        if (value != null) {
-			//backendMap().get(value); 
-            //retList = new ArrayList<String>(backendMap().readAllKeySet());
+        if (value == null) {
+			// Lets fetch everything
             retList = new ArrayList<String>(backendMap().readAllKeySet());
 			// Return the full keyset
 			retList.forEach(k -> ret.add(k));
+		} else {
+			//TODO: not sure abt keyset() vs readAllKeySet()
+			retList = new ArrayList<String>(backendMap().keySet());
+			for (String key : retList) {
+				String val = backendMap().get(key);
+				if (value.equals(val)) {
+					ret.add(key);
+				}
+			}
 		}
-		retList = new ArrayList<String>(backendMap().readAllKeySet());
-		// Return the full keyset
-		retList.forEach(k -> ret.add(k));
 		return ret;
 	}
 	
@@ -235,7 +236,7 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 			backendMap().fastPut(key, value, Math.max(expire - System.currentTimeMillis(), 1),
 				TimeUnit.MILLISECONDS);
 		} else {
-			backendMap().put(key, value);
+			backendMap().fastPut(key, value);
 		}
 		return null;
 	}
@@ -257,7 +258,6 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 		Set<String> keys = new HashSet<String>();
 		Map<String, String> mapSlice = new HashMap<String, String>();
 		Map.Entry<String,String> entry = null;
-		String value= null;
 
 		keys.add(key);
 		mapSlice = backendMap().getAll(keys);
@@ -268,17 +268,13 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 			if (entry == null) {
 				return null;
 			}
-			value = entry.getValue();
+			String value = entry.getValue();
 
-			//Cheating there because I don't think redisson has Map Entry Eviction according to this:
-			//https://www.javadoc.io/doc/org.redisson/redisson/3.2.0/org/redisson/api/RMapCache.html
-			Long expireObj = 0L;
-		
+			Long expireObj = backendMap().remainTimeToLive(key) + System.currentTimeMillis();
 			// Note: 0 = no timestamp, hence valid value
 			long expiry = expireObj.longValue();
 			return new MutablePair<String, Long>(value, expiry);
 		}
 		return null;
 	}
-	
 }
