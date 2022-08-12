@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import picoded.dstack.core.*;
 
 // Cache2k implmentation
+import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 /**
@@ -147,7 +148,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 			}
 			
 			// Build the cache
-			_valueMap = StructCacheUtil.setupCache2kMap(cacheName(), configMap());
+			_valueMap = StructCacheUtil.setupCache2kMap(new Cache2kBuilder<String, Map<String,Object>>(){}, cacheName(), configMap());
 			
 			// Add it back to the global cache
 			globalCacheMap.put(cacheName(), _valueMap);
@@ -159,8 +160,11 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	 **/
 	@Override
 	public void systemDestroy() {
-		globalCacheMap.remove(cacheName());
-		_valueMap = null;
+		synchronized (StructCache_DataObjectMap.class) {
+			_valueMap.clear();
+			globalCacheMap.remove(cacheName());
+			_valueMap = null;
+		}
 	}
 	
 }

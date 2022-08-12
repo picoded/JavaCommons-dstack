@@ -1,12 +1,11 @@
 package picoded.dstack.struct.cache;
 
-// Cache2k implmentation
-import org.cache2k.Cache2kBuilder;
-
 import picoded.core.struct.GenericConvertMap;
 
 import java.util.concurrent.TimeUnit;
 
+// Cache2k implmentation
+import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 class StructCacheUtil {
@@ -14,14 +13,8 @@ class StructCacheUtil {
 	/**
 	 * Utility function used to build a new Cache2k cache instance
 	 * This handles all the various common config settings, and set it up accordingly
-	 * 
-	 * @param <K>
-	 * @param <V>
-	 * @param name
-	 * @param config
-	 * @return
 	 */
-	static <K, V> Cache<K, V> setupCache2kMap(String name, GenericConvertMap<String, Object> config) {
+	static <V> Cache<String, V> setupCache2kMap(Cache2kBuilder<String,V> builder, String name, GenericConvertMap<String, Object> config) {
 		
 		//
 		// Get Config
@@ -91,10 +84,6 @@ class StructCacheUtil {
 		//
 		// Setup the builder
 		//-----------------------------------------------------------------------
-		
-		// Setup the builder
-		Cache2kBuilder<K, V> builder = new Cache2kBuilder<K, V>() {
-		};
 		
 		// Configure cache name and capacity
 		builder = builder.name(name).entryCapacity(capacity);
