@@ -147,7 +147,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		if (file == null) {
 			throw new RuntimeException("Invalid OID (unable to setup)");
 		}
-		boolean mkdir = file.mkdirs();
+		file.mkdirs();
 	}
 	
 	//--------------------------------------------------------------------------
