@@ -49,7 +49,7 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 	//--------------------------------------------------------------------------
 	
 	/** Redis instance representing the backend connection */
-	RedisStack redisStack = null;
+	RedissonStack redisStack = null;
 	RedissonClient redisson = null;
 	RMap<String, Object> redisMap = null;
 	
@@ -59,7 +59,7 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Redisson_DataObjectMap(RedisStack inStack, String name) {
+	public Redisson_DataObjectMap(RedissonStack inStack, String name) {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();

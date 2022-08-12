@@ -31,7 +31,7 @@ import org.apache.commons.lang3.RandomUtils;
  */
 public class Redisson_stack_test {
 	
-	protected static volatile RedisStack instance = null;
+	protected static volatile RedissonStack instance = null;
 	
 	@Test
 	public void stackTest() {
@@ -46,7 +46,7 @@ public class Redisson_stack_test {
 		stackConfig.put("name", "Redisson_stack_test");
 		stackConfig.put("redis", redisConfig);
 		
-		instance = new RedisStack(stackConfig);
+		instance = new RedissonStack(stackConfig);
 		
 		//Test instance instanciation :o)
 		//assertSame("pong", instance.ping());

@@ -91,7 +91,7 @@ public class RedissonStack extends CoreStack {
 		// If DB config is missing, throw an error
 		if (dbConfig == null) {
 			throw new IllegalArgumentException(
-				"Missing 'RedisStack' config object for Redis stack provider");
+				"Missing 'RedissonStack' config object for Redis stack provider");
 		}
 		
 		// Get the connection & database
@@ -130,10 +130,10 @@ public class RedissonStack extends CoreStack {
 		// Initialize for the respective type
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
-			ret = new Redis_DataObjectMap(this, name);
+			ret = new Redisson_DataObjectMap(this, name);
 		}
 		if (type.equalsIgnoreCase("KeyValueMap")) {
-			ret = new Redis_KeyValueMap(this, name);
+			ret = new Redisson_KeyValueMap(this, name);
 		}
 		// If datastrucutre initialized, setup name
 		if (ret != null) {

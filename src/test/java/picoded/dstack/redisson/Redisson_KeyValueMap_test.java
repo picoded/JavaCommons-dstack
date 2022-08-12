@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Redisson_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 	// Redis stack instance
-	protected static volatile RedisStack instance = null;
+	protected static volatile RedissonStack instance = null;
 	
 	/// Implementation constructor
 	public KeyValueMap implementationConstructor() {
@@ -36,7 +36,7 @@ public class Redisson_KeyValueMap_test extends StructSimple_KeyValueMap_test {
 				stackConfig.put("name", "Redisson_KeyValueMap_test");
 				stackConfig.put("redis", redisConfig);
 				
-				instance = new RedisStack(stackConfig);
+				instance = new RedissonStack(stackConfig);
 			}
 		}
 		// Load the KeyValueMap

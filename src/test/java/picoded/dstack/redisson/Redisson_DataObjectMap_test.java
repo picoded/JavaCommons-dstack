@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Redisson_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	// Redis stack instance
-	protected static volatile RedisStack instance = null;
+	protected static volatile RedissonStack instance = null;
 	
 	/// Implementation constructor
 	public DataObjectMap implementationConstructor() {
@@ -36,7 +36,7 @@ public class Redisson_DataObjectMap_test extends StructSimple_DataObjectMap_test
 				stackConfig.put("name", "Redisson_DataObjectMap_test");
 				stackConfig.put("redis", redisConfig);
 				
-				instance = new RedisStack(stackConfig);
+				instance = new RedissonStack(stackConfig);
 			}
 		}
 		// Load the DataObjectMap

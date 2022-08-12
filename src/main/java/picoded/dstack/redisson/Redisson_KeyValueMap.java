@@ -41,7 +41,7 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	//--------------------------------------------------------------------------
 	
 	/** Redis instance representing the backend connection */
-	RedisStack redisStack = null;
+	RedissonStack redisStack = null;
 	RedissonClient redisson = null;
 	
 	/**
@@ -50,7 +50,7 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Redisson_KeyValueMap(RedisStack inStack, String name) {
+	public Redisson_KeyValueMap(RedissonStack inStack, String name) {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
