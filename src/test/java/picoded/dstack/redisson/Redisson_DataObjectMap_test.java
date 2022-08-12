@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 import picoded.core.struct.*;
 import picoded.dstack.*;
@@ -8,11 +8,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * ## Purpose
- * This class is meant to test the Redis_DataObjectMap implementation,
+ * This class is meant to test the Redisson_DataObjectMap implementation,
  * and ensure that it passes all the test layed out in StructSImple_DataObjectMap_test
  * 
  */
-public class Redis_DataObjectMap_test extends StructSimple_DataObjectMap_test {
+public class Redisson_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	// Redis stack instance
 	protected static volatile RedisStack instance = null;
 	
@@ -20,7 +20,7 @@ public class Redis_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 	public DataObjectMap implementationConstructor() {
 		
 		// Initialize server
-		synchronized (Redis_DataObjectMap_test.class) {
+		synchronized (Redisson_DataObjectMap_test.class) {
 			if (instance == null) {
 				// The default config uses "172.17.0.1" (default docker bridge address) 
 				// and port 6379 (default redis port)
@@ -33,7 +33,7 @@ public class Redis_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 				redisConfig.put("name", DStackTestConfig.randomTablePrefix());
 				
 				GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
-				stackConfig.put("name", "Redis_DataObjectMap_test");
+				stackConfig.put("name", "Redisson_DataObjectMap_test");
 				stackConfig.put("redis", redisConfig);
 				
 				instance = new RedisStack(stackConfig);

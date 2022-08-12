@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 // Test system include
 import static org.junit.Assert.*;
@@ -29,7 +29,7 @@ import org.apache.commons.lang3.RandomUtils;
  * Minimal Redis connectivity test.
  * Used to test assumptions used to build Redis implementation
  */
-public class Redis_stack_test {
+public class Redisson_stack_test {
 	
 	protected static volatile RedisStack instance = null;
 	
@@ -43,7 +43,7 @@ public class Redis_stack_test {
 		redisConfig.put("name", DStackTestConfig.randomTablePrefix());
 		
 		GenericConvertMap<String, Object> stackConfig = new GenericConvertHashMap<>();
-		stackConfig.put("name", "Redis_DataObjectMap_test");
+		stackConfig.put("name", "Redisson_stack_test");
 		stackConfig.put("redis", redisConfig);
 		
 		instance = new RedisStack(stackConfig);

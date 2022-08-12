@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -14,9 +14,9 @@ import org.redisson.api.RedissonClient;
 /**
  * [Internal use only]
  * 
- * StructCache configuration based stack provider
+ * Redisson based stack provider
  **/
-public class RedisStack extends CoreStack {
+public class RedissonStack extends CoreStack {
 	
 	/**
 	 * The internal Redis connection

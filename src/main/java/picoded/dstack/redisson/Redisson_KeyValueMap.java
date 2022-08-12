@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 // Java imports
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import org.redisson.api.RMapCache;
  *
  * Built ontop of the Core_KeyValueMap implementation.
  **/
-public class Redis_KeyValueMap extends Core_KeyValueMap {
+public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -50,7 +50,7 @@ public class Redis_KeyValueMap extends Core_KeyValueMap {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Redis_KeyValueMap(RedisStack inStack, String name) {
+	public Redisson_KeyValueMap(RedisStack inStack, String name) {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();

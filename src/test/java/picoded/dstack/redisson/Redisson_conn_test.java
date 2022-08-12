@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 // Test system include
 import static org.junit.Assert.*;
@@ -24,7 +24,7 @@ import org.redisson.api.RAtomicLong;
  * Minimal Redis connectivity test.
  * Used to test assumptions used to build Redis implementation
  */
-public class Redis_conn_test {
+public class Redisson_conn_test {
 	
 	@Test
 	public void connectivityTest() {

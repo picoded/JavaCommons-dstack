@@ -1,4 +1,4 @@
-package picoded.dstack.redis;
+package picoded.dstack.redisson;
 
 // Java imports
 import java.util.HashMap;
@@ -40,7 +40,7 @@ import org.redisson.api.RMap;
  * 
  * - 
  **/
-public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
+public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 	
 	//--------------------------------------------------------------------------
 	//
@@ -59,7 +59,7 @@ public class Redis_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @param  inStack   hazelcast stack to use
 	 * @param  name      of data object map to use
 	 */
-	public Redis_DataObjectMap(RedisStack inStack, String name) {
+	public Redisson_DataObjectMap(RedisStack inStack, String name) {
 		super();
 		redisStack = inStack;
 		redisson = inStack.getConnection();
