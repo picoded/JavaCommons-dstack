@@ -55,10 +55,11 @@ public class MongoDBStack extends CoreStack {
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
 		String opts = config.getString("opt_str",
-			"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
+		"w=majority&retryWrites=true&retryReads=true&"+
+		"maxPoolSize=10&compressors=zstd&"+
+		"readPreference=nearest&readConcernLevel=linearizable");
 		
 		// In the future we may want to support opt_map
-		// this should still support the default read/write "majority" concern.
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
 		// Lets build the auth str
