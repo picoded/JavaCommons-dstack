@@ -651,22 +651,22 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// For each one of it, process it!
 		for (File subFile : dirList) {
 			// Skip if its not a directory
-			if( !subFile.isDirectory() ) {
+			if (!subFile.isDirectory()) {
 				continue;
 			}
-
+			
 			// Get the presumed oid
 			String oid = subFile.getName();
-
+			
 			// Validate the dir name (oid)
-			if( !validateOid(oid) ) {
+			if (!validateOid(oid)) {
 				continue;
 			}
-
+			
 			// Add the oid to the ret set
 			ret.add(oid);
 		}
-
+		
 		// Return the full keyset
 		return ret;
 	}

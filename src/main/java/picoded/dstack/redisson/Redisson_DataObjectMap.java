@@ -137,14 +137,14 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 		//Delete all the keys of all the existing databases
 		redisson.getKeys().flushall();
 	}
-
+	
 	/**
 	 * Teardown and delete the backend storage table, etc. If needed
 	 **/
 	public void systemDestroy() {
 		redisMap.delete();
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -168,24 +168,27 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 		Set<String> updateKeys) {
 		
 		Map<String, Object> clonedMap = new HashMap<String, Object>();
-
+		
 		// Lets iterate the keys, and decide accordingly
 		for (String key : fullMap.keySet()) {
 			// Get the full map value
 			Object val = fullMap.get(key);
-
+			
 			if (updateKeys.contains(key)) {
 				clonedMap.put(key, val);
 			}
 		}
-
+		
 		// call the default implementation, basically equal to redisMap.put(_oid,clonedMap)
 		super.DataObjectRemoteDataMap_update(_oid, clonedMap, updateKeys);
 	}
-
-	public Map<String,Object> ObjToMap(Object obj) {
-		if( obj instanceof Map ) { return (Map<String,Object>) obj; }
-		else {return null;}
+	
+	public Map<String, Object> ObjToMap(Object obj) {
+		if (obj instanceof Map) {
+			return (Map<String, Object>) obj;
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -193,26 +196,26 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return null if not exists, else a map with the data
 	 **/
 	public Map<String, Object> DataObjectRemoteDataMap_get(String _oid) {
-
+		
 		//Map Slicing 
 		Set<String> keys = new HashSet<String>();
 		Map<String, Object> mapSlice = new HashMap<String, Object>();
-		Map.Entry<String,Object> res = null;
+		Map.Entry<String, Object> res = null;
 		Object tmpObj = null;
-
+		
 		keys.add(_oid);
 		mapSlice = redisMap.getAll(keys);
 		
-		Iterator<Map.Entry<String,Object>> it = mapSlice.entrySet().iterator();
-		if(it.hasNext()){
+		Iterator<Map.Entry<String, Object>> it = mapSlice.entrySet().iterator();
+		if (it.hasNext()) {
 			res = it.next();
 			tmpObj = res.getValue();
 		}
-
+		
 		if (tmpObj == null) {
 			return null;
 		}
-
+		
 		Map<String, Object> resObj = null;
 		resObj = ObjToMap(tmpObj);
 		
@@ -221,14 +224,14 @@ public class Redisson_DataObjectMap extends Core_DataObjectMap_struct {
 		// Lets iterate through the object
 		Set<String> fullKeys = resObj.keySet();
 		for (String key : fullKeys) {
-	
+			
 			// Get the value
 			Object val = resObj.get(key);
-					
+			
 			// Populate the ret map
 			ret.put(key, val);
 		}
-	
+		
 		return ret;
 	}
 	

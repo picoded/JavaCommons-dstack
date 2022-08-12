@@ -59,10 +59,10 @@ public class MongoDBStack extends CoreStack {
 		int port = config.getInt("port", 27017);
 		String opts = config.getString("opt_str", "w=majority&retryWrites=true&retryReads=true"
 			+ "&maxPoolSize=10&compressors=zstd");
-			// "&readPreference=nearest&readConcernLevel=linearizable"
+		// "&readPreference=nearest&readConcernLevel=linearizable"
 		
 		// Lets do a logging, for missing read concern if its not configured
-		if( opts.indexOf("readConcernLevel") < 0 ) {
+		if (opts.indexOf("readConcernLevel") < 0) {
 			//
 			// readConcernLevel is a complicated topic, do consider reading up
 			// https://jepsen.io/analyses/mongodb-4.2.6
@@ -74,11 +74,11 @@ public class MongoDBStack extends CoreStack {
 			// Unless you know what your doing from a performance standpoint, it is strongly recommended to use 
 			// `readConcernLevel=linearizable`
 			//
-			LOGGER.warning("MongoDB is configured without readConcernLevel, "+
-			"this is alright for a single node, but `readConcernLevel=linearizable`"+
-			"is highly recommended for replica clusters to ensure read after write consistency.");
+			LOGGER.warning("MongoDB is configured without readConcernLevel, "
+				+ "this is alright for a single node, but `readConcernLevel=linearizable`"
+				+ "is highly recommended for replica clusters to ensure read after write consistency.");
 		}
-
+		
 		// In the future we may want to support opt_map
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
