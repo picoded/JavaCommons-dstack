@@ -22,6 +22,9 @@ import com.mongodb.ConnectionString;
  **/
 public class MongoDBStack extends CoreStack {
 	
+	/// Internal self used logger
+	private static Logger LOGGER = Logger.getLogger(MongoDBStack.class.getName());
+	
 	/**
 	 * The internal MongoClient connection
 	 */
@@ -54,11 +57,28 @@ public class MongoDBStack extends CoreStack {
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
-		String opts = config.getString("opt_str",
-		"w=majority&retryWrites=true&retryReads=true&"+
-		"maxPoolSize=10&compressors=zstd&"+
-		"readPreference=nearest&readConcernLevel=linearizable");
+		String opts = config.getString("opt_str", "w=majority&retryWrites=true&retryReads=true"
+			+ "&maxPoolSize=10&compressors=zstd");
+			// "&readPreference=nearest&readConcernLevel=linearizable"
 		
+		// Lets do a logging, for missing read concern if its not configured
+		if( opts.indexOf("readConcernLevel") < 0 ) {
+			//
+			// readConcernLevel is a complicated topic, do consider reading up
+			// https://jepsen.io/analyses/mongodb-4.2.6
+			// https://www.mongodb.com/blog/post/performance-best-practices-transactions-and-read--write-concerns
+			// https://www.mongodb.com/docs/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-
+			//
+			// This option was removed by default, as an error will be thrown when its applied to single node clusters
+			//
+			// Unless you know what your doing from a performance standpoint, it is strongly recommended to use 
+			// `readConcernLevel=linearizable`
+			//
+			LOGGER.warning("MongoDB is configured without readConcernLevel, "+
+			"this is alright for a single node, but `readConcernLevel=linearizable`"+
+			"is highly recommended for replica clusters to ensure read after write consistency.");
+		}
+
 		// In the future we may want to support opt_map
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
