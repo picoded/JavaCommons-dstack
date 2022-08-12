@@ -138,9 +138,6 @@ public class RedisStack extends CoreStack {
 		if (type.equalsIgnoreCase("KeyValueMap")) {
 			ret = new Redis_KeyValueMap(this, name);
 		}
-		if (type.equalsIgnoreCase("KeyLongMap")) {
-			ret = new Redis_KeyLongMap(this, name);
-		}
 		// If datastrucutre initialized, setup name
 		if (ret != null) {
 			ret.configMap().put("name", name);
