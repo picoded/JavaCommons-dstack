@@ -270,10 +270,19 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 			}
 			String value = entry.getValue();
 
-			Long expireObj = backendMap().remainTimeToLive(key) + System.currentTimeMillis();
-			// Note: 0 = no timestamp, hence valid value
-			long expiry = expireObj.longValue();
-			return new MutablePair<String, Long>(value, expiry);
+			// Get the raw TTL
+			long rawTTL = backendMap().remainTimeToLive(key);
+			if( rawTTL <= -2 ) {
+				// value has expired
+				return null;
+			} else if( rawTTL <= -1 ) {
+				// has no expiry
+				// Note: 0 = no timestamp, hence valid value
+				return new MutablePair<String, Long>(value, 0);
+			}
+			
+			// Return with expiry value
+			return new MutablePair<String, Long>(value, rawTTL + System.currentTimeMillis());
 		}
 		return null;
 	}
