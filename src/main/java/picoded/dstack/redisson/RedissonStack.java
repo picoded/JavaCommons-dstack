@@ -81,7 +81,7 @@ public class RedissonStack extends CoreStack {
 	/**
 	 * Constructor with configuration map
 	 */
-	public RedisStack(GenericConvertMap<String, Object> inConfig) {
+	public RedissonStack(GenericConvertMap<String, Object> inConfig) {
 		//https://github.com/redisson/redisson/wiki/10.-additional-features#107-low-level-redis-client
 		super(inConfig);
 		
