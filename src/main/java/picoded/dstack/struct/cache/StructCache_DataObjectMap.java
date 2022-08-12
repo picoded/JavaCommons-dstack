@@ -1,20 +1,13 @@
 package picoded.dstack.struct.cache;
 
 // Java imports
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Picoded imports
-import picoded.core.conv.ConvertJSON;
-import picoded.core.common.ObjectToken;
-import picoded.dstack.*;
 import picoded.dstack.core.*;
 
 // Cache2k implmentation
-import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 /**
