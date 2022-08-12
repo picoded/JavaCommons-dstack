@@ -88,9 +88,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Meaning a full "8 * 1000 * 1000" chunk would use "8 * 1024 * 1024"
 		// worth of space, after adding the unknown headers (<=4kb of space : 8*24*24)
 		//
-
-		filesCollection = inStack.db_conn.getCollection(name+".files");
-		chunksCollection = inStack.db_conn.getCollection(name+".chunks");
+		
+		filesCollection = inStack.db_conn.getCollection(name + ".files");
+		chunksCollection = inStack.db_conn.getCollection(name + ".chunks");
 	}
 	
 	//--------------------------------------------------------------------------
@@ -104,16 +104,16 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void systemSetup() {
-
+		
 		// We insert a "root" object, to ensure the tables are initialized
 		// ---
-		if(!fullRawPathExist("root")) {
+		if (!fullRawPathExist("root")) {
 			setupAnchorFile_withFullRawPath("root", "root", "root");
 		}
-
+		
 		// Lets setup the index for the metadata fields (which is not enabled by default)
 		// ---
-
+		
 		// Lets create the index for the oid
 		IndexOptions opt = new IndexOptions();
 		opt = opt.name("metadata.oid");
@@ -169,7 +169,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public void backend_setupWorkspace(String oid) {
 		// We setup a blank file with type root
-		if(!fullRawPathExist(oid)) {
+		if (!fullRawPathExist(oid)) {
 			setupAnchorFile_withFullRawPath(oid, oid, "space");
 		}
 	}
@@ -211,24 +211,21 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Fail, as the search found no iterations
 		return false;
 	}
-
+	
 	/** Utility function used, to check if a folder, or file with folder prefix exists **/
 	protected boolean prefixPathExist(String oid, String path) {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
 		// Get the full prefixpath
-		String fullPrefixPath = oid+"/"+path;
-
+		String fullPrefixPath = oid + "/" + path;
+		
 		// Remove matching path
 		query = Filters.or(
 			Filters.eq("filename", fullPrefixPath),
-			Filters.and(
-				Filters.eq("metadata.oid", oid),
-				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
-			)
-		);
-
+			Filters.and(Filters.eq("metadata.oid", oid),
+				Filters.regex("filename", "^" + Pattern.quote(fullPrefixPath) + ".*")));
+		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
 		
@@ -238,11 +235,11 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				return true;
 			}
 		}
-
+		
 		// No match found, fail
 		return false;
 	}
-
+	
 	/**
 	 * Setup an empty file, used for various use cases
 	 * The extended funciton name is intentional to avoid confusion of "full path" with "path"
@@ -261,7 +258,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			// Prepare the upload options
 			GridFSUploadOptions opt = (new GridFSUploadOptions()).metadata(metadata);
 			ObjectId objID = gridFSBucket.uploadFromStream(fullPath, emptyStream, opt);
-
+			
 			// Flush it?
 			objID.toString();
 		} catch (IOException e) {
@@ -276,17 +273,15 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
-		if( path == null || path.equals("/") || path.isEmpty() ) {
+		if (path == null || path.equals("/") || path.isEmpty()) {
 			// Remove everything under the oid
 			query = Filters.eq("metadata.oid", oid);
 		} else {
 			// Remove matching path
-			query = Filters.and(
-				Filters.eq("metadata.oid", oid),
-				Filters.regex("filename", "^"+Pattern.quote(oid+"/"+path)+".*")
-			);
+			query = Filters.and(Filters.eq("metadata.oid", oid),
+				Filters.regex("filename", "^" + Pattern.quote(oid + "/" + path) + ".*"));
 		}
-
+		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query);
 		
@@ -298,7 +293,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			}
 		}
 	}
-
+	
 	/** 
 	 * Utility function used, to remove a specific file
 	 **/
@@ -307,8 +302,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		Bson query = null;
 		
 		// Remove matching path
-		query = Filters.eq("filename", oid+"/"+path);
-
+		query = Filters.eq("filename", oid + "/" + path);
+		
 		// Lets prepare the search (removes all versions)
 		GridFSFindIterable search = gridFSBucket.find(query);
 		
@@ -321,38 +316,38 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				rmFlag = true;
 			}
 		}
-
+		
 		// Return the remove status
 		return rmFlag;
 	}
-
+	
 	/** 
 	 * Given the current path, enforce the parent pathing dir
 	 * Used mainly to ensure "parent" folder exists on file write/rm
 	 **/
 	protected void ensureParentPath(String oid, String path) {
 		// Does nothing if path is empty
-		if( path == null || path.equals("/") || path.isEmpty() ) {
+		if (path == null || path.equals("/") || path.isEmpty()) {
 			return;
 		}
-
+		
 		// Cleanup ending slash
-		if( path.endsWith("/") ) {
+		if (path.endsWith("/")) {
 			path = path.substring(0, path.length() - 1);
 		}
-
+		
 		// Get the parent path
-		String parPath = normalizeFolderPathString( FileUtil.getParentPath(path) );
-
+		String parPath = normalizeFolderPathString(FileUtil.getParentPath(path));
+		
 		// Does nothing if folder path is "blank"
-		if( parPath == null || parPath.equals("/") || parPath.isEmpty() ) {
+		if (parPath == null || parPath.equals("/") || parPath.isEmpty()) {
 			return;
 		}
-
+		
 		// Path enforcement
 		backend_ensureFolderPath(oid, parPath);
 	}
-
+	
 	/**
 	 * Because mongoDB does file versioining on each save, we would need to cleanup 
 	 * older file versions where applicable, in a safe way
@@ -374,22 +369,22 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * This safety measure is used in addition, to the checks performed on file write
 	 */
 	protected void performVersionedFileCleanup(String oid, String path) {
-
+		
 		// Lets get the list of files and their respective versions
 		// We query the file table directly, to reduce the required
 		// back and forth queries
 		
 		// Get the full filename
-		String filename = oid+"/"+path;
+		String filename = oid + "/" + path;
 		
 		// Get the current timestamp
 		long now = System.currentTimeMillis();
 		long tenSecondsAgo = now - (10 * 1000);
-
+		
 		// Lets fetch the full list in descending date order
-		FindIterable<Document> search = filesCollection.find( Filters.eq("filename", filename) );
-		search = search.sort( (new Document()).append("uploadDate", -1) );
-
+		FindIterable<Document> search = filesCollection.find(Filters.eq("filename", filename));
+		search = search.sort((new Document()).append("uploadDate", -1));
+		
 		// Lets remap from cursor to list
 		List<Document> searchList = new ArrayList<>();
 		try (MongoCursor<Document> cursor = search.iterator()) {
@@ -401,67 +396,67 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Safe anchor point, all items after this is "safe to be deleted"
 		// if this is detected properly (do not delete the safeAnchorPoint file itself)
 		int safeAnchorPoint = -1;
-
+		
 		// Lets find the document thats atleast 10 seconds old
-		for( int i=1; i<searchList.size(); ++i ) {
+		for (int i = 1; i < searchList.size(); ++i) {
 			Document doc = searchList.get(i);
-
+			
 			// Check if it meets the required timestamp
-			if(doc.getDate("uploadDate").getTime() < tenSecondsAgo) {
+			if (doc.getDate("uploadDate").getTime() < tenSecondsAgo) {
 				safeAnchorPoint = i;
 				break;
 			}
 		}
-
+		
 		// Lets clear the old files, if safeAnchorPoint is found
-		if( safeAnchorPoint >= 1 ) {
+		if (safeAnchorPoint >= 1) {
 			// Lets loop through all items after the safeAnchorPoint
-			while( searchList.size() > (safeAnchorPoint + 1) ) {
+			while (searchList.size() > (safeAnchorPoint + 1)) {
 				// Get and remove the last item
-				Document doc = searchList.remove( searchList.size() - 1 );
+				Document doc = searchList.remove(searchList.size() - 1);
 				ObjectId objID = doc.getObjectId("_id");
-
+				
 				// Lets remove the file (and its chunks)
 				try {
 					gridFSBucket.delete(objID);
-				} catch(Exception e) {
+				} catch (Exception e) {
 					// do nothing, as there could be a race condition delete 
 					// (2 delete by seperate write commands happenign together)
 				}
 			}
 		}
-
+		
 		// If the list is less then 10, lets return
-		if( searchList.size() <= 10 ) {
+		if (searchList.size() <= 10) {
 			return;
 		}
-
+		
 		// We have more then 10 files, that is less then 10 seconds old
 		// Lets do a forced 10 seconds halt, so we can forcefully clear the files
 		try {
 			Thread.sleep(10 * 1000);
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-
+		
 		// And clear the various outdated files
 		// after the latest, and its immediate previous version
-		while( searchList.size() > 2 ) {
+		while (searchList.size() > 2) {
 			// Get and remove the last item
-			Document doc = searchList.remove( searchList.size() - 1 );
+			Document doc = searchList.remove(searchList.size() - 1);
 			ObjectId objID = doc.getObjectId("_id");
-
+			
 			// Lets remove the file (and its chunks)
 			try {
 				gridFSBucket.delete(objID);
-			} catch(Exception e) {
+			} catch (Exception e) {
 				// do nothing, as there could be a race condition delete 
 				// (2 delete by seperate write commands happenign together)
 			}
 		}
-
+		
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// File write
@@ -480,7 +475,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	@Override
 	public void backend_fileWrite(String oid, String filepath, byte[] data) {
-
+		
 		// Build the full path
 		String fullPath = oid + "/" + filepath;
 		
@@ -496,20 +491,20 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// This prevents the creation of a "new version" unless its needed. And slow down
 		// any flooding of back to back file writes.
 		//
-
+		
 		// 1) Lets check the previous write timing, and throttle it if needed
 		// ---
-
+		
 		// Lets get the time "NOW"
 		long now = System.currentTimeMillis();
-
+		
 		// Lets build the query for the file involved
 		Bson query = Filters.eq("filename", fullPath);
 		
 		// Read timestamp, and objectid
 		ObjectId readObjId = null;
 		long readUploadTimestamp = -1;
-
+		
 		// Lets iterate the search result, and return true on an item
 		try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
 			if (cursor.hasNext()) {
@@ -521,13 +516,13 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		// Check if the current file is less then 2 seconds old
 		// If so, we induce a wait for it to occur (if file exists)
-		if( readObjId != null && readUploadTimestamp + 2000 >= now ) {
+		if (readObjId != null && readUploadTimestamp + 2000 >= now) {
 			try {
-				Thread.sleep( Math.min( Math.max( readUploadTimestamp + 2000 - now, 500), 2000 ) );
-			} catch(InterruptedException e) {
+				Thread.sleep(Math.min(Math.max(readUploadTimestamp + 2000 - now, 500), 2000));
+			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
-
+			
 			// And get the latest objectID again (in case of any changes)
 			try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
 				if (cursor.hasNext()) {
@@ -537,37 +532,37 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				}
 			}
 		}
-
+		
 		// 2) Lets check against current value
 		// ---
-
+		
 		// Handle null byte[]
-		if( data == null ) {
+		if (data == null) {
 			data = EmptyArray.BYTE;
 		}
-
+		
 		// Lets map the current value to an inputstream, in closable blocks
 		// We intentionally use inputstream, to avoid needing 2 byte[] blocks in memory
 		// (if file exists)
-		if( readObjId == null ) {
+		if (readObjId == null) {
 			// does nothing if the object does not exists
 		} else {
-			try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data) ) {
-				try(InputStream existingValue = gridFSBucket.openDownloadStream(readObjId)) {
-					if(IOUtils.contentEquals(inBuffer, existingValue)) {
+			try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data)) {
+				try (InputStream existingValue = gridFSBucket.openDownloadStream(readObjId)) {
+					if (IOUtils.contentEquals(inBuffer, existingValue)) {
 						// They are the same, skip the write
 						return;
 					}
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
-			} 
+			}
 		}
-
+		
 		// Finally, lets write the update
 		// ---
-
-		try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data) ) {
+		
+		try (ByteArrayInputStream inBuffer = new ByteArrayInputStream(data)) {
 			// Setup the metadata for the file
 			Document metadata = new Document();
 			metadata.append("oid", oid);
@@ -582,7 +577,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// Perform post file write cleanup (if there was a previous version)
-		if( readObjId != null ) {
+		if (readObjId != null) {
 			performVersionedFileCleanup(oid, filepath);
 		}
 	}
@@ -600,7 +595,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @param   data to write the file with
 	 **/
 	@Override
-	public void backend_fileWriteInputStream(final String oid, final String filepath, InputStream data) {
+	public void backend_fileWriteInputStream(final String oid, final String filepath,
+		InputStream data) {
 		// Converts it to bytearray respectively
 		byte[] rawBytes = null;
 		try {
@@ -641,7 +637,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		InputStream buffer = backend_fileReadInputStream(oid, filepath);
 		
 		// Null handling
-		if( buffer == null ) {
+		if (buffer == null) {
 			return null;
 		}
 		
@@ -677,12 +673,12 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public InputStream backend_fileReadInputStream(String oid, String filepath) {
 		try {
 			return gridFSBucket.openDownloadStream(oid + "/" + filepath);
-		} catch(Exception e) {
-			if( e.getMessage().toLowerCase().indexOf("no file found") >= 0 ) {
+		} catch (Exception e) {
+			if (e.getMessage().toLowerCase().indexOf("no file found") >= 0) {
 				// Does nothing if no file is found
 				return null;
-			} 
-
+			}
+			
 			// rethrow the error
 			throw e;
 		}
@@ -747,8 +743,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_ensureFolderPath(final String oid, final String folderPath) {
 		// We setup a blank file with type root, this checks only for the anchor file
 		// if it does not exists, we will make it
-		if(fullRawPathExist(oid+"/"+folderPath) == false) {
-			setupAnchorFile_withFullRawPath(oid, oid+"/"+folderPath, "dir");
+		if (fullRawPathExist(oid + "/" + folderPath) == false) {
+			setupAnchorFile_withFullRawPath(oid, oid + "/" + folderPath, "dir");
 		}
 	}
 	
@@ -774,7 +770,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long backend_createdTimestamp(final String oid, final String filepath) {
-
+		
 		// Currently only modified timestamp is supported
 		return backend_modifiedTimestamp(oid, filepath);
 	}
@@ -828,30 +824,28 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public Set<String> backend_getFileAndFolderPathSet(final String oid, String folderPath,
 		final int minDepth, final int maxDepth) {
-			
+		
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
 		// The fulle prefix path
-		String fullPrefixPath = oid+"/";
+		String fullPrefixPath = oid + "/";
 		
-		if( folderPath == null || folderPath.equals("/") || folderPath.isEmpty() ) {
+		if (folderPath == null || folderPath.equals("/") || folderPath.isEmpty()) {
 			// Query everything (using only the oid)
 			query = Filters.eq("metadata.oid", oid);
 		} else {
 			// Query using oid and the path
-			fullPrefixPath = fullPrefixPath+folderPath;
-
+			fullPrefixPath = fullPrefixPath + folderPath;
+			
 			// Filter for matching path
-			query = Filters.and(
-				Filters.eq("metadata.oid", oid),
-				Filters.regex("filename", "^"+Pattern.quote(fullPrefixPath)+".*")
-			);
+			query = Filters.and(Filters.eq("metadata.oid", oid),
+				Filters.regex("filename", "^" + Pattern.quote(fullPrefixPath) + ".*"));
 		}
-
+		
 		// The return set
 		Set<String> ret = new HashSet<>();
-
+		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query);
 		
@@ -861,37 +855,70 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				// Get the fileobj and filename
 				GridFSFile fileObj = cursor.next();
 				String fullFilename = fileObj.getFilename();
-
+				
 				// Skip the oid anchor
-				if( fullFilename.equals(oid) ) {
+				if (fullFilename.equals(oid)) {
 					continue;
 				}
-
+				
 				// Remove the oid prefix
-				String filepath = fullFilename.substring( oid.length()+1 );
-
+				String filepath = fullFilename.substring(oid.length() + 1);
+				
 				// Register the validpath
 				ret.add(filepath);
-
+				
 				// Prepare a clean path without ending slash
 				String cleanPath = filepath;
-				if( cleanPath.endsWith("/") ) {
-					cleanPath = cleanPath.substring(0, cleanPath.length()-1);
+				if (cleanPath.endsWith("/")) {
+					cleanPath = cleanPath.substring(0, cleanPath.length() - 1);
 				}
-
+				
 				// Lets split the filepath
 				String[] cleanPathArr = cleanPath.split("/");
 				List<String> cleanPathList = Arrays.asList(cleanPathArr);
-
+				
 				// Lets handle parent folders, note that i<cleanPathArr.length, alread excludes the file itself
-				for(int i=1; i<cleanPathArr.length; ++i) {
-					ret.add( String.join("/", cleanPathList.subList(0,i) )+"/" );
+				for (int i = 1; i < cleanPathArr.length; ++i) {
+					ret.add(String.join("/", cleanPathList.subList(0, i)) + "/");
 				}
 			}
 		}
-
+		
 		// Filter and return the final set
-		return backend_filterPathSet( ret, folderPath, minDepth, maxDepth, 0);
+		return backend_filterPathSet(ret, folderPath, minDepth, maxDepth, 0);
 	}
+	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get and returns all the GUID's, note that due to its
+	 * potential of returning a large data set, production use
+	 * should be avoided.
+	 *
+	 * @return set of keys
+	 **/
+	@Override
+	public Set<String> keySet() {
+		// The return hashset
+		HashSet<String> ret = new HashSet<String>();
+		
+		// Lets fetch everything ... D=
+		DistinctIterable<String> search = filesCollection.distinct("metadata.oid", String.class);
+
+		// Lets iterate the search
+		try (MongoCursor<String> cursor = search.iterator()) {
+			while (cursor.hasNext()) {
+				ret.add(cursor.next());
+			}
+		}
+		
+		// Return the full keyset
+		return ret;
+	}
+	
 	
 }

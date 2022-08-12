@@ -28,4 +28,19 @@ public class DStackTestConfig extends JSqlTestConfig {
 		return MONGODB_PORT;
 	}
 	
+	//----------------------------------//
+	// Default Credentials for REDIS  //
+	//----------------------------------//
+	
+	static private String REDIS_HOST = "172.17.0.1";
+	static private int REDIS_PORT = 6379;
+	
+	static public String REDIS_HOST() {
+		return REDIS_HOST;
+	}
+	
+	static public int REDIS_PORT() {
+		return REDIS_PORT;
+	}
+	
 }
