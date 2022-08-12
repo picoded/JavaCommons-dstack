@@ -33,18 +33,18 @@ public class RedissonStack extends CoreStack {
 	 * https://github.com/lettuce-io/lettuce-core/wiki/Redis-URI-and-connection-details
 	 */
 	public static String getFullConnectionURL(GenericConvertMap<String, Object> config) {
-		// Get the DB name (required)
-		
-		// Redis db are labelled from 0 to 15
-		String dbname = config.getString("name", null);
-		if (dbname == null || dbname.isEmpty()) {
-			throw new IllegalArgumentException("Missing database 'name' for redis config");
-		}
 		
 		// Get the full connection url, and use it if present
 		String full_url = config.getString("full_url", null);
 		if (full_url != null) {
 			return full_url;
+		}
+		
+		// Get the DB name (required)
+		// Redis db are labelled from 0 to 15
+		String dbname = config.getString("name", null);
+		if (dbname == null || dbname.isEmpty()) {
+			throw new IllegalArgumentException("Missing database 'name' for redis config");
 		}
 		
 		// Lets get the config respectively
@@ -53,8 +53,6 @@ public class RedissonStack extends CoreStack {
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "172.17.0.1"); //default docker ip 
 		int port = config.getInt("port", 6379); //default redis port
-		String opts = config.getString("opt_str",
-			"r=majority&w=majority&retryWrites=true&maxPoolSize=50");
 		
 		// Lets build the auth str
 		String authStr = "";
@@ -62,7 +60,7 @@ public class RedissonStack extends CoreStack {
 			authStr = user + ":" + pass + "@";
 		}
 		
-		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
+		return protocol + "://" + authStr + host + ":" + port + "/" + dbname;
 	}
 	
 	/**
@@ -71,7 +69,6 @@ public class RedissonStack extends CoreStack {
 	public static RedissonClient setupFromConfig(GenericConvertMap<String, Object> inConfig) {
 		// Get the full_url
 		String full_url = getFullConnectionURL(inConfig);
-		System.out.println(full_url);
 		
 		// Apply config
 		Config config = new Config();
