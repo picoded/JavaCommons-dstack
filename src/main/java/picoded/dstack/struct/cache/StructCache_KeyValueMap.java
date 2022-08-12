@@ -1,24 +1,32 @@
 package picoded.dstack.struct.cache;
 
 // Java imports
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Picoded imports
-import picoded.dstack.core.*;
+import picoded.dstack.KeyValueMap;
+import picoded.dstack.core.Core_KeyValueMap;
+import picoded.core.struct.GenericConvertMap;
+import picoded.core.struct.MutablePair;
+import picoded.core.struct.GenericConvertHashMap;
 
 // Cache2k implmentation
 import org.cache2k.Cache2kBuilder;
 import org.cache2k.Cache;
 
 /**
- * Internal cache implementation of DataObjectMap
+ * Internal cache implementation of KeyValueMap
  * This is done via a cache2k implementation via internal data structures.
  *
- * Built ontop of the Core_DataObjectMap_struct implementation.
+ * Built ontop of the StructCache_KeyValueMap implementation.
  **/
-public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
-	
+public class StructCache_KeyValueMap extends Core_KeyValueMap {
+
 	//--------------------------------------------------------------------------
 	//
 	// Constructor
@@ -28,14 +36,14 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	/**
 	 * Constructor, without name constructor (this is required)
 	 */
-	public StructCache_DataObjectMap() {
+	public StructCache_KeyValueMap() {
 		super();
 	}
 	
 	/**
 	 * Constructor, with name constructor
 	 */
-	public StructCache_DataObjectMap(String name) {
+	public StructCache_KeyValueMap(String name) {
 		super();
 		configMap().put("name", name);
 	}
@@ -50,7 +58,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected volatile static Map<String, Cache<String, Map<String, Object>>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, Map<String, Object>>>();
+	protected volatile static Map<String, Cache<String, String>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, String>>();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -85,12 +93,12 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	/**
 	 * @return The current cache namespace object
 	 **/
-	protected Cache<String, Map<String, Object>> _valueMap = null;
+	protected Cache<String, String> _valueMap = null;
 	
 	/**
 	 * @return Get the cachemap from global namespace by name
 	 */
-	private Cache<String, Map<String, Object>> valueMap() {
+	private Cache<String, String> valueMap() {
 		// Return the value map if already initialized
 		if (_valueMap != null) {
 			return _valueMap;
@@ -112,7 +120,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	 * @return Storage map used for the backend operations of one "DataObjectMap"
 	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
 	 */
-	protected Map<String, Map<String, Object>> backendMap() {
+	protected Map<String, String> backendMap() {
 		return valueMap().asMap();
 	}
 	
@@ -122,9 +130,6 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 	//
 	//--------------------------------------------------------------------------
 	
-	/**
-	 * Setsup the backend storage table, etc. If needed
-	 **/
 	@Override
 	public void systemSetup() {
 		// Value map already loaded, ignore this step
@@ -140,7 +145,7 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 		
 		// We perfome the following in a syncronized block, to avoid race conditions
 		// in the systemSetup process
-		synchronized (StructCache_DataObjectMap.class) {
+		synchronized (StructCache_KeyValueMap.class) {
 			// Lets load from global cache map (again) with cache name if possible
 			_valueMap = globalCacheMap.get(cacheName());
 			if (_valueMap != null) {
@@ -148,23 +153,64 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 			}
 			
 			// Build the cache
-			_valueMap = StructCacheUtil.setupCache2kMap(new Cache2kBuilder<String, Map<String,Object>>(){}, cacheName(), configMap());
+			_valueMap = StructCacheUtil.setupCache2kMap(new Cache2kBuilder<String, String>(){}, cacheName(), configMap());
 			
 			// Add it back to the global cache
 			globalCacheMap.put(cacheName(), _valueMap);
 		}
+
 	}
-	
-	/**
-	 * Teardown and delete the backend storage table, etc. If needed
-	 **/
+
 	@Override
 	public void systemDestroy() {
-		synchronized (StructCache_DataObjectMap.class) {
+		synchronized (StructCache_KeyValueMap.class) {
 			_valueMap.clear();
 			globalCacheMap.remove(cacheName());
 			_valueMap = null;
 		}
+
+	}
+
+	@Override
+	public void maintenance() {
+		// Does nothing
+
+	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Set and get values
+	//
+	//--------------------------------------------------------------------------
+	
+	@Override
+	public String setValueRaw(String key, String value, long expire) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setExpiryRaw(String key, long time) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// KeySet and value query
+	//
+	//--------------------------------------------------------------------------
+	
+	@Override
+	public Set<String> keySet(String value) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
