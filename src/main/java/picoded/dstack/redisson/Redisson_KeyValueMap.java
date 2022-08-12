@@ -278,7 +278,7 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 			} else if( rawTTL <= -1 ) {
 				// has no expiry
 				// Note: 0 = no timestamp, hence valid value
-				return new MutablePair<String, Long>(value, 0);
+				return new MutablePair<String, Long>(value, 0L);
 			}
 			
 			// Return with expiry value
