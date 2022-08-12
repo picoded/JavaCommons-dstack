@@ -111,6 +111,7 @@ dependencies {
 
 	// Mongo DB 
 	api 'org.mongodb:mongodb-driver-sync:4.5.1'
+	api 'com.github.luben:zstd-jni:1.5.2-3'
 
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
