@@ -672,7 +672,7 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		return ListValueConv.toStringSet(r.getObjectList("oID"));
 	}
-
+	
 	/**
 	 * Gets and return a random object ID
 	 *
@@ -691,5 +691,4 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return r.getStringArray("oID")[0];
 	}
 	
-
 }

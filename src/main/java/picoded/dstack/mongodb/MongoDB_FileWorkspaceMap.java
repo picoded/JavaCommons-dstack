@@ -908,7 +908,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		// Lets fetch everything ... D=
 		DistinctIterable<String> search = filesCollection.distinct("metadata.oid", String.class);
-
+		
 		// Lets iterate the search
 		try (MongoCursor<String> cursor = search.iterator()) {
 			while (cursor.hasNext()) {
@@ -919,6 +919,5 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Return the full keyset
 		return ret;
 	}
-	
 	
 }

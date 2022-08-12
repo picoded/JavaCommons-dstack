@@ -294,7 +294,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		
 		// Lets fetch everything ... D=
 		DistinctIterable<String> search = collection.distinct("_oid", String.class);
-
+		
 		// Lets iterate the search
 		try (MongoCursor<String> cursor = search.iterator()) {
 			while (cursor.hasNext()) {

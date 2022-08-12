@@ -77,38 +77,38 @@ public class FileLayered_FileWorkspaceMap extends FileSimple_FileWorkspaceMap {
 		// For each one of it, process it!
 		for (File l1_dir : l1_dirList) {
 			// Skip if its not a directory
-			if( !l1_dir.isDirectory() ) {
+			if (!l1_dir.isDirectory()) {
 				continue;
 			}
-
+			
 			// List all the files/folders
 			File[] l2_dirList = l1_dir.listFiles();
 			
-			for(File l2_dir : l2_dirList) {
+			for (File l2_dir : l2_dirList) {
 				// Skip if its not a directory
-				if( !l2_dir.isDirectory() ) {
+				if (!l2_dir.isDirectory()) {
 					continue;
 				}
-
+				
 				// Get the oidDirLIst
 				File[] oid_list = l2_dir.listFiles();
-
+				
 				// For each oid dir
-				for(File oid_dir : oid_list) {
+				for (File oid_dir : oid_list) {
 					// Get the presumed oid
 					String oid = oid_dir.getName();
-
+					
 					// Validate the dir name (oid)
-					if( !validateOid(oid) ) {
+					if (!validateOid(oid)) {
 						continue;
 					}
-
+					
 					// Add the oid to the ret set
 					ret.add(oid);
 				}
 			}
 		}
-
+		
 		// Return the full keyset
 		return ret;
 	}

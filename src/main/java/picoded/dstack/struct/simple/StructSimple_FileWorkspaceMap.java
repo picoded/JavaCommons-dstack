@@ -627,7 +627,7 @@ public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public Set<String> keySet() {
 		return new HashSet<>(fileContentMap.keySet());
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor and maintenance

@@ -90,7 +90,7 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	 * @return backendmap memoizer
 	 */
 	// private RMap<String, Map<String, Object>> _backendRMap = null;
-	private RMapCache<String, String>  _backendRMap = null;
+	private RMapCache<String, String> _backendRMap = null;
 	
 	/**
 	 * @return Storage map used for the backend operations of one "DataObjectMap"
@@ -164,10 +164,10 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	public Set<String> keySet(String value) {
 		// The return hashset
 		HashSet<String> ret = new HashSet<String>();
-		List<String> retList = null; 
-        if (value == null) {
+		List<String> retList = null;
+		if (value == null) {
 			// Lets fetch everything
-            retList = new ArrayList<String>(backendMap().readAllKeySet());
+			retList = new ArrayList<String>(backendMap().readAllKeySet());
 			// Return the full keyset
 			retList.forEach(k -> ret.add(k));
 		} else {
@@ -202,14 +202,12 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	 **/
 	public void setExpiryRaw(String key, long time) {
 		if (time > 0) {
-			backendMap()
-				.updateEntryExpiration(key, Math.max(time - System.currentTimeMillis(), 1),
-					TimeUnit.MILLISECONDS,0,TimeUnit.MILLISECONDS);
+			backendMap().updateEntryExpiration(key, Math.max(time - System.currentTimeMillis(), 1),
+				TimeUnit.MILLISECONDS, 0, TimeUnit.MILLISECONDS);
 		} else {
 			backendMap()
-				.updateEntryExpiration(key, 0, 
-					TimeUnit.MILLISECONDS,0,TimeUnit.MILLISECONDS);
-		}	
+				.updateEntryExpiration(key, 0, TimeUnit.MILLISECONDS, 0, TimeUnit.MILLISECONDS);
+		}
 	}
 	
 	/**
@@ -254,28 +252,28 @@ public class Redisson_KeyValueMap extends Core_KeyValueMap {
 	 * @return String value, and expiry pair
 	 **/
 	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
-
+		
 		Set<String> keys = new HashSet<String>();
 		Map<String, String> mapSlice = new HashMap<String, String>();
-		Map.Entry<String,String> entry = null;
-
+		Map.Entry<String, String> entry = null;
+		
 		keys.add(key);
 		mapSlice = backendMap().getAll(keys);
-
-		Iterator<Map.Entry<String,String>> it = mapSlice.entrySet().iterator();
-		if(it.hasNext()){
+		
+		Iterator<Map.Entry<String, String>> it = mapSlice.entrySet().iterator();
+		if (it.hasNext()) {
 			entry = it.next();
 			if (entry == null) {
 				return null;
 			}
 			String value = entry.getValue();
-
+			
 			// Get the raw TTL
 			long rawTTL = backendMap().remainTimeToLive(key);
-			if( rawTTL <= -2 ) {
+			if (rawTTL <= -2) {
 				// value has expired
 				return null;
-			} else if( rawTTL <= -1 ) {
+			} else if (rawTTL <= -1) {
 				// has no expiry
 				// Note: 0 = no timestamp, hence valid value
 				return new MutablePair<String, Long>(value, 0L);

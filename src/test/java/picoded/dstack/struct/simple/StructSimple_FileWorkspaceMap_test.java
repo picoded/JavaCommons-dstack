@@ -437,16 +437,15 @@ public class StructSimple_FileWorkspaceMap_test {
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));
 	}
-
-
+	
 	@Test
 	public void keySetTest() {
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
-
+		
 		// Get the workspace keyset
 		Set<String> keyset = testObj.keySet();
 		assertNotNull(keyset);
-		assertTrue( keyset.contains(fileWorkspace._oid()) );
+		assertTrue(keyset.contains(fileWorkspace._oid()));
 	}
 }
