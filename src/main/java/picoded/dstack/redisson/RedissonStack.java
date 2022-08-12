@@ -104,12 +104,12 @@ public class RedissonStack extends CoreStack {
 	//
 	//--------------------------------------------------------------------------
 	
-	/**
-	 * @return pong
-	 */
-	protected String ping() {
-		return "pong";
-	}
+	// /**
+	//  * @return pong
+	//  */
+	// protected String ping() {
+	// 	return "pong";
+	// }
 	
 	/**
 	 * @return the internal hazelcastInstance connection
