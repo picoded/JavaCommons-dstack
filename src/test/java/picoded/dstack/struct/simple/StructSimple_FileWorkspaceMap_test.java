@@ -153,7 +153,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		
 		// Check for null (no file) for non existant file
 		assertNull(fileWorkspace.readString("test/folder/file.txt"));
-
+		
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
 		assertTrue(fileWorkspace.fileExist("test/folder/file.txt"));
@@ -162,7 +162,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		// Check for null (no file) for non existant file
 		assertNull(fileWorkspace.readString("test/folder/file-somethingElse.txt"));
 	}
-
+	
 	@Test
 	public void fileWrite_andProperlySetupFolder() {
 		// Get the file workspace to use
@@ -174,7 +174,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		
 		// Check for null (no file) for non existant file
 		assertNull(fileWorkspace.readString("test/folder/file.txt"));
-
+		
 		// Write file
 		fileWorkspace.writeString("test/folder/file.txt", "anything");
 		assertTrue(fileWorkspace.folderPathExist("test/folder"));
@@ -184,7 +184,7 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.removeFolderPath("test/folder");
 		assertFalse(fileWorkspace.fileExist("test/folder/file.txt"));
 		assertFalse(fileWorkspace.folderPathExist("test/folder"));
-
+		
 		assertTrue(fileWorkspace.folderPathExist("test"));
 	}
 	
@@ -204,13 +204,14 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertFalse(fileWorkspace.folderPathExist("test/folder"));
 		
 		// Write and read file
-		for(int i=0; i < 5; ++i) {
-			fileWorkspace.writeString("test/folder/file.txt", "ver-"+i);
-			assertEquals("ver-"+i, fileWorkspace.readString("test/folder/file.txt"));
-			fileWorkspace.writeString("test/folder/file.txt", "ver-"+i);
-			assertEquals("ver-"+i, fileWorkspace.readString("test/folder/file.txt"));
+		for (int i = 0; i < 5; ++i) {
+			fileWorkspace.writeString("test/folder/file.txt", "ver-" + i);
+			assertEquals("ver-" + i, fileWorkspace.readString("test/folder/file.txt"));
+			fileWorkspace.writeString("test/folder/file.txt", "ver-" + i);
+			assertEquals("ver-" + i, fileWorkspace.readString("test/folder/file.txt"));
 		}
 	}
+	
 	@Test
 	public void fileWrite_twentyTimes() {
 		// Get the file workspace to use
@@ -221,11 +222,11 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertFalse(fileWorkspace.folderPathExist("test/folder"));
 		
 		// Write and read file
-		for(int i=0; i < 20; ++i) {
-			fileWorkspace.writeString("test/folder/file.txt", "ver-"+i);
-			assertEquals("ver-"+i, fileWorkspace.readString("test/folder/file.txt"));
-			fileWorkspace.writeString("test/folder/file.txt", "ver-"+i);
-			assertEquals("ver-"+i, fileWorkspace.readString("test/folder/file.txt"));
+		for (int i = 0; i < 20; ++i) {
+			fileWorkspace.writeString("test/folder/file.txt", "ver-" + i);
+			assertEquals("ver-" + i, fileWorkspace.readString("test/folder/file.txt"));
+			fileWorkspace.writeString("test/folder/file.txt", "ver-" + i);
+			assertEquals("ver-" + i, fileWorkspace.readString("test/folder/file.txt"));
 		}
 	}
 	

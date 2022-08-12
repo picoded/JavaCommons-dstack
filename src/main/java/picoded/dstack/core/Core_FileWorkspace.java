@@ -105,12 +105,12 @@ public class Core_FileWorkspace implements FileWorkspace {
 		main.setupWorkspace(_oid());
 		_isUninitialized = false;
 	}
-
+	
 	/**
 	 * Calls setupWorkspace if _isUninitialized is true
 	 */
 	protected void setupUninitializedWorkspace() {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			setupWorkspace();
 		}
 	}
@@ -145,7 +145,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true, if file exists (and writable), false if it does not. Possible a folder
 	 */
 	public boolean fileExist(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return false;
 		}
 		return main.backend_fileExist(_oid, normalizeFilePathString(filepath));
@@ -157,7 +157,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param filepath in the workspace to delete
 	 */
 	public void removeFile(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_removeFile(_oid, normalizeFilePathString(filepath));
@@ -174,7 +174,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return the file contents, null if file does not exists
 	 */
 	public InputStream readInputStream(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return null;
 		}
 		return main.backend_fileReadInputStream(_oid, normalizeFilePathString(filepath));
@@ -204,7 +204,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return the file contents, null if file does not exists
 	 */
 	public byte[] readByteArray(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return null;
 		}
 		return main.backend_fileRead(_oid, normalizeFilePathString(filepath));
@@ -247,7 +247,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param folderPath in the workspace (note, folderPath is normalized to end with "/")
 	 */
 	public void removeFolderPath(final String folderPath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_removeFolderPath(_oid, normalizeFolderPathString(folderPath));
@@ -260,7 +260,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return true if folderPath is valid
 	 */
 	public boolean folderPathExist(final String folderPath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return false;
 		}
 		return main.backend_folderPathExist(_oid, normalizeFolderPathString(folderPath));
@@ -294,7 +294,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long createdTimestamp(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return -1;
 		}
 		return main.backend_createdTimestamp(_oid, normalizeFilePathString(filepath));
@@ -309,7 +309,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long modifiedTimestamp(final String filepath) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return -1;
 		}
 		return main.backend_modifiedTimestamp(_oid, normalizeFilePathString(filepath));
@@ -334,7 +334,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFile
 	 */
 	public void moveFile(final String sourceFile, final String destinationFile) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_moveFile(_oid, normalizeFilePathString(sourceFile),
@@ -358,7 +358,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFolder
 	 */
 	public void moveFolderPath(final String sourceFolder, final String destinationFolder) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_moveFolderPath(_oid, normalizeFolderPathString(sourceFolder),
@@ -384,7 +384,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFile
 	 */
 	public void copyFile(final String sourceFile, final String destinationFile) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_copyFile(_oid, normalizeFilePathString(sourceFile),
@@ -408,7 +408,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @param destinationFolder
 	 */
 	public void copyFolderPath(final String sourceFolder, final String destinationFolder) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return;
 		}
 		main.backend_copyFolderPath(_oid, normalizeFolderPathString(sourceFolder),
@@ -428,7 +428,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFileAndFolderPathSet(final String folderPath, final int minDepth,
 		final int maxDepth) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return new HashSet<>();
 		}
 		return main.backend_getFileAndFolderPathSet(_oid, normalizeFolderPathString(folderPath),
@@ -444,7 +444,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 * @return list of path strings - relative to the given folderPath
 	 */
 	public Set<String> getFilePathSet(final String folderPath, final int minDepth, final int maxDepth) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return new HashSet<>();
 		}
 		return main.backend_getFilePathSet(_oid, normalizeFolderPathString(folderPath), minDepth,
@@ -461,7 +461,7 @@ public class Core_FileWorkspace implements FileWorkspace {
 	 */
 	public Set<String> getFolderPathSet(final String folderPath, final int minDepth,
 		final int maxDepth) {
-		if( _isUninitialized ) {
+		if (_isUninitialized) {
 			return new HashSet<>();
 		}
 		return main.backend_getFolderPathSet(_oid, normalizeFolderPathString(folderPath), minDepth,

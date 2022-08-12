@@ -183,7 +183,7 @@ public interface KeyLongMap extends GenericConvertMap<String, KeyLong>, CommonSt
 		// We simply use get and add, with the delta,
 		// this reduce the amount of permutation needed to support
 		//
-		return getAndAdd(key, delta)+GenericConvert.toLong(delta);
+		return getAndAdd(key, delta) + GenericConvert.toLong(delta);
 	}
 	
 	/**

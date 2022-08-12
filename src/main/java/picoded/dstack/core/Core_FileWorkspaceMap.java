@@ -125,12 +125,12 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		if (res.endsWith("/")) {
 			res = res.substring(0, res.length() - 1);
 		}
-
+		
 		// Block empty filepath
-		if( res.isEmpty() ) {
+		if (res.isEmpty()) {
 			throw new RuntimeException("Empty file path is not allowed");
 		}
-
+		
 		return res;
 	}
 	
@@ -298,7 +298,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		
 		// Get the existing byte array
 		byte[] read = backend_fileRead(oid, filepath);
-
+		
 		// Just write it as it is (read is null)
 		if (read == null) {
 			backend_fileWrite(oid, filepath, data);
@@ -409,17 +409,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		final String destinationFolder) {
 		// Get the list of valid sub paths in the sourceFolder
 		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
-
+		
 		// Lets sync up all the folders first
-		for(String dir : subPath) {
-			if(dir.endsWith("/")) {
-				backend_ensureFolderPath(oid, destinationFolder+dir);
+		for (String dir : subPath) {
+			if (dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder + dir);
 			}
 		}
 		// Lets sync up all the files next
-		for(String file : subPath) {
-			if(!file.endsWith("/")) {
-				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
+		for (String file : subPath) {
+			if (!file.endsWith("/")) {
+				backend_copyFile(oid, sourceFolder + file, destinationFolder + file);
 			}
 		}
 		// Lets remove the original folders
@@ -449,7 +449,8 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 	 */
 	public void backend_copyFile(final String oid, final String sourceFile,
 		final String destinationFile) {
-		backend_fileWriteInputStream(oid, destinationFile, backend_fileReadInputStream(oid, sourceFile));
+		backend_fileWriteInputStream(oid, destinationFile,
+			backend_fileReadInputStream(oid, sourceFile));
 	}
 	
 	/**
@@ -476,17 +477,17 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		final String destinationFolder) {
 		// Get the list of valid sub paths in the sourceFolder
 		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
-
+		
 		// Lets sync up all the folders first
-		for(String dir : subPath) {
-			if(dir.endsWith("/")) {
-				backend_ensureFolderPath(oid, destinationFolder+dir);
+		for (String dir : subPath) {
+			if (dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder + dir);
 			}
 		}
 		// Lets sync up all the files next
-		for(String file : subPath) {
-			if(file.endsWith("/") == false) {
-				backend_copyFile(oid, sourceFolder+file, destinationFolder+file);
+		for (String file : subPath) {
+			if (file.endsWith("/") == false) {
+				backend_copyFile(oid, sourceFolder + file, destinationFolder + file);
 			}
 		}
 	}
@@ -600,12 +601,12 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			}
 			
 			// Alrighto - lets check file / folder type - and add it in
-
+			
 			// Ignore empty, or root path
-			if(subPath.isEmpty() || subPath.equals("/")) {
+			if (subPath.isEmpty() || subPath.equals("/")) {
 				continue;
 			}
-
+			
 			// Expect a folder, reject files
 			if (pathType == 1) {
 				if (subPath.endsWith("/")) {
@@ -613,7 +614,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 					continue;
 				}
 			}
-
+			
 			// Expect files, reject folders
 			if (pathType == 2) {
 				if (!subPath.endsWith("/")) {

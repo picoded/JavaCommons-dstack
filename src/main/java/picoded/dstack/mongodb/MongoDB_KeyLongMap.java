@@ -421,43 +421,43 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	//  * @return  value of the given key after adding
 	//  **/
 	// public Long getAndAdd(Object key, Object delta) {
-		
+	
 	// 	// This is the more optimized varient for weakCompareAndSet
 	// 	// ---
-
+	
 	// 	// Validate and convert the key to String
 	// 	if (key == null) {
 	// 		throw new IllegalArgumentException("key cannot be null in");
 	// 	}
 	// 	String keyAsString = key.toString();
-		
+	
 	// 	// Normalize the delta to a long
 	// 	Long deltaLong = GenericConvert.toLong(delta);
-
+	
 	// 	// Configure this to be an "upsert" query
 	// 	FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
 	// 	opt.upsert(true);
-
+	
 	// // !! THE FOLLOWING BELOW IS INCOMPLETE CODE (AND IS BROKEN)
 	// // ---
-
+	
 	// 	// now timestamp
 	// 	Date now = new Date();
-		
+	
 	// 	// Lets generate the mongodb "update" document rule
 	// 	Document updateDoc = new Document();
-		
+	
 	// 	// Disable expire timestamp when using 
 	// 	// weakCompareAndSet/getAndAdd/addAndGet
 	// 	Document unset_doc = new Document();
 	// 	unset_doc.append("expireAt", "");
 	// 	updateDoc.append("$unset", unset_doc);
-		
+	
 	// 	// Setup the value on update/insert/upsert
 	// 	Document inc_doc = new Document();
 	// 	inc_doc.append("val", deltaLong);
 	// 	updateDoc.append("$set", set_doc);
-		
+	
 	// 	//
 	// 	// In general there are the following compare and set scenerios to handle
 	// 	//
@@ -468,14 +468,14 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 	// 2) expecting value is non-zero
 	// 	//   a) existing record is NOT expired, and is expected value.
 	// 	//
-		
+	
 	// 	// Potentially a new upsert, ensure there is something to "update" atleast
 	// 	// initializing an empty row if it does not exist
 	// 	if (expect == null || expect == 0l) {
 	// 		// Expect is now atleast 0
 	// 		expect = 0l;
 	// 	}
-		
+	
 	// 	//
 	// 	// We update any existing values
 	// 	// this handle scenerio 1a, 1c & 2a
@@ -483,7 +483,7 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 	// We can do this safely here, as mongodb handles the expire
 	// 	// natively, so we do not need to worry about race conditions.
 	// 	//
-		
+	
 	// 	//
 	// 	// Upsert the document
 	// 	//
@@ -493,12 +493,12 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 			Filters.and(Filters.gt("expireAt", new Date(0l)), Filters.lt("expireAt", now)),
 	// 			// Handles an non-expired record
 	// 			Filters.and(Filters.eq("val", expect), filterForUnexpired(now)))), updateDoc, opt);
-		
+	
 	// 	// Return true on succesful update
 	// 	if (ret != null) {
 	// 		return true;
 	// 	}
-		
+	
 	// 	//
 	// 	// We insert a record if possible, this handle sceneric 1b
 	// 	//
@@ -507,7 +507,7 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 			InsertOneResult res = collection.insertOne( //
 	// 				new Document().append("key", key).append("val", update) //
 	// 				);
-				
+	
 	// 			if (res.wasAcknowledged()) {
 	// 				return true;
 	// 			}
@@ -516,11 +516,11 @@ public class MongoDB_KeyLongMap extends Core_KeyLongMap {
 	// 			return false;
 	// 		}
 	// 	}
-		
+	
 	// 	// All Failed
 	// 	return false;
 	// }
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Remove call
