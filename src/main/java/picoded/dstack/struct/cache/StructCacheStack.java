@@ -32,6 +32,8 @@ public class StructCacheStack extends CoreStack {
 		Core_DataStructure ret = null;
 		if (type.equalsIgnoreCase("DataObjectMap")) {
 			ret = new StructCache_DataObjectMap();
+		} else if (type.equalsIgnoreCase("KeyValueMap")) {
+			ret = new StructCache_KeyValueMap();
 		}
 		
 		// If datastrucutre initialized, setup name
