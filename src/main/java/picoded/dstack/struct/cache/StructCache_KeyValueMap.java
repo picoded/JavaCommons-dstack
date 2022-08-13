@@ -1,19 +1,15 @@
 package picoded.dstack.struct.cache;
 
+import java.io.Serializable;
 // Java imports
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Picoded imports
-import picoded.dstack.KeyValueMap;
 import picoded.dstack.core.Core_KeyValueMap;
-import picoded.core.struct.GenericConvertMap;
 import picoded.core.struct.MutablePair;
-import picoded.core.struct.GenericConvertHashMap;
 
 // Cache2k implmentation
 import org.cache2k.Cache2kBuilder;
@@ -55,10 +51,27 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	//--------------------------------------------------------------------------
 	
 	/**
+	 * Serializable class for storing value, expire pairs
+	 * We use this because cache2k requires Serializable values
+	 */
+	static public class CacheValue implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public String value;
+		public long expire;
+	}
+
+	static CacheValue cacheValueBuilder(String val, long exp) {
+		CacheValue ret = new CacheValue();
+		ret.value = val;
+		ret.expire = exp;
+		return ret;
+	}
+
+	/**
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
 	 */
-	protected volatile static Map<String, Cache<String, String>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, String>>();
+	protected volatile static Map<String, Cache<String, CacheValue>> globalCacheMap = new ConcurrentHashMap<String, Cache<String, CacheValue>>();
 	
 	//--------------------------------------------------------------------------
 	//
@@ -93,12 +106,12 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	/**
 	 * @return The current cache namespace object
 	 **/
-	protected Cache<String, String> _valueMap = null;
+	protected Cache<String, CacheValue> _valueMap = null;
 	
 	/**
 	 * @return Get the cachemap from global namespace by name
 	 */
-	private Cache<String, String> valueMap() {
+	private Cache<String, CacheValue> valueMap() {
 		// Return the value map if already initialized
 		if (_valueMap != null) {
 			return _valueMap;
@@ -114,14 +127,6 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 		
 		// Return the value map to use
 		return _valueMap;
-	}
-	
-	/**
-	 * @return Storage map used for the backend operations of one "DataObjectMap"
-	 *         identical to valueMap, made to be compliant with Core_DataObjectMap_struct
-	 */
-	protected Map<String, String> backendMap() {
-		return valueMap().asMap();
 	}
 	
 	//--------------------------------------------------------------------------
@@ -153,7 +158,9 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 			}
 			
 			// Build the cache
-			_valueMap = StructCacheUtil.setupCache2kMap(new Cache2kBuilder<String, String>(){}, cacheName(), configMap());
+			Cache2kBuilder<String, CacheValue> builder = new Cache2kBuilder<String, CacheValue>(){};
+			builder.storeByReference(true);
+			_valueMap = StructCacheUtil.setupCache2kMap(builder, cacheName(), configMap());
 			
 			// Add it back to the global cache
 			globalCacheMap.put(cacheName(), _valueMap);
@@ -183,22 +190,84 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	//
 	//--------------------------------------------------------------------------
 	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * Sets the value, with validation
+	 *
+	 * @param key
+	 * @param value, null means removal
+	 * @param expire TIMESTAMP, 0 means no timestamp
+	 *
+	 * @return null
+	 **/
 	@Override
 	public String setValueRaw(String key, String value, long expire) {
-		// TODO Auto-generated method stub
+		// Handles null removal
+		if( value == null ) {
+			valueMap().remove(key);
+			return null;
+		}
+
+		// Store and configure expiry
+		valueMap().put(key, cacheValueBuilder(value, expire));
+		if( expire > 0 ) {
+			// Note that cache expiry config, may take priority
+			// so this should not be relied on in itself
+			valueMap().expireAt(key, expire);
+		}
 		return null;
 	}
 
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * Sets the expire time stamp value, raw without validation
+	 *
+	 * @param key as String
+	 * @param expire TIMESTAMP in milliseconds, 0 means NO expire
+	 *
+	 * @return 
+	 **/
 	@Override
 	public void setExpiryRaw(String key, long time) {
-		// TODO Auto-generated method stub
+		CacheValue cv = valueMap().get(key);
+		if( cv == null ) {
+			// Does nothing if cv == null
+			return;
+		}
 
+		// Set the actual expire value
+		cv.expire = time;
+
+		// Configure cache2k expire values
+		if( time > 0 ) {
+			// Note that cache expiry config, may take priority
+			// so this should not be relied on in itself
+			valueMap().expireAt(key, time);
+		}
 	}
 
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Returns the value and expiry, with validation against the current timestamp
+	 *
+	 * @param key as String
+	 * @param now timestamp, 0 = no timestamp so skip timestamp checks
+	 *
+	 * @return String value, and expiry pair
+	 **/
 	@Override
 	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
-		// TODO Auto-generated method stub
-		return null;
+		CacheValue cv = valueMap().get(key);
+		if( cv == null ) {
+			// Does nothing if cv == null
+			return null;
+		}
+		if( cv.expire > 0 && cv.expire <= System.currentTimeMillis() ) {
+			// Value should be expired, does nothing
+			return null;
+		}
+		return new MutablePair<String,Long>(cv.value, cv.expire);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -209,8 +278,34 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	
 	@Override
 	public Set<String> keySet(String value) {
-		// TODO Auto-generated method stub
-		return null;
+		// Optimized for all
+		if( value == null ) {
+			return valueMap().asMap().keySet();
+		}
+
+		// We have to do a search
+		Set<String> full = valueMap().asMap().keySet();
+		Set<String> ret = new HashSet<>();
+		long now = System.currentTimeMillis();
+
+		// Lets iterate each key
+		for(String key : full) {
+			CacheValue cv = valueMap().get(key);
+			if( cv == null ) {
+				// Does nothing if cv == null
+				continue;
+			}
+			if( cv.expire > 0 && cv.expire <= now ) {
+				// Value should be expired, does nothing
+				continue;
+			}
+			if( cv.value == value ) {
+				ret.add(key);
+			}
+		}
+
+		// Return the filtered set
+		return ret;
 	}
 
 }
