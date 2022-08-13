@@ -64,8 +64,8 @@ class StructCacheUtil {
 		//
 		int capacity = config.getInt("capacity", 10000);
 		
-		// Disable monitoring statistics by default
-		boolean monitoring = config.getBoolean("monitoring", false);
+		// // Disable monitoring statistics by default
+		// boolean monitoring = config.getBoolean("monitoring", false);
 		
 		// Optimize for high concurrency mode, not recommended unless its
 		// >100k size, and 8 vCPU that is constantly under heavy load
@@ -88,10 +88,10 @@ class StructCacheUtil {
 		// Configure cache name and capacity
 		builder = builder.name(name).entryCapacity(capacity);
 		
-		// Disable monitoring
-		if (monitoring == false) {
-			builder = builder.disableMonitoring(true);
-		}
+		// // Disable monitoring
+		// if (monitoring == false) {
+		// 	builder = builder.disableMonitoring(true);
+		// }
 		// boostConcurrency if configured
 		if (boostConcurrency == true) {
 			builder = builder.boostConcurrency(true);
