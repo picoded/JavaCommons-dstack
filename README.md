@@ -18,14 +18,16 @@ Followed by `DStack` which faciltates the stacking of data backend provider for 
 | backend          | status        | notes                                                | DataObjectMap | KeyValueMap | KeyLongMap | FileWorkspaceMap |
 |------------------|---------------|------------------------------------------------------|---------------|-------------|------------|------------------|
 | struct.simple    | in-production | reference implementation, not recommended for use    | storage       | storage     | storage    | storage          |
-| struct.cache     | in-production | local instance caching, useful for WORM data         | storage       |             |            |                  |
+| struct.cache     | in-production | local instance caching, useful for WORM data         | storage       | storage     |            |                  |
 | jsql             | in-production | *with limits: see SQL support notes below            | full          | full        | full       | full             |
+| mongodb          | in-production | *with limits: see MongoDB support notes below        | full          | full        | full       | full             |
 | hazelcast.cache  | in-production |                                                      | full          | full        | full       |                  |
 | hazelcast.store  | in-production |                                                      | full          | full        | full       |                  |
 | file.simple      | in-production |                                                      |               |             |            | storage          |
 | file.layered     | in-production |                                                      |               |             |            | storage          |
-| ignite           | development   | roadmap                                              |               |             |            |                  |
-| cockroachdb      | development   | roadmap                                              |               |             |            |                  |
+| resdisson        | experimental  |                                                      | storage       | storage     |            |                  |
+| ignite           | roadmap       | roadmap                                              |               |             |            |                  |
+| cockroachdb      | roadmap       | roadmap                                              |               |             |            |                  |
 
 **Important notes**
 
@@ -33,6 +35,7 @@ Followed by `DStack` which faciltates the stacking of data backend provider for 
 - "storage" means does not support optimization for queries, for large queries, this can have detrimental performance implication, as the apistack will need to iterate a large number of data.
 - Hazelcast require a custom build / deployment with the JavaCommons JAR file to support the required functionality
 - MySQL connection / db seems to support only up to 16 digits of accuracy
+- Requires read-after-write consistency, for expected behaviour, use w=majority&readConcernLevel=linearizable
 
 # Data Structures
 
@@ -40,7 +43,7 @@ Followed by `DStack` which faciltates the stacking of data backend provider for 
 |------------------|---------------|----------------------------------------------------------------------------|
 | DataObjectMap    | in-production | Map document storage, with SQL query support                               |
 | KeyValueMap      | in-production | High performance key to string value storage                               |
-| KeyLongMap       | experimental  | Varient of KeyValue with atomic long support (if used in single tier mode) |
-| FileWorkspaceMap | development   | File workspace storage support                                             |
+| KeyLongMap       | in-production | Varient of KeyValue with atomic long support (if used in single tier mode) |
+| FileWorkspaceMap | in-production | File workspace storage support                                             |
 | MessageQueue     | road-map      | Message queue                                                              |
 | JobQueue         | road-map      | Job request, response queue                                                |

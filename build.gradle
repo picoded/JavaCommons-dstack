@@ -13,7 +13,7 @@ plugins {
 	// id "com.github.onslip.gradle-one-jar" version "1.0.5"
 
 	// Shadow plugin used to build the shade jar
-	id 'com.github.johnrengelman.shadow' version '2.0.4'
+	id 'com.github.johnrengelman.shadow' version '4.0.4'
 
 	// jacoco code coverage for test
 	id 'jacoco'
@@ -101,8 +101,8 @@ dependencies {
 	api "net.sourceforge.jtds:jtds:1.3.1" // for mssql
 
 	// Cache2k implementation
-	api "org.cache2k:cache2k-api:1.2.4.Final"
-	api "org.cache2k:cache2k-core:1.2.4.Final"
+	api "org.cache2k:cache2k-api:2.6.1.Final"
+	api "org.cache2k:cache2k-core:2.6.1.Final"
 
 	// Hazelcast 
 	api "com.hazelcast:hazelcast-all:4.0.2"
