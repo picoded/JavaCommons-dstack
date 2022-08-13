@@ -13,7 +13,7 @@ plugins {
 	// id "com.github.onslip.gradle-one-jar" version "1.0.5"
 
 	// Shadow plugin used to build the shade jar
-	id 'com.github.johnrengelman.plugin-shadow' version '2.0.3'
+	id 'com.github.johnrengelman.shadow' version '2.0.4'
 
 	// jacoco code coverage for test
 	id 'jacoco'
