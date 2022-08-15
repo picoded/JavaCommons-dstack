@@ -364,8 +364,13 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				// we will generates its REGEX equivalent
 				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
 
-				// val = val.replaceAll("*", "*");
-				val = val.replaceAll("\\*", "\\*");
+				// Escaping special regex characters
+				final String regexSpecialCharacters = ".+*?^$()[]{}|\\";
+				for(int i=0; i<regexSpecialCharacters.length(); ++i) {
+					val = val.replaceAll("\\"+regexSpecialCharacters.charAt(i), "\\"+regexSpecialCharacters.charAt(i));
+				}
+
+				// Replacing SQL syntax
 				val = val.replaceAll("\\%", ".*");
 				val = val.replaceAll("\\_", ".");
 				
