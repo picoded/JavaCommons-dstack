@@ -14,7 +14,8 @@ class StructCacheUtil {
 	 * Utility function used to build a new Cache2k cache instance
 	 * This handles all the various common config settings, and set it up accordingly
 	 */
-	static <V> Cache<String, V> setupCache2kMap(Cache2kBuilder<String,V> builder, String name, GenericConvertMap<String, Object> config) {
+	static <V> Cache<String, V> setupCache2kMap(Cache2kBuilder<String, V> builder, String name,
+		GenericConvertMap<String, Object> config) {
 		
 		//
 		// Get Config

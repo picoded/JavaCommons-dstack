@@ -22,7 +22,7 @@ import org.cache2k.Cache;
  * Built ontop of the StructCache_KeyValueMap implementation.
  **/
 public class StructCache_KeyValueMap extends Core_KeyValueMap {
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Constructor
@@ -59,14 +59,14 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 		public String value;
 		public long expire;
 	}
-
+	
 	static CacheValue cacheValueBuilder(String val, long exp) {
 		CacheValue ret = new CacheValue();
 		ret.value = val;
 		ret.expire = exp;
 		return ret;
 	}
-
+	
 	/**
 	 * Global static cache map,
 	 * Used to persist all the various cache maps used.
@@ -158,16 +158,17 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 			}
 			
 			// Build the cache
-			Cache2kBuilder<String, CacheValue> builder = new Cache2kBuilder<String, CacheValue>(){};
+			Cache2kBuilder<String, CacheValue> builder = new Cache2kBuilder<String, CacheValue>() {
+			};
 			builder.storeByReference(true);
 			_valueMap = StructCacheUtil.setupCache2kMap(builder, cacheName(), configMap());
 			
 			// Add it back to the global cache
 			globalCacheMap.put(cacheName(), _valueMap);
 		}
-
+		
 	}
-
+	
 	@Override
 	public void systemDestroy() {
 		synchronized (StructCache_KeyValueMap.class) {
@@ -175,15 +176,15 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 			globalCacheMap.remove(cacheName());
 			_valueMap = null;
 		}
-
+		
 	}
-
+	
 	@Override
 	public void maintenance() {
 		// Does nothing
-
+		
 	}
-
+	
 	//--------------------------------------------------------------------------
 	//
 	// Set and get values
@@ -203,21 +204,21 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	@Override
 	public String setValueRaw(String key, String value, long expire) {
 		// Handles null removal
-		if( value == null ) {
+		if (value == null) {
 			valueMap().remove(key);
 			return null;
 		}
-
+		
 		// Store and configure expiry
 		valueMap().put(key, cacheValueBuilder(value, expire));
-		if( expire > 0 ) {
+		if (expire > 0) {
 			// Note that cache expiry config, may take priority
 			// so this should not be relied on in itself
 			valueMap().expireAt(key, expire);
 		}
 		return null;
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 * Sets the expire time stamp value, raw without validation
@@ -230,22 +231,22 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	@Override
 	public void setExpiryRaw(String key, long time) {
 		CacheValue cv = valueMap().get(key);
-		if( cv == null ) {
+		if (cv == null) {
 			// Does nothing if cv == null
 			return;
 		}
-
+		
 		// Set the actual expire value
 		cv.expire = time;
-
+		
 		// Configure cache2k expire values
-		if( time > 0 ) {
+		if (time > 0) {
 			// Note that cache expiry config, may take priority
 			// so this should not be relied on in itself
 			valueMap().expireAt(key, time);
 		}
 	}
-
+	
 	/**
 	 * [Internal use, to be extended in future implementation]
 	 *
@@ -259,15 +260,15 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	@Override
 	public MutablePair<String, Long> getValueExpiryRaw(String key, long now) {
 		CacheValue cv = valueMap().get(key);
-		if( cv == null ) {
+		if (cv == null) {
 			// Does nothing if cv == null
 			return null;
 		}
-		if( cv.expire > 0 && cv.expire <= System.currentTimeMillis() ) {
+		if (cv.expire > 0 && cv.expire <= System.currentTimeMillis()) {
 			// Value should be expired, does nothing
 			return null;
 		}
-		return new MutablePair<String,Long>(cv.value, cv.expire);
+		return new MutablePair<String, Long>(cv.value, cv.expire);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -279,33 +280,33 @@ public class StructCache_KeyValueMap extends Core_KeyValueMap {
 	@Override
 	public Set<String> keySet(String value) {
 		// Optimized for all
-		if( value == null ) {
+		if (value == null) {
 			return valueMap().asMap().keySet();
 		}
-
+		
 		// We have to do a search
 		Set<String> full = valueMap().asMap().keySet();
 		Set<String> ret = new HashSet<>();
 		long now = System.currentTimeMillis();
-
+		
 		// Lets iterate each key
-		for(String key : full) {
+		for (String key : full) {
 			CacheValue cv = valueMap().get(key);
-			if( cv == null ) {
+			if (cv == null) {
 				// Does nothing if cv == null
 				continue;
 			}
-			if( cv.expire > 0 && cv.expire <= now ) {
+			if (cv.expire > 0 && cv.expire <= now) {
 				// Value should be expired, does nothing
 				continue;
 			}
-			if( cv.value == value ) {
+			if (cv.value == value) {
 				ret.add(key);
 			}
 		}
-
+		
 		// Return the filtered set
 		return ret;
 	}
-
+	
 }

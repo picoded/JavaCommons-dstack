@@ -148,7 +148,9 @@ public class StructCache_DataObjectMap extends Core_DataObjectMap_struct {
 			}
 			
 			// Build the cache
-			_valueMap = StructCacheUtil.setupCache2kMap(new Cache2kBuilder<String, Map<String,Object>>(){}, cacheName(), configMap());
+			_valueMap = StructCacheUtil.setupCache2kMap(
+				new Cache2kBuilder<String, Map<String, Object>>() {
+				}, cacheName(), configMap());
 			
 			// Add it back to the global cache
 			globalCacheMap.put(cacheName(), _valueMap);
