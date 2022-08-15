@@ -1,6 +1,7 @@
 package picoded.dstack.jsql;
 
 import picoded.dstack.core.Core_FileWorkspaceMap;
+import picoded.core.conv.ListValueConv;
 import picoded.core.file.FileUtil;
 import picoded.core.struct.GenericConvertList;
 import picoded.dstack.connector.jsql.JSql;
@@ -655,6 +656,39 @@ public class JSql_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		// Filter and return it accordingly
 		return backend_filterPathSet(rawSet, folderPath, minDepth, maxDepth, 0);
+	}
+	
+	/**
+	 * Return the current list of ID keys for fileWorkspaceMap
+	 **/
+	@Override
+	public Set<String> keySet() {
+		// Search blank "paths" which represents the workspace root
+		JSqlResult r = sqlObj.select(fileWorkspaceTableName, "oID", "path = ?", new Object[] { "" });
+		
+		// Convert it into a set
+		if (r == null || r.get("oID") == null) {
+			return new HashSet<String>();
+		}
+		return ListValueConv.toStringSet(r.getObjectList("oID"));
+	}
+	
+	/**
+	 * Gets and return a random object ID
+	 *
+	 * @return  Random object ID
+	 **/
+	public String randomObjectID() {
+		// Get a random ID
+		JSqlResult r = sqlObj.randomSelect(fileWorkspaceTableName, "oID", null, null, 1);
+		
+		// No result : NULL
+		if (r == null || r.get("oID") == null || r.rowCount() <= 0) {
+			return null;
+		}
+		
+		// Return the result
+		return r.getStringArray("oID")[0];
 	}
 	
 }

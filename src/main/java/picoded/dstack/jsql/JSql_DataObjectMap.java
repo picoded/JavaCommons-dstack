@@ -612,7 +612,8 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 		// Result set to fetch next ID
 		JSqlResult r = null;
 		if (currentID == null) {
-			r = sqlObj.select(primaryKeyTable, "oID", null, null, "oID ASC", 1, 0);
+			// By searching against oID > "", we provide a hint to use the oID index
+			r = sqlObj.select(primaryKeyTable, "oID", "oID > ?", new Object[] { "" }, "oID ASC", 1, 0);
 		} else {
 			r = sqlObj.select(primaryKeyTable, "oID", "oID > ?", new Object[] { currentID },
 				"oID ASC", 1, 0);

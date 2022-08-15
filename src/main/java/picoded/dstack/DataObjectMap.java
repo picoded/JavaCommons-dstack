@@ -313,6 +313,33 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	}
 	
 	//
+	// Query count optimization handling
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * Get the size of the current DataObjectMap
+	 * 
+	 * Note that if the dataset size is larger then Integer.MAX_VALUE
+	 * it is clamped accordingly to the MAX_VALUE
+	 **/
+	@Override
+	default int size() {
+		long s = queryCount(null, null);
+		if (s > Integer.MAX_VALUE) {
+			return Integer.MAX_VALUE;
+		}
+		return (int) s;
+	}
+	
+	/**
+	 * Get the size as a long for the DataObjectMap
+	 * This should be used instead of size (to work around int limits)
+	 */
+	default long longSize() {
+		return queryCount(null, null);
+	}
+	
+	//
 	// Get key names handling
 	//--------------------------------------------------------------------------
 	

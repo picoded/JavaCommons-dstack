@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 // Test Case include
@@ -435,5 +436,16 @@ public class StructSimple_FileWorkspaceMap_test {
 		assertNotNull(testObj.get(fileWorkspace._oid()));
 		testObj.remove(fileWorkspace._oid());
 		assertNull(testObj.get(fileWorkspace._oid()));
+	}
+	
+	@Test
+	public void keySetTest() {
+		FileWorkspace fileWorkspace = testObj.newEntry();
+		fileWorkspace.writeByteArray("filepath", "anything".getBytes());
+		
+		// Get the workspace keyset
+		Set<String> keyset = testObj.keySet();
+		assertNotNull(keyset);
+		assertTrue(keyset.contains(fileWorkspace._oid()));
 	}
 }
