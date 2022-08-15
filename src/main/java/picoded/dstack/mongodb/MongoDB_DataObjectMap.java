@@ -243,6 +243,11 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				value = new Binary((byte[]) value);
 			}
 			
+			// If value is an array, cast it to the list, as mongoDB has issues with arrays
+			if (value != null && value.getClass().isArray()) {
+				value = Arrays.asList(value);
+			}
+			
 			// Lets apply the update values
 			if (updateKeys.contains(key)) {
 				// Handle NULL values unset
@@ -363,18 +368,19 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				// Because the LIKE operator does not natively exists,
 				// we will generates its REGEX equivalent
 				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
-
+				
 				// Escaping special regex characters
 				final String regexSpecialCharacters = ".+*?^$()[]{}|\\";
-				for(int i=0; i<regexSpecialCharacters.length(); ++i) {
-					val = val.replaceAll("\\"+regexSpecialCharacters.charAt(i), "\\"+regexSpecialCharacters.charAt(i));
+				for (int i = 0; i < regexSpecialCharacters.length(); ++i) {
+					val = val.replaceAll("\\" + regexSpecialCharacters.charAt(i), "\\"
+						+ regexSpecialCharacters.charAt(i));
 				}
-
+				
 				// Replacing SQL syntax
 				val = val.replaceAll("\\%", ".*");
 				val = val.replaceAll("\\_", ".");
 				
-				return Filters.regex(inQuery.fieldName(), "^"+val+"$");
+				return Filters.regex(inQuery.fieldName(), "^" + val + "$");
 			}
 		}
 		
