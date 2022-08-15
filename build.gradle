@@ -91,7 +91,7 @@ dependencies {
 	api                "com.oracle.ojdbc:ojdbc8:19.3.0.0"  // for oracle
 
 	// api files("./lib/jsql/ojdbc6.jar")  // for oracle	
-	api "org.xerial:sqlite-jdbc:3.25.2" // for sqlite
+	api "org.xerial:sqlite-jdbc:3.34.0" // for sqlite
 	api "mysql:mysql-connector-java:8.0.26" // for mysql
 
 	// Newer MSSQL connection (THIS DOES NOT WORK)
@@ -112,6 +112,9 @@ dependencies {
 	// Mongo DB 
 	api 'org.mongodb:mongodb-driver-sync:4.5.1'
 	api 'com.github.luben:zstd-jni:1.5.2-3'
+
+	// Redis
+	api 'org.redisson:redisson:3.17.1'
 
 	// PostgresSQL library
 	api "org.postgresql:postgresql:42.2.5"
@@ -279,6 +282,9 @@ test {
 		if(!project.hasProperty("test_mongodb")) {
 			exclude "**/*MongoDB*"
 		}
+		if(!project.hasProperty("test_redis")) {
+			exclude "**/*Redis*"
+		}
 	}
 
 	// Setup test to run on parllel threads = to number of processors by default
@@ -381,6 +387,9 @@ task incrementalTest(type: TestWatcher) {
 		}
 		if(!project.hasProperty("test_mongodb")) {
 			exclude "**/*MongoDB*"
+		}
+		if(!project.hasProperty("test_redis")) {
+			exclude "**/*Redis*"
 		}
 	}
 

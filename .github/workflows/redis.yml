@@ -1,13 +1,27 @@
-name: Core Test & Binary Build
+name: Redis support test
 on:
   push:
-    branches: [ master, "*" ]
+    branches: [ master, "redis*", "*redis*" ]
   pull_request:
     branches: [ master ]
 jobs:
-  build:
+  unit_test:
     runs-on: ubuntu-latest
+    
+    # Configuration, for us to perform test against multiple version in the future
+    strategy:
+      matrix:
+        redis-version: [7]
+    
+    # The test step
     steps:
+    # Start Redis 
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.4.0
+      with:
+        redis-version: ${{ matrix.redis-version }}
+
+    # The usual checkout, and test
     - uses: actions/checkout@v1
     - name: Init submodules
       run: ./git-init-submodules.sh
@@ -27,11 +41,9 @@ jobs:
     - name: Pull dependencies libs, and perform initial compile
       run: ./gradlew src
     - name: Run unit tests
-      run: ./gradlew test
+      run: ./gradlew test -Ptest_redis
     - name: Run jacocoTestReport
       run: ./gradlew jacocoTestReport
-    - name: Run the build
-      run: ./gradlew build
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       if: always()
@@ -49,9 +61,3 @@ jobs:
         # directory: build/jacoco/
         verbose: true # optional (default = false)
         fail_ci_if_error: false
-    - name: Archive binary files
-      uses: actions/upload-artifact@v2
-      with:
-        name: binary-libs
-        path: |
-          build/libs/**/*

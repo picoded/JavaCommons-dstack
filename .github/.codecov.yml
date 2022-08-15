@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      # Full configuration format is found here :
+      # https://docs.codecov.com/docs/commit-status#section-project-status
+      default:
+        # basic
+        #target: 10%
+        #threshold: 10%
+        paths: 
+          - "src"
+        # advanced settings
+        if_ci_failed: error #success, failure, error, ignore
+        informational: true
+        only_pulls: false

@@ -60,9 +60,10 @@ public class MongoDBStack extends CoreStack {
 		String opts = config.getString("opt_str", "w=majority&retryWrites=true&retryReads=true"
 			+ "&maxPoolSize=10&compressors=zstd");
 			// "&readPreference=master&readConcernLevel=majority"
+		  // "&readPreference=nearest&readConcernLevel=linearizable"
 		
 		// Lets do a logging, for missing read concern if its not configured
-		if( opts.indexOf("readConcernLevel") < 0 ) {
+		if (opts.indexOf("readConcernLevel") < 0) {
 			//
 			// readConcernLevel is a complicated topic, do consider reading up
 			// https://jepsen.io/analyses/mongodb-4.2.6
@@ -79,7 +80,7 @@ public class MongoDBStack extends CoreStack {
 			"or `readPreference=master&readConcernLevel=majority`"+
 			"is highly recommended for replica clusters to ensure read after write consistency.");
 		}
-
+		
 		// In the future we may want to support opt_map
 		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		

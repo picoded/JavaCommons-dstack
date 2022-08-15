@@ -578,6 +578,64 @@ public class Stack_FileWorkspaceMap extends Core_FileWorkspaceMap implements Sta
 	
 	//--------------------------------------------------------------------------
 	//
+	// KeySet support
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 * List all the oid supported in the current backend
+	 */
+	public Set<String> keySet() {
+		return queryLayer.keySet();
+	}
+	
+	/**
+	 * Gets and return a random object ID
+	 *
+	 * @return  Random object ID
+	 **/
+	public String randomObjectID() {
+		return queryLayer.randomObjectID();
+	}
+	
+	/**
+	 * Gets and return the next object ID key for iteration given the current ID,
+	 * null gets the first object in iteration.
+	 *
+	 * It is important to note actual iteration sequence is implementation dependent.
+	 * And does not gurantee that newly added objects, after the iteration started,
+	 * will be part of the chain of results.
+	 *
+	 * Similarly if the currentID was removed midway during iteration, the return
+	 * result is not properly defined, and can either be null, or the closest object matched
+	 * or even a random object.
+	 *
+	 * It is however guranteed, if no changes / writes occurs. A complete iteration
+	 * will iterate all existing objects.
+	 *
+	 * The larger intention of this function, is to allow a background thread to slowly
+	 * iterate across all objects, eventually. With an acceptable margin of loss on,
+	 * recently created/edited object. As these objects will eventually be iterated in
+	 * repeated rounds on subsequent calls.
+	 *
+	 * Due to its roughly random nature in production (with concurrent objects generated)
+	 * and its iterative nature as an eventuality. The phrase looselyIterate was chosen,
+	 * to properly reflect its nature.
+	 *
+	 * Another way to phrase it, in worse case scenerio, its completely random,
+	 * eventually iterating all objects. In best case scenerio, it does proper
+	 * iteration as per normal.
+	 *
+	 * @param   Current object ID, can be NULL
+	 *
+	 * @return  Next object ID, if found
+	 **/
+	public String looselyIterateObjectID(String currentID) {
+		return queryLayer.looselyIterateObjectID(currentID);
+	}
+	
+	//--------------------------------------------------------------------------
+	//
 	// Copy pasta code, I wished could have worked in an interface
 	//
 	//--------------------------------------------------------------------------

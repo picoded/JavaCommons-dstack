@@ -123,7 +123,14 @@ public interface FileWorkspaceMap extends UnsupportedDefaultMap<String, FileWork
 	 *
 	 * This is equivalent of "TRUNCATE TABLE {TABLENAME}"
 	 **/
+	@Override
 	void clear();
+	
+	/**
+	 * Return the current list of ID keys for fileWorkspaceMap
+	 **/
+	@Override
+	Set<String> keySet();
 	
 	// Special iteration support
 	//--------------------------------------------------------------------------
