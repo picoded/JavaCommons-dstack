@@ -984,6 +984,30 @@ public class StructSimple_DataObjectMap_test {
 		
 	}
 	
+	// Query where bug checks
+	//-----------------------------------------------
+	
+	@Test
+	public void queryWithLikeClause() {
+		
+		// Lets just rescycle old test for the names
+		mtObj.newEntry(genNumStrObj(1, "this", 5));
+		mtObj.newEntry(genNumStrObj(2, "is", 4));
+		mtObj.newEntry(genNumStrObj(3, "hello", 3));
+		mtObj.newEntry(genNumStrObj(4, "world", 2));
+		mtObj.newEntry(genNumStrObj(5, "program", 1));
+		mtObj.newEntry(genNumStrObj(6, "in", 6));
+		mtObj.newEntry(genNumStrObj(7, "this", 7));
+		
+		// Query with like clause
+		DataObject[] qRes = mtObj.query("str_val LIKE ?", new String[] { "%his" });
+		assertEquals(qRes.length, 2);
+		
+		qRes = mtObj.query("str_val LIKE ?", new String[] { "%ell%" });
+		assertEquals(qRes.length, 1);
+		
+	}
+	
 	// Random object, and iteration support
 	//-----------------------------------------------
 	

@@ -1,6 +1,7 @@
 package picoded.dstack.mongodb;
 
 // Java imports
+import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -361,13 +362,14 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			if (type == QueryType.LIKE) {
 				// Because the LIKE operator does not natively exists,
 				// we will generates its REGEX equivalent
-				
 				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
-				val = val.replaceAll("*", "\\*");
-				val = val.replaceAll("%", ".*");
-				val = val.replaceAll("_", ".+");
+
+				// val = val.replaceAll("*", "*");
+				val = val.replaceAll("\\*", "*");
+				val = val.replaceAll("\\%", ".*");
+				val = val.replaceAll("\\_", "[.]");
 				
-				return Filters.regex(inQuery.fieldName(), val);
+				return Filters.regex(inQuery.fieldName(), "^"+val+"$");
 			}
 		}
 		
