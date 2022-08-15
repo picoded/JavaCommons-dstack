@@ -1,6 +1,7 @@
 package picoded.dstack.mongodb;
 
 // Java imports
+import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -293,13 +294,12 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		HashSet<String> ret = new HashSet<String>();
 		
 		// Lets fetch everything ... D=
-		FindIterable<Document> search = collection.find();
-		search = search.projection(Projections.include("_oid"));
+		DistinctIterable<String> search = collection.distinct("_oid", String.class);
 		
 		// Lets iterate the search
-		try (MongoCursor<Document> cursor = search.iterator()) {
+		try (MongoCursor<String> cursor = search.iterator()) {
 			while (cursor.hasNext()) {
-				ret.add(cursor.next().getString("_oid"));
+				ret.add(cursor.next());
 			}
 		}
 		
@@ -362,13 +362,14 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			if (type == QueryType.LIKE) {
 				// Because the LIKE operator does not natively exists,
 				// we will generates its REGEX equivalent
-				
 				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
-				val = val.replaceAll("*", "\\*");
+
+				// val = val.replaceAll("*", "*");
+				val = val.replaceAll("*", Pattern.quote("*"));
 				val = val.replaceAll("%", ".*");
-				val = val.replaceAll("_", ".+");
+				val = val.replaceAll("_", "[.]");
 				
-				return Filters.regex(inQuery.fieldName(), val);
+				return Filters.regex(inQuery.fieldName(), "^"+val+"$");
 			}
 		}
 		

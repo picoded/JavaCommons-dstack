@@ -59,7 +59,7 @@ public class MongoDBStack extends CoreStack {
 		int port = config.getInt("port", 27017);
 		String opts = config.getString("opt_str", "w=majority&retryWrites=true&retryReads=true"
 			+ "&maxPoolSize=10&compressors=zstd");
-			// "&readPreference=nearest&readConcernLevel=linearizable"
+			// "&readPreference=master&readConcernLevel=majority"
 		
 		// Lets do a logging, for missing read concern if its not configured
 		if( opts.indexOf("readConcernLevel") < 0 ) {
@@ -76,6 +76,7 @@ public class MongoDBStack extends CoreStack {
 			//
 			LOGGER.warning("MongoDB is configured without readConcernLevel, "+
 			"this is alright for a single node, but `readConcernLevel=linearizable`"+
+			"or `readPreference=master&readConcernLevel=majority`"+
 			"is highly recommended for replica clusters to ensure read after write consistency.");
 		}
 
