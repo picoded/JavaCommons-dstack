@@ -365,9 +365,9 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				String val = GenericConvert.toString(inQuery.defaultArgumentValue());
 
 				// val = val.replaceAll("*", "*");
-				val = val.replaceAll("*", Pattern.quote("*"));
-				val = val.replaceAll("%", ".*");
-				val = val.replaceAll("_", "[.]");
+				val = val.replaceAll("\\*", "*");
+				val = val.replaceAll("\\%", ".*");
+				val = val.replaceAll("\\_", "[.]");
 				
 				return Filters.regex(inQuery.fieldName(), "^"+val+"$");
 			}
