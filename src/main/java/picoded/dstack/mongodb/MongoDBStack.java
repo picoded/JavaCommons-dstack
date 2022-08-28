@@ -35,6 +35,13 @@ public class MongoDBStack extends CoreStack {
 	protected MongoClient client_conn = null;
 	protected MongoDatabase db_conn = null;
 	
+	/**
+	 * The secondary connetion settings
+	 */
+	protected MongoClient sec_client_conn = null;
+	protected MongoDatabase sec_db_conn = null;
+	protected String sec_mode = null;
+	
 	//-------------------------------------------------------------------------
 	// Connector utilities
 	//-------------------------------------------------------------------------
