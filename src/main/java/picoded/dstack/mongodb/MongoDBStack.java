@@ -1,9 +1,13 @@
 package picoded.dstack.mongodb;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import picoded.core.conv.GenericConvert;
 import picoded.core.struct.GenericConvertMap;
 import picoded.dstack.core.*;
 
@@ -32,6 +36,41 @@ public class MongoDBStack extends CoreStack {
 	protected MongoDatabase db_conn = null;
 	
 	//-------------------------------------------------------------------------
+	// Connector utilities
+	//-------------------------------------------------------------------------
+	
+	/// Default settings option JSON
+	protected static String defaultOptJson = "{"+ //
+	"	\"w\":\"majority\","+ //
+	"	\"retryWrites\":\"true\","+ //
+	"	\"retryReads\":\"true\","+ //
+	"	\"maxPoolSize\":25,"+ //
+	"	\"compressors\":\"zstd\""+ //
+	"}";
+	// "&readPreference=master&readConcernLevel=majority"
+	// "&readPreference=nearest&readConcernLevel=linearizable"
+
+	protected static String mapToOptStr(Map<String,Object> map) {
+		// Get the sorted list of keys
+		List<String> keys = (new ArrayList<>(map.keySet()));
+		Collections.sort(keys);
+
+		// The ret stringbuilder
+		StringBuilder ret = new StringBuilder();
+
+		// Lets loop the keys
+		for(String key : keys) {
+			if( ret.length() > 0 ) {
+				ret.append("&");
+			}
+			ret.append(key+"="+GenericConvert.toString(map.get(key)));
+		}
+
+		// And return the built str
+		return ret.toString();
+	}
+
+	//-------------------------------------------------------------------------
 	// Database connection constructor
 	//-------------------------------------------------------------------------
 	
@@ -57,13 +96,13 @@ public class MongoDBStack extends CoreStack {
 		String pass = config.getString("pass", null);
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
-		String opts = config.getString("opt_str", "w=majority&retryWrites=true&retryReads=true"
-			+ "&maxPoolSize=10&compressors=zstd");
-		// "&readPreference=master&readConcernLevel=majority"
-		// "&readPreference=nearest&readConcernLevel=linearizable"
+
+		// Hanlding of option string
+		GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt", defaultOptJson);
+		String optStr = config.getString("opt_str", mapToOptStr(optMap));
 		
 		// Lets do a logging, for missing read concern if its not configured
-		if (opts.indexOf("readConcernLevel") < 0) {
+		if (optStr.indexOf("readConcernLevel") < 0) {
 			//
 			// readConcernLevel is a complicated topic, do consider reading up
 			// https://jepsen.io/analyses/mongodb-4.2.6
@@ -93,9 +132,9 @@ public class MongoDBStack extends CoreStack {
 		// Return the full URL depending on the settings
 		if (protocol.equals("mongodb+srv")) {
 			// mongodb+srv does not support the port protocol
-			return protocol + "://" + authStr + host + "/" + dbname + "?" + opts;
+			return protocol + "://" + authStr + host + "/" + dbname + "?" + optStr;
 		}
-		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + opts;
+		return protocol + "://" + authStr + host + ":" + port + "/" + dbname + "?" + optStr;
 	}
 	
 	/**
