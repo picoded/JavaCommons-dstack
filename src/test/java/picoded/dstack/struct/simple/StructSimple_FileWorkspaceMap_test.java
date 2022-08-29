@@ -348,7 +348,12 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeString("test/d1/file.txt", "anything");
 		fileWorkspace.writeString("test/d2/file.txt", "anything");
 		
-		// List files and folders
+		// List all files and folders
+		assertEquals(4, fileWorkspace.getFileAndFolderPathSet(null).size());
+		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("").size());
+		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("/").size());
+
+		// List files in sub folders
 		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("test").size());
 		assertEquals(2, fileWorkspace.getFilePathSet("test").size());
 		assertEquals(2, fileWorkspace.getFolderPathSet("test").size());

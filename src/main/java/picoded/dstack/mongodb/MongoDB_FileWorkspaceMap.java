@@ -828,7 +828,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
-		// The fulle prefix path
+		// The fuller prefix path
 		String fullPrefixPath = oid + "/";
 		
 		if (folderPath == null || folderPath.equals("/") || folderPath.isEmpty()) {

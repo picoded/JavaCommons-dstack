@@ -554,7 +554,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		
 		// Normalize the folder path
 		String searchPath = folderPath;
-		if (searchPath.equals("/")) {
+		if (searchPath == null || searchPath.equals("/")) {
 			searchPath = "";
 		}
 		int searchPathLen = searchPath.length();
