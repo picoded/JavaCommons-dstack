@@ -1,6 +1,7 @@
 package picoded.dstack.core;
 
 import picoded.core.conv.ArrayConv;
+import picoded.core.conv.ConvertJSON;
 import picoded.core.file.FileUtil;
 
 // Java imports
@@ -559,12 +560,26 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		}
 		int searchPathLen = searchPath.length();
 		
+		// // Debugging stuff
+		// System.out.println( "#" );
+		// System.out.println( "searchPath: "+searchPath );
+		// System.out.println( "searchPathLen: "+searchPathLen );
+		// System.out.println( "minDepth: "+minDepth );
+		// System.out.println( "maxDepth: "+maxDepth );
+		// System.out.println( "pathType: "+pathType );
+		// System.out.println( ConvertJSON.fromObject(rawSet) );
+
 		// Return set
 		Set<String> ret = new HashSet<>();
 		
 		// Get the keyset, and iterate it
 		for (String key : rawSet) {
 			
+			// Skip the root folder of a workspace
+			if( key.equals("") || key.equals("/") ) {
+				continue;
+			}
+
 			// If folder does not match - skip
 			if (searchPathLen > 0 && !key.startsWith(searchPath)) {
 				continue;
@@ -575,32 +590,36 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			
 			// No filtering is needed, store and continue
 			if (maxDepth <= 0 && minDepth <= 0) {
-				// Does nothing
-			} else {
-				// Lets perform path filtering
-				
-				// Lets filter out the ending "/" 
-				String filteredSubPath = subPath;
-				if (filteredSubPath.endsWith("/")) {
-					filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length());
-				}
-				
-				// Split and count
-				String[] splitSubPath = filteredSubPath.split("/");
-				int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
-				
-				// Check min depth - skip key if check failed
-				if (subPathLength < minDepth) {
-					continue;
-				}
-				
-				// Check max depth - skip key if check failed
-				if (subPathLength > maxDepth) {
-					continue;
-				}
+				// Does no checks, add and continue
+				ret.add(subPath);
+				continue;
+			} 
+			
+			// Lets perform path filtering
+			// ---
+			
+			// Lets filter out the ending "/" 
+			String filteredSubPath = subPath;
+			if (filteredSubPath.endsWith("/")) {
+				filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length() - 1);
+			}
+			
+			// Split and count
+			String[] splitSubPath = filteredSubPath.split("/");
+			int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
+			
+			// Check min depth - skip key if check failed
+			if (minDepth > 0 && subPathLength < minDepth) {
+				continue;
+			}
+			
+			// Check max depth - skip key if check failed
+			if (maxDepth > 0 && subPathLength > maxDepth) {
+				continue;
 			}
 			
 			// Alrighto - lets check file / folder type - and add it in
+			// ---
 			
 			// Ignore empty, or root path
 			if (subPath.isEmpty() || subPath.equals("/")) {
@@ -627,6 +646,10 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			ret.add(subPath);
 		}
 		
+		// // Debugging stuff
+		// System.out.println( "Filtered Set" );
+		// System.out.println( ConvertJSON.fromObject(ret) );
+
 		// Return the filtered set
 		return ret;
 	}

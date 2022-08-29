@@ -877,7 +877,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 				String[] cleanPathArr = cleanPath.split("/");
 				List<String> cleanPathList = Arrays.asList(cleanPathArr);
 				
-				// Lets handle parent folders, note that i<cleanPathArr.length, alread excludes the file itself
+				// Lets handle parent folders, note that i<cleanPathArr.length, 
+				// already excludes the file itself
 				for (int i = 1; i < cleanPathArr.length; ++i) {
 					ret.add(String.join("/", cleanPathList.subList(0, i)) + "/");
 				}

@@ -346,17 +346,37 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeString("test/one.txt", "anything");
 		fileWorkspace.writeString("test/two.txt", "anything");
 		fileWorkspace.writeString("test/d1/file.txt", "anything");
-		fileWorkspace.writeString("test/d2/file.txt", "anything");
+		fileWorkspace.writeString("test/d2/file1.txt", "anything");
+		fileWorkspace.writeString("test/d2/file2.txt", "anything");
 		
 		// List all files and folders
-		assertEquals(4, fileWorkspace.getFileAndFolderPathSet(null).size());
-		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("").size());
-		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("/").size());
+		// this includes, 5 files, and 3 folders (test/, test/d1/, test/d2/)
+		assertEquals(8, fileWorkspace.getFileAndFolderPathSet(null, -1, -1).size());
+		assertEquals(8, fileWorkspace.getFileAndFolderPathSet("", -1, -1).size());
+		assertEquals(8, fileWorkspace.getFileAndFolderPathSet("/", -1, -1).size());
 
-		// List files in sub folders
+		assertEquals(3, fileWorkspace.getFolderPathSet("", -1, -1).size());
+		assertEquals(5, fileWorkspace.getFilePathSet("", -1, -1).size());
+
+		// List the `test/` folder
+		assertEquals(1, fileWorkspace.getFileAndFolderPathSet(null).size());
+		assertEquals(1, fileWorkspace.getFileAndFolderPathSet("").size());
+		assertEquals(1, fileWorkspace.getFileAndFolderPathSet("/").size());
+		assertEquals(1, fileWorkspace.getFolderPathSet("").size());
+
+		// The `test/` is not a file, hence 0
+		assertEquals(0, fileWorkspace.getFilePathSet("").size());
+
+		// List files & folders in the `test/` sub folders
 		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("test").size());
 		assertEquals(2, fileWorkspace.getFilePathSet("test").size());
 		assertEquals(2, fileWorkspace.getFolderPathSet("test").size());
+
+		// List files & folders in the `test/d2/` sub folders
+		assertEquals(2, fileWorkspace.getFileAndFolderPathSet("test/d2/").size());
+		assertEquals(2, fileWorkspace.getFilePathSet("test/d2/").size());
+		assertEquals(0, fileWorkspace.getFolderPathSet("test/d2/").size());
+
 	}
 	
 	//-----------------------------------------------------------------------------------
