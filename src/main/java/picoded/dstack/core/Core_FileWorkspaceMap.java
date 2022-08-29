@@ -568,7 +568,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// System.out.println( "maxDepth: "+maxDepth );
 		// System.out.println( "pathType: "+pathType );
 		// System.out.println( ConvertJSON.fromObject(rawSet) );
-
+		
 		// Return set
 		Set<String> ret = new HashSet<>();
 		
@@ -576,10 +576,10 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		for (String key : rawSet) {
 			
 			// Skip the root folder of a workspace
-			if( key.equals("") || key.equals("/") ) {
+			if (key.equals("") || key.equals("/")) {
 				continue;
 			}
-
+			
 			// If folder does not match - skip
 			if (searchPathLen > 0 && !key.startsWith(searchPath)) {
 				continue;
@@ -589,16 +589,16 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			String subPath = key.substring(searchPathLen);
 			
 			// Skip the root folder of a subpath
-			if( subPath.equals("") || subPath.equals("/") ) {
+			if (subPath.equals("") || subPath.equals("/")) {
 				continue;
 			}
-
+			
 			// No filtering is needed, store and continue
 			if (maxDepth <= 0 && minDepth <= 0) {
 				// Does no checks, add and continue
 				ret.add(subPath);
 				continue;
-			} 
+			}
 			
 			// Lets perform path filtering
 			// ---
@@ -654,7 +654,7 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 		// // Debugging stuff
 		// System.out.println( "Filtered Set" );
 		// System.out.println( ConvertJSON.fromObject(ret) );
-
+		
 		// Return the filtered set
 		return ret;
 	}

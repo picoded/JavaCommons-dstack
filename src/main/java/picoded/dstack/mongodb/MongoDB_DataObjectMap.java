@@ -250,10 +250,10 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			
 			// If value is a Map, we recast it to avoid referencing and formatting issues
 			// this also resolves the issue when a Map, contains an array
-			if( value instanceof Map ) {
-				value = ConvertJSON.toMap( ConvertJSON.fromObject(value) );
+			if (value instanceof Map) {
+				value = ConvertJSON.toMap(ConvertJSON.fromObject(value));
 			}
-
+			
 			// Lets apply the update values
 			if (updateKeys.contains(key)) {
 				// Handle NULL values unset

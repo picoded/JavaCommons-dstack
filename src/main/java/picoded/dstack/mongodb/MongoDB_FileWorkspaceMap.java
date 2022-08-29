@@ -155,7 +155,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public boolean backend_workspaceExist(String oid) {
 		// The folder root, will only contain the "oid"
-		return fullRawPathExist(oid);
+		return prefixPathExist(oid, null);
 	}
 	
 	/**
@@ -217,14 +217,19 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
-		// Get the full prefixpath
-		String fullPrefixPath = oid + "/" + path;
-		
-		// Remove matching path
-		query = Filters.or(
-			Filters.eq("filename", fullPrefixPath),
-			Filters.and(Filters.eq("metadata.oid", oid),
-				Filters.regex("filename", "^" + Pattern.quote(fullPrefixPath) + ".*")));
+		// Handle search with null
+		if (path == null || path.equals("")) {
+			query = Filters.eq("metadata.oid", oid);
+		} else {
+			// Get the full prefixpath
+			String fullPrefixPath = oid + "/" + path;
+			
+			// Remove matching path
+			query = Filters.or(
+				Filters.eq("filename", fullPrefixPath),
+				Filters.and(Filters.eq("metadata.oid", oid),
+					Filters.regex("filename", "^" + Pattern.quote(fullPrefixPath) + ".*")));
+		}
 		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
@@ -326,7 +331,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * Used mainly to ensure "parent" folder exists on file write/rm
 	 **/
 	protected void ensureParentPath(String oid, String path) {
-		// Does nothing if path is empty
+		// Ensure
 		if (path == null || path.equals("/") || path.isEmpty()) {
 			return;
 		}
@@ -692,7 +697,11 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
+		// Ensure root anchor exists
+		backend_setupWorkspace(oid);
+		// Ensure any parend dir anchor exists if needed
 		ensureParentPath(oid, filepath);
+		// Remove the respective file
 		removeFilePath(oid, filepath);
 	}
 	
@@ -711,7 +720,11 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  the stored byte array of the file
 	 **/
 	public void backend_removeFolderPath(final String oid, final String folderPath) {
+		// Ensure root anchor exists
+		backend_setupWorkspace(oid);
+		// Ensure any parend dir anchor exists if needed
 		ensureParentPath(oid, folderPath);
+		// Remove the respective file
 		removeFilePathRecursively(oid, folderPath);
 	}
 	
