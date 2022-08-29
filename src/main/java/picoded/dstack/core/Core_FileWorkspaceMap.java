@@ -588,6 +588,11 @@ abstract public class Core_FileWorkspaceMap extends Core_DataStructure<String, F
 			// If folder path match - store it - maybe?
 			String subPath = key.substring(searchPathLen);
 			
+			// Skip the root folder of a subpath
+			if( subPath.equals("") || subPath.equals("/") ) {
+				continue;
+			}
+
 			// No filtering is needed, store and continue
 			if (maxDepth <= 0 && minDepth <= 0) {
 				// Does no checks, add and continue

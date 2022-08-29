@@ -330,8 +330,8 @@ public class StructSimple_FileWorkspaceMap_test {
 	//
 	//-----------------------------------------------------------------------------------
 	
-	@Test
-	public void getPathSetLookup() {
+	// Setup a predefined fileworkspace, for path set loookup testing
+	public FileWorkspace getPathSetLookup_setup() {
 		// Get the file workspace to use
 		FileWorkspace fileWorkspace = testObj.newEntry();
 		assertNotNull(fileWorkspace);
@@ -348,25 +348,192 @@ public class StructSimple_FileWorkspaceMap_test {
 		fileWorkspace.writeString("test/d1/file.txt", "anything");
 		fileWorkspace.writeString("test/d2/file1.txt", "anything");
 		fileWorkspace.writeString("test/d2/file2.txt", "anything");
+
+		// And return
+		return fileWorkspace;
+	}
+
+	// Just perform and validate setup
+	@Test
+	public void getPathSetLookup_setupTest() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+		assertNotNull(fileWorkspace);
+	}
+
+	// List all files and folders
+	// this includes, 5 files, and 3 folders (test/, test/d1/, test/d2/)
+	//
+	// See `getPathSetLookup_setup` for setup code
+	@Test
+	public void getPathSetLookup_fullSet() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+
+		// Test set to use for comparision
+		Set<String> testFileSet = new HashSet<>();
+		Set<String> testDirSet = new HashSet<>();
+		Set<String> testFullSet = new HashSet<>();
+
+		// Test files
+		testFileSet.add("test/one.txt");
+		testFileSet.add("test/two.txt");
+		testFileSet.add("test/d1/file.txt");
+		testFileSet.add("test/d2/file1.txt");
+		testFileSet.add("test/d2/file2.txt");
+
+		// Test dirs
+		testDirSet.add("test/");
+		testDirSet.add("test/d1/");
+		testDirSet.add("test/d2/");
+
+		// Full set
+		testFullSet.addAll(testFileSet);
+		testFullSet.addAll(testDirSet);
 		
-		// List all files and folders
-		// this includes, 5 files, and 3 folders (test/, test/d1/, test/d2/)
-		assertEquals(8, fileWorkspace.getFileAndFolderPathSet(null, -1, -1).size());
-		assertEquals(8, fileWorkspace.getFileAndFolderPathSet("", -1, -1).size());
-		assertEquals(8, fileWorkspace.getFileAndFolderPathSet("/", -1, -1).size());
+		// Test it !
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet(null, -1, -1));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("", -1, -1));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("/", -1, -1));
+		assertEquals(testDirSet, fileWorkspace.getFolderPathSet("", -1, -1));
+		assertEquals(testFileSet, fileWorkspace.getFilePathSet("", -1, -1));
+	}
 
-		assertEquals(3, fileWorkspace.getFolderPathSet("", -1, -1).size());
-		assertEquals(5, fileWorkspace.getFilePathSet("", -1, -1).size());
+	// List all files and folders, with limits
+	//
+	// See `getPathSetLookup_setup` for setup code
+	@Test
+	public void getPathSetLookup_fullSet_withLimit() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
 
-		// List the `test/` folder
-		assertEquals(1, fileWorkspace.getFileAndFolderPathSet(null).size());
-		assertEquals(1, fileWorkspace.getFileAndFolderPathSet("").size());
-		assertEquals(1, fileWorkspace.getFileAndFolderPathSet("/").size());
-		assertEquals(1, fileWorkspace.getFolderPathSet("").size());
+		// Test set to use for comparision
+		Set<String> testFileSet = new HashSet<>();
+		Set<String> testDirSet = new HashSet<>();
+		Set<String> testFullSet = new HashSet<>();
 
-		// The `test/` is not a file, hence 0
-		assertEquals(0, fileWorkspace.getFilePathSet("").size());
+		// Test files
+		testFileSet.add("test/one.txt");
+		testFileSet.add("test/two.txt");
 
+		// Test dirs
+		testDirSet.add("test/");
+		testDirSet.add("test/d1/");
+		testDirSet.add("test/d2/");
+
+		// Full set
+		testFullSet.addAll(testFileSet);
+		testFullSet.addAll(testDirSet);
+		
+		// Test it !
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet(null, -1, 2));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("", -1, 2));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("/", -1, 2));
+		assertEquals(testDirSet, fileWorkspace.getFolderPathSet("", -1, 2));
+		assertEquals(testFileSet, fileWorkspace.getFilePathSet("", -1, 2));
+	}
+
+	// List all files and folders from the `test/` dir
+	//
+	// See `getPathSetLookup_setup` for setup code
+	@Test
+	public void getPathSetLookup_testDir_fullSet() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+
+		// Test set to use for comparision
+		Set<String> testFileSet = new HashSet<>();
+		Set<String> testDirSet = new HashSet<>();
+		Set<String> testFullSet = new HashSet<>();
+
+		// Test files
+		testFileSet.add("one.txt");
+		testFileSet.add("two.txt");
+		testFileSet.add("d1/file.txt");
+		testFileSet.add("d2/file1.txt");
+		testFileSet.add("d2/file2.txt");
+
+		// Test dirs
+		testDirSet.add("d1/");
+		testDirSet.add("d2/");
+
+		// Full set
+		testFullSet.addAll(testFileSet);
+		testFullSet.addAll(testDirSet);
+		
+		// Test it !
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("test/", -1, -1));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("test", -1, -1));
+		assertEquals(testDirSet, fileWorkspace.getFolderPathSet("test", -1, -1));
+		assertEquals(testFileSet, fileWorkspace.getFilePathSet("test", -1, -1));
+	}
+
+	// List all files and folders from the `/` dir
+	//
+	// See `getPathSetLookup_setup` for setup code
+	@Test
+	public void getPathSetLookup_listRoot() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+
+		// Test set to use for comparision
+		Set<String> testFileSet = new HashSet<>();
+		Set<String> testDirSet = new HashSet<>();
+		Set<String> testFullSet = new HashSet<>();
+
+		// Test files
+		// -- there is none
+
+		// Test dirs
+		testDirSet.add("test/");
+
+		// Full set
+		testFullSet.addAll(testFileSet);
+		testFullSet.addAll(testDirSet);
+		
+		// Test it !
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("/"));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet(""));
+		assertEquals(testDirSet, fileWorkspace.getFolderPathSet(""));
+		assertEquals(testFileSet, fileWorkspace.getFilePathSet(""));
+	}
+
+	// List all files and folders from the `test/d2/` dir
+	//
+	// See `getPathSetLookup_setup` for setup code
+	@Test
+	public void getPathSetLookup_testDir_d2() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+
+		// Test set to use for comparision
+		Set<String> testFileSet = new HashSet<>();
+		Set<String> testDirSet = new HashSet<>();
+		Set<String> testFullSet = new HashSet<>();
+
+		// Test files
+		testFileSet.add("file1.txt");
+		testFileSet.add("file2.txt");
+
+		// Test dirs
+		// -- there is none
+
+		// Full set
+		testFullSet.addAll(testFileSet);
+		testFullSet.addAll(testDirSet);
+		
+		// Test it !
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("test/d2/", -1, -1));
+		assertEquals(testFullSet, fileWorkspace.getFileAndFolderPathSet("test/d2", -1, -1));
+		assertEquals(testDirSet, fileWorkspace.getFolderPathSet("test/d2/", -1, -1));
+		assertEquals(testFileSet, fileWorkspace.getFilePathSet("test/d2/", -1, -1));
+	}
+
+	@Test
+	public void getPathSetLookup() {
+		// Get the file workspace to use
+		FileWorkspace fileWorkspace = getPathSetLookup_setup();
+		
 		// List files & folders in the `test/` sub folders
 		assertEquals(4, fileWorkspace.getFileAndFolderPathSet("test").size());
 		assertEquals(2, fileWorkspace.getFilePathSet("test").size());
