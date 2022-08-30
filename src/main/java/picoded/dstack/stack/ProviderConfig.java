@@ -146,6 +146,9 @@ public class ProviderConfig {
 				throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
 			}
 			
+			// Logging for debugging issue
+			System.out.println("Initializing getProviderStack : "+name);
+
 			// Initialization of stack and store into cache
 			cache = initStack(providerConfig.getString("type"), providerConfig);
 			providerStackMap.put(name, cache);
