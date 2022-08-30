@@ -163,12 +163,28 @@ public class ProviderConfig {
 			System.out.println("!! providerStackMap ptr : "+providerStackMap);
 
 			// Initialization of stack and store into cache
-			cache = initStack(providerConfig.getString("type"), providerConfig);
+			try {
+				cache = initStack(providerConfig.getString("type"), providerConfig);
+			} catch(Exception e) {
+				System.err.println(e.getMessage());
+				System.err.println(e.getStackTrace());
+				throw new RuntimeException(e);
+			}
+
+			// Null safety check
+			if( cache == null ) {
+				System.out.println("!! initialized stack is null : "+name);
+				throw new RuntimeException("Unexpected NULL provider stack was initialized");
+			}
+
+
+			// Save it into cache
 			providerStackMap.put(name, cache);
 			
 			// Lets do a GET validation, I dunno why im doing this
 			if( providerStackMap.get(name) != cache ) {
-				throw new RuntimeException("providerStackMap : failed GET after PUT safety test");
+				System.out.println("!! Failed GET after PUT : "+name);
+				throw new RuntimeException("Failed GET after PUT safety test");
 			}
 
 			// Logically this should only happen ONCE !
