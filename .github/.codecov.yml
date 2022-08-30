@@ -13,3 +13,7 @@ coverage:
         if_ci_failed: error #success, failure, error, ignore
         informational: true
         only_pulls: false
+    # Disable patch codecov errors 
+    patch:
+      default:
+        enabled: false
