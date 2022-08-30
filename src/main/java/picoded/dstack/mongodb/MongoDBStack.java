@@ -106,9 +106,14 @@ public class MongoDBStack extends CoreStack {
 		String protocol = config.getString("protocol", "mongodb");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
-		String host = config.getString("host", "localhost");
+		String host = config.getString("host", null);
 		int port = config.getInt("port", 27017);
 		
+		// Safety check
+		if( host == null ) {
+			throw IllegalArgumentException("Missing valid host setting for MongoDB connection");
+		}
+
 		// Hanlding of option string
 		GenericConvertMap<String, Object> optMap = config.getGenericConvertStringMap("opt",
 			defaultOptJson);
