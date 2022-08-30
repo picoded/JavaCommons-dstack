@@ -280,7 +280,7 @@ public class MongoDBStack extends CoreStack {
 		// ------
 		
 		// Null check for secondary connection
-		String config_sec_mode = config.getString("sec_mode", null);
+		String config_sec_mode = dbConfig.getString("sec_mode", null);
 		if (config_sec_mode == null) {
 			sec_mode = null;
 			sec_client_conn = null;
