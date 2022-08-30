@@ -111,7 +111,7 @@ public class MongoDBStack extends CoreStack {
 		
 		// Safety check
 		if( host == null ) {
-			throw IllegalArgumentException("Missing valid host setting for MongoDB connection");
+			throw new IllegalArgumentException("Missing valid host setting for MongoDB connection");
 		}
 
 		// Hanlding of option string
