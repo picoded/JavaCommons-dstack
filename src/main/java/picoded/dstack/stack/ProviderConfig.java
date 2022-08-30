@@ -118,7 +118,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the respective stack providers
 	 */
-	protected final ConcurrentHashMap<String, CoreStack> providerStackMap = new ConcurrentHashMap<>();
+	protected volatile ConcurrentHashMap<String, CoreStack> providerStackMap = new ConcurrentHashMap<>();
 	
 	/**
 	 * Get the stack of the provider specified by the name,
@@ -158,7 +158,6 @@ public class ProviderConfig {
 			// Return result
 			return cache;
 		}
-		
 	}
 	
 	/**
