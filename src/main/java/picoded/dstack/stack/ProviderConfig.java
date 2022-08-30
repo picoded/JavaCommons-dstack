@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
@@ -51,6 +52,7 @@ public class ProviderConfig {
 	 * Load the provider config with provider list
 	 **/
 	public ProviderConfig(List<Object> inConfigList) {
+		System.out.println("!! Setting up ProviderConfig");
 		loadConfigArray(inConfigList);
 	}
 	
@@ -147,7 +149,7 @@ public class ProviderConfig {
 			}
 			
 			// Logging for debugging issue
-			System.out.println("Initializing getProviderStack : "+name);
+			System.out.println("!! Initializing getProviderStack : "+name);
 
 			// Initialization of stack and store into cache
 			cache = initStack(providerConfig.getString("type"), providerConfig);
