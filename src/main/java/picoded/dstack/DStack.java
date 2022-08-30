@@ -12,10 +12,10 @@ import java.util.List;
 public class DStack extends CoreStack {
 	
 	// List of provider backends - to fetch / initialize from
-	protected ProviderConfig providerConfig;
+	protected ProviderConfig providerConfig = null;
 	
 	// Namespace listing
-	protected GenericConvertList<Object> namespace;
+	protected GenericConvertList<Object> namespace = null;
 	
 	/**
 	 * Constructor with configuration map

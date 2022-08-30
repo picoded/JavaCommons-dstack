@@ -3,6 +3,7 @@ package picoded.dstack.stack;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
@@ -115,7 +116,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the respective stack providers
 	 */
-	protected Map<String, CoreStack> providerStackMap = new HashMap<>();
+	protected final ConcurrentHashMap<String, CoreStack> providerStackMap = new ConcurrentHashMap<>();
 	
 	/**
 	 * Get the stack of the provider specified by the name,
@@ -132,18 +133,27 @@ public class ProviderConfig {
 			return cache;
 		}
 		
-		// Cache not found, get config to initialize a new stack
-		GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
-		if (providerConfig == null) {
-			throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
+		synchronized(providerStackMap) {
+			// Check the cache again (avoid race condition)
+			cache = providerStackMap.get(name);
+			if (cache != null) {
+				return cache;
+			}
+
+			// Cache not found, get config to initialize a new stack
+			GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
+			if (providerConfig == null) {
+				throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
+			}
+			
+			// Initialization of stack and store into cache
+			cache = initStack(providerConfig.getString("type"), providerConfig);
+			providerStackMap.put(name, cache);
+			
+			// Return result
+			return cache;
 		}
-		
-		// Initialization of stack and store into cache
-		cache = initStack(providerConfig.getString("type"), providerConfig);
-		providerStackMap.put(name, cache);
-		
-		// Return result
-		return cache;
+
 	}
 	
 	/**
