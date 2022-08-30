@@ -160,6 +160,11 @@ public class ProviderConfig {
 			cache = initStack(providerConfig.getString("type"), providerConfig);
 			providerStackMap.put(name, cache);
 			
+			// Lets do a GET validation
+			if( providerStackMap.get(name) != cache ) {
+				throw new RuntimeException("providerStackMap : failed GET after PUT safety test");
+			}
+
 			// Return result
 			return cache;
 		}
