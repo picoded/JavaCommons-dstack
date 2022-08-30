@@ -257,7 +257,7 @@ public class MongoDBStack extends CoreStack {
 		// ------
 		
 		// Get the full_url
-		String full_url = getFullConnectionURL_primary(inConfig);
+		String full_url = getFullConnectionURL_primary(dbConfig);
 		
 		// Lets build using the stable API settings
 		ServerApi serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
@@ -285,7 +285,7 @@ public class MongoDBStack extends CoreStack {
 		sec_mode = config_sec_mode.trim().toUpperCase();
 		
 		// lets get the secondary connection
-		full_url = getFullConnectionURL_secondary(inConfig);
+		full_url = getFullConnectionURL_secondary(dbConfig);
 		serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
 		settings = MongoClientSettings.builder()
 			.applyConnectionString(new ConnectionString(full_url)).serverApi(serverApi).build();
