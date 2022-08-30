@@ -180,7 +180,8 @@ public class MongoDBStack extends CoreStack {
 		// Hanlding of option string, default sec_opt uses `secondaryPreferred`
 		GenericConvertMap<String, Object> optMap = new GenericConvertHashMap<>();
 		optMap.putAll(config.getGenericConvertStringMap("opt", defaultOptJson));
-		optMap.putAll(config.getGenericConvertStringMap("sec_opt", "{ \"readPreference\":\"secondaryPreferred\" }"));
+		optMap.putAll(config.getGenericConvertStringMap("sec_opt",
+			"{ \"readPreference\":\"secondaryPreferred\" }"));
 		
 		// The opt string overwrite
 		String optStr = config.getString("sec_opt_str", mapToOptStr(optMap));

@@ -63,7 +63,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the internal config mapping by its name
 	 **/
-	protected Map<String, GenericConvertMap<String, Object>> providerConfigMap = new HashMap<>();;
+	protected final Map<String, GenericConvertMap<String, Object>> providerConfigMap = new HashMap<>();;
 	
 	/**
 	 * Loads a configuration array of backend providers for dstack, into the provider map
@@ -133,13 +133,13 @@ public class ProviderConfig {
 			return cache;
 		}
 		
-		synchronized(providerStackMap) {
+		synchronized (providerStackMap) {
 			// Check the cache again (avoid race condition)
 			cache = providerStackMap.get(name);
 			if (cache != null) {
 				return cache;
 			}
-
+			
 			// Cache not found, get config to initialize a new stack
 			GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
 			if (providerConfig == null) {
@@ -153,7 +153,7 @@ public class ProviderConfig {
 			// Return result
 			return cache;
 		}
-
+		
 	}
 	
 	/**
