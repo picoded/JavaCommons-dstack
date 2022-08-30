@@ -53,6 +53,11 @@ public class ProviderConfig {
 	 **/
 	public ProviderConfig(List<Object> inConfigList) {
 		System.out.println("!! Setting up ProviderConfig");
+
+		// The variables are intentionally initialized here inside the constructor
+		providerConfigMap = new HashMap<>();
+		providerStackMap = new ConcurrentHashMap<>();
+
 		loadConfigArray(inConfigList);
 	}
 	
@@ -65,7 +70,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the internal config mapping by its name
 	 **/
-	protected final Map<String, GenericConvertMap<String, Object>> providerConfigMap = new HashMap<>();;
+	protected final Map<String, GenericConvertMap<String, Object>> providerConfigMap;
 	
 	/**
 	 * Loads a configuration array of backend providers for dstack, into the provider map
@@ -118,7 +123,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the respective stack providers
 	 */
-	protected volatile ConcurrentHashMap<String, CoreStack> providerStackMap = new ConcurrentHashMap<>();
+	protected final ConcurrentHashMap<String, CoreStack> providerStackMap;
 	
 	/**
 	 * Get the stack of the provider specified by the name,
@@ -135,7 +140,7 @@ public class ProviderConfig {
 			return cache;
 		}
 		
-		synchronized (providerStackMap) {
+		synchronized (this) {
 			// Check the cache again (avoid race condition)
 			cache = providerStackMap.get(name);
 			if (cache != null) {
