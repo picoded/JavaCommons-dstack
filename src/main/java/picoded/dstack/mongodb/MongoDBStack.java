@@ -33,15 +33,15 @@ public class MongoDBStack extends CoreStack {
 	/**
 	 * The internal MongoClient connection
 	 */
-	protected final MongoClient client_conn ;
-	protected final MongoDatabase db_conn ;
+	protected final MongoClient client_conn;
+	protected final MongoDatabase db_conn;
 	
 	/**
 	 * The secondary connetion settings
 	 */
-	protected final MongoClient sec_client_conn ;
-	protected final MongoDatabase sec_db_conn ;
-	protected final String sec_mode ;
+	protected final MongoClient sec_client_conn;
+	protected final MongoDatabase sec_db_conn;
+	protected final String sec_mode;
 	
 	//-------------------------------------------------------------------------
 	// Connector utilities

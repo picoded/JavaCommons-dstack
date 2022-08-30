@@ -29,7 +29,7 @@ public abstract class HazelcastStack extends CoreStack {
 	/**
 	 * The internal JSql connection
 	 */
-	protected HazelcastInstance conn = null;
+	protected final HazelcastInstance conn;
 	
 	/**
 	 * Constructor with configuration map

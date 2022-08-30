@@ -17,10 +17,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class StructSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	// Stores all the various data for structSimple
-	protected ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
+	protected final ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>> fileContentMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, byte[]>>();
 	
 	// Handles read / write locks
-	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
+	protected final ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
 	
 	//--------------------------------------------------------------------------
 	//

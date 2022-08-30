@@ -30,7 +30,7 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap_struct {
 	/**
 	 * Stores the key to value map
 	 **/
-	protected Map<String, Map<String, Object>> valueMap = new ConcurrentHashMap<String, Map<String, Object>>();
+	protected final Map<String, Map<String, Object>> valueMap = new ConcurrentHashMap<String, Map<String, Object>>();
 	
 	/**
 	 * @return Storage map used centrally for all operations

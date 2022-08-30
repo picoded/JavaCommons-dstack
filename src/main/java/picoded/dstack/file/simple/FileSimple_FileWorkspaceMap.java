@@ -23,7 +23,7 @@ public class FileSimple_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	//--------------------------------------------------------------------------
 	
 	/// The file directory to opreate from
-	protected File baseDir = null;
+	protected final File baseDir;
 	
 	/// The file suffix to use for JSON object records
 	

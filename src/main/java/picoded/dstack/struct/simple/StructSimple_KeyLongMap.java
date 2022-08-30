@@ -20,17 +20,17 @@ public class StructSimple_KeyLongMap extends Core_KeyLongMap {
 	/**
 	 * Stores the key to long map
 	 **/
-	protected ConcurrentMap<String, Long> longMap = new ConcurrentHashMap<String, Long>();
+	protected final ConcurrentMap<String, Long> longMap = new ConcurrentHashMap<String, Long>();
 	
 	/**
 	 * Stores the expire timestamp
 	 **/
-	protected ConcurrentMap<String, Long> expireMap = new ConcurrentHashMap<String, Long>();
+	protected final ConcurrentMap<String, Long> expireMap = new ConcurrentHashMap<String, Long>();
 	
 	/**
 	 * Read write lock
 	 **/
-	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
+	protected final ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
 	
 	//--------------------------------------------------------------------------
 	//

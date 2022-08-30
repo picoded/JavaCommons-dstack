@@ -29,17 +29,17 @@ public class StructSimple_KeyValueMap extends Core_KeyValueMap {
 	/**
 	 * Stores the key to value map
 	 **/
-	protected ConcurrentMap<String, String> valueMap = new ConcurrentHashMap<String, String>();
+	protected final ConcurrentMap<String, String> valueMap = new ConcurrentHashMap<String, String>();
 	
 	/**
 	 * Stores the expire timestamp
 	 **/
-	protected ConcurrentMap<String, Long> expireMap = new ConcurrentHashMap<String, Long>();
+	protected final ConcurrentMap<String, Long> expireMap = new ConcurrentHashMap<String, Long>();
 	
 	/**
 	 * Read write lock
 	 **/
-	protected ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
+	protected final ReentrantReadWriteLock accessLock = new ReentrantReadWriteLock();
 	
 	//--------------------------------------------------------------------------
 	//

@@ -22,7 +22,7 @@ public class RedissonStack extends CoreStack {
 	 * The internal Redis connection
 	 */
 	
-	protected RedissonClient conn = null;
+	protected final RedissonClient conn;
 	
 	//-------------------------------------------------------------------------
 	// Database connection constructor
