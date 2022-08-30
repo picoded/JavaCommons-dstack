@@ -134,16 +134,21 @@ public class ProviderConfig {
 	 * @return the stack provider if found
 	 */
 	public CoreStack getProviderStack(String name) {
+		System.out.println("!! GET getProviderStack : "+name);
+
 		// Get and return from cache if found
 		CoreStack cache = providerStackMap.get(name);
 		if (cache != null) {
+			System.out.println("!! CACHE HIT 1 getProviderStack : "+name);
 			return cache;
 		}
 		
 		synchronized (this) {
+			System.out.println("!! THREAD LOCK getProviderStack : "+name);
 			// Check the cache again (avoid race condition)
 			cache = providerStackMap.get(name);
 			if (cache != null) {
+				System.out.println("!! CACHE HIT 2 getProviderStack : "+name);
 				return cache;
 			}
 			
@@ -155,15 +160,19 @@ public class ProviderConfig {
 			
 			// Logging for debugging issue
 			System.out.println("!! Initializing getProviderStack : "+name);
+			System.out.println("!! providerStackMap ptr : "+providerStackMap);
 
 			// Initialization of stack and store into cache
 			cache = initStack(providerConfig.getString("type"), providerConfig);
 			providerStackMap.put(name, cache);
 			
-			// Lets do a GET validation
+			// Lets do a GET validation, I dunno why im doing this
 			if( providerStackMap.get(name) != cache ) {
 				throw new RuntimeException("providerStackMap : failed GET after PUT safety test");
 			}
+
+			// Logically this should only happen ONCE !
+			System.out.println("!! Returning Initialized getProviderStack : "+name);
 
 			// Return result
 			return cache;
