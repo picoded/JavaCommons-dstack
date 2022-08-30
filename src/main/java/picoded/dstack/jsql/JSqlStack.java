@@ -15,7 +15,7 @@ public class JSqlStack extends CoreStack {
 	/**
 	 * The internal JSql connection
 	 */
-	protected JSql conn = null;
+	protected final JSql conn ;
 	
 	/**
 	 * Constructor with configuration map

@@ -33,15 +33,15 @@ public class MongoDBStack extends CoreStack {
 	/**
 	 * The internal MongoClient connection
 	 */
-	protected MongoClient client_conn = null;
-	protected MongoDatabase db_conn = null;
+	protected final MongoClient client_conn ;
+	protected final MongoDatabase db_conn ;
 	
 	/**
 	 * The secondary connetion settings
 	 */
-	protected MongoClient sec_client_conn = null;
-	protected MongoDatabase sec_db_conn = null;
-	protected String sec_mode = null;
+	protected final MongoClient sec_client_conn ;
+	protected final MongoDatabase sec_db_conn ;
+	protected final String sec_mode ;
 	
 	//-------------------------------------------------------------------------
 	// Connector utilities
@@ -277,6 +277,9 @@ public class MongoDBStack extends CoreStack {
 		// Null check for secondary connection
 		String config_sec_mode = config.getString("sec_mode", null);
 		if (config_sec_mode == null) {
+			sec_mode = null;
+			sec_client_conn = null;
+			sec_db_conn = null;
 			return;
 		}
 		sec_mode = config_sec_mode.trim().toUpperCase();
@@ -288,10 +291,10 @@ public class MongoDBStack extends CoreStack {
 			.applyConnectionString(new ConnectionString(full_url)).serverApi(serverApi).build();
 		
 		// Get the connection & database
-		client_conn = MongoClients.create(settings);
+		sec_client_conn = MongoClients.create(settings);
 		
 		// Get the DB connection, and validate it
-		sec_db_conn = client_conn.getDatabase(dbConfig.fetchString("name"));
+		sec_db_conn = sec_client_conn.getDatabase(dbConfig.fetchString("name"));
 		checkMongoDatabaseConnection(sec_db_conn);
 		
 	}
