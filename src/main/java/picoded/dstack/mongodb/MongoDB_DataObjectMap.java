@@ -60,6 +60,10 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	/** MongoDB instance representing the backend connection */
 	MongoCollection<Document> collection = null;
 	
+	/** Secondary connection, and its applicable mode */
+	MongoCollection<Document> sec_collection = null;
+	String sec_mode = null;
+	
 	/**
 	 * Constructor, with name constructor
 	 * 
@@ -69,6 +73,12 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	public MongoDB_DataObjectMap(MongoDBStack inStack, String name) {
 		super();
 		collection = inStack.db_conn.getCollection(name);
+		
+		// Get the secondary collection if applicable
+		if (inStack.sec_db_conn != null) {
+			sec_collection = inStack.sec_db_conn.getCollection(name);
+			sec_mode = inStack.sec_mode;
+		}
 	}
 	
 	//--------------------------------------------------------------------------
@@ -418,7 +428,28 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		}
 		
 		// Lets fetch the data, for the various _oid
-		FindIterable<Document> search = collection.find(bsonFilter);
+		FindIterable<Document> search = null;
+		
+		// Chose the respective serach mode
+		if (sec_mode == null) {
+			// NULL safety
+			search = collection.find(bsonFilter);
+		} else if (sec_mode.equals("LIKE")) {
+			// Use secondary connection for LIKE query
+			if (queryClause.toSqlString().toUpperCase().indexOf("LIKE") > 0) {
+				search = sec_collection.find(bsonFilter);
+			}
+		} else if (sec_mode.equals("QUERY")) {
+			// Use secondary for all queries
+			search = sec_collection.find(bsonFilter);
+		}
+		
+		// Fallback to main collection query
+		if (search == null) {
+			search = collection.find(bsonFilter);
+		}
+		
+		// Apply the projection, to only fetch _oid
 		search = search.projection(Projections.include("_oid"));
 		
 		// Build the orderBy clause

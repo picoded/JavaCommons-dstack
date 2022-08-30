@@ -52,7 +52,7 @@ public class MongoDBStack extends CoreStack {
 		"	\"w\":\"majority\"," + //
 		"	\"retryWrites\":\"true\"," + //
 		"	\"retryReads\":\"true\"," + //
-		"	\"maxPoolSize\":10," + //
+		"	\"maxPoolSize\":20," + //
 		"	\"compressors\":\"zstd\"" + //
 		"}";
 	
@@ -134,9 +134,6 @@ public class MongoDBStack extends CoreStack {
 					+ "is highly recommended for replica clusters to ensure read after write consistency.");
 		}
 		
-		// In the future we may want to support opt_map
-		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
-		
 		// Lets build the auth str
 		String authStr = "";
 		if (user != null && pass != null) {
@@ -180,10 +177,10 @@ public class MongoDBStack extends CoreStack {
 		String host = config.getString("host", "localhost");
 		int port = config.getInt("port", 27017);
 		
-		// Hanlding of option string
+		// Hanlding of option string, default sec_opt uses `secondaryPreferred`
 		GenericConvertMap<String, Object> optMap = new GenericConvertHashMap<>();
 		optMap.putAll(config.getGenericConvertStringMap("opt", defaultOptJson));
-		optMap.putAll(config.getGenericConvertStringMap("sec_opt", "{}"));
+		optMap.putAll(config.getGenericConvertStringMap("sec_opt", "{ \"readPreference\":\"secondaryPreferred\" }"));
 		
 		// The opt string overwrite
 		String optStr = config.getString("sec_opt_str", mapToOptStr(optMap));
@@ -204,12 +201,9 @@ public class MongoDBStack extends CoreStack {
 			LOGGER
 				.warning("MongoDB is configured without readConcernLevel for the secondary connection, "
 					+ "this is alright for a single node, but `readConcernLevel=linearizable`"
-					+ "or `readPreference=master&readConcernLevel=majority`"
+					+ "or `readPreference=secondaryPreferred&readConcernLevel=majority`"
 					+ "is highly recommended for replica clusters to ensure read after write consistency.");
 		}
-		
-		// In the future we may want to support opt_map
-		// GenericConvertMap<String,Object> optMap = config.getGenericConvertStringMap("opt_map", "{}");
 		
 		// Lets build the auth str
 		String authStr = "";
