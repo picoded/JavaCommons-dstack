@@ -106,8 +106,13 @@ public class MongoDBStack extends CoreStack {
 		String protocol = config.getString("protocol", "mongodb");
 		String user = config.getString("user", null);
 		String pass = config.getString("pass", null);
-		String host = config.getString("host", "localhost");
+		String host = config.getString("host", null);
 		int port = config.getInt("port", 27017);
+		
+		// Safety check
+		if (host == null || host.isEmpty()) {
+			throw new IllegalArgumentException("Missing valid host setting for MongoDB connection");
+		}
 		
 		// Hanlding of option string
 		GenericConvertMap<String, Object> optMap = config.getGenericConvertStringMap("opt",
@@ -257,7 +262,7 @@ public class MongoDBStack extends CoreStack {
 		// ------
 		
 		// Get the full_url
-		String full_url = getFullConnectionURL_primary(inConfig);
+		String full_url = getFullConnectionURL_primary(dbConfig);
 		
 		// Lets build using the stable API settings
 		ServerApi serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
@@ -275,7 +280,7 @@ public class MongoDBStack extends CoreStack {
 		// ------
 		
 		// Null check for secondary connection
-		String config_sec_mode = config.getString("sec_mode", null);
+		String config_sec_mode = dbConfig.getString("sec_mode", null);
 		if (config_sec_mode == null) {
 			sec_mode = null;
 			sec_client_conn = null;
@@ -285,7 +290,7 @@ public class MongoDBStack extends CoreStack {
 		sec_mode = config_sec_mode.trim().toUpperCase();
 		
 		// lets get the secondary connection
-		full_url = getFullConnectionURL_secondary(inConfig);
+		full_url = getFullConnectionURL_secondary(dbConfig);
 		serverApi = ServerApi.builder().version(ServerApiVersion.V1).build();
 		settings = MongoClientSettings.builder()
 			.applyConnectionString(new ConnectionString(full_url)).serverApi(serverApi).build();

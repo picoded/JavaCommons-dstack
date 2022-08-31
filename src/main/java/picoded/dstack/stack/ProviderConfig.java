@@ -4,7 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
 import picoded.core.struct.GenericConvertMap;
@@ -47,10 +50,15 @@ public class ProviderConfig {
 	//
 	//--------------------------------------------------------------------------
 	
+	// Logger to use, for config file warnings
+	private static final Logger LOGGER = Logger.getLogger(ProviderConfig.class.getName());
+	
 	/**
 	 * Load the provider config with provider list
 	 **/
 	public ProviderConfig(List<Object> inConfigList) {
+		providerConfigMap = new HashMap<>();
+		providerStackMap = new ConcurrentHashMap<>();
 		loadConfigArray(inConfigList);
 	}
 	
@@ -63,7 +71,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the internal config mapping by its name
 	 **/
-	protected final Map<String, GenericConvertMap<String, Object>> providerConfigMap = new HashMap<>();;
+	protected final Map<String, GenericConvertMap<String, Object>> providerConfigMap;
 	
 	/**
 	 * Loads a configuration array of backend providers for dstack, into the provider map
@@ -116,7 +124,7 @@ public class ProviderConfig {
 	/**
 	 * Stores the respective stack providers
 	 */
-	protected final ConcurrentHashMap<String, CoreStack> providerStackMap = new ConcurrentHashMap<>();
+	protected final ConcurrentHashMap<String, CoreStack> providerStackMap;
 	
 	/**
 	 * Get the stack of the provider specified by the name,
@@ -133,7 +141,7 @@ public class ProviderConfig {
 			return cache;
 		}
 		
-		synchronized (providerStackMap) {
+		synchronized (this) {
 			// Check the cache again (avoid race condition)
 			cache = providerStackMap.get(name);
 			if (cache != null) {
@@ -143,17 +151,30 @@ public class ProviderConfig {
 			// Cache not found, get config to initialize a new stack
 			GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
 			if (providerConfig == null) {
+				LOGGER.log(Level.SEVERE, "Unknown provider name, config not found : " + name);
 				throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
 			}
 			
+			// Log the setup
+			String type = providerConfig.getString("type");
+			LOGGER.info("Setting DStack provider backend : " + name + " (" + type + ")");
+			
 			// Initialization of stack and store into cache
-			cache = initStack(providerConfig.getString("type"), providerConfig);
+			try {
+				cache = initStack(type, providerConfig);
+			} catch (Exception e) {
+				// Log the error, as this is easily missed into an API error
+				LOGGER.log(Level.SEVERE, "Error while setting DStack provider : " + name + " (" + type
+					+ ")", e);
+				throw new RuntimeException(e);
+			}
+			
+			// Save it into cache
 			providerStackMap.put(name, cache);
 			
 			// Return result
 			return cache;
 		}
-		
 	}
 	
 	/**
