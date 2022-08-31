@@ -110,10 +110,10 @@ public class MongoDBStack extends CoreStack {
 		int port = config.getInt("port", 27017);
 		
 		// Safety check
-		if( host == null ) {
+		if (host == null || host.isEmpty()) {
 			throw new IllegalArgumentException("Missing valid host setting for MongoDB connection");
 		}
-
+		
 		// Hanlding of option string
 		GenericConvertMap<String, Object> optMap = config.getGenericConvertStringMap("opt",
 			defaultOptJson);

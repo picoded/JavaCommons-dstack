@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import io.vertx.core.impl.logging.Logger;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
@@ -147,25 +148,27 @@ public class ProviderConfig {
 				return cache;
 			}
 			
-			// Log the setup
-			String type = providerConfig.getString("type");
-			LOGGER.info("Setting DStack provider backend : "+name+" ("+type+")");
-
 			// Cache not found, get config to initialize a new stack
 			GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
 			if (providerConfig == null) {
+				LOGGER.log(Level.SEVERE, "Unknown provider name, config not found : " + name);
 				throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
 			}
+			
+			// Log the setup
+			String type = providerConfig.getString("type");
+			LOGGER.info("Setting DStack provider backend : " + name + " (" + type + ")");
 			
 			// Initialization of stack and store into cache
 			try {
 				cache = initStack(type, providerConfig);
-			} catch(Exception e) {
+			} catch (Exception e) {
 				// Log the error, as this is easily missed into an API error
-				LOGGER.error("Error while setting DStack provider : "+name+" ("+type+")", e);
+				LOGGER.log(Level.SEVERE, "Error while setting DStack provider : " + name + " (" + type
+					+ ")", e);
 				throw new RuntimeException(e);
 			}
-
+			
 			// Save it into cache
 			providerStackMap.put(name, cache);
 			
