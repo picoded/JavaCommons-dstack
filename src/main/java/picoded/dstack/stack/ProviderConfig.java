@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.vertx.core.impl.logging.Logger;
 import picoded.core.conv.ConvertJSON;
 import picoded.core.struct.GenericConvertHashMap;
 import picoded.core.struct.GenericConvertList;
@@ -48,16 +49,15 @@ public class ProviderConfig {
 	//
 	//--------------------------------------------------------------------------
 	
+	// Logger to use, for config file warnings
+	private static final Logger LOGGER = Logger.getLogger(ProviderConfig.class.getName());
+	
 	/**
 	 * Load the provider config with provider list
 	 **/
 	public ProviderConfig(List<Object> inConfigList) {
-		System.out.println("!! Setting up ProviderConfig");
-
-		// The variables are intentionally initialized here inside the constructor
 		providerConfigMap = new HashMap<>();
 		providerStackMap = new ConcurrentHashMap<>();
-
 		loadConfigArray(inConfigList);
 	}
 	
@@ -134,62 +134,41 @@ public class ProviderConfig {
 	 * @return the stack provider if found
 	 */
 	public CoreStack getProviderStack(String name) {
-		System.out.println("!! GET getProviderStack : "+name);
-
 		// Get and return from cache if found
 		CoreStack cache = providerStackMap.get(name);
 		if (cache != null) {
-			System.out.println("!! CACHE HIT 1 getProviderStack : "+name);
 			return cache;
 		}
 		
 		synchronized (this) {
-			System.out.println("!! THREAD LOCK getProviderStack : "+name);
 			// Check the cache again (avoid race condition)
 			cache = providerStackMap.get(name);
 			if (cache != null) {
-				System.out.println("!! CACHE HIT 2 getProviderStack : "+name);
 				return cache;
 			}
 			
+			// Log the setup
+			String type = providerConfig.getString("type");
+			LOGGER.info("Setting DStack provider backend : "+name+" ("+type+")");
+
 			// Cache not found, get config to initialize a new stack
 			GenericConvertMap<String, Object> providerConfig = getStackConfig(name);
 			if (providerConfig == null) {
 				throw new IllegalArgumentException("Unknown provider name, config not found : " + name);
 			}
 			
-			// Logging for debugging issue
-			System.out.println("!! Initializing getProviderStack : "+name);
-			System.out.println("!! providerStackMap ptr : "+providerStackMap);
-
 			// Initialization of stack and store into cache
 			try {
-				cache = initStack(providerConfig.getString("type"), providerConfig);
+				cache = initStack(type, providerConfig);
 			} catch(Exception e) {
-				System.err.println(e.getMessage());
-				System.err.println(e.getStackTrace());
+				// Log the error, as this is easily missed into an API error
+				LOGGER.error("Error while setting DStack provider : "+name+" ("+type+")", e);
 				throw new RuntimeException(e);
 			}
-
-			// Null safety check
-			if( cache == null ) {
-				System.out.println("!! initialized stack is null : "+name);
-				throw new RuntimeException("Unexpected NULL provider stack was initialized");
-			}
-
 
 			// Save it into cache
 			providerStackMap.put(name, cache);
 			
-			// Lets do a GET validation, I dunno why im doing this
-			if( providerStackMap.get(name) != cache ) {
-				System.out.println("!! Failed GET after PUT : "+name);
-				throw new RuntimeException("Failed GET after PUT safety test");
-			}
-
-			// Logically this should only happen ONCE !
-			System.out.println("!! Returning Initialized getProviderStack : "+name);
-
 			// Return result
 			return cache;
 		}
