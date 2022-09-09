@@ -801,7 +801,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 */
 	public long backend_modifiedTimestamp(final String oid, final String filepath) {
 		// Lets build the query for the "root file"
-		Bson query = Filters.eq("filename", filepath);
+		Bson query = Filters.eq("filename", oid + "/" + filepath);
 		
 		// Lets prepare the search
 		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
