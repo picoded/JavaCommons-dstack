@@ -436,7 +436,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			search = collection.find(bsonFilter);
 		} else if (sec_mode.equals("LIKE")) {
 			// Use secondary connection for LIKE query
-			if (queryClause.toSqlString().toUpperCase().indexOf("LIKE") > 0) {
+			if (queryClause == null || queryClause.toSqlString().toUpperCase().indexOf("LIKE") > 0) {
 				search = sec_collection.find(bsonFilter);
 			}
 		} else if (sec_mode.equals("QUERY")) {
