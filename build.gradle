@@ -21,11 +21,9 @@ plugins {
 
 // Dependency providers to fetch from
 repositories {
-	// Use maven central to resolve dependencies
+	google()
+	gradlePluginPortal() 
 	mavenCentral()
-
-	// Use jcenter as an alternative
-	jcenter()
 
 	// You can declare any other Maven/Ivy/file repository here.
 }
