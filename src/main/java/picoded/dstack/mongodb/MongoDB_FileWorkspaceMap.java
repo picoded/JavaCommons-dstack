@@ -108,7 +108,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// We insert a "root" object, to ensure the tables are initialized
 		// ---
 		if (!fullRawPathExist("root")) {
-			setupAnchorFile_withFullRawPath("root", "root", "root");
+			setupAnchorFile_withFullRawPath("", "root", "root");
 		}
 		
 		// Lets setup the index for the metadata fields (which is not enabled by default)
@@ -926,7 +926,12 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Lets iterate the search
 		try (MongoCursor<String> cursor = search.iterator()) {
 			while (cursor.hasNext()) {
-				ret.add(cursor.next());
+				String oid = cursor.next();
+				// older version of DStack initialized a "root" folder, which is invalid
+				if( oid == null || oid.equals("root") || oid.equals("") ) {
+					continue;	
+				}
+				ret.add(oid);
 			}
 		}
 		
