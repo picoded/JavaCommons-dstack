@@ -618,14 +618,22 @@ public class StructSimple_DataObjectMap_test {
 		DataObject[] oRes = null;
 		assertNotNull(oRes = mtObj.query(null, null));
 		assertTrue(oRes.length > 0);
+
+		// Lets get the first object
+		DataObject testObject = oRes[0];
+		String oid = testObject._oid();
+		testObject.remove("num");
+		testObject.remove("str_val");
+		testObject.saveDelta();
 		
-		// Lets remove one object
-		mtObj.remove(oRes[0]);
+		// Get the object again
+		DataObject changedObject = mtObj.get(oid);
+		assertNotNull( changedObject );
+
+		// Check the respective value is null
+		assertNull( changedObject.get("num") );
+		assertNull( changedObject.get("str_val") );
 		
-		// Lets query to make sure its removed
-		DataObject[] qRes = null;
-		assertNotNull(qRes = mtObj.query(null, null));
-		assertEquals(oRes.length - 1, qRes.length);
 	}
 	
 	@Test
@@ -641,6 +649,26 @@ public class StructSimple_DataObjectMap_test {
 		
 		// Lets remove one object
 		mtObj.remove(oRes[0]._oid());
+		
+		// Lets query to make sure its removed
+		DataObject[] qRes = null;
+		assertNotNull(qRes = mtObj.query(null, null));
+		assertEquals(oRes.length - 1, qRes.length);
+	}
+	
+	@Test
+	public void removePropertyForMetaObject() {
+		
+		// Lets just rescycle old test for some dummy data
+		basicTest();
+		
+		// Lets get DataObject list
+		DataObject[] oRes = null;
+		assertNotNull(oRes = mtObj.query(null, null));
+		assertTrue(oRes.length > 0);
+		
+		// Lets remove one object
+		mtObj.remove(oRes[0]);
 		
 		// Lets query to make sure its removed
 		DataObject[] qRes = null;
