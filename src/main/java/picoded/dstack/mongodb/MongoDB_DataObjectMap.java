@@ -268,10 +268,13 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			if (updateKeys.contains(key)) {
 				// Handle NULL values unset
 				if (value == null || value == ObjectToken.NULL) {
+					// In theory this should have worked
 					unset_doc.append(key, "");
-					set_doc.append(key, null);
-					setOnInsert_doc.append(key, null);
-					continue;
+
+					// // But it didn't so i tried this instead
+					// set_doc.append(key, null);
+					// setOnInsert_doc.append(key, null);
+					// continue;
 				}
 				
 				// Handle values update
