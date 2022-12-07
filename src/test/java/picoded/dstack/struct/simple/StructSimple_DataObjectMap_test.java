@@ -609,7 +609,7 @@ public class StructSimple_DataObjectMap_test {
 	// remove meta object support
 	//-----------------------------------------------
 	@Test
-	public void removeViaDataObject() {
+	public void removePropertyViaDataObject_saveDelta() {
 		
 		// Lets just rescycle old test for some dummy data
 		basicTest();
@@ -633,7 +633,33 @@ public class StructSimple_DataObjectMap_test {
 		// Check the respective value is null
 		assertNull( changedObject.get("num") );
 		assertNull( changedObject.get("str_val") );
+	}
+	
+	@Test
+	public void removePropertyViaDataObject_saveAll() {
 		
+		// Lets just rescycle old test for some dummy data
+		basicTest();
+		
+		// Lets get DataObject list
+		DataObject[] oRes = null;
+		assertNotNull(oRes = mtObj.query(null, null));
+		assertTrue(oRes.length > 0);
+
+		// Lets get the first object
+		DataObject testObject = oRes[0];
+		String oid = testObject._oid();
+		testObject.remove("num");
+		testObject.remove("str_val");
+		testObject.saveAll();
+		
+		// Get the object again
+		DataObject changedObject = mtObj.get(oid);
+		assertNotNull( changedObject );
+
+		// Check the respective value is null
+		assertNull( changedObject.get("num") );
+		assertNull( changedObject.get("str_val") );
 	}
 	
 	@Test
