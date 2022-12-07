@@ -268,7 +268,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			if (updateKeys.contains(key)) {
 				// Handle NULL values unset
 				if (value == null || value == ObjectToken.NULL) {
-					unset_doc.append(key, "");
+					unset_doc.append(key, 1);
 					continue;
 				}
 				
