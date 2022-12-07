@@ -269,19 +269,14 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				// Handle NULL values unset
 				if (value == null || value == ObjectToken.NULL) {
 					unset_doc.append(key, "");
+					set_doc.append(key, null);
+					setOnInsert_doc.append(key, null);
 					continue;
 				}
 				
 				// Handle values update
 				set_doc.append(key, value);
 				continue;
-			} else {
-				// It seems like for some reason NULL might not be properly triggering the updateKeys?
-				if (value == null || value == ObjectToken.NULL) {
-					unset_doc.append(key, "");
-					set_doc.append(key, null);
-					setOnInsert_doc.append(key, null);
-				}
 			}
 			
 			// OK - this is not in the update dataset
