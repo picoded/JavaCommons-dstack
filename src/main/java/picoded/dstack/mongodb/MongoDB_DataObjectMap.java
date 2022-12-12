@@ -222,6 +222,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 **/
 	public void DataObjectRemoteDataMap_update(String _oid, Map<String, Object> fullMap,
 		Set<String> updateKeys) {
+
 		
 		// Configure this to be an "upsert" query
 		FindOneAndUpdateOptions opt = new FindOneAndUpdateOptions();
@@ -236,7 +237,9 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		Document unset_doc = new Document();
 		
 		// Lets iterate the keys, and decide accordingly
-		Set<String> fullKeys = fullMap.keySet();
+		Set<String> fullKeys = new HashSet<String>(fullMap.keySet());
+		fullKeys.addAll(updateKeys);
+
 		for (String key : fullKeys) {
 			// Get the value
 			Object value = fullMap.get(key);
@@ -268,13 +271,10 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 			if (updateKeys.contains(key)) {
 				// Handle NULL values unset
 				if (value == null || value == ObjectToken.NULL) {
-					// In theory this should have worked
-					unset_doc.append(key, "");
 
-					// // But it didn't so i tried this instead
-					// set_doc.append(key, null);
-					// setOnInsert_doc.append(key, null);
-					// continue;
+					unset_doc.append(key, "");
+					continue;
+
 				}
 				
 				// Handle values update
@@ -290,6 +290,7 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 				setOnInsert_doc.append(key, value);
 			}
 		}
+
 		
 		// Generate the "update" doc
 		Document updateDoc = new Document();
