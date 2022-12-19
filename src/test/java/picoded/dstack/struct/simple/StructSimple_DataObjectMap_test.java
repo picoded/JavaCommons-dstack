@@ -59,9 +59,9 @@ public class StructSimple_DataObjectMap_test {
 	// Subset assertion
 	//-----------------------------------------------
 	
-	/// Utility function, to ensure the expected values exists in map
-	/// while allowing future test cases not to break when additional values
-	/// like create timestamp is added.
+	// Utility function, to ensure the expected values exists in map
+	// while allowing future test cases not to break when additional values
+	// like create timestamp is added.
 	public void assetSubset(Map<String, Object> expected, Map<String, Object> result) {
 		for (Map.Entry<String, Object> entry : expected.entrySet()) {
 			assertEquals(entry.getValue(), result.get(entry.getKey()));
@@ -86,10 +86,9 @@ public class StructSimple_DataObjectMap_test {
 	}
 	
 	// @Test
-	// public void invalidSetup() { //Numeric as table prefix tend to cuase
-	// problems
+	// public void invalidSetup() { 
+	// //Numeric as table prefix tend to cause problems
 	// DataObjectMap m;
-	//
 	// try {
 	// m = new DataObjectMap(JStackObj, "1" + TestConfig.randomTablePrefix());
 	// fail(); // if we got here, no exception was thrown, which is bad
@@ -139,7 +138,7 @@ public class StructSimple_DataObjectMap_test {
 		assetSubset(objMap, mtObj.get(guid));
 	}
 	
-	/// Checks if a blank object gets saved
+	// Checks if a blank object gets saved
 	@Test
 	public void blankObjectSave() {
 		String guid = null;
@@ -607,9 +606,9 @@ public class StructSimple_DataObjectMap_test {
 	// }
 	
 	// remove meta object support
-	//-----------------------------------------------
+	// -----------------------------------------------
 	@Test
-	public void removeViaDataObject() {
+	public void removePropertyViaDataObject_saveDelta() {
 		
 		// Lets just rescycle old test for some dummy data
 		basicTest();
@@ -618,14 +617,50 @@ public class StructSimple_DataObjectMap_test {
 		DataObject[] oRes = null;
 		assertNotNull(oRes = mtObj.query(null, null));
 		assertTrue(oRes.length > 0);
+
+		// Lets get the first object
+		DataObject testObject = oRes[0];
+		String oid = testObject._oid();
+
+		testObject.remove("num");
+		testObject.remove("str_val");
+		testObject.saveDelta();
+
+		// Get the object again
+		DataObject changedObject = mtObj.get(oid);
+		assertNotNull( changedObject );
+
+		// Check the respective value is null
+		assertNull( changedObject.get("num") );
+		assertNull( changedObject.get("str_val") );
+	}
+	
+	@Test
+	public void removePropertyViaDataObject_saveAll() {
 		
-		// Lets remove one object
-		mtObj.remove(oRes[0]);
-		
-		// Lets query to make sure its removed
-		DataObject[] qRes = null;
-		assertNotNull(qRes = mtObj.query(null, null));
-		assertEquals(oRes.length - 1, qRes.length);
+		// Lets just rescycle old test for some dummy data
+		basicTest();
+
+		// Lets get DataObject list
+		DataObject[] oRes = null;
+		assertNotNull(oRes = mtObj.query(null, null));
+		assertTrue(oRes.length > 0);
+
+		// Lets get the first object
+		DataObject testObject = oRes[0];
+		String oid = testObject._oid();
+
+		testObject.remove("num");
+		testObject.remove("str_val");
+		testObject.saveAll();
+
+		// Get the object again
+		DataObject changedObject = mtObj.get(oid);
+		assertNotNull( changedObject );
+
+		// Check the respective value is null
+		assertNull( changedObject.get("num") );
+		assertNull( changedObject.get("str_val") );
 	}
 	
 	@Test
@@ -641,6 +676,26 @@ public class StructSimple_DataObjectMap_test {
 		
 		// Lets remove one object
 		mtObj.remove(oRes[0]._oid());
+		
+		// Lets query to make sure its removed
+		DataObject[] qRes = null;
+		assertNotNull(qRes = mtObj.query(null, null));
+		assertEquals(oRes.length - 1, qRes.length);
+	}
+	
+	@Test
+	public void removePropertyForMetaObject() {
+		
+		// Lets just rescycle old test for some dummy data
+		basicTest();
+		
+		// Lets get DataObject list
+		DataObject[] oRes = null;
+		assertNotNull(oRes = mtObj.query(null, null));
+		assertTrue(oRes.length > 0);
+		
+		// Lets remove one object
+		mtObj.remove(oRes[0]);
 		
 		// Lets query to make sure its removed
 		DataObject[] qRes = null;
