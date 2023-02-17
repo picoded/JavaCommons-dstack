@@ -902,6 +902,140 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		return backend_filterPathSet(ret, folderPath, minDepth, maxDepth, 0);
 	}
 	
+	 /**
+	 * Internal utility function used to filter a path set, and remove items that does not match.
+	 * This is used to help filter raw results, from existing implementation
+	 * 
+	 * - its folderPath prefix
+	 * - min/max depth
+	 * - any / file / folder
+	 * 
+	 * @param rawSet (note this expect the full RAW paths, without removing the folderPath prefix)
+	 * @param folderPath the folder path prefix to search and match against, and truncate
+	 * @param minDepth (0 = all items, 1 = must be in atleast a folder, 2 = folder, inside a folder)
+	 * @param maxDepth
+	 * @param pathType (0 = any, 1 = file, 2 = folder)
+	 * @return
+	 */
+	@Override
+	protected Set<String> backend_filterPathSet(final Set<String> rawSet, final String folderPath,
+		final int minDepth, final int maxDepth, final int pathType) {
+		
+		// Normalize the folder path
+		String searchPath = folderPath;
+		if (searchPath == null || searchPath.equals("/")) {
+			searchPath = "";
+		}
+		int searchPathLen = searchPath.length();
+		
+		// // Debugging stuff
+		// System.out.println( "#" );
+		// System.out.println( "searchPath: "+searchPath );
+		// System.out.println( "searchPathLen: "+searchPathLen );
+		// System.out.println( "minDepth: "+minDepth );
+		// System.out.println( "maxDepth: "+maxDepth );
+		// System.out.println( "pathType: "+pathType );
+		// System.out.println( ConvertJSON.fromObject(rawSet) );
+		
+		// Return set
+		Set<String> ret = new HashSet<>();
+		
+		// Get the keyset, and iterate it
+		for (String key : rawSet) {
+			System.out.println("KEY="+key);
+			
+			// Skip the root folder of a workspace
+			if (key.equals("") || key.equals("/")) {
+				continue;
+			}
+			
+			// If folder does not match - skip
+			if (searchPathLen > 0 && !key.startsWith(searchPath)) {
+				continue;
+			}
+			
+			// If folder path match - store it - maybe?
+			String subPath = key.substring(searchPathLen);
+
+			//Dirty Fix for empty folder being deleted instead of moved
+			//Empty folder being considered as "" somehow
+			if (subPath.equals("")) {
+				ret.add("/");
+				continue;
+			}
+			
+			// Skip the root folder of a subpath
+			if (subPath.equals("/")) {
+				continue;
+			}
+			
+			// No filtering is needed, store and continue
+			if (maxDepth <= 0 && minDepth <= 0) {
+				// Does no checks, add and continue
+				ret.add(subPath);
+				continue;
+			}
+			
+			// Lets perform path filtering
+			// ---
+			
+			// Lets filter out the ending "/" 
+			String filteredSubPath = subPath;
+			if (filteredSubPath.endsWith("/")) {
+				filteredSubPath = filteredSubPath.substring(0, filteredSubPath.length() - 1);
+			}
+			
+			// Split and count
+			String[] splitSubPath = filteredSubPath.split("/");
+			int subPathLength = (filteredSubPath.length() <= 0) ? 0 : splitSubPath.length;
+			
+			// Check min depth - skip key if check failed
+			if (minDepth > 0 && subPathLength < minDepth) {
+				continue;
+			}
+			
+			// Check max depth - skip key if check failed
+			if (maxDepth > 0 && subPathLength > maxDepth) {
+				continue;
+			}
+			
+			// Alrighto - lets check file / folder type - and add it in
+			// ---
+			
+			// Ignore empty
+			if (subPath.isEmpty()) {
+				continue;
+			}
+			
+			// Expect a folder, reject files
+			if (pathType == 1) {
+				if (subPath.endsWith("/")) {
+					// Not a file - abort!
+					continue;
+				}
+			}
+			
+			// Expect files, reject folders
+			if (pathType == 2) {
+				if (!subPath.endsWith("/")) {
+					// Not a folder - abort!
+					continue;
+				}
+			}
+			
+			// Finally - all checks passed : add the path
+			ret.add(subPath);
+		}
+		
+		// // Debugging stuff
+		// System.out.println( "Filtered Set" );
+		// System.out.println( ConvertJSON.fromObject(ret) );
+
+		
+		// Return the filtered set
+		return ret;
+	}
+	
 	//--------------------------------------------------------------------------
 	//
 	// KeySet support
