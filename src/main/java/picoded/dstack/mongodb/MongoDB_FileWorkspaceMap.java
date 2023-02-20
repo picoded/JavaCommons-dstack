@@ -18,6 +18,7 @@ import java.sql.Date;
 // JavaCommons imports
 import picoded.core.common.EmptyArray;
 import picoded.core.file.FileUtil;
+import picoded.core.conv.ConvertJSON;
 import picoded.dstack.FileWorkspace;
 import picoded.dstack.core.Core_FileWorkspaceMap;
 
@@ -724,6 +725,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		backend_setupWorkspace(oid);
 		// Ensure any parend dir anchor exists if needed
 		ensureParentPath(oid, folderPath);
+
 		// Remove the respective file
 		removeFilePathRecursively(oid, folderPath);
 	}
@@ -837,7 +839,6 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	@Override
 	public Set<String> backend_getFileAndFolderPathSet(final String oid, String folderPath,
 		final int minDepth, final int maxDepth) {
-		
 		// Lets build the query for the "root file"
 		Bson query = null;
 		
@@ -901,8 +902,9 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Filter and return the final set
 		return backend_filterPathSet(ret, folderPath, minDepth, maxDepth, 0);
 	}
+
 	
-	 /**
+	/**
 	 * Internal utility function used to filter a path set, and remove items that does not match.
 	 * This is used to help filter raw results, from existing implementation
 	 * 
@@ -929,20 +931,19 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		int searchPathLen = searchPath.length();
 		
 		// // Debugging stuff
-		// System.out.println( "#" );
-		// System.out.println( "searchPath: "+searchPath );
-		// System.out.println( "searchPathLen: "+searchPathLen );
-		// System.out.println( "minDepth: "+minDepth );
-		// System.out.println( "maxDepth: "+maxDepth );
-		// System.out.println( "pathType: "+pathType );
-		// System.out.println( ConvertJSON.fromObject(rawSet) );
+		System.out.println( "#" );
+		System.out.println( "searchPath: "+searchPath );
+		System.out.println( "searchPathLen: "+searchPathLen );
+		System.out.println( "minDepth: "+minDepth );
+		System.out.println( "maxDepth: "+maxDepth );
+		System.out.println( "pathType: "+pathType );
+		System.out.println(	"rawSet: "+ConvertJSON.fromObject(rawSet) );
 		
 		// Return set
 		Set<String> ret = new HashSet<>();
 		
 		// Get the keyset, and iterate it
 		for (String key : rawSet) {
-			System.out.println("KEY="+key);
 			
 			// Skip the root folder of a workspace
 			if (key.equals("") || key.equals("/")) {
@@ -957,10 +958,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			// If folder path match - store it - maybe?
 			String subPath = key.substring(searchPathLen);
 
-			//Dirty Fix for empty folder being deleted instead of moved
-			//Empty folder being considered as "" somehow
-			if (subPath.equals("")) {
-				ret.add("/");
+			// Skip the root folder of a subpath
+			if (subPath.equals("") || subPath.equals("/")) {
 				continue;
 			}
 			
@@ -1028,8 +1027,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		}
 		
 		// // Debugging stuff
-		// System.out.println( "Filtered Set" );
-		// System.out.println( ConvertJSON.fromObject(ret) );
+		System.out.println( "Filtered Set: "+ConvertJSON.fromObject(ret) );
 
 		
 		// Return the filtered set
