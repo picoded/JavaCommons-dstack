@@ -708,6 +708,51 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	
 	// Folder Pathing support
 	//--------------------------------------------------------------------------
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 * 
+	 * Copy a given file within the system
+	 * 
+	 * WARNING: Copy operations are typically not "atomic" in nature, and can be unsafe where
+	 *          missing files / corrupted data can occur when executed concurrently with other operations.
+	 * 
+	 * In general "S3-like" object storage will not safely support atomic Copy operations.
+	 * Please use the `atomicCopySupported()` function to validate if such operations are supported.
+	 * 
+	 * Note that both source, and destionation folder will be normalized to include the "/" path.
+	 * This operation may in effect function as a rename
+	 * If the destionation folder exists with content, the result will be merged. With the sourceFolder files, overwriting on conflicts.
+	 * 
+	 * @param  ObjectID of workspace
+	 * @param  sourceFolder
+	 * @param  destinationFolder
+	 * 
+	 */
+	public void backend_copyFolderPath(final String oid, final String sourceFolder,
+		final String destinationFolder) {
+		
+		// Get the list of valid sub paths in the sourceFolder
+		Set<String> subPath = backend_getFileAndFolderPathSet(oid, sourceFolder, -1, -1);
+		
+		//Special handling for the edge case where you try to move an empty folder and it just get removed instead
+		if(subPath.isEmpty() && sourceFolder != null && sourceFolder !="" && sourceFolder != "/" && sourceFolder.length() > 0){
+			subPath.add("/");
+		}
+
+
+		// Lets sync up all the folders first
+		for (String dir : subPath) {
+			if (dir.endsWith("/")) {
+				backend_ensureFolderPath(oid, destinationFolder + dir);
+			}
+		}
+		// Lets sync up all the files next
+		for (String file : subPath) {
+			if (file.endsWith("/") == false) {
+				backend_copyFile(oid, sourceFolder + file, destinationFolder + file);
+			}
+		}
+	}
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
