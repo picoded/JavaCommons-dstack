@@ -959,7 +959,8 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			String subPath = key.substring(searchPathLen);
 
 			// Skip the root folder of a subpath
-			if (subPath.equals("") || subPath.equals("/")) {
+			if (subPath.equals("")) {
+				ret.add("/");
 				continue;
 			}
 			
