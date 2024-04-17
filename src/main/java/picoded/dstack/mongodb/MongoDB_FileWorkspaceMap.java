@@ -848,10 +848,14 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public long backend_modifiedTimestamp(final String oid, final String filepath) {
 		// Lets build the query for the "root file"
 		Bson query = Filters.eq("filename", oid + "/" + filepath);
-		
+
 		// Lets prepare the search
-		GridFSFindIterable search = gridFSBucket.find(query).limit(1);
-		
+		GridFSFindIterable search = gridFSBucket.find(query)
+				// GridFS uses an index on the files collection using the filename and uploadDate fields.
+				// Make sure to sort the query by uploadDate descending (-1) to ensure that we get the latest file.
+				.sort((new Document()).append("uploadDate", -1 /* descending*/ ))
+				.limit(1);
+
 		// Lets iterate the search result, and return true on an item
 		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
 			if (cursor.hasNext()) {
