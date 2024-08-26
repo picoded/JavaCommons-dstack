@@ -921,6 +921,16 @@ public class JSql_DataObjectMap_QueryBuilder {
 								"(" + collumnTableAlias + ".sVl IS NULL OR " + replacement.toString() + ")");
 						}
 					}
+				} else if (argObj instanceof Boolean) {
+					// note that due to a bug in dstack before 26 Aug 2024,
+					// ... all boolean values were stored as json (Core_DataType.JSON, 31)
+					//     ...thus entry is stored with the values: nVl = NULL, sVL = null, tVl = "true" or "false"
+					//     ... thus, for boolean, we need to query against tVl to support legacy values
+					// ... this bug has been fixed in newer versions of dstack...
+					//     ... where the entry is stored with the values: nVl = 1 or 0, sVL = "true" or "false", tVl = "true" or "false"
+					replacement = QueryFilter.basicQueryFromTokens(queryArgMap, collumnTableAlias
+						+ ".tVl", toReplace.operatorSymbol(), ":" + toReplace.argumentName() //
+					);
 				}
 				
 				// Unprocessed arg type

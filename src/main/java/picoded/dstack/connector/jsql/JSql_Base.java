@@ -130,6 +130,16 @@ public abstract class JSql_Base extends JSql {
 					ps.setDouble(pt + 1, (Double) argObj);
 				} else if (Float.class.isInstance(argObj)) {
 					ps.setFloat(pt + 1, (Float) argObj);
+				} else if (Boolean.class.isInstance(argObj)){
+					boolean bValue = (Boolean) argObj;
+					// note that due to a bug in dstack before 26 Aug 2024,
+					// ... all boolean values were stored as json (Core_DataType.JSON, 31)
+					//     ...thus entry is stored with the values: nVl = NULL, sVL = null, tVl = "true" or "false"
+					//     ... thus, for boolean, we need to query against tVl to support legacy values
+					// ... this bug has been fixed in newer versions of dstack...
+					//     ... where the entry is stored with the values: nVl = 1 or 0, sVL = "true" or "false", tVl = "true" or "false"
+					ps.setString(pt + 1, bValue ? "true" : "false");
+					// ps.setBoolean(pt + 1, (Boolean) argObj); // this does not work, bc this transforms the value to 1/0
 				} else if (Date.class.isInstance(argObj)) {
 					java.sql.Date sqlDate = new java.sql.Date(((Date) argObj).getTime());
 					ps.setDate(pt + 1, sqlDate);

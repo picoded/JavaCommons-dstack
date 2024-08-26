@@ -193,7 +193,15 @@ public class JSql_DataObjectMapUtil {
 			return valueTypeSet(Core_DataType.STRING.getValue(), null, shortenStringValue(value),
 				value.toString(), EmptyArray.BYTE);
 		}
-		
+
+		// Boolean type support
+		// - stores nVl as 1 or 0
+		// - store sVl and tVl as the string value : "true" or "false"
+		if(value instanceof Boolean){
+			return valueTypeSet(Core_DataType.BOOLEAN.getValue(), ((Boolean) value) ? 1 : 0, value.toString(), value.toString(),
+					EmptyArray.BYTE);
+		}
+
 		// Binary type support
 		if (value instanceof byte[]) {
 			return valueTypeSet(Core_DataType.BINARY.getValue(), null, null, null, (byte[]) value);
