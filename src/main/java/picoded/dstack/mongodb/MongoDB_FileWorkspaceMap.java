@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.sql.Date;
 
 // JavaCommons imports
+import com.mongodb.client.gridfs.model.GridFSDownloadOptions;
 import picoded.core.common.EmptyArray;
 import picoded.core.file.FileUtil;
 import picoded.dstack.FileWorkspace;
