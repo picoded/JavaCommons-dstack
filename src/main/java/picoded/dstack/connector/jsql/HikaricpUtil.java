@@ -218,8 +218,22 @@ class HikaricpUtil {
 		
 		// Setup the configured connection URL + DB
 		// hconfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
+		String jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + name;
+
+		// add jdbc params, if any, e.g.:
+		// [
+		//  "useSSL=REQUIRED",
+		//  "enabledTLSProtocols=TLSv1.2,TLSv1.3",
+		// ]
+		String[] params = config.getStringArray("params", "[]");
+		if (params != null && params.length > 0) {
+			for (int i = 0; i < params.length; i++) {
+				jdbcUrl += (i == 0 ? "?" : "&") + params[i];
+			}	
+		}
 		
-		hconfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name);
+		hconfig.setJdbcUrl(jdbcUrl);
 		
 		// Setup the username and password
 		hconfig.setUsername(user);
