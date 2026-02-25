@@ -707,27 +707,27 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	public void backend_moveFile(String oid, String sourceFile, String destinationFile) {
 		
 		// in mongodb gridFS, "move" is performed by updating the "filename" metadata
-
+		
 		// first, check that the source file exists
-		if(!backend_fileExist(oid, sourceFile)){
+		if (!backend_fileExist(oid, sourceFile)) {
 			throw new RuntimeException("Source file does not exist: " + sourceFile);
 		}
 		
 		// then, ensure that file at destination does not exists
-		if(backend_fileExist(oid, destinationFile)){
+		if (backend_fileExist(oid, destinationFile)) {
 			throw new RuntimeException("Destination file already exists: " + destinationFile);
 		}
-
+		
 		// finally, perform the "move" by updating the filename metadata of the source file to the destination file
-
+		
 		String sourceFullPath = oid + "/" + sourceFile;
 		String destinationFullPath = oid + "/" + destinationFile;
-
+		
 		Bson query = Filters.eq("filename", sourceFullPath);
 		Bson update = new Document("$set", new Document("filename", destinationFullPath));
-
-		gridFSBucket.getFilesCollection().updateOne(query, update);
-
+		
+		filesCollection.updateOne(query, update, null);
+		
 	}
 	
 	@Override
