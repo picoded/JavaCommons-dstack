@@ -726,7 +726,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		Bson query = Filters.eq("filename", sourceFullPath);
 		Bson update = new Document("$set", new Document("filename", destinationFullPath));
 		
-		filesCollection.updateOne(query, update, null);
+		filesCollection.updateOne(query, update);
 		
 	}
 	
