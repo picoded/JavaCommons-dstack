@@ -73,12 +73,21 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Generates a new blank object, with a GUID.
+	 * Generates a new blank object, with a generated GUID.
 	 * Note that save does not trigger, unless its called.
 	 *
 	 * @return the DataObject
 	 **/
 	DataObject newEntry();
+
+	/**
+	 * Generates a new blank object, with a given GUID.
+	 * Note that save does not trigger, unless its called.
+	 * 
+	 * @param oid the object ID to use for the new entry, if null a GUID will be generated
+	 * @return the DataObject
+	 */
+	DataObject newEntry(String oid);
 	
 	/**
 	 * Generates a new blank object, with a GUID.
