@@ -61,78 +61,108 @@ public class Core_DataObject implements DataObject {
 	
 	// Constructor
 	//----------------------------------------------
+
+	/**
+	 * Setup a DataObject against a DataObjectMap backend.
+	 * 
+	 * Generates a new GUID for the object.
+	 * 
+	 * @param inTable The DataObjectMap backend to use
+	 */
+	public Core_DataObject(DataObjectMap inTable){
+		this(inTable, null);
+	}
+
+	/**
+	 * Setup a DataObject against a DataObjectMap backend.
+	 * 
+	 * Generates a new GUID for the object if inOID is null, else uses the provided inOID.
+	 * 
+	 * @param inTable The DataObjectMap backend to use
+	 * @param inOID The GUID to use for the new DataObject, can be null
+	 */
+	public Core_DataObject(DataObjectMap inTable, String inOID){
+
+		// Main table to use
+		mainTable = (Core_DataObjectMap) inTable;
+
+		// Issue a GUID
+		if (inOID == null) {
+			_oid = GUID.base58();
+		} else {
+			_oid = inOID;
+		}
+		
+		if (_oid.length() < 4) {
+			throw new RuntimeException("_oid should be atleast 4 character long");
+		}
+		
+		// // D= GUID collision check for LOLZ
+		// remoteDataMap = mainTable.DataObjectRemoteDataMap_get(_oid);
+		// if (remoteDataMap.size() > 0) {
+		// 	throw new SecurityException("GUID Collision =.= DO YOU HAVE REAL ENTROPY? : " + _oid);
+		// }
+		
+		// Ensure oid is savable, needed to save blank objects
+		deltaDataMap.put("_oid", _oid);
+		deltaDataMap.put("_createTimestamp", System.currentTimeMillis());
+		
+		// Create remote data map (blank)
+		remoteDataMap = new HashMap<String, Object>();
+		
+		// Indicated that the provided map is "complete"
+		isCompleteRemoteDataMap = true;
+
+	}
 	
 	/**
 	 * Setup a DataObject against a DataObjectMap backend.
 	 *
 	 * This allow the setup in the following modes
 	 *
-	 * + No (or invalid) GUID : Assume a new DataObject is made with NO DATA. Issues a new GUID for the object
 	 * + GUID without remote data, will pull the required data when required
 	 * + GUID with complete remote data
 	 * + GUID with incomplete remote data, will pull the required data when required
 	 *
 	 * @param  Meta table to use
-	 * @param  GUID to use, can be null
+	 * @param  GUID to use
 	 * @param  Remote mapping data used (this should be modifiable)
 	 * @param  is complete remote map, use false if incomplete data
 	 **/
 	public Core_DataObject(DataObjectMap inTable, String inOID, Map<String, Object> inRemoteData,
 		boolean isCompleteData) {
+
+		// null / empty check for inOID
+		if(inOID == null || inOID.isEmpty()){
+			throw new IllegalArgumentException("inOID cannot be null or empty");
+		}
+
 		// Main table to use
 		mainTable = (Core_DataObjectMap) inTable;
 		
-		// Generates a GUID if not given
-		if (inOID == null) {
-			// Issue a GUID
-			if (_oid == null) {
-				_oid = GUID.base58();
-			}
-			
-			if (_oid.length() < 4) {
-				throw new RuntimeException("_oid should be atleast 4 character long");
-			}
-			
-			// // D= GUID collision check for LOLZ
-			// remoteDataMap = mainTable.DataObjectRemoteDataMap_get(_oid);
-			// if (remoteDataMap.size() > 0) {
-			// 	throw new SecurityException("GUID Collision =.= DO YOU HAVE REAL ENTROPY? : " + _oid);
-			// }
-			
-			// Ensure oid is savable, needed to save blank objects
-			deltaDataMap.put("_oid", _oid);
-			deltaDataMap.put("_createTimestamp", System.currentTimeMillis());
-			
-			// Create remote data map (blank)
-			remoteDataMap = new HashMap<String, Object>();
-			
-			// Indicated that the provided map is "complete"
-			isCompleteRemoteDataMap = true;
-			
-		} else {
-			// _oid setup
-			_oid = inOID;
-			
-			// Loading remote data map, only valid if _oid is given
-			remoteDataMap = inRemoteData;
-			
-			// Indicates that isComplete is flagged if given
-			if (remoteDataMap != null) {
-				isCompleteRemoteDataMap = isCompleteData;
-			}
+		// _oid setup
+		_oid = inOID;
+		
+		// Loading remote data map, only valid if _oid is given
+		remoteDataMap = inRemoteData;
+		
+		// Indicates that isComplete is flagged if given
+		if (remoteDataMap != null) {
+			isCompleteRemoteDataMap = isCompleteData;
 		}
+		
 	}
 	
-	/**
-	 * Constructor, with DataObjectMap and GUID (auto generated if null)
-	 * This is the shorten version of the larger constructor
-	 *
-	 * @param  Meta table to use
-	 * @param  GUID to use, can be null
-	 **/
-	public Core_DataObject(DataObjectMap inTable, String inOID) {
-		this(inTable, inOID, null, false);
-	}
+	// /**
+	//  * Constructor, with DataObjectMap and GUID (auto generated if null)
+	//  * This is the shorten version of the larger constructor
+	//  *
+	//  * @param  Meta table to use
+	//  * @param  GUID to use, can be null
+	//  **/
+	// public Core_DataObject(DataObjectMap inTable, String inOID) {
+	// 	this(inTable, inOID, null, false);
+	// }
 	
 	// DataObject ID
 	//----------------------------------------------
