@@ -264,15 +264,15 @@ public class JSql_DataObjectMapUtil {
 		// Boolean value support
 		//
 		if(baseType == Core_DataType.BOOLEAN.getValue()){
-			String tVl = r.getString("tVl");
-			if(tVl.equalsIgnoreCase("true")){
+			String tVl = (r.get("tVl") != null) ? r.get("tVl").getString(pos) : null;
+			if(tVl != null && tVl.equalsIgnoreCase("true")){
 				return true;
 			}
-			if(tVl.equalsIgnoreCase("false")){
+			if(tVl != null && tVl.equalsIgnoreCase("false")){
 				return false;
 			}
 			// get the value from nVl
-			int nVl = r.getInt("nVl");
+			int nVl = (r.get("nVl") != null) ? r.get("nVl").getInt(pos) : -1;
 			if(nVl == 1){
 				return true;
 			}
