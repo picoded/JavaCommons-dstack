@@ -193,7 +193,15 @@ public class JSql_DataObjectMapUtil {
 			return valueTypeSet(Core_DataType.STRING.getValue(), null, shortenStringValue(value),
 				value.toString(), EmptyArray.BYTE);
 		}
-		
+
+		// Boolean type support
+		// - stores nVl as 1 or 0
+		// - store sVl and tVl as the string value : "true" or "false"
+		if(value instanceof Boolean){
+			return valueTypeSet(Core_DataType.BOOLEAN.getValue(), ((Boolean) value) ? 1 : 0, value.toString(), value.toString(),
+					EmptyArray.BYTE);
+		}
+
 		// Binary type support
 		if (value instanceof byte[]) {
 			return valueTypeSet(Core_DataType.BINARY.getValue(), null, null, null, (byte[]) value);
@@ -251,14 +259,36 @@ public class JSql_DataObjectMapUtil {
 		} else if (baseType == Core_DataType.TEXT.getValue()) { // Text
 			return r.get("tVl").getString(pos);
 		}
-		
+
+		//
+		// Boolean value support
+		//
+		if(baseType == Core_DataType.BOOLEAN.getValue()){
+			String tVl = r.getString("tVl");
+			if(tVl.equalsIgnoreCase("true")){
+				return true;
+			}
+			if(tVl.equalsIgnoreCase("false")){
+				return false;
+			}
+			// get the value from nVl
+			int nVl = r.getInt("nVl");
+			if(nVl == 1){
+				return true;
+			}
+			if(nVl == 0){
+				return false;
+			}
+			throw new JSqlException("Invalid boolean value: tVl=" + tVl + ", nVl=" + nVl);
+		}
+
 		//
 		// Binary value
 		//
 		if (baseType == Core_DataType.BINARY.getValue()) {
 			// Older base64 stroage format
 			// return (Base64.getDecoder().decode((String) (r.get("tVl").get(pos))));
-			
+
 			Object rawValue = r.get("rVl").get(pos);
 			if (rawValue instanceof java.sql.Blob) {
 				java.sql.Blob blobData = (java.sql.Blob) rawValue;

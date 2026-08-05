@@ -59,7 +59,12 @@ public enum Core_DataType {
 	 * String type
 	 **/
 	STRING(25),
-	
+
+	/**
+	 * Boolean type
+	 */
+	BOOLEAN(26),
+
 	//
 	// Storage types
 	//
