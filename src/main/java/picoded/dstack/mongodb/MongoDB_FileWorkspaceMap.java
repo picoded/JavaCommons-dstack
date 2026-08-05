@@ -695,6 +695,40 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		// Check against the full file path
 		return fullRawPathExist(oid + "/" + filepath);
 	}
+
+	/**
+	 * Move or rename a file.
+	 * Note that in MongoDB GridFS, there is no native "move" or "rename" operation, so we perform this by updating the "filename" metadata of the file.
+	 * @param oid ObjectID of workspace
+	 * @param sourceFile the current file path to move from
+	 * @param destinationFile the new file path to move to
+	 */
+	@Override
+	public void backend_moveFile(String oid, String sourceFile, String destinationFile) {
+		
+		// in mongodb gridFS, "move" is performed by updating the "filename" metadata
+
+		// first, check that the source file exists
+		if(!backend_fileExist(oid, sourceFile)){
+			throw new RuntimeException("Source file does not exist: " + sourceFile);
+		}
+		
+		// then, ensure that file at destination does not exists
+		if(backend_fileExist(oid, destinationFile)){
+			throw new RuntimeException("Destination file already exists: " + destinationFile);
+		}
+
+		// finally, perform the "move" by updating the filename metadata of the source file to the destination file
+
+		String sourceFullPath = oid + "/" + sourceFile;
+		String destinationFullPath = oid + "/" + destinationFile;
+
+		Bson query = Filters.eq("filename", sourceFullPath);
+		Bson update = new Document("$set", new Document("filename", destinationFullPath));
+
+		gridFSBucket.getFilesCollection().updateOne(query, update);
+
+	}
 	
 	@Override
 	public void backend_removeFile(String oid, String filepath) {
@@ -704,7 +738,7 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		ensureParentPath(oid, filepath);
 		// Remove the respective file
 		removeFilePath(oid, filepath);
-	}
+	}	
 	
 	// Folder Pathing support
 	//--------------------------------------------------------------------------
