@@ -283,16 +283,36 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	//--------------------------------------------------------------------------
 	
 	/**
-	 * Generates a new blank object, with a GUID
+	 * Generates a new blank object and issue a new GUID for it
 	 *
 	 * @return the DataObject
 	 **/
 	public DataObject newEntry() {
 		// Generating a new object
-		DataObject ret = new Core_DataObject(this, null, null, false);
+		DataObject ret = new Core_DataObject(this);
 		
 		// Actual return
 		return ret;
+	}
+
+	/**
+	 * Generates a new blank object with the specified OID
+	 * @param oid The OID to use for the new DataObject
+	 * @return The newly created DataObject
+	 */
+	public DataObject newEntry(String oid) {
+
+		// do a collision check, to ensure the OID is not already in use
+		if (get(oid) != null) {
+			throw new RuntimeException("_oid already taken");
+		}
+
+		// Generating a new object
+		DataObject ret = new Core_DataObject(this, oid);
+		
+		// Actual return
+		return ret;
+
 	}
 	
 	/**
