@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.sql.Date;
 
 // JavaCommons imports
+import com.mongodb.client.gridfs.model.GridFSDownloadOptions;
 import picoded.core.common.EmptyArray;
 import picoded.core.file.FileUtil;
 import picoded.dstack.FileWorkspace;
@@ -502,21 +503,15 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 		
 		// Lets get the time "NOW"
 		long now = System.currentTimeMillis();
-		
-		// Lets build the query for the file involved
-		Bson query = Filters.eq("filename", fullPath);
-		
+
+		GridFSFile fileObj = getLatestCopy(fullPath);
+
 		// Read timestamp, and objectid
 		ObjectId readObjId = null;
 		long readUploadTimestamp = -1;
-		
-		// Lets iterate the search result, and return true on an item
-		try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
-			if (cursor.hasNext()) {
-				GridFSFile fileObj = cursor.next();
-				readUploadTimestamp = fileObj.getUploadDate().getTime();
-				readObjId = fileObj.getObjectId();
-			}
+		if(fileObj!= null) {
+			readUploadTimestamp = fileObj.getUploadDate().getTime();
+			readObjId = fileObj.getObjectId();
 		}
 		
 		// Check if the current file is less then 2 seconds old
@@ -529,12 +524,10 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 			}
 			
 			// And get the latest objectID again (in case of any changes)
-			try (MongoCursor<GridFSFile> cursor = gridFSBucket.find(query).limit(1).iterator()) {
-				if (cursor.hasNext()) {
-					GridFSFile fileObj = cursor.next();
-					readUploadTimestamp = fileObj.getUploadDate().getTime();
-					readObjId = fileObj.getObjectId();
-				}
+			fileObj = getLatestCopy(fullPath);
+			if(fileObj!= null) {
+				readUploadTimestamp = fileObj.getUploadDate().getTime();
+				readObjId = fileObj.getObjectId();
 			}
 		}
 		
@@ -854,22 +847,10 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 * @return  DataObject created timestamp in ms
 	 */
 	public long backend_modifiedTimestamp(final String oid, final String filepath) {
-		// Lets build the query for the "root file"
-		Bson query = Filters.eq("filename", oid + "/" + filepath);
 
-		// Lets prepare the search
-		GridFSFindIterable search = gridFSBucket.find(query)
-				// GridFS uses an index on the files collection using the filename and uploadDate fields.
-				// Make sure to sort the query by uploadDate descending (-1) to ensure that we get the latest file.
-				.sort((new Document()).append("uploadDate", -1 /* descending*/ ))
-				.limit(1);
-
-		// Lets iterate the search result, and return true on an item
-		try (MongoCursor<GridFSFile> cursor = search.iterator()) {
-			if (cursor.hasNext()) {
-				GridFSFile fileObj = cursor.next();
-				return fileObj.getUploadDate().getTime();
-			}
+		GridFSFile file = getLatestCopy(oid + "/" + filepath);
+		if(file != null){
+			return file.getUploadDate().getTime();
 		}
 		
 		// Fail, as the search found no iterations
@@ -881,7 +862,29 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	// Query, and listing support
 	//
 	//--------------------------------------------------------------------------
-	
+
+	/**
+	 * Get the latest copy of a file
+	 * @param fullPath the full path of the file
+	 * @return the latest copy of the file
+	 */
+	private GridFSFile getLatestCopy(String fullPath){
+
+		GridFSFindIterable search = gridFSBucket
+				.find(Filters.eq("filename", fullPath))
+				// GridFS uses an index on the files collection using the filename and uploadDate fields.
+				// Make sure to sort the query by uploadDate descending (-1) to ensure that we get the latest file.
+				.sort((new Document()).append("uploadDate", -1 /* descending*/ ))
+				.limit(1);
+
+		MongoCursor<GridFSFile> cursor = search.iterator();
+		if(cursor.hasNext()){
+			return cursor.next();
+		}
+		return null;
+
+	}
+
 	/**
 	 * List all the various files and folders found in the given folderPath
 	 * 
