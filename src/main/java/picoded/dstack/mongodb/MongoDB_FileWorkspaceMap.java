@@ -677,7 +677,15 @@ public class MongoDB_FileWorkspaceMap extends Core_FileWorkspaceMap {
 	 **/
 	public InputStream backend_fileReadInputStream(String oid, String filepath) {
 		try {
-			return gridFSBucket.openDownloadStream(oid + "/" + filepath);
+
+			// id of the file to download
+			return gridFSBucket.openDownloadStream(
+					// name of the file to download
+					oid + "/" + filepath,
+					// set the revision number to -1 to download the latest copy of the file
+					new GridFSDownloadOptions().revision(-1)
+				);
+
 		} catch (Exception e) {
 			if (e.getMessage().toLowerCase().indexOf("no file found") >= 0) {
 				// Does nothing if no file is found
