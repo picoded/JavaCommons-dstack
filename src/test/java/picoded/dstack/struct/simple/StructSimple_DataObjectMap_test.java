@@ -1087,4 +1087,351 @@ public class StructSimple_DataObjectMap_test {
 		mtObj.maintenance();
 		indexBasedTestSetup();
 	}
+
+	// Ported Exhaustive Primitive & Fallback Tests
+	//-----------------------------------------------------
+
+	@Test
+	public void testCreateAndGetByOid() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		assertNotNull(entry);
+		String oid = entry.getString("_oid");
+		assertNotNull(oid);
+
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(oid, retrieved.getString("_oid"));
+	}
+
+	@Test
+	public void testStringProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myString", "hello-world");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals("hello-world", retrieved.getString("myString"));
+	}
+
+	@Test
+	public void testGetStringFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals("default-string", retrieved.getString("nonExistentProp", "default-string"));
+	}
+
+	@Test
+	public void testIntProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myInt", 123);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(123, retrieved.getInt("myInt"));
+	}
+
+	@Test
+	public void testGetIntFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(999, retrieved.getInt("nonExistentProp", 999));
+	}
+
+	@Test
+	public void testBooleanProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myBool", true);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertTrue(retrieved.getBoolean("myBool"));
+	}
+
+	@Test
+	public void testGetBooleanFallbackFalse() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertFalse(retrieved.getBoolean("nonExistentProp", false));
+	}
+
+	@Test
+	public void testGetBooleanFallbackTrue() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertTrue(retrieved.getBoolean("nonExistentProp", true));
+	}
+
+	@Test
+	public void testIntOneAsBooleanTrue() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myIntOne", 1);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertTrue(retrieved.getBoolean("myIntOne", false));
+	}
+
+	@Test
+	public void testIntZeroAsBooleanFalse() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myIntZero", 0);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertFalse(retrieved.getBoolean("myIntZero", true));
+	}
+
+	@Test
+	public void testNumberProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myNum", 42.56);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(42.56, retrieved.getNumber("myNum").doubleValue(), 0.001);
+	}
+
+	@Test
+	public void testGetNumberFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(99.9, retrieved.getNumber("nonExistent", 99.9).doubleValue(), 0.001);
+	}
+
+	@Test
+	public void testLongProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myLong", 9876543210L);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(9876543210L, retrieved.getLong("myLong"));
+	}
+
+	@Test
+	public void testGetLongFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(12345L, retrieved.getLong("nonExistent", 12345L));
+	}
+
+	@Test
+	public void testFloatProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myFloat", 5.67f);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(5.67f, retrieved.getFloat("myFloat"), 0.01f);
+	}
+
+	@Test
+	public void testGetFloatFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(1.23f, retrieved.getFloat("nonExistent", 1.23f), 0.01f);
+	}
+
+	@Test
+	public void testDoubleProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myDouble", 3.14159);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(3.14159, retrieved.getDouble("myDouble"), 0.00001);
+	}
+
+	@Test
+	public void testGetDoubleFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals(2.71828, retrieved.getDouble("nonExistent", 2.71828), 0.00001);
+	}
+
+	@Test
+	public void testByteProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myByte", (byte) 12);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals((byte) 12, retrieved.getByte("myByte"));
+	}
+
+	@Test
+	public void testGetByteFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals((byte) 5, retrieved.getByte("nonExistent", (byte) 5));
+	}
+
+	@Test
+	public void testShortProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.put("myShort", (short) 456);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals((short) 456, retrieved.getShort("myShort"));
+	}
+
+	@Test
+	public void testGetShortFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		assertEquals((short) 9, retrieved.getShort("nonExistent", (short) 9));
+	}
+
+	@Test
+	public void testListProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		List<String> list = new ArrayList<String>();
+		list.add("item1");
+		list.add("item2");
+		entry.put("myList", list);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		List<String> retrievedList = retrieved.getList("myList");
+		assertNotNull(retrievedList);
+		assertEquals(2, retrievedList.size());
+		assertEquals("item1", retrievedList.get(0));
+	}
+
+	@Test
+	public void testGetListFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		List<String> fallbackList = new ArrayList<String>();
+		fallbackList.add("fallback-item");
+		assertEquals(fallbackList, retrieved.getList("nonExistent", fallbackList));
+	}
+
+	@Test
+	public void testStringArrayProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		String[] arr = new String[]{"val1", "val2"};
+		entry.put("myStrArr", arr);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		String[] retrievedArr = retrieved.getStringArray("myStrArr");
+		assertNotNull(retrievedArr);
+		assertEquals(2, retrievedArr.length);
+		assertEquals("val1", retrievedArr[0]);
+	}
+
+	@Test
+	public void testGetStringArrayFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		String[] fallbackArr = new String[]{"fb"};
+		assertArrayEquals(fallbackArr, retrieved.getStringArray("nonExistent", fallbackArr));
+	}
+
+	@Test
+	public void testObjectArrayProp() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		Object[] arr = new Object[]{"val1", 123};
+		entry.put("myObjArr", arr);
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		Object[] retrievedArr = retrieved.getObjectArray("myObjArr");
+		assertNotNull(retrievedArr);
+		assertEquals(2, retrievedArr.length);
+		assertEquals("val1", retrievedArr[0]);
+		assertEquals(123, retrievedArr[1]);
+	}
+
+	@Test
+	public void testGetObjectArrayFallback() throws Exception {
+		DataObject entry = mtObj.newEntry();
+		String oid = entry.getString("_oid");
+		entry.saveDelta();
+
+		DataObject retrieved = mtObj.get(oid);
+		assertNotNull(retrieved);
+		Object[] fallbackArr = new Object[]{"fb"};
+		assertArrayEquals(fallbackArr, retrieved.getObjectArray("nonExistent", fallbackArr));
+	}
 }
