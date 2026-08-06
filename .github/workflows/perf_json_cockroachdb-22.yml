@@ -1,4 +1,4 @@
-name: (perf) JSON Cockroach DB v21 Support Test
+name: (perf) JSON Cockroach DB v22 Support Test
 on:
   # -------------------------------------------------------------------------------------------------------------------------------
   # Disabling perf test to ensure build time is < 4m
@@ -21,7 +21,7 @@ jobs:
     # so we are gonna to run the docker containers via the bash commandline
     # services:
     #   postgres:
-    #     image: cockroachdb/cockroach:v21.1.12
+    #     image: cockroachdb/cockroach:v22.2.19
     #     env:
     #       POSTGRES_DATABASE: javacommons
     #       POSTGRES_USER: javacommons
@@ -47,7 +47,7 @@ jobs:
           ~/.gradle/wrapper
     - name: Setup cockroachDB 
       run: |
-        sudo docker run -d --name=roach1 --hostname=roach1 -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v21.2.0 start-single-node --insecure && \
+        sudo docker run -d --name=roach1 --hostname=roach1 -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v22.2.19 start-single-node --insecure && \
         sleep 5s
     - name: Setup initial cockroach DB
       run: |
