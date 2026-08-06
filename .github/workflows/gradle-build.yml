@@ -33,7 +33,7 @@ jobs:
     - name: Run the build
       run: ./gradlew build
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-result-report
@@ -50,7 +50,7 @@ jobs:
         verbose: true # optional (default = false)
         fail_ci_if_error: false
     - name: Archive binary files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: binary-libs
         path: |
