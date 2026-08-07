@@ -214,17 +214,32 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		// Curent timestamp
 		long now = JSql_DataObjectMapUtil.getCurrentTimestamp();
 		
-		// // Ensure GUID is registered
-		// sqlObj.upsert( //
-		// 	dataStorageTable, //
-		// 	new String[] { "oID" }, //
-		// 	new Object[] { _oid }, //
-		// 	new String[] { "uTm", "data", "bData" }, //
-		// 	new Object[] { now, dataPair.getLeft(), dataPair.getRight() }, //
-		// 	new String[] { "cTm", "eTm" }, //
-		// 	new Object[] { now, 0 }, //
-		// 	null // The only misc col, is pKy, which is being handled by DB
-		// 	);
+		// Determine which keys are being deleted/removed (explicitly null or ObjectToken.NULL)
+		String updateDataSql = dataStorageTable + ".data||EXCLUDED.data";
+		Set<String> keysToProcess = keys;
+		if (keysToProcess == null) {
+			keysToProcess = fullMap.keySet();
+		}
+		
+		java.util.List<String> deletedKeys = new java.util.ArrayList<>();
+		for (String k : keysToProcess) {
+			if (k.equalsIgnoreCase("oid") || k.equalsIgnoreCase("_oid") || k.equalsIgnoreCase("_otm")) {
+				continue;
+			}
+			Object v = fullMap.get(k);
+			if (v == null || v == picoded.core.common.ObjectToken.NULL) {
+				deletedKeys.add(k);
+			}
+		}
+		
+		if (!deletedKeys.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("(").append(updateDataSql).append(")");
+			for (String dk : deletedKeys) {
+				sb.append(" - '").append(dk.replace("'", "''")).append("'");
+			}
+			updateDataSql = sb.toString();
+		}
 		
 		// Perform the upsert command
 		sqlObj.update_raw( //
@@ -233,7 +248,7 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 				"VALUES ( ?, ?, ?, ?, ?::jsonb, ? ) " + //
 				"ON CONFLICT ( oID ) DO UPDATE SET " + //
 				"uTm=EXCLUDED.uTm, " + //
-				"data=" + dataStorageTable + ".data||EXCLUDED.data, " + //
+				"data=" + updateDataSql + ", " + //
 				"bData=EXCLUDED.bData", new Object[] { //
 			_oid, now, now, 0, dataPair.getLeft(), dataPair.getRight() //
 			});
