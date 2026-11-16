@@ -62,4 +62,36 @@ public class Stack_DataObjectMap_test extends StructSimple_DataObjectMap_test {
 		assertNotNull(data);
 		assertEquals("world", data.get("hello"));
 	}
+
+	@Test
+	public void testBulkRemoveAcrossLayers() {
+		// Populate item in bottom layer
+		DataObject data1 = layer2.newEntry();
+		data1.put("k", "v1");
+		data1.saveAll();
+		String oid1 = data1._oid();
+
+		// Populate item directly in top layer
+		DataObject data2 = layer1.newEntry();
+		data2.put("k", "v2");
+		data2.saveAll();
+		String oid2 = data2._oid();
+
+		// Read data1 through stack so it is cached in layer1
+		DataObject readData1 = mtObj.get(oid1);
+		assertNotNull(readData1);
+		assertNotNull(layer1.get(oid1));
+		assertNotNull(layer2.get(oid1));
+
+		// Bulk remove both IDs through stack
+		long removed = mtObj.removeBulk(Arrays.asList(oid1, oid2));
+		assertTrue(removed >= 0);
+
+		// Assert both layers no longer have the items
+		assertNull(layer1.get(oid1));
+		assertNull(layer2.get(oid1));
+		assertNull(layer1.get(oid2));
+		assertNull(mtObj.get(oid1));
+		assertNull(mtObj.get(oid2));
+	}
 }

@@ -2,6 +2,7 @@ package picoded.dstack.core;
 
 // Java imports
 import java.util.Collections;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -59,6 +60,18 @@ abstract public class Core_DataObjectMap_struct extends Core_DataObjectMap {
 	 **/
 	public void DataObjectRemoteDataMap_remove(String oid) {
 		backendMap().remove(oid);
+	}
+	
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		long count = 0;
+		Map<String, Map<String, Object>> map = backendMap();
+		for (String oid : oids) {
+			if (map.remove(oid) != null) {
+				count++;
+			}
+		}
+		return count;
 	}
 	
 	/**

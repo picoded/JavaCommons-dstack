@@ -1,6 +1,7 @@
 package picoded.dstack.stack;
 
 // Java imports
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -97,6 +98,19 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 		for (int i = dataLayers.length - 1; i >= 0; --i) {
 			dataLayers[i].DataObjectRemoteDataMap_remove(oid);
 		}
+	}
+
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		long removed = 0;
+		// Remove data from the lowest layer upwards
+		for (int i = dataLayers.length - 1; i >= 0; --i) {
+			long count = dataLayers[i].removeBulk(oids);
+			if (i == dataLayers.length - 1) {
+				removed = count;
+			}
+		}
+		return removed;
 	}
 	
 	/**

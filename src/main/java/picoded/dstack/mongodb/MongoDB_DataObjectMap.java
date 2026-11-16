@@ -1,6 +1,7 @@
 package picoded.dstack.mongodb;
 
 // Java imports
+import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.result.DeleteResult;
 
 /**
  * ## Purpose
@@ -167,6 +169,15 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
 		collection.deleteOne(Filters.eq("_oid", _oid));
+	}
+
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		if (oids == null || oids.isEmpty()) {
+			return 0;
+		}
+		DeleteResult res = collection.deleteMany(Filters.in("_oid", oids));
+		return res.getDeletedCount();
 	}
 	
 	/**

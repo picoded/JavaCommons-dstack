@@ -1727,5 +1727,61 @@ public class JSql_DataObjectMap_QueryBuilder {
 		//--------------------------------------------------------------------
 		sql.delete(dataMap.primaryKeyTable, "oID = ?", new Object[] { _oid });
 	}
+
+	/**
+	 * Deletes multiple records by their IDs across dynamic table, fixed tables, and primary key table.
+	 *
+	 * @param oids - collection of object IDs to delete
+	 * @return number of primary key records deleted
+	 **/
+	public long jSqlObjectMapRemoveBulk(Collection<String> oids) {
+		if (oids == null || oids.isEmpty()) {
+			return 0;
+		}
+
+		JSql sql = dataMap.sqlObj;
+		StringBuilder placeholders = new StringBuilder();
+		int idx = 0;
+		for (String oid : oids) {
+			if (idx > 0) {
+				placeholders.append(", ?");
+			} else {
+				placeholders.append("?");
+			}
+			idx++;
+		}
+		Object[] params = oids.toArray(new Object[oids.size()]);
+		String inClause = "oID IN (" + placeholders.toString() + ")";
+
+		// Delete the data from dynamic table
+		int dynCount = sql.delete(dataMap.dataStorageTable, inClause, params);
+
+		// Delete the data from the fixed tables
+		int fixedMax = 0;
+		List<String> fixedTableNameSet = getFixedTableNameList();
+		for (String tableName : fixedTableNameSet) {
+			String oidCollumn = getFixedTableCollumnName(tableName, "_oid");
+			int fCount = sql.delete(tableName, oidCollumn + " IN (" + placeholders.toString() + ")", params);
+			if (fCount > fixedMax) {
+				fixedMax = fCount;
+			}
+		}
+
+		// Delete the parent key
+		int pkCount = sql.delete(dataMap.primaryKeyTable, inClause, params);
+
+		int count = pkCount;
+		if (count <= 0 && fixedMax > 0) {
+			count = fixedMax;
+		}
+		if (count <= 0 && dynCount > 0) {
+			if (dynCount < oids.size()) {
+				count = dynCount;
+			} else {
+				count = oids.size();
+			}
+		}
+		return (long) count;
+	}
 	
 }

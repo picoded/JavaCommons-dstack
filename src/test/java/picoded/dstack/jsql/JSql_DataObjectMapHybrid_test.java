@@ -209,6 +209,31 @@ public class JSql_DataObjectMapHybrid_test {
 		DataObject nonExistence = mtObj.get(oid);
 		assertNull(nonExistence);
 	}
+
+	@Test
+	public void deleteBulkObjectsShouldPass() {
+		// Pick 3 OIDs to bulk remove
+		List<String> toRemove = new ArrayList<>();
+		toRemove.add(populatedOID.get(0));
+		toRemove.add(populatedOID.get(1));
+		toRemove.add(populatedOID.get(2));
+
+		for (String oid : toRemove) {
+			assertNotNull(mtObj.get(oid));
+		}
+
+		long removedCount = mtObj.removeBulk(toRemove);
+		assertEquals(3, removedCount);
+
+		for (String oid : toRemove) {
+			assertNull(mtObj.get(oid));
+		}
+
+		// Verify remaining OIDs are still intact
+		for (int i = 3; i < populatedOID.size(); i++) {
+			assertNotNull(mtObj.get(populatedOID.get(i)));
+		}
+	}
 	
 	@Test
 	public void createNewObjectInHybridShouldPass() {
