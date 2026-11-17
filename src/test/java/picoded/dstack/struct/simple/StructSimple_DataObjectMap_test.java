@@ -1528,4 +1528,171 @@ public class StructSimple_DataObjectMap_test {
 		assertNull(mtObj.get(entry1._oid()));
 		assertNull(mtObj.get(entry2._oid()));
 	}
+
+	//
+	// Query IN tests
+	//-----------------------------------------------------
+
+	/**
+	 * Tests queryIn and queryIn_id with null or empty value collections.
+	 * Verifies that an empty array is safely returned without throwing NullPointerException.
+	 */
+	@Test
+	public void testQueryInNullAndEmpty() {
+		DataObject[] objsNull = mtObj.queryIn("status", null);
+		assertNotNull(objsNull);
+		assertEquals(0, objsNull.length);
+
+		String[] idsNull = mtObj.queryIn_id("status", null);
+		assertNotNull(idsNull);
+		assertEquals(0, idsNull.length);
+
+		DataObject[] objsEmpty = mtObj.queryIn("status", Collections.emptyList());
+		assertNotNull(objsEmpty);
+		assertEquals(0, objsEmpty.length);
+
+		String[] idsEmpty = mtObj.queryIn_id("status", Collections.emptyList());
+		assertNotNull(idsEmpty);
+		assertEquals(0, idsEmpty.length);
+	}
+
+	/**
+	 * Tests queryIn and queryIn_id matching against in-memory DataObjects.
+	 * Verifies multi-value matching, single-value matching, and zero results for non-matching values.
+	 */
+	@Test
+	public void testQueryInBasicMatching() throws Exception {
+		DataObject obj1 = mtObj.newEntry();
+		obj1.put("billID", "BILL_10");
+		obj1.put("status", "SUCCESS");
+		obj1.saveDelta();
+
+		DataObject obj2 = mtObj.newEntry();
+		obj2.put("billID", "BILL_20");
+		obj2.put("status", "FAILED");
+		obj2.saveDelta();
+
+		DataObject obj3 = mtObj.newEntry();
+		obj3.put("billID", "BILL_30");
+		obj3.put("status", "SUCCESS");
+		obj3.saveDelta();
+
+		// Query for BILL_10 and BILL_30
+		DataObject[] matchedObjs = mtObj.queryIn("billID", Arrays.asList("BILL_10", "BILL_30"));
+		assertEquals(2, matchedObjs.length);
+
+		List<String> matchedBillIds = new ArrayList<String>();
+		for (DataObject matched : matchedObjs) {
+			matchedBillIds.add((String) matched.get("billID"));
+		}
+		assertTrue(matchedBillIds.contains("BILL_10"));
+		assertTrue(matchedBillIds.contains("BILL_30"));
+
+		// Query IDs for BILL_20
+		String[] matchedIds = mtObj.queryIn_id("billID", Arrays.asList("BILL_20"));
+		assertEquals(1, matchedIds.length);
+		assertEquals(obj2._oid(), matchedIds[0]);
+
+		// Query for non-existent value
+		DataObject[] noMatch = mtObj.queryIn("billID", Arrays.asList("BILL_999"));
+		assertEquals(0, noMatch.length);
+	}
+
+	/**
+	 * Tests queryIn_id matching explicitly on the primary key property "_oid".
+	 * Verifies that ID resolution matches directly against object keys.
+	 */
+	@Test
+	public void testQueryInByOid() throws Exception {
+		DataObject obj1 = mtObj.newEntry();
+		obj1.put("name", "entry1");
+		obj1.saveDelta();
+
+		DataObject obj2 = mtObj.newEntry();
+		obj2.put("name", "entry2");
+		obj2.saveDelta();
+
+		String[] matchedIds = mtObj.queryIn_id("_oid", Arrays.asList(obj1._oid(), obj2._oid()));
+		assertEquals(2, matchedIds.length);
+		List<String> idList = Arrays.asList(matchedIds);
+		assertTrue(idList.contains(obj1._oid()));
+		assertTrue(idList.contains(obj2._oid()));
+	}
+
+	/**
+	 * Tests queryIn and queryIn_id at the exact maximum boundary limit of MAX_QUERY_IN_SIZE (100).
+	 * Verifies that 100 values are accepted without throwing an exception.
+	 */
+	@Test
+	public void testQueryInBoundaryLimit() {
+		List<String> values100 = new ArrayList<String>();
+		for (int i = 0; i < 100; i++) {
+			values100.add("item_" + i);
+		}
+
+		DataObject[] resultObjs = mtObj.queryIn("category", values100);
+		assertNotNull(resultObjs);
+		assertEquals(0, resultObjs.length);
+
+		String[] resultIds = mtObj.queryIn_id("category", values100);
+		assertNotNull(resultIds);
+		assertEquals(0, resultIds.length);
+	}
+
+	/**
+	 * Tests queryIn and queryIn_id with additionalWhereQuery and additionalWhereArgs.
+	 * Verifies compound boolean evaluation: property IN (...) AND (additionalWhereQuery).
+	 */
+	@Test
+	public void testQueryInWithAdditionalWhere() throws Exception {
+		DataObject obj1 = mtObj.newEntry();
+		obj1.put("billID", "BILL_A");
+		obj1.put("status", "ACTIVE");
+		obj1.saveDelta();
+
+		DataObject obj2 = mtObj.newEntry();
+		obj2.put("billID", "BILL_A");
+		obj2.put("status", "ARCHIVED");
+		obj2.saveDelta();
+
+		DataObject obj3 = mtObj.newEntry();
+		obj3.put("billID", "BILL_B");
+		obj3.put("status", "ACTIVE");
+		obj3.saveDelta();
+
+		DataObject obj4 = mtObj.newEntry();
+		obj4.put("billID", "BILL_C");
+		obj4.put("status", "ARCHIVED");
+		obj4.saveDelta();
+
+		// Query IN ("BILL_A", "BILL_B") with additionalWhereQuery "status = ?" ("ACTIVE")
+		DataObject[] activeResults = mtObj.queryIn("billID", Arrays.asList("BILL_A", "BILL_B"), "status = ?", new Object[] { "ACTIVE" });
+		assertEquals(2, activeResults.length);
+		List<String> activeOids = new ArrayList<String>();
+		for (DataObject d : activeResults) {
+			activeOids.add(d._oid());
+		}
+		assertTrue(activeOids.contains(obj1._oid()));
+		assertTrue(activeOids.contains(obj3._oid()));
+
+		// Query IN_id ("BILL_A", "BILL_C") with additionalWhereQuery "status = ?" ("ARCHIVED")
+		String[] archivedIds = mtObj.queryIn_id("billID", Arrays.asList("BILL_A", "BILL_C"), "status = ?", new Object[] { "ARCHIVED" });
+		assertEquals(2, archivedIds.length);
+		List<String> archivedList = Arrays.asList(archivedIds);
+		assertTrue(archivedList.contains(obj2._oid()));
+		assertTrue(archivedList.contains(obj4._oid()));
+	}
+
+	/**
+	 * Tests that passing more than MAX_QUERY_IN_SIZE (100) values to queryIn
+	 * throws IllegalArgumentException.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testQueryInExceedsLimitThrowsException() {
+		List<String> values101 = new ArrayList<String>();
+		for (int i = 0; i <= 100; i++) {
+			values101.add("item_" + i);
+		}
+		mtObj.queryIn("category", values101);
+	}
 }
