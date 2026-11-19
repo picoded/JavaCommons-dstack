@@ -1,6 +1,7 @@
 package picoded.dstack.jsql;
 
 import java.util.logging.*;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
@@ -417,6 +418,12 @@ public class JSql_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
 		queryBuilder.jSqlObjectMapRemove(_oid);
+	}
+
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		// Bulk delete the data
+		return queryBuilder.jSqlObjectMapRemoveBulk(oids);
 	}
 	
 	/**

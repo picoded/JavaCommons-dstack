@@ -2,6 +2,8 @@ package picoded.dstack;
 
 // Java imports
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -160,6 +162,11 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	}
 	
 	/**
+	 * Maximum allowed batch size for a single removeBulk operation.
+	 **/
+	public static final int MAX_BULK_REMOVE_SIZE = 500;
+
+	/**
 	 * Removes a DataObject if it exists, from the DB
 	 *
 	 * @param  object GUID to fetch
@@ -167,6 +174,51 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	 * @return NULL
 	 **/
 	DataObject remove(Object key);
+
+	/**
+	 * Removes multiple DataObjects by their string identifiers.
+	 * Throws IllegalArgumentException if the collection exceeds MAX_BULK_REMOVE_SIZE (500).
+	 *
+	 * @param  oids collection of object IDs to remove
+	 * @return number of records successfully removed
+	 **/
+	default long removeBulk(Collection<String> oids) {
+		if (oids == null || oids.isEmpty()) {
+			return 0;
+		}
+		if (oids.size() > MAX_BULK_REMOVE_SIZE) {
+			throw new IllegalArgumentException(
+				"Cannot bulk remove more than " + MAX_BULK_REMOVE_SIZE + " items at once. Received: " + oids.size()
+			);
+		}
+		long count = 0;
+		for (String oid : oids) {
+			if (oid != null) {
+				remove(oid);
+				count++;
+			}
+		}
+		return count;
+	}
+
+	/**
+	 * Removes multiple DataObjects by their string identifiers array.
+	 * Throws IllegalArgumentException if the array exceeds MAX_BULK_REMOVE_SIZE (500).
+	 *
+	 * @param  oids array of object IDs to remove
+	 * @return number of records successfully removed
+	 **/
+	default long removeBulk(String[] oids) {
+		if (oids == null || oids.length == 0) {
+			return 0;
+		}
+		if (oids.length > MAX_BULK_REMOVE_SIZE) {
+			throw new IllegalArgumentException(
+				"Cannot bulk remove more than " + MAX_BULK_REMOVE_SIZE + " items at once. Received: " + oids.length
+			);
+		}
+		return removeBulk(Arrays.asList(oids));
+	}
 	
 	// DataObject utility operations
 	//--------------------------------------------------------------------------

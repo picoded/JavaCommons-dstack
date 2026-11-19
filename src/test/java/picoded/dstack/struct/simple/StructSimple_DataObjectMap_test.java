@@ -1434,4 +1434,98 @@ public class StructSimple_DataObjectMap_test {
 		Object[] fallbackArr = new Object[]{"fb"};
 		assertArrayEquals(fallbackArr, retrieved.getObjectArray("nonExistent", fallbackArr));
 	}
+
+	//--------------------------------------------------------------------------
+	// Bulk removal tests
+	//--------------------------------------------------------------------------
+
+	@Test
+	public void testRemoveBulkSuccess() throws Exception {
+		List<String> createdIds = new ArrayList<String>();
+		for (int i = 0; i < 5; i++) {
+			DataObject entry = mtObj.newEntry();
+			entry.put("index", i);
+			entry.saveDelta();
+			createdIds.add(entry._oid());
+		}
+
+		List<String> toRemove = new ArrayList<String>();
+		toRemove.add(createdIds.get(0));
+		toRemove.add(createdIds.get(1));
+		toRemove.add(createdIds.get(2));
+
+		long removedCount = mtObj.removeBulk(toRemove);
+		assertEquals(3, removedCount);
+
+		assertNull(mtObj.get(createdIds.get(0)));
+		assertNull(mtObj.get(createdIds.get(1)));
+		assertNull(mtObj.get(createdIds.get(2)));
+		assertNotNull(mtObj.get(createdIds.get(3)));
+		assertNotNull(mtObj.get(createdIds.get(4)));
+	}
+
+	@Test
+	public void testRemoveBulkArray() throws Exception {
+		DataObject entry1 = mtObj.newEntry();
+		entry1.saveDelta();
+		DataObject entry2 = mtObj.newEntry();
+		entry2.saveDelta();
+		DataObject entry3 = mtObj.newEntry();
+		entry3.saveDelta();
+
+		String[] toRemove = new String[] { entry1._oid(), entry2._oid() };
+		long removedCount = mtObj.removeBulk(toRemove);
+		assertEquals(2, removedCount);
+
+		assertNull(mtObj.get(entry1._oid()));
+		assertNull(mtObj.get(entry2._oid()));
+		assertNotNull(mtObj.get(entry3._oid()));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testRemoveBulkExceedsLimitThrows() {
+		List<String> oids = new ArrayList<String>();
+		for (int i = 0; i <= DataObjectMap.MAX_BULK_REMOVE_SIZE; i++) {
+			oids.add("oid_" + i);
+		}
+		mtObj.removeBulk(oids);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testRemoveBulkArrayExceedsLimitThrows() {
+		String[] oids = new String[DataObjectMap.MAX_BULK_REMOVE_SIZE + 1];
+		for (int i = 0; i < oids.length; i++) {
+			oids[i] = "oid_" + i;
+		}
+		mtObj.removeBulk(oids);
+	}
+
+	@Test
+	public void testRemoveBulkEmptyAndNull() {
+		assertEquals(0, mtObj.removeBulk((Collection<String>) null));
+		assertEquals(0, mtObj.removeBulk(new ArrayList<String>()));
+		assertEquals(0, mtObj.removeBulk((String[]) null));
+		assertEquals(0, mtObj.removeBulk(new String[0]));
+	}
+
+	@Test
+	public void testRemoveBulkDuplicateAndNullElements() throws Exception {
+		DataObject entry1 = mtObj.newEntry();
+		entry1.saveDelta();
+		DataObject entry2 = mtObj.newEntry();
+		entry2.saveDelta();
+
+		List<String> toRemove = new ArrayList<String>();
+		toRemove.add(entry1._oid());
+		toRemove.add(null);
+		toRemove.add(entry1._oid());
+		toRemove.add("");
+		toRemove.add(entry2._oid());
+
+		long removedCount = mtObj.removeBulk(toRemove);
+		assertEquals(2, removedCount);
+
+		assertNull(mtObj.get(entry1._oid()));
+		assertNull(mtObj.get(entry2._oid()));
+	}
 }

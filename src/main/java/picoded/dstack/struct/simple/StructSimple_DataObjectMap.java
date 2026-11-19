@@ -1,6 +1,7 @@
 package picoded.dstack.struct.simple;
 
 // Java imports
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -99,6 +100,16 @@ public class StructSimple_DataObjectMap extends Core_DataObjectMap_struct {
 		try {
 			accessLock.writeLock().lock();
 			super.DataObjectRemoteDataMap_remove(oid);
+		} finally {
+			accessLock.writeLock().unlock();
+		}
+	}
+
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		try {
+			accessLock.writeLock().lock();
+			return super.DataObjectRemoteDataMap_removeBulk(oids);
 		} finally {
 			accessLock.writeLock().unlock();
 		}

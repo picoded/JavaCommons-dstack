@@ -1,5 +1,6 @@
 package picoded.dstack.jsql_json;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -173,6 +174,26 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 	public void DataObjectRemoteDataMap_remove(String _oid) {
 		// Delete the data
 		sqlObj.delete(dataStorageTable, "oID = ?", new Object[] { _oid });
+	}
+
+	@Override
+	public long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		if (oids == null || oids.isEmpty()) {
+			return 0;
+		}
+		StringBuilder placeholders = new StringBuilder();
+		int idx = 0;
+		for (String oid : oids) {
+			if (idx > 0) {
+				placeholders.append(", ?");
+			} else {
+				placeholders.append("?");
+			}
+			idx++;
+		}
+		Object[] params = oids.toArray(new Object[oids.size()]);
+		int count = sqlObj.delete(dataStorageTable, "oID IN (" + placeholders.toString() + ")", params);
+		return (long) count;
 	}
 	
 	/**

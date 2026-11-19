@@ -2,8 +2,10 @@ package picoded.dstack.core;
 
 // Java imports
 import java.util.Collections;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,24 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 	 * @return nothing
 	 **/
 	abstract public void DataObjectRemoteDataMap_remove(String oid);
+	
+	/**
+	 * [Internal use, to be extended in future implementation]
+	 *
+	 * Removes multiple objects from the remote data map.
+	 * Default implementation iterates DataObjectRemoteDataMap_remove.
+	 *
+	 * @param oids sanitized collection of object IDs to remove
+	 * @return number of records removed
+	 **/
+	protected long DataObjectRemoteDataMap_removeBulk(Collection<String> oids) {
+		long count = 0;
+		for (String oid : oids) {
+			DataObjectRemoteDataMap_remove(oid);
+			count++;
+		}
+		return count;
+	}
 	
 	/**
 	 * [Internal use, to be extended in future implementation]
@@ -274,6 +294,31 @@ abstract public class Core_DataObjectMap extends Core_DataStructure<String, Data
 			DataObjectRemoteDataMap_remove(key.toString());
 		}
 		return null;
+	}
+
+	@Override
+	public long removeBulk(Collection<String> oids) {
+		if (oids == null || oids.isEmpty()) {
+			return 0;
+		}
+		if (oids.size() > MAX_BULK_REMOVE_SIZE) {
+			throw new IllegalArgumentException(
+				"Cannot bulk remove more than " + MAX_BULK_REMOVE_SIZE + " items at once. Received: " + oids.size()
+			);
+		}
+		Set<String> sanitized = new LinkedHashSet<String>();
+		for (String oid : oids) {
+			if (oid != null) {
+				String trimmed = oid.trim();
+				if (!trimmed.isEmpty()) {
+					sanitized.add(trimmed);
+				}
+			}
+		}
+		if (sanitized.isEmpty()) {
+			return 0;
+		}
+		return DataObjectRemoteDataMap_removeBulk(sanitized);
 	}
 	
 	//--------------------------------------------------------------------------

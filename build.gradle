@@ -35,7 +35,7 @@ repositories {
 //----------------------------------------------------------------
 
 // The Project version
-version = '4.1.12'
+version = '4.1.16'
 
 // Setup java compilation version
 sourceCompatibility = 1.8
