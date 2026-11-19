@@ -1,8 +1,10 @@
 package picoded.dstack.mongodb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -168,5 +170,63 @@ public class MongoDB_DataObjectMap_test extends StructSimple_DataObjectMap_test 
 		);
 		assertEquals(1, degradedIds.length);
 		assertEquals(doc2._oid(), degradedIds[0]);
+	}
+
+	/**
+	 * Tests Index management operations on MongoDB_DataObjectMap:
+	 * - supportsIndexManagement()
+	 * - listIndexes()
+	 * - hasIndex()
+	 * - hasIndexWithKeys()
+	 * - createIndex()
+	 */
+	@Test
+	public void testIndexManagementOperations() throws Exception {
+		MongoDB_DataObjectMap mongoMap = (MongoDB_DataObjectMap) mtObj;
+
+		// 1. Backend must declare index management support
+		assertTrue("MongoDB backend must support index management", mongoMap.supportsIndexManagement());
+
+		// 2. Default indexes: MongoDB always creates "_id_"
+		assertTrue("Collection must have _id_ index", mongoMap.hasIndex("_id_"));
+
+		// 3. Create a compound index
+		IndexDefinition customIndex = IndexDefinition.create("test_user_status_idx")
+			.ascending("userId")
+			.descending("status")
+			.build();
+
+		// Initially neither name nor keys should exist
+		assertFalse(mongoMap.hasIndex("test_user_status_idx"));
+		assertFalse(mongoMap.hasIndexWithKeys(customIndex));
+
+		// Create the index
+		mongoMap.createIndex(customIndex);
+
+		// Now both should exist
+		assertTrue(mongoMap.hasIndex("test_user_status_idx"));
+		assertTrue(mongoMap.hasIndexWithKeys(customIndex));
+
+		// 4. Duplicate call to createIndex should be idempotent (skips creation safely)
+		mongoMap.createIndex(customIndex);
+		assertTrue(mongoMap.hasIndex("test_user_status_idx"));
+
+		// 5. Another index definition with same keys but different name should also be skipped by hasIndexWithKeys
+		IndexDefinition duplicateKeysDiffName = IndexDefinition.create("another_name_same_keys")
+			.ascending("userId")
+			.descending("status")
+			.build();
+		mongoMap.createIndex(duplicateKeysDiffName);
+		// The new name should not be created because an index with those keys already exists
+		assertFalse(mongoMap.hasIndex("another_name_same_keys"));
+
+		// 6. TTL index creation test
+		IndexDefinition ttlIndex = IndexDefinition.create("test_session_ttl_idx")
+			.ascending("expireAt")
+			.expireAfterSeconds(3600L)
+			.build();
+		mongoMap.createIndex(ttlIndex);
+		assertTrue(mongoMap.hasIndex("test_session_ttl_idx"));
+		assertTrue(mongoMap.hasIndexWithKeys(ttlIndex));
 	}
 }

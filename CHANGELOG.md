@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.1.17] - 2026-11-17
+## [4.1.18] - 2026-11-19
+
+### Added
+- Added `IndexDefinition` class representing normalized index specifications (name, keys with directions or custom types, unique, sparse, background, and TTL expiration).
+- Added index management interface methods to `DataObjectMap`: `supportsIndexManagement()`, `listIndexes()`, `hasIndex(name)`, `hasIndexWithKeys(indexDef)`, and `createIndex(indexDef)`.
+- Implemented MongoDB index management in `MongoDB_DataObjectMap`: `supportsIndexManagement()`, `listIndexes()` parsing existing indexes into `IndexDefinition`, and `createIndex(indexDef)` with pre-checks against duplicate names/keys and background building.
+- Added index management forwarding in `Stack_DataObjectMap`.
 
 ### Added
 - Added `queryIn` and `queryIn_id` to `DataObjectMap` for querying records matching any value in a collection (up to 100 items), with overloads supporting `additionalWhereQuery` and `additionalWhereArgs`.

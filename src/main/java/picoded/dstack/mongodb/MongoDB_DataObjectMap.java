@@ -10,8 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 // JavaCommons imports
 import picoded.core.conv.ConvertJSON;
@@ -38,6 +43,7 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.MongoCommandException;
 
 /**
  * ## Purpose
@@ -738,6 +744,134 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		// if (configMap.getBoolean("autoIndex", true)) {
 		// 	// performAutoIndexing(keySet());
 		// }
+	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Index Management Implementation
+	//
+	//--------------------------------------------------------------------------
+
+	private static final Logger LOGGER = Logger.getLogger(MongoDB_DataObjectMap.class.getName());
+
+	/**
+	 * Indicates whether this MongoDB DataObjectMap backend supports index management operations.
+	 *
+	 * @return true
+	 */
+	@Override
+	public boolean supportsIndexManagement() {
+		return true;
+	}
+
+	/**
+	 * Lists all existing indexes on this MongoDB collection as normalized IndexDefinition instances.
+	 *
+	 * @return list of IndexDefinition objects representing existing indexes
+	 */
+	@Override
+	public List<IndexDefinition> listIndexes() {
+		List<IndexDefinition> resultList = new ArrayList<>();
+		try {
+			for (Document doc : collection.listIndexes()) {
+				String idxName = doc.getString("name");
+
+				// Extract and normalize keys document
+				Map<String, String> keysMap = new LinkedHashMap<>();
+				Document keyDoc = (Document) doc.get("key");
+				if (keyDoc != null) {
+					for (Map.Entry<String, Object> entry : keyDoc.entrySet()) {
+						Object val = entry.getValue();
+						if (val == null) {
+							LOGGER.log(Level.WARNING, "Null key direction/type for field '" + entry.getKey() + "' in index '" + idxName + "' on collection: " + collection.getNamespace().getCollectionName());
+							continue;
+						}
+						keysMap.put(entry.getKey(), String.valueOf(val));
+					}
+				} else {
+					LOGGER.log(Level.WARNING, "Index '" + idxName + "' has null 'key' specification document on collection: " + collection.getNamespace().getCollectionName());
+				}
+
+				boolean unique = doc.getBoolean("unique", false);
+				boolean sparse = doc.getBoolean("sparse", false);
+				boolean background = doc.getBoolean("background", true);
+				Long expireAfterSeconds = null;
+				if (doc.containsKey("expireAfterSeconds") && doc.get("expireAfterSeconds") != null) {
+					expireAfterSeconds = GenericConvert.toLong(doc.get("expireAfterSeconds"));
+				}
+
+				resultList.add(new IndexDefinition(idxName, keysMap, unique, sparse, background, expireAfterSeconds));
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Failed to list indexes for collection: " + collection.getNamespace().getCollectionName(), e);
+		}
+		return resultList;
+	}
+
+	/**
+	 * Creates an index on this MongoDB collection using the provided IndexDefinition.
+	 * Checks if an index with matching name or matching keys already exists before attempting creation.
+	 *
+	 * @param indexDef normalized index definition
+	 */
+	@Override
+	public void createIndex(IndexDefinition indexDef) {
+		if (indexDef == null || indexDef.getKeys() == null || indexDef.getKeys().isEmpty()) {
+			throw new IllegalArgumentException("Index definition and keys cannot be null or empty");
+		}
+
+		String name = indexDef.getName();
+		String collectionName = collection.getNamespace().getCollectionName();
+
+		// Check if index already exists by name
+		if (name != null && !name.trim().isEmpty() && hasIndex(name.trim())) {
+			LOGGER.log(Level.INFO, "Index '" + name + "' already exists on collection '" + collectionName + "', skipping creation.");
+			return;
+		}
+
+		// Check if an index with identical key composition already exists
+		if (hasIndexWithKeys(indexDef)) {
+			LOGGER.log(Level.INFO, "An index with matching keys already exists on collection '" + collectionName + "', skipping creation for: " + indexDef);
+			return;
+		}
+
+		// Build MongoDB key specification document (preserving field insertion order)
+		Document keysDoc = new Document();
+		for (Map.Entry<String, String> entry : indexDef.getKeys().entrySet()) {
+			String val = entry.getValue();
+			// Convert direction strings to numeric 1 / -1 for MongoDB, otherwise preserve custom type (e.g. "text", "2dsphere")
+			if (val != null && val.equals("1")) {
+				keysDoc.append(entry.getKey(), 1);
+			} else if (val != null && val.equals("-1")) {
+				keysDoc.append(entry.getKey(), -1);
+			} else {
+				keysDoc.append(entry.getKey(), val);
+			}
+		}
+
+		// Configure index options
+		IndexOptions opt = new IndexOptions();
+		if (name != null && !name.trim().isEmpty()) {
+			opt.name(name.trim());
+		}
+		opt.unique(indexDef.isUnique());
+		opt.sparse(indexDef.isSparse());
+		opt.background(indexDef.isBackground());
+
+		// Optional TTL expiration in seconds
+		Long expireAfterSeconds = indexDef.getExpireAfterSeconds();
+		if (expireAfterSeconds != null) {
+			opt.expireAfter(expireAfterSeconds, TimeUnit.SECONDS);
+		}
+
+		// Execute index creation against MongoDB collection
+		try {
+			collection.createIndex(keysDoc, opt);
+			LOGGER.log(Level.INFO, "Successfully created index '" + name + "' on collection '" + collectionName + "'.");
+		} catch (MongoCommandException e) {
+			LOGGER.log(Level.WARNING, "Failed creating index " + name + " on " + collectionName + ": " + e.getErrorMessage(), e);
+			throw e;
+		}
 	}
 	
 }

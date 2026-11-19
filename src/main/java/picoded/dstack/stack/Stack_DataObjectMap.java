@@ -2,7 +2,9 @@ package picoded.dstack.stack;
 
 // Java imports
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -332,6 +334,47 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 		return queryLayer.looselyIterateObjectID(currentID);
 	}
 	
+	//--------------------------------------------------------------------------
+	//
+	// Index Management Interface Delegation
+	//
+	//--------------------------------------------------------------------------
+
+	@Override
+	public boolean supportsIndexManagement() {
+		if (dataLayers != null) {
+			for (Core_DataObjectMap layer : dataLayers) {
+				if (layer.supportsIndexManagement()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public List<IndexDefinition> listIndexes() {
+		if (dataLayers != null) {
+			for (Core_DataObjectMap layer : dataLayers) {
+				if (layer.supportsIndexManagement()) {
+					return layer.listIndexes();
+				}
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void createIndex(IndexDefinition indexDef) {
+		if (dataLayers != null && indexDef != null) {
+			for (Core_DataObjectMap layer : dataLayers) {
+				if (layer.supportsIndexManagement()) {
+					layer.createIndex(indexDef);
+				}
+			}
+		}
+	}
+
 	//--------------------------------------------------------------------------
 	//
 	// Copy pasta code, I wished could have worked in an interface

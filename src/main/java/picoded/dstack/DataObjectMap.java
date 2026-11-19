@@ -832,5 +832,77 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 		String retID = looselyIterateObjectID(currentID);
 		return (retID != null) ? get(retID) : null;
 	}
+
+	//--------------------------------------------------------------------------
+	//
+	// Index Management Interface
+	//
+	//--------------------------------------------------------------------------
+
+	/**
+	 * Indicates whether this DataObjectMap backend supports index management operations
+	 * (listing, inspecting, and programmatically creating indexes).
+	 *
+	 * @return true if index operations are supported, false otherwise.
+	 */
+	default boolean supportsIndexManagement() {
+		return false;
+	}
+
+	/**
+	 * Lists all existing indexes on this collection/table as normalized IndexDefinition instances.
+	 *
+	 * @return list of IndexDefinition objects.
+	 */
+	default List<IndexDefinition> listIndexes() {
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Checks whether an index with the given name already exists on this collection/table.
+	 *
+	 * @param indexName name of the index to check
+	 * @return true if an index with the given name exists, false otherwise.
+	 */
+	default boolean hasIndex(String indexName) {
+		if (indexName == null) {
+			return false;
+		}
+		// Iterate through existing indexes and check for name match
+		for (IndexDefinition idx : listIndexes()) {
+			if (indexName.equals(idx.getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks whether an index with the exact set and order of keys already exists on this collection/table.
+	 *
+	 * @param indexDef index definition to match keys against
+	 * @return true if a matching index exists, false otherwise.
+	 */
+	default boolean hasIndexWithKeys(IndexDefinition indexDef) {
+		if (indexDef == null || indexDef.getKeys() == null || indexDef.getKeys().isEmpty()) {
+			return false;
+		}
+		// Compare key definition and compound order against each existing index
+		for (IndexDefinition idx : listIndexes()) {
+			if (idx.matchesKeys(indexDef)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Creates an index using a normalized IndexDefinition specification.
+	 *
+	 * @param indexDef normalized index definition
+	 */
+	default void createIndex(IndexDefinition indexDef) {
+		// Default no-op for backends that do not support index management
+	}
 	
 }
