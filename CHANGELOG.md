@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.17] - 2026-11-17
+
+### Added
+- Added `queryIn` and `queryIn_id` to `DataObjectMap` for querying records matching any value in a collection (up to 100 items), with overloads supporting `additionalWhereQuery` and `additionalWhereArgs`.
+- Implemented backend-specific `queryIn_id` support in `JSql_DataObjectMap`, `PostgresJsonb_DataObjectMap`, `MongoDB_DataObjectMap`, and `Stack_DataObjectMap`.
+
 ## [4.1.16] - 2026-11-16
 
 ### Added

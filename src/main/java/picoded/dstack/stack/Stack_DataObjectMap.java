@@ -255,6 +255,24 @@ public class Stack_DataObjectMap extends Core_DataObjectMap implements Stack_Com
 	}
 	
 	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * delegating to the configured query layer.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	@Override
+	public String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr, int offset, int limit) {
+		return queryLayer.queryIn_id(propertyName, values, additionalWhereQuery, additionalWhereArgs, orderByStr, offset, limit);
+	}
+	
+	/**
 	 * Performs a search query, and returns the respective DataObjects
 	 *
 	 * @param   where query statement

@@ -55,6 +55,11 @@ import picoded.core.struct.ProxyGenericConvertMap;
  **/
 public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>, CommonStructure,
 	CollectionQueryForIDInterface<String, DataObject> {
+
+	/**
+	 * Maximum allowed items in a queryIn / queryIn_id value collection.
+	 **/
+	public static final int MAX_QUERY_IN_SIZE = 100;
 	
 	// DataObject optimizations
 	//----------------------------------------------
@@ -281,6 +286,250 @@ public interface DataObjectMap extends UnsupportedDefaultMap<String, DataObject>
 	default long queryCount(String whereClause, Object[] whereValues) {
 		// Query and count
 		return query_id(whereClause, whereValues, null).length;
+	}
+	
+	//
+	// Query IN operations (matching property against collection of values)
+	//--------------------------------------------------------------------------
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr, int offset, int limit) {
+		return getArrayFromID(queryIn_id(propertyName, values, additionalWhereQuery, additionalWhereArgs, orderByStr, offset, limit), true);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values, String orderByStr,
+		int offset, int limit) {
+		return queryIn(propertyName, values, null, null, orderByStr, offset, limit);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values) {
+		return queryIn(propertyName, values, null, null, null, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values, String orderByStr) {
+		return queryIn(propertyName, values, null, null, orderByStr, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs) {
+		return queryIn(propertyName, values, additionalWhereQuery, additionalWhereArgs, null, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObjects.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 *
+	 * @return  The DataObject[] array
+	 **/
+	default DataObject[] queryIn(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr) {
+		return queryIn(propertyName, values, additionalWhereQuery, additionalWhereArgs, orderByStr, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr, int offset, int limit) {
+		if (propertyName == null || propertyName.trim().length() == 0) {
+			throw new IllegalArgumentException("propertyName cannot be null or empty");
+		}
+		if (values == null || values.isEmpty()) {
+			return new String[0];
+		}
+		if (values.size() > MAX_QUERY_IN_SIZE) {
+			throw new IllegalArgumentException("queryIn exceeds maximum allowed values: " + values.size() + " > " + MAX_QUERY_IN_SIZE);
+		}
+
+		StringBuilder whereClause = new StringBuilder("(");
+		int idx = 0;
+		for (Object val : values) {
+			if (idx > 0) {
+				whereClause.append(" OR ");
+			}
+			whereClause.append(propertyName).append(" = ?");
+			idx++;
+		}
+		whereClause.append(")");
+
+		boolean hasAdditional = false;
+		if (additionalWhereQuery != null && additionalWhereQuery.trim().length() > 0) {
+			hasAdditional = true;
+		}
+
+		int additionalArgsLen = 0;
+		if (hasAdditional && additionalWhereArgs != null) {
+			additionalArgsLen = additionalWhereArgs.length;
+		}
+
+		Object[] whereValues = new Object[values.size() + additionalArgsLen];
+		idx = 0;
+		for (Object val : values) {
+			whereValues[idx] = val;
+			idx++;
+		}
+
+		if (hasAdditional) {
+			whereClause.append(" AND (").append(additionalWhereQuery.trim()).append(")");
+			if (additionalWhereArgs != null) {
+				for (int i = 0; i < additionalWhereArgs.length; ++i) {
+					whereValues[idx] = additionalWhereArgs[i];
+					idx++;
+				}
+			}
+		}
+
+		return query_id(whereClause.toString(), whereValues, orderByStr, offset, limit);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values, String orderByStr,
+		int offset, int limit) {
+		return queryIn_id(propertyName, values, null, null, orderByStr, offset, limit);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values) {
+		return queryIn_id(propertyName, values, null, null, null, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values, String orderByStr) {
+		return queryIn_id(propertyName, values, null, null, orderByStr, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs) {
+		return queryIn_id(propertyName, values, additionalWhereQuery, additionalWhereArgs, null, -1, -1);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * with optional additional WHERE clause, and returns the respective DataObject keys.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	default String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr) {
+		return queryIn_id(propertyName, values, additionalWhereQuery, additionalWhereArgs, orderByStr, -1, -1);
 	}
 	
 	// Get from key names operations (to optimize on specific implementation)

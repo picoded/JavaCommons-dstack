@@ -89,4 +89,84 @@ public class MongoDB_DataObjectMap_test extends StructSimple_DataObjectMap_test 
 			Filters.eq("_oid", obj3._oid())
 		));
 	}
+
+	/**
+	 * Tests MongoDB backend queryIn and queryIn_id using native $in filters.
+	 * Verifies matching by custom property as well as document _oid.
+	 */
+	@Test
+	public void testMongoQueryInBasicAndByOid() throws Exception {
+		MongoDB_DataObjectMap mongoMap = (MongoDB_DataObjectMap) mtObj;
+
+		DataObject doc1 = mongoMap.newEntry();
+		doc1.put("cluster", "prod-us-east");
+		doc1.put("tier", "frontend");
+		doc1.saveDelta();
+
+		DataObject doc2 = mongoMap.newEntry();
+		doc2.put("cluster", "prod-eu-west");
+		doc2.put("tier", "backend");
+		doc2.saveDelta();
+
+		DataObject doc3 = mongoMap.newEntry();
+		doc3.put("cluster", "staging-asia");
+		doc3.put("tier", "database");
+		doc3.saveDelta();
+
+		// Query for "prod-us-east" and "staging-asia"
+		DataObject[] matched = mongoMap.queryIn("cluster", Arrays.asList("prod-us-east", "staging-asia"));
+		assertEquals(2, matched.length);
+
+		// Query IDs for "prod-eu-west"
+		String[] matchedIds = mongoMap.queryIn_id("cluster", Arrays.asList("prod-eu-west"));
+		assertEquals(1, matchedIds.length);
+		assertEquals(doc2._oid(), matchedIds[0]);
+
+		// Query by _oid collection
+		String[] oidMatches = mongoMap.queryIn_id("_oid", Arrays.asList(doc1._oid(), doc3._oid()));
+		assertEquals(2, oidMatches.length);
+	}
+
+	/**
+	 * Tests MongoDB backend queryIn and queryIn_id with compound additionalWhereQuery.
+	 * Verifies that Filters.in is combined with additional BSON filter via Filters.and.
+	 */
+	@Test
+	public void testMongoQueryInWithAdditionalWhere() throws Exception {
+		MongoDB_DataObjectMap mongoMap = (MongoDB_DataObjectMap) mtObj;
+
+		DataObject doc1 = mongoMap.newEntry();
+		doc1.put("region", "apac");
+		doc1.put("status", "healthy");
+		doc1.saveDelta();
+
+		DataObject doc2 = mongoMap.newEntry();
+		doc2.put("region", "apac");
+		doc2.put("status", "degraded");
+		doc2.saveDelta();
+
+		DataObject doc3 = mongoMap.newEntry();
+		doc3.put("region", "emea");
+		doc3.put("status", "healthy");
+		doc3.saveDelta();
+
+		// Query region IN ("apac", "emea") AND status = "healthy"
+		DataObject[] healthyDocs = mongoMap.queryIn(
+			"region",
+			Arrays.asList("apac", "emea"),
+			"status = ?",
+			new Object[] { "healthy" }
+		);
+		assertEquals(2, healthyDocs.length);
+
+		// Query IDs for region IN ("apac", "emea") AND status = "degraded"
+		String[] degradedIds = mongoMap.queryIn_id(
+			"region",
+			Arrays.asList("apac", "emea"),
+			"status = ?",
+			new Object[] { "degraded" }
+		);
+		assertEquals(1, degradedIds.length);
+		assertEquals(doc2._oid(), degradedIds[0]);
+	}
 }

@@ -433,7 +433,6 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 	 * @return  The String[] array
 	 **/
 	public String[] query_id(Query queryClause, String orderByStr, int offset, int limit) {
-		
 		// The query filter to use, use "all" if queryClause is null
 		Bson bsonFilter = null;
 		if (queryClause != null) {
@@ -470,6 +469,88 @@ public class MongoDB_DataObjectMap extends Core_DataObjectMap {
 		if (search == null) {
 			search = collection.find(bsonFilter);
 		}
+		
+		return executeFindIterable_id(search, orderByStr, offset, limit);
+	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * using MongoDB's native $in filter, with optional additional WHERE clause.
+	 *
+	 * @param   propertyName property name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of _oid keys
+	 **/
+	@Override
+	public String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr, int offset, int limit) {
+		if (propertyName == null || propertyName.trim().length() == 0) {
+			throw new IllegalArgumentException("propertyName cannot be null or empty");
+		}
+		if (values == null || values.isEmpty()) {
+			return new String[0];
+		}
+		if (values.size() > MAX_QUERY_IN_SIZE) {
+			throw new IllegalArgumentException("queryIn exceeds maximum allowed values: " + values.size() + " > " + MAX_QUERY_IN_SIZE);
+		}
+
+		Bson inFilter = Filters.in(propertyName, values);
+		Bson activeFilter = inFilter;
+		boolean isLike = false;
+
+		if (additionalWhereQuery != null && additionalWhereQuery.trim().length() > 0) {
+			Query additionalQuery = Query.build(additionalWhereQuery, additionalWhereArgs);
+			if (additionalQuery != null) {
+				Bson additionalFilter = queryObjToBsonFilter(additionalQuery);
+				if (additionalFilter != null) {
+					activeFilter = Filters.and(inFilter, additionalFilter);
+				}
+				if (additionalQuery.toSqlString().toUpperCase().indexOf("LIKE") > 0) {
+					isLike = true;
+				}
+			}
+		}
+
+		FindIterable<Document> search = null;
+
+		if (sec_mode == null) {
+			search = collection.find(activeFilter);
+		} else if (sec_mode.equals("LIKE")) {
+			if (isLike) {
+				search = sec_collection.find(activeFilter);
+			}
+		} else if (sec_mode.equals("LIKEORALL")) {
+			if (isLike) {
+				search = sec_collection.find(activeFilter);
+			}
+		} else if (sec_mode.equals("QUERY")) {
+			search = sec_collection.find(activeFilter);
+		}
+
+		if (search == null) {
+			search = collection.find(activeFilter);
+		}
+
+		return executeFindIterable_id(search, orderByStr, offset, limit);
+	}
+
+	/**
+	 * Projects _oid, sorts, paginates, and returns array of _oid keys from the MongoDB search iterable.
+	 *
+	 * @param   search FindIterable of Document to execute
+	 * @param   orderByStr string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of _oid keys
+	 **/
+	protected String[] executeFindIterable_id(FindIterable<Document> search, String orderByStr, int offset, int limit) {
 		
 		// Apply the projection, to only fetch _oid
 		search = search.projection(Projections.include("_oid"));

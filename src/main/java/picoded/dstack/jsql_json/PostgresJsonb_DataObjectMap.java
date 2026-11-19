@@ -331,6 +331,94 @@ public class PostgresJsonb_DataObjectMap extends Core_DataObjectMap {
 		// Blank list as fallback (nothing found)
 		return new String[0];
 	}
+
+	/**
+	 * Performs a search query for a property matching any value in the given collection,
+	 * using PostgreSQL native IN query, with optional additional WHERE clause.
+	 *
+	 * @param   propertyName property/column name to match
+	 * @param   values collection of values (at most MAX_QUERY_IN_SIZE)
+	 * @param   additionalWhereQuery optional additional WHERE query string (e.g. "status = ?"), or null
+	 * @param   additionalWhereArgs arguments for additionalWhereQuery, or null
+	 * @param   orderByStr query string to sort the order by, use null to ignore
+	 * @param   offset of the result to display, use -1 to ignore
+	 * @param   limit number of objects to return max, use -1 to ignore
+	 *
+	 * @return  The String[] array of object keys
+	 **/
+	@Override
+	public String[] queryIn_id(String propertyName, Collection<?> values, String additionalWhereQuery,
+		Object[] additionalWhereArgs, String orderByStr, int offset, int limit) {
+		if (propertyName == null || propertyName.trim().length() == 0) {
+			throw new IllegalArgumentException("propertyName cannot be null or empty");
+		}
+		if (values == null || values.isEmpty()) {
+			return new String[0];
+		}
+		if (values.size() > MAX_QUERY_IN_SIZE) {
+			throw new IllegalArgumentException("queryIn exceeds maximum allowed values: " + values.size() + " > " + MAX_QUERY_IN_SIZE);
+		}
+
+		StringBuilder colExpr = new StringBuilder();
+		if ("oID".equalsIgnoreCase(propertyName) || "_oid".equalsIgnoreCase(propertyName) || "id".equalsIgnoreCase(propertyName)) {
+			colExpr.append("oID");
+		} else {
+			colExpr.append("(data->>'").append(propertyName).append("')");
+		}
+
+		StringBuilder whereClause = new StringBuilder(colExpr.toString());
+		whereClause.append(" IN (");
+		Object[] whereValues = new Object[values.size()];
+		int idx = 0;
+		for (Object val : values) {
+			if (idx > 0) {
+				whereClause.append(", ");
+			}
+			whereClause.append("?");
+			whereValues[idx] = val;
+			idx++;
+		}
+		whereClause.append(")");
+
+		StringBuilder fullQuery = new StringBuilder("SELECT oID FROM " + dataStorageTable + " WHERE " + whereClause.toString());
+		Object[] finalArgs = whereValues;
+
+		if (additionalWhereQuery != null && additionalWhereQuery.trim().length() > 0) {
+			MutablePair<String, Object[]> additionalPair = JsonbUtils.jsonQueryPairBuilder(additionalWhereQuery, additionalWhereArgs);
+			if (additionalPair != null && additionalPair.left != null && additionalPair.left.trim().length() > 0) {
+				fullQuery.append(" AND (").append(additionalPair.left).append(")");
+				Object[] additionalValues = additionalPair.right;
+				if (additionalValues == null) {
+					additionalValues = new Object[0];
+				}
+				Object[] combinedArgs = new Object[whereValues.length + additionalValues.length];
+				System.arraycopy(whereValues, 0, combinedArgs, 0, whereValues.length);
+				System.arraycopy(additionalValues, 0, combinedArgs, whereValues.length, additionalValues.length);
+				finalArgs = combinedArgs;
+			}
+		}
+
+		String reqOrderByStr = JsonbUtils.jsonOrderByStringBuilder(orderByStr);
+		if (reqOrderByStr != null) {
+			fullQuery.append(" ORDER BY ").append(reqOrderByStr);
+		} else {
+			fullQuery.append(" ORDER BY oID");
+		}
+
+		if (limit > 0) {
+			fullQuery.append(" LIMIT ").append(limit);
+			if (offset > 0) {
+				fullQuery.append(" OFFSET ").append(offset);
+			}
+		}
+
+		JSqlResult res = sqlObj.query_raw(fullQuery.toString(), finalArgs);
+		List<Object> oID_list = res.getObjectList("oID");
+		if (oID_list != null) {
+			return ListValueConv.objectListToStringArray(oID_list);
+		}
+		return new String[0];
+	}
 	
 	/**
 	 * Performs a search query, and returns the respective DataObject keys.
