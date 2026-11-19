@@ -103,14 +103,24 @@ public class JsonbUtils {
 					continue;
 				}
 			} else if (v instanceof byte[]) {
-				// Handling of binary data
-				binMap.put(k, v);
+				// Skip binary data in keySet loop; processed below from fullSet
 			} else {
 				// In all other cases, treat it as JSON data
 				// we add it to the jsonMap, if its within the keyset
 				if (keySet.contains(k)) {
 					jsonMap.put(k, v);
 				}
+			}
+		}
+		
+		// Build complete binary map from fullSet to prevent losing existing binary properties during partial updates
+		for (String k : fullSet) {
+			if (k.equalsIgnoreCase("_otm") || k.length() > 64) {
+				continue;
+			}
+			Object v = inMap.get(k);
+			if (v instanceof byte[] && v != null && v != ObjectToken.NULL) {
+				binMap.put(k, v);
 			}
 		}
 		
